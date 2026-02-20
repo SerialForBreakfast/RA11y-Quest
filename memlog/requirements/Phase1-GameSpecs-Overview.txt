@@ -1,0 +1,52 @@
+RA11y - Accessibility Training Gamification
+Phase 1 - MVP Game Specs Overview
+
+Date: 2026-02-20
+
+Purpose
+=======
+This set of documents defines the MVP game designs in a way that is implementable and testable.
+For each game we specify:
+- Player goal and explicit VoiceOver actions
+- Observable signals (what the app can measure reliably)
+- Scoring (rank + metrics: time + mistakes)
+- Failure states + mitigations
+- Unit-testable logic
+
+Guiding Decisions (Locked)
+==========================
+- SwiftUI-first. If SwiftUI cannot satisfy an MVP requirement, fall back to UIKit only if necessary.
+- VoiceOver is required ON for gameplay (no preview mode).
+- We do not need to detect the exact gesture; we validate observable outcomes.
+- Validation should rely on activation of the correct element where possible.
+- Metrics stored: time + mistakes. Rank is derived from these per-game.
+- Rotation supported in full screen; leaving full screen (minimized / half-screen) stops the game.
+
+Cross-cutting Scoring Rules
+===========================
+Metrics
+- timeSeconds: measured from game start to success (or timeout).
+- mistakes: integer count.
+
+Mistake taxonomy (MVP default)
+- +1 for each wrong activation (decoy control activated).
+- +1 for each timeout bucket exceeded (see each game for thresholds).
+- Optional (per game): +1 for measurable wrong-direction scroll beyond a threshold.
+
+Ranks
+- Perfect / Good / Ok / Failed
+- Ranks are derived from thresholds per game and can be tuned after hands-on playtests.
+
+Best-result comparison (MVP default)
+- Compare rank first.
+- If rank ties, fewer mistakes wins.
+- If mistakes tie, faster time wins.
+
+Notes
+=====
+- Hints are optional and do NOT count as mistakes.
+- Thresholds are initial guesses and must be validated via short playtests.
+
+Related Spike
+=============
+- See Spike-ScrollObservability-SwiftUI.txt for the scroll measurement strategy validation.

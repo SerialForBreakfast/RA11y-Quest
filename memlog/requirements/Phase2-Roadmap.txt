@@ -1,0 +1,189 @@
+RA11y - Accessibility Training Gamification
+Phase 2 - Roadmap and MVP Slices
+
+Date: 2026-02-20
+Owner: Product (Requirements)
+
+Purpose
+=======
+Phase 2 defines achievable milestones (MVP slices) and a dependency-ordered roadmap.
+This is NOT the detailed ticket breakdown (that is Phase 3).
+
+Phase 1 Inputs (Summary)
+========================
+- Platform: iOS MVP.
+- Privacy: Offline-first, no tracking.
+- VoiceOver gating: Games require VoiceOver ON (no preview mode).
+- VO OFF behavior: Interstitial gate with best-effort Settings open + fallback + in-app steps.
+- MVP skills: Focus navigation, Activate (double-tap), Scroll (3-finger scroll).
+- Navigation: Hub (sandbox) + optional first-run "Basics" sequence.
+- Progress: Store best result per game; hub displays rank only (Perfect/Good/Ok/Failed).
+- Metrics: Persist time + mistakes (per game), with rank-first best-result comparison.
+- Architecture: MVVM, lightweight GameDefinition catalog, StorageComponent abstraction (UserDefaults first).
+
+Definitions
+===========
+- "Milestone": a shippable increment that can be tested and demoed.
+- "MVP": the minimum set of milestones that delivers a complete user experience.
+
+MVP Milestones (Dependency Ordered)
+==================================
+
+M0 - Foundation Skeleton (App + Navigation)
+-------------------------------------------
+Goal: App launches, routes, and can host future games.
+Includes:
+- App shell with hub route.
+- Basic navigation stack / router pattern (implementation details in Phase 3).
+- Shared design tokens: typography, spacing, corner radius, colors (minimal, native).
+Exit Criteria:
+- App launches to hub (placeholder content permitted only at this milestone).
+- All screens support Dynamic Type and VoiceOver labeling where applicable.
+
+M1 - Core Infrastructure (Catalog + Storage + Scoring Model)
+-----------------------------------------------------------
+Goal: Data structures exist to list games and persist best rank.
+Includes:
+- GameDefinition catalog (3 MVP games).
+- Score/Result model supports rank + optional metrics.
+- StorageComponent protocol + UserDefaults implementation.
+- Best-result comparison rules.
+Exit Criteria:
+- Hub can render from catalog.
+- Best result is persisted and reloaded across relaunch.
+- Unit test coverage exists for: best-result comparison + storage read/write.
+
+M2 - VoiceOver State + Gating UX (Interstitial + Help)
+-----------------------------------------------------
+Goal: Safe, predictable VO-on requirement flows.
+Includes:
+- VoiceOverStateProvider dependency (testable abstraction).
+- Gate: attempting to start any game with VO OFF routes to interstitial.
+- Interstitial actions:
+  - Open Settings (best-effort deep-link) + fallback path.
+  - Open in-app help sheet with steps to enable VoiceOver.
+- Help affordance (info button) visible ONLY when VO is OFF.
+Exit Criteria:
+- With VO OFF: cannot enter games; interstitial always appears.
+- With VO ON: games are reachable; help affordance hidden.
+- Unit test coverage exists for gating decisions (VO ON vs OFF).
+
+M3 - Game Hub (Sandbox) v1
+-------------------------
+Goal: A usable hub that launches games and shows progress.
+Includes:
+- Hub UI listing 3 games:
+  - Title, goal, estimated duration.
+  - Best rank badge ("Not played" if absent).
+  - Start action.
+- Basic settings / about entry (optional; avoid scope creep).
+Exit Criteria:
+- Hub is fully functional and stable; no dead ends.
+- Rank updates immediately after completing a game.
+
+M4 - Basics Sequence (First Run) v1
+----------------------------------
+Goal: First-run guided entry without sacrificing sandbox.
+Includes:
+- First-launch screen: "Start Basics" vs "Go to Hub".
+- Basics flow runs: Focus -> Activate -> Scroll.
+- Basics completed flag stored locally.
+Exit Criteria:
+- First-run logic works; returning users land on hub.
+- Basics is still accessible from hub.
+
+M5 - MVP Game 1: Find & Focus (SwiftUI)
+--------------------------------------
+Goal: Teach focus navigation and target selection.
+Includes:
+- Simple target-finding interaction design suitable for VO.
+- Clear instructions and success feedback.
+- Result computed with rank + optional metric (time or mistakes).
+Exit Criteria:
+- Game can be completed reliably with VoiceOver.
+- Result persists as best score.
+
+M6 - MVP Game 2: Activate (Double-Tap) (SwiftUI)
+-----------------------------------------------
+Goal: Teach focus then double-tap activation.
+Includes:
+- Interaction with decoys to prevent guessing.
+- Result computed with rank + optional metric.
+Exit Criteria:
+- Correct activation required to pass; misfires penalize.
+- Result persists.
+
+M7 - MVP Game 3: Scroll Hunt (SwiftUI)
+-------------------------------------
+Goal: Teach 3-finger scroll to reveal targets.
+Includes:
+- Scrollable content with offscreen targets.
+- Clear cueing and success feedback.
+- Result computed with rank + optional metric.
+Exit Criteria:
+- Users must perform scroll gesture to reveal required target.
+- Result persists.
+
+M8 - MVP Polish + Release Readiness
+----------------------------------
+Goal: Ship quality: stability, UX clarity, accessibility correctness.
+Includes:
+- Visual polish pass (native look).
+- Copy pass for instructions.
+- Accessibility audit pass (labels, hints, reading order).
+- Edge cases: rotation (if supported), large Dynamic Type, Reduce Motion.
+- Basic crash-free demo path.
+Exit Criteria:
+- No blocking accessibility defects found in smoke test.
+- App is coherent and complete: hub -> gate/help -> games -> scoring -> back.
+
+MVP Definition
+==============
+MVP is M0 through M8. The smallest "complete" MVP for a user is:
+- Hub + VO gate/help + at least 1 game + persistence.
+However, the planned MVP release target includes all 3 games.
+
+Post-MVP Roadmap (High-Level)
+=============================
+
+P1 - Curriculum Mode
+--------------------
+- Structured path, progressive difficulty, and coaching.
+- Unlocking and adaptive recommendations.
+
+P2 - More Accessibility Features
+-------------------------------
+- Dynamic Type focused challenges.
+- Reduce Motion / Contrast / Bold Text experiences.
+- Later: Switch Control, AssistiveTouch, Spoken Content, etc.
+
+P3 - Advanced / Debug Mode (Later MVP)
+-------------------------------------
+- Intentional "broken accessibility" levels to teach common pitfalls.
+
+P4 - Localization
+----------------
+- Add translations using String Catalogs; keep keys stable.
+
+P5 - Opt-in Social / GameKit
+---------------------------
+- Only with explicit user opt-in; preserve offline-only path.
+
+Risks / Constraints
+===================
+- Deep-linking directly to VoiceOver Settings may be limited by iOS behavior; we must provide fallbacks.
+- Measuring VO gestures directly is not always possible; gameplay must be designed around observable app state changes.
+- Must avoid solutions that require tracking or network calls.
+
+Phase 2 Decisions (Locked)
+=========================
+1) Rank UI style
+   - Use a compact badge/pill that contains the rank text (e.g., "Perfect").
+   - Also include a plain-text fallback label for maximum clarity (badge is visual; label is semantic).
+
+2) Stored metrics
+   - Persist: time + mistakes per attempt, and best-result evaluation uses rank first.
+   - Use per-game tie-break rules (default: fewer mistakes, then faster time).
+
+3) Device support for MVP
+   - Support iPhone + iPad.

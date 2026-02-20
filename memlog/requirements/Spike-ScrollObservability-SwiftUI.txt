@@ -1,0 +1,62 @@
+RA11y - Accessibility Training Gamification
+Spike Spec - Scroll Observability in SwiftUI (iOS 18+ / 26+)
+
+Date: 2026-02-20
+
+Goal
+====
+Prove we can measure scroll progress reliably in SwiftUI for Scroll Hunt without UIKit introspection.
+
+Success Criteria
+================
+1) We can observe scroll changes in a ScrollView using SwiftUI APIs on supported OS versions.
+2) We can derive a stable, equatable “progress” value that:
+   - advances when the user scrolls,
+   - can be used to determine when the target region is reachable/visible,
+   - does not spam updates excessively.
+3) The solution works on iPhone and iPad, portrait and landscape full-screen.
+
+Primary API (iOS 18+)
+=====================
+Use `onScrollGeometryChange(for:of:action:)` with values derived from `ScrollGeometry`.
+
+Strategy
+========
+A) Offset bucket strategy
+- Derive a bucketed offset (e.g., every 20pt or every 5% of viewport height).
+- Use the bucket index as the equatable signal.
+- Pros: simple; reduces update frequency.
+- Cons: requires access to meaningful offset units in ScrollGeometry.
+
+B) Target visibility strategy (preferred)
+- Attach an anchor/identifier to the target region.
+- Derive whether the target region intersects the visible rect using geometry delivered by scroll APIs.
+- Use boolean “targetVisible” (and optionally a small progress enum) as the equatable signal.
+- Pros: directly supports win condition; minimal updates.
+- Cons: depends on availability of visible rect + target frame information.
+
+Secondary API (optional)
+========================
+If the design uses discrete scroll targets:
+- Use ScrollPosition / scrollPosition(id:anchor:) to detect which item is currently at an anchor.
+
+Fallback
+========
+If scroll geometry APIs are insufficient for the needed layout:
+- Use Geometry + PreferenceKey only as a last resort, with a performance budget.
+
+Deliverables
+============
+- A small prototype view that prints/logs progress updates and flips a “target revealed” state.
+- Documented findings:
+  - which derived values were stable,
+  - update frequency,
+  - any OS/version differences observed,
+  - recommended approach for Scroll Hunt.
+
+Unit Test
+=========
+- Implement a pure function that maps “raw scroll signals” to DerivedProgress and unit test it.
+  Example:
+  - input: offsetBucket changes 0 -> 1 -> 2
+  - output: progress advances monotonically and emits “targetVisible” at the configured threshold.

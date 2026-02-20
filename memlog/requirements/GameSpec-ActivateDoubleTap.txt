@@ -1,0 +1,68 @@
+RA11y - Accessibility Training Gamification
+Game Spec - Activate (Double-Tap) (SwiftUI)
+
+Date: 2026-02-20
+MVP Skill: Focus then activate (double-tap)
+
+Player Goal
+===========
+Activate the correct control using a double-tap on the focused element.
+
+Player Instructions (VoiceOver)
+===============================
+- “Move focus to the highlighted control and double-tap to activate it.”
+
+Gameplay Loop
+=============
+1) Game presents multiple controls with similar labels.
+2) One control is the current objective (the “correct” one).
+3) Player must activate the correct control.
+4) Game ends on success or timeout.
+
+Observable Signals (Measurable)
+===============================
+Primary
+- Correct control activation handler invoked (success).
+
+Secondary
+- Incorrect control activation handler invoked (mistake).
+- Elapsed time (monotonic clock).
+- Timeout fired (fail).
+
+Scoring
+=======
+Metrics
+- timeSeconds: from “Start” to success (or timeout).
+- mistakes:
+  - +1 per wrong activation.
+  - +1 per timeout bucket exceeded (see below).
+
+Timeout bucket (initial)
+------------------------
+- Bucket size: 8 seconds
+- Each full bucket elapsed beyond the first bucket adds +1 mistake.
+
+Rank Thresholds (Initial Guess; Tunable)
+========================================
+- Perfect: mistakes == 0 AND timeSeconds <= 8
+- Good: mistakes <= 1 AND timeSeconds <= 16
+- Ok: success AND timeSeconds <= 40
+- Failed: timeout at 40s OR mistakes >= 5
+
+Failure States + Mitigations
+============================
+- Accidental activation:
+  - Ensure adequate spacing and clear labels.
+- Optional hint:
+  - Provide a hint button that announces the target label again (no penalty).
+
+Accessibility Requirements
+==========================
+- Labels must be distinctive enough to avoid pure guessing.
+- Provide consistent instructional copy.
+
+Unit-testable Logic
+===================
+- rankFor(timeSeconds:mistakes:) -> Rank
+- bucketMistakes(timeSeconds:) -> Int
+- bestResult(lhs:rhs:) -> Result

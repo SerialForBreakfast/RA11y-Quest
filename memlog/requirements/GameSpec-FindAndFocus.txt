@@ -1,0 +1,74 @@
+RA11y - Accessibility Training Gamification
+Game Spec - Find & Focus (SwiftUI)
+
+Date: 2026-02-20
+MVP Skill: Focus navigation (by swiping VO focus) + correct activation
+
+Player Goal
+===========
+Navigate by swiping left/right through items until the target is reached, then activate it.
+
+Player Instructions (VoiceOver)
+===============================
+- “Swipe right until you hear the target item. Then double-tap to select it.”
+
+Gameplay Loop
+=============
+1) Game displays a small set of labeled controls (one target + multiple decoys).
+2) Player uses VO focus navigation to locate the target.
+3) Player double-taps to activate the focused element.
+4) Game ends on successful target activation (win) or timeout (fail).
+
+Observable Signals (Measurable)
+===============================
+Primary
+- Target control activation handler invoked (success).
+
+Secondary
+- Any decoy control activation handler invoked (mistake).
+- Elapsed time (monotonic clock).
+- Timeout fired (fail).
+
+Scoring
+=======
+Metrics
+- timeSeconds: from “Start” to success (or timeout).
+- mistakes:
+  - +1 per wrong activation of a decoy control.
+  - +1 per timeout bucket exceeded (see below).
+
+Timeout bucket (initial)
+------------------------
+- Bucket size: 10 seconds
+- Each full bucket elapsed beyond the first bucket adds +1 mistake.
+  - Example: 0–10s => +0 bucket mistakes
+             10–20s => +1
+             20–30s => +2
+  - This is tunable after playtest.
+
+Rank Thresholds (Initial Guess; Tunable)
+========================================
+- Perfect: mistakes == 0 AND timeSeconds <= 10
+- Good: mistakes <= 1 AND timeSeconds <= 20
+- Ok: success AND timeSeconds <= 45
+- Failed: timeout at 45s OR mistakes >= 5
+
+Failure States + Mitigations
+============================
+- Player cannot find target:
+  - Optional: provide an in-app hint button that announces: “Try swiping right; the target name is …”
+  - Hints do NOT change scoring.
+- Player gets stuck:
+  - Provide “Restart” action.
+
+Accessibility Requirements
+==========================
+- All controls have clear labels and helpful hints.
+- Reading order should be deterministic.
+- Avoid rapid UI changes that disrupt VO.
+
+Unit-testable Logic
+===================
+- rankFor(timeSeconds:mistakes:) -> Rank
+- bucketMistakes(timeSeconds:) -> Int
+- bestResult(lhs:rhs:) -> Result

@@ -1,0 +1,20 @@
+RA11y - Accessibility Training Gamification
+Phase 3 - Ticket Breakdown (Placeholder)
+
+Date: 2026-02-20
+Owner: Product (Requirements)
+
+Purpose
+=======
+Phase 3 will contain the detailed ticket breakdown derived from Phase 2 milestones.
+Each ticket must include:
+- User Story
+- Requirements
+- Acceptance Criteria
+- At least one meaningful Unit Test
+
+Related documents
+=================
+- Phase2-Roadmap.txt for milestone definitions (M0–M8).
+- Phase1-GameSpecs-Overview.txt, GameSpec-*.txt for game design.
+- Spike-ScrollObservability-SwiftUI.txt for scroll observability approach.

@@ -1,5 +1,30 @@
-memlog/requirements Index
+RA11y - Requirements Index
+==========================
+memlog/requirements/
 
-- Phase1-Requirements.txt
-- Phase1-UserStories.txt
-- Phase1-Decisions.txt
+Keep this index updated when adding or moving requirement documents.
+
+Phase 1 — Capture
+-----------------
+- Phase1-Requirements.txt   Product, platform, VO gating, scoring, architecture.
+- Phase1-UserStories.txt    User stories with acceptance criteria and test hints.
+- Phase1-Decisions.txt      Locked decisions snapshot (scope, navigation, storage).
+- Phase1-GameSpecs-Overview.txt  Cross-cutting game spec rules and overview.
+
+Game Specs (MVP)
+---------------
+- GameSpec-FindAndFocus.txt
+- GameSpec-ActivateDoubleTap.txt
+- GameSpec-ScrollHunt.txt
+
+Spikes
+------
+- Spike-ScrollObservability-SwiftUI.txt  Scroll progress observation for Scroll Hunt.
+
+Phase 2 — Roadmap
+-----------------
+- Phase2-Roadmap.txt        MVP milestones (M0–M8), dependency order, post-MVP.
+
+Phase 3 — Tickets
+-----------------
+- Phase3-TicketBreakdown.txt Placeholder for detailed tickets (from Phase 2 milestones).

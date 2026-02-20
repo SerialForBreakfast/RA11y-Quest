@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
 
 ---
-Current structure (as of 2025-02-20)
+Current structure (as of 2026-02-20)
 ---
 
 .
@@ -48,6 +48,19 @@ Current structure (as of 2025-02-20)
 │   │       └── RA11yCoreTests.swift
 │   └── Package.swift
 └── memlog
+    ├── DirectoryTree.txt
+    ├── requirements
+    │   ├── GameSpec-ActivateDoubleTap.txt
+    │   ├── GameSpec-FindAndFocus.txt
+    │   ├── GameSpec-ScrollHunt.txt
+    │   ├── Phase1-Decisions.txt
+    │   ├── Phase1-GameSpecs-Overview.txt
+    │   ├── Phase1-Requirements.txt
+    │   ├── Phase1-UserStories.txt
+    │   ├── Phase2-Roadmap.txt
+    │   ├── Phase3-TicketBreakdown.txt
+    │   ├── Requirements-Index.txt
+    │   └── Spike-ScrollObservability-SwiftUI.txt
     └── research
         ├── InitialBrainstorming.txt
         └── NativeAccessibility.txt
@@ -58,4 +71,4 @@ Notes
 - RA11y-iOS: iOS app target (SwiftUI); tests and UI tests under same folder.
 - RA11y.xcworkspace: Workspace that ties the app and local packages together.
 - RA11yCore: Shared Swift package (SPM); used for cross-target logic.
-- memlog: Project log, research, and docs (e.g. DirectoryTree.txt, research/).
+- memlog: Project log and docs. requirements/: Phase 1–3 docs, game specs, spike; see Requirements-Index.txt. research/: brainstorming and reference.

@@ -1,0 +1,79 @@
+RA11y - Accessibility Training Gamification
+Game Spec - Scroll Hunt (SwiftUI)
+
+Date: 2026-02-20
+MVP Skill: 3-finger scroll outcome (scroll to reveal offscreen content) + activation
+
+Player Goal
+===========
+Scroll until a hidden target becomes reachable/visible, then activate it.
+
+Player Instructions (VoiceOver)
+===============================
+- “Use three fingers to scroll down until you find the hidden item. Then double-tap it.”
+Note: We do not detect the exact gesture; we validate the scroll outcome.
+
+Gameplay Loop
+=============
+1) Game shows a ScrollView with content longer than the viewport.
+2) Target exists below the fold and cannot be reached without scrolling.
+3) Player scrolls until the target is reachable and activates it.
+4) Game ends on success or timeout.
+
+Observable Signals (Measurable)
+===============================
+Primary
+- Scroll progress changes (derived from SwiftUI scroll geometry APIs).
+- Target activation handler invoked (success).
+
+Secondary
+- Wrong activation of decoy targets (mistake).
+- Optional: wrong-direction scroll beyond threshold (if measurable).
+- Elapsed time (monotonic clock).
+- Timeout fired (fail).
+
+Scoring
+=======
+Metrics
+- timeSeconds: from “Start” to success (or timeout).
+- mistakes:
+  - +1 per wrong activation of decoys.
+  - +1 per timeout bucket exceeded (see below).
+  - Optional: +1 if wrong-direction scroll exceeds a threshold (only if reliably measurable).
+
+Timeout bucket (initial)
+------------------------
+- Bucket size: 15 seconds
+- Each full bucket elapsed beyond the first bucket adds +1 mistake.
+
+Rank Thresholds (Initial Guess; Tunable)
+========================================
+- Perfect: mistakes == 0 AND timeSeconds <= 15
+- Good: mistakes <= 1 AND timeSeconds <= 30
+- Ok: success AND timeSeconds <= 60
+- Failed: timeout at 60s OR mistakes >= 6
+
+Anti-cheat / Integrity
+======================
+- No “Jump to target” UI.
+- Success requires:
+  - scroll progress to indicate target region is reachable/visible AND
+  - target activation.
+
+Failure States + Mitigations
+============================
+- Player doesn’t know how to scroll:
+  - Optional hint explains 3-finger scrolling.
+- Provide “Restart” action.
+
+Accessibility Requirements
+==========================
+- ScrollView must be clearly indicated as scrollable by VO.
+- Target must be a standard accessible control with label + hint.
+
+Unit-testable Logic
+===================
+- rankFor(timeSeconds:mistakes:) -> Rank
+- bucketMistakes(timeSeconds:) -> Int
+- bestResult(lhs:rhs:) -> Result
+- progressMapping(scrollGeometry:) -> DerivedProgress (if represented as pure derived value)
