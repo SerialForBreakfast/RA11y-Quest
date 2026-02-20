@@ -1,0 +1,854 @@
+RA11y - MVP Ticket Breakdown
+Date: 2026-02-20
+
+Notes
+=====
+- Derived from Phase 2 milestones. Each ticket: User Story, Requirements, Acceptance Criteria, Unit Test.
+- Tickets are organized into tracks and dependency-ordered within each track.
+- Tracks can be worked in parallel where noted.
+- Design track lives in memlog/requirements/Design/ (separate files); this document references timing only.
+- NEW = added during review. FIXED = corrected from original.
+
+Tracks
+======
+- Infrastructure (M0, M1)      — Foundation; unblock all other tracks.
+- UX / Gating (M2, M3, M4)    — User flows; depends on Infrastructure.
+- Games (M5, M6, S1, M7)      — Game implementations; depends on Infrastructure + UX/Gating.
+- Polish (M8)                  — Stability + audit; depends on all Games.
+- Design (Parallel)            — Asset work; starts M1, must land before M5.
+
+
+================================================================================
+TRACK: Infrastructure
+================================================================================
+
+
+===============================
+TICKET-M0-AppShell-Navigation
+===============================
+Ticket: M0 - App Shell + Navigation Skeleton
+
+User Story
+----------
+As a user
+I want the app to launch into a stable, navigable shell
+So that I can reach the hub and return from any screen without dead ends.
+
+Requirements
+------------
+- Provide an app entry route that leads to the Hub.
+- Define a navigation approach compatible with SwiftUI-first (NavigationStack or equivalent).
+- Provide a single source of truth for routing so gating and first-run flows can plug in cleanly.
+- All screens must support Dynamic Type and VoiceOver labeling for interactive controls.
+
+Acceptance Criteria
+-------------------
+- App launches to the Hub route (placeholder content is acceptable at this milestone only).
+- Navigation can push to a placeholder "Game" route and return to the Hub.
+- No screen has unreachable controls when VoiceOver is enabled.
+
+Useful Unit Test
+----------------
+- Given a router initialized with default state, the initial route resolves to Hub.
+
+Dependencies
+------------
+- None
+
+
+===============================
+TICKET-M0-DesignTokens [NEW]
+===============================
+Ticket: M0 - Shared Design Token System
+
+User Story
+----------
+As a developer
+I want a single source for typography, spacing, and color constants
+So that all screens are visually consistent and can adopt system accessibility overrides correctly.
+
+Requirements
+------------
+- Define design tokens covering:
+  - Typography: font styles aligned to Dynamic Type text styles (title, headline, body, caption).
+  - Spacing: a small step scale (e.g., 4, 8, 12, 16, 24, 32pt).
+  - Corner radius: consistent values (e.g., card, button, badge).
+  - Colors: semantic color set (background, surface, primary, secondary, destructive) using adaptive
+    Color assets compatible with Increase Contrast and Dark Mode.
+- Tokens must be defined in a way that resolves correctly under system accessibility overrides
+  (Increase Contrast, Reduce Transparency, Dark Mode).
+- No raw numeric literals for spacing, radius, or color in UI code; token references only.
+
+Acceptance Criteria
+-------------------
+- Token definitions exist and are consumable from SwiftUI views.
+- Changing a token propagates correctly to all uses.
+- UI remains legible under Increase Contrast and Dark Mode.
+
+Useful Unit Test
+----------------
+- Color token for primary surface returns a non-zero opacity value in both Light and Dark
+  trait environments (validates token is configured, not inadvertently transparent).
+
+Dependencies
+------------
+- None
+
+
+===============================
+TICKET-M0-StringCatalog-Setup [NEW]
+===============================
+Ticket: M0 - String Catalog Infrastructure (Localization Foundation)
+
+User Story
+----------
+As a developer
+I want all user-facing strings stored in a String Catalog from day one
+So that we can support localization later without rewriting feature code.
+
+Requirements
+------------
+- Create an .xcstrings String Catalog for the main app target.
+- Establish the pattern: all user-visible strings in code reference localization keys
+  (no inline string literals in UI code).
+- Placeholder English strings populate the catalog for MVP.
+- Localization is not in scope for MVP; the catalog structure is.
+
+Acceptance Criteria
+-------------------
+- No user-visible string literals appear directly in SwiftUI views.
+- The .xcstrings catalog builds without warnings.
+- Adding a future language requires only new catalog entries, not code changes.
+
+Useful Unit Test
+----------------
+- No unit test required. Verified by build linting (no raw strings in UI layer) and
+  code review during PR.
+
+Dependencies
+------------
+- None
+
+
+===============================
+TICKET-M0-OSLog-Logging [NEW]
+===============================
+Ticket: M0 - Unified Logging System (OSLog)
+
+User Story
+----------
+As a developer
+I want categorized OSLog subsystem logging available across all features
+So that I can filter and debug specific subsystems without noise during development and testing.
+
+Requirements
+------------
+- Define a logging abstraction wrapping OSLog with named subsystem and per-feature categories.
+  Example categories: navigation, storage, voiceOver, gameSession, scoring.
+- All categories must be defined as constants (no ad-hoc string literals at call sites).
+- Privacy: no user-identifiable data is logged at any level.
+- Log levels used correctly: debug (development only), info (informational), error (failures).
+
+Acceptance Criteria
+-------------------
+- At least one log call per major subsystem compiles and filters correctly in Console.app.
+- No sensitive data appears in any log output.
+
+Useful Unit Test
+----------------
+- No runtime assertion needed. Verified by Console.app filter smoke test during development.
+  Logging must not throw or crash under any input.
+
+Dependencies
+------------
+- None
+
+
+===============================
+TICKET-M1-GameCatalog-Definitions [FIXED]
+===============================
+Ticket: M1 - GameDefinition Catalog (MVP)
+
+User Story
+----------
+As a user
+I want to see a curated list of available games
+So that I can pick a training exercise to play.
+
+Requirements
+------------
+- Define a static catalog of 3 MVP games. Each GameDefinition includes:
+  - stable ID (used as storage key; must never change post-ship)
+  - display title
+  - one-line goal description
+  - estimated duration
+  - game kind / routing identifier
+  - required asset name references (placeholders accepted at this milestone)
+- Catalog drives hub UI; no hardcoded game data in views.
+
+Acceptance Criteria
+-------------------
+- Hub renders game list from catalog with correct titles and goals.
+- Catalog IDs are stable and match storage keys.
+
+Useful Unit Test
+----------------
+- Given a known game ID, catalog lookup returns the correct GameDefinition
+  with the expected title, goal string, and routing kind. [FIXED: was "count 3 IDs"]
+
+Dependencies
+------------
+- M0
+
+
+===============================
+TICKET-M1-ScoringModel-RankMetrics
+===============================
+Ticket: M1 - Scoring Model (Rank + Metrics)
+
+User Story
+----------
+As a user
+I want results shown as a simple rank with supporting metrics
+So that I can quickly understand my performance and improve.
+
+Requirements
+------------
+- Result stores: rank (Perfect/Good/Ok/Failed), timeSeconds, mistakes.
+- Ranking is derived per-game from (time, mistakes) threshold configuration.
+- Default best-result comparison: rank first, then fewer mistakes, then faster time.
+- Structure must allow per-game tie-break override without modifying the comparison call site.
+
+Acceptance Criteria
+-------------------
+- A result evaluates to a rank using per-game threshold settings.
+- Best-result comparison is deterministic and stable for any two results.
+
+Useful Unit Test
+----------------
+- Given two results of equal rank, the one with fewer mistakes is chosen as best;
+  if mistakes also tie, the faster time wins.
+
+Dependencies
+------------
+- None (can build in parallel with M0)
+
+
+===============================
+TICKET-M1-StorageComponent-UserDefaults
+===============================
+Ticket: M1 - StorageComponent Abstraction (UserDefaults Implementation)
+
+User Story
+----------
+As a user
+I want my best scores and first-run completion to persist
+So that my progress remains after relaunch.
+
+Requirements
+------------
+- StorageComponent protocol API:
+  - get/set best result per game ID
+  - get/set "Basics completed" flag
+- MVP backing store: UserDefaults.
+- Storage keys must be namespaced and stable.
+- API must be compatible with a future SwiftData implementation; no call-site changes required.
+- No network or analytics dependencies.
+
+Acceptance Criteria
+-------------------
+- After saving a best result, reloading returns the same result.
+- "Basics completed" flag persists across relaunch.
+- Data survives app termination and relaunch.
+
+Useful Unit Test
+----------------
+- Using an in-memory StorageComponent stub, verify setting then getting best result
+  returns the same value; and that a second result with a lower rank does not overwrite the first.
+
+Dependencies
+------------
+- M1 Scoring Model (for Result shape)
+
+
+===============================
+TICKET-M1-GameSessionLifecycle [NEW]
+===============================
+Ticket: M1 - Game Session Lifecycle / State Machine
+
+User Story
+----------
+As a developer
+I want a shared, testable game session state machine
+So that all games handle start, pause, stop, abandon, and completion consistently
+and scoring is never written in an invalid state.
+
+Requirements
+------------
+- Define a GameSession state machine with states:
+  - idle, running, paused, completed, abandoned
+- Transitions:
+  - idle -> running (start)
+  - running -> paused (app backgrounded or full-screen exited)
+  - paused -> running (returned to full-screen)
+  - running -> completed (success condition met)
+  - running -> abandoned (timeout, or VO turned off mid-game; see M2-VOStateChangeMidGame)
+  - paused -> abandoned (session invalidated while paused)
+- Only completed state is eligible to write a best result.
+- Session tracks: startTime, elapsed time (accounts for pauses), mistake count.
+- Session must be injectable / testable (no direct UIApplication or timer dependencies in the model).
+
+Acceptance Criteria
+-------------------
+- Starting a session and recording a mistake increments the count correctly.
+- Pausing and resuming preserves elapsed time correctly.
+- Reaching abandoned state does not trigger a storage write.
+- Reaching completed state with a valid result triggers a storage write.
+
+Useful Unit Test
+----------------
+- Given a session that is paused then abandoned, the resulting state is abandoned
+  and no result is passed to storage.
+- Given a session that completes, the result passed to storage matches the session's
+  elapsed time and mistake count.
+
+Dependencies
+------------
+- M1 Scoring Model, M1 StorageComponent
+
+
+===============================
+TICKET-M1-SharedGameResultScreen [NEW]
+===============================
+Ticket: M1 - Shared Game Result View
+
+User Story
+----------
+As a user
+I want a clear result screen after each game
+So that I know my rank and what to work on.
+
+Requirements
+------------
+- Shared SwiftUI view used by all 3 games (not duplicated per game).
+- Displays: rank (text-first; badge/pill is visual decoration only), timeSeconds, mistakes.
+- VoiceOver: result must be fully understandable via speech.
+  - Rank must be announced as text, not only conveyed visually.
+  - Metrics are announced in a logical order (rank, then time, then mistakes).
+- Actions: "Play Again", "Return to Hub".
+- Dynamic Type: all text scales; layout adapts at largest sizes.
+
+Acceptance Criteria
+-------------------
+- All 3 games route to this view on completion.
+- With VoiceOver enabled, rank + metrics are all announced correctly.
+- "Play Again" restarts the same game; "Return to Hub" navigates back.
+
+Useful Unit Test
+----------------
+- Given a Result with rank Perfect, 0 mistakes, 8.5s, the view model produces
+  the correct accessibility announcement string (rank first, then metrics).
+
+Dependencies
+------------
+- M0, M1 Scoring Model
+
+
+================================================================================
+TRACK: UX / Gating
+================================================================================
+
+
+===============================
+TICKET-M2-VoiceOverStateProvider
+===============================
+Ticket: M2 - VoiceOverStateProvider (Testable)
+
+User Story
+----------
+As a developer
+I want a testable abstraction for VoiceOver state
+So that I can gate gameplay and show/hide help affordances reliably in tests.
+
+Requirements
+------------
+- Protocol exposing isVoiceOverRunning: Bool.
+- Live implementation uses UIAccessibility.isVoiceOverRunning.
+- Must be injectable for unit tests (stub/mock).
+
+Acceptance Criteria
+-------------------
+- When provider reports VO ON, game start routing proceeds to the game.
+- When provider reports VO OFF, game start routing redirects to interstitial.
+
+Useful Unit Test
+----------------
+- Given a stub provider returning false, the start-game routing decision
+  produces the interstitial route.
+
+Dependencies
+------------
+- M0
+
+
+===============================
+TICKET-M2-VOOff-Interstitial-SettingsFallback
+===============================
+Ticket: M2 - VO Off Interstitial (Settings + Fallback + Help Sheet)
+
+User Story
+----------
+As a user
+I want clear instructions and a quick path to enable VoiceOver
+So that I can start playing the training games.
+
+Requirements
+------------
+- When VoiceOver is OFF and user attempts to start any game:
+  - Present an interstitial explaining VO is required.
+  - Primary action: Open Settings (best-effort deep link).
+  - If deep link fails/unavailable: show a fallback path (general Settings open + in-app steps).
+  - Secondary action: open in-app help sheet (steps to enable VoiceOver).
+- No preview mode: user cannot enter gameplay without VO enabled.
+
+Acceptance Criteria
+-------------------
+- Starting any game with VO OFF always shows the interstitial (never the game).
+- A working path forward exists even if Settings deep linking fails.
+- Help sheet is reachable from the interstitial.
+
+Useful Unit Test
+----------------
+- Given VO OFF, the "Start Game" action resolves to the interstitial route,
+  not the game route.
+
+Dependencies
+------------
+- M0, M2 VoiceOverStateProvider
+
+
+===============================
+TICKET-M2-HelpAffordance-Visibility
+===============================
+Ticket: M2 - Help Affordance Visibility (VO Off Only)
+
+User Story
+----------
+As a user
+I want help controls to appear only when needed
+So that the hub is uncluttered when VoiceOver is already enabled.
+
+Requirements
+------------
+- Hub (and any screen where VO guidance is relevant) shows a "How to enable VoiceOver"
+  affordance only when VO is OFF.
+- When VO is ON, the affordance must not be present in the view hierarchy
+  (not just hidden; must not be focusable).
+
+Acceptance Criteria
+-------------------
+- With VO OFF: hub shows help entry point.
+- With VO ON: hub does not expose help entry point (not even to VoiceOver).
+
+Useful Unit Test
+----------------
+- Given VO ON, hub view model state sets showHelpAffordance to false.
+
+Dependencies
+------------
+- M2 VoiceOverStateProvider
+
+
+===============================
+TICKET-M2-VOStateChangeMidGame [NEW]
+===============================
+Ticket: M2 - VoiceOver Disabled Mid-Gameplay
+
+User Story
+----------
+As a user
+I want the game to handle VoiceOver being turned off during play gracefully
+So that the app doesn't end up in an inconsistent or unscored state.
+
+Requirements
+------------
+- Subscribe to VoiceOver state change notifications during an active game session.
+- If VoiceOver transitions OFF while a game session is running or paused:
+  - Transition game session to abandoned state.
+  - Do not write a result (abandoned sessions are not scored; see GameSessionLifecycle).
+  - Navigate to the VO Off interstitial, not to the result screen.
+- If VO is re-enabled, user must restart the game; no resume from mid-session.
+
+Acceptance Criteria
+-------------------
+- With a game running and VO toggled off, the session ends in abandoned state.
+- No result is written to storage.
+- User lands on the interstitial, not the result screen.
+
+Useful Unit Test
+----------------
+- Given an active GameSession, injecting a voiceOverDidDisable event causes
+  the session to transition to abandoned and calls the abandon handler, not the
+  completion handler.
+
+Dependencies
+------------
+- M2 VoiceOverStateProvider, M1 GameSessionLifecycle
+
+
+===============================
+TICKET-M3-Hub-UI-Progress [FIXED]
+===============================
+Ticket: M3 - Hub UI (Sandbox) + Best Rank Display
+
+User Story
+----------
+As a user
+I want a hub that lists games and shows my best rank
+So that I can choose what to practice and see improvement.
+
+Requirements
+------------
+- Render 3 MVP games from GameDefinition catalog. Each game card shows:
+  - title
+  - one-line goal
+  - estimated duration
+  - best rank badge/pill (text is the canonical accessibility label; badge is visual decoration)
+  - "Not played" when no result exists
+  - start action
+- When VoiceOver is OFF: show a persistent "How to enable VoiceOver" help affordance
+  (from M2-HelpAffordance-Visibility). [FIXED: was missing]
+- Provide a "VoiceOver Basics" entry point accessible from the hub at all times
+  (visible regardless of first-run state; from M4). [FIXED: was missing]
+- Rank badge must not rely on color alone; shape or text cue required.
+- Dynamic Type and Increase Contrast must keep the hub readable.
+
+Acceptance Criteria
+-------------------
+- Hub renders all 3 games from catalog.
+- After a game completes, hub reflects updated best rank without requiring relaunch.
+- With VO OFF: help affordance is visible.
+- With VO ON: help affordance is not present.
+- "VoiceOver Basics" entry is always accessible from hub.
+
+Useful Unit Test
+----------------
+- Given stored results for two games, hub view model returns correct rank strings
+  for those games and "Not played" for the third.
+
+Dependencies
+------------
+- M0, M1 (Catalog, Storage, Scoring Model), M2 (VoiceOverStateProvider, HelpAffordance)
+
+
+===============================
+TICKET-M4-FirstRun-BasicsSequence
+===============================
+Ticket: M4 - First-Run "VoiceOver Basics" Sequence
+
+User Story
+----------
+As a first-time user
+I want an optional guided basics sequence
+So that I can learn core VoiceOver interactions in a structured order.
+
+Requirements
+------------
+- On first launch, present a first-run screen offering:
+  - "Start Basics"
+  - "Go to Hub"
+- "Start Basics" runs games in order: Find & Focus -> Activate -> Scroll Hunt.
+- Persist "Basics completed" flag via StorageComponent.
+- Basics sequence remains accessible from the hub after first-run (via the hub entry point added in M3).
+- Subsequent launches (after Basics completed or skipped) go directly to Hub.
+
+Acceptance Criteria
+-------------------
+- First launch shows the first-run screen.
+- Completing the sequence marks basics as completed and returns to Hub.
+- Subsequent launches go directly to Hub.
+- Basics is accessible from Hub at any time.
+
+Useful Unit Test
+----------------
+- When basicsCompleted is true in storage, the initial routing decision resolves to Hub,
+  not the first-run screen.
+
+Dependencies
+------------
+- M0, M1 Storage, M3 Hub
+
+
+================================================================================
+TRACK: Games
+================================================================================
+
+
+===============================
+TICKET-M5-Game-SimonSays-FindAndFocus
+===============================
+Ticket: M5 - Game 1 (Simon Says) - Find & Focus
+
+User Story
+----------
+As a user
+I want a Simon Says-style drill that trains focus navigation and correct activation
+So that I can reliably select the intended element with VoiceOver.
+
+Theme / Narrative
+-----------------
+- Simon Says training drill inside the Training Academy.
+
+Requirements
+------------
+- SwiftUI-first implementation.
+- Present a small set of controls: 1 target + multiple decoys.
+- Prompt: "Simon says: activate <target>."
+- Success: target control's activation handler is invoked.
+- Session managed via GameSessionLifecycle (start, mistake, complete/abandon).
+- Mistakes: wrong activation of a decoy, time-based mistake buckets (per GameSpec-FindAndFocus).
+- Optional hint button does not affect scoring.
+- On completion: route to SharedGameResultView with computed rank + metrics.
+- Persist best result via StorageComponent.
+
+Acceptance Criteria
+-------------------
+- With VoiceOver ON, the game can be completed reliably.
+- Wrong activation increments the mistake count in the session.
+- Timeout transitions session to abandoned (not completed).
+- Result persists and best result updates when improved.
+
+Useful Unit Test
+----------------
+- Given (timeSeconds: 9, mistakes: 0), rank evaluates to Perfect for this game's thresholds.
+- Given (timeSeconds: 46, mistakes: 0), rank evaluates to Failed (timeout exceeded).
+
+Dependencies
+------------
+- M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
+
+
+===============================
+TICKET-M6-Game-BombDefusal-Activate [FIXED]
+===============================
+Ticket: M6 - Game 2 (Bomb Defusal) - Activate
+
+User Story
+----------
+As a user
+I want a bomb-defusal simulation that trains focusing the correct element and activating it
+So that I can build confidence using double-tap activation with VoiceOver.
+
+Theme / Narrative
+-----------------
+- Bomb Defusal simulation exercise (safe, stylized training device) in the Training Academy.
+
+Requirements
+------------
+- SwiftUI-first implementation.
+- Present multiple similar controls (wires/modules), one is the correct objective.
+- Prompt: "Disarm: cut the <wire/module>."
+- Success: correct control's activation handler is invoked.
+- Session managed via GameSessionLifecycle.
+- Mistakes: wrong activation, time-based mistake buckets (per GameSpec-ActivateDoubleTap).
+- Optional hint button does not affect scoring.
+- On completion: route to SharedGameResultView.
+- Persist best result.
+
+Acceptance Criteria
+-------------------
+- Correct activation required to pass.
+- Wrong activation increments mistakes.
+- Result persists; best score updates correctly.
+
+Useful Unit Test
+----------------
+- Given two results with equal rank, the result with fewer mistakes is selected as best
+  by the comparison function.
+
+Dependencies
+------------
+- M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
+- Can be built in parallel with M5 once shared infrastructure (M0/M1/M2) is complete.
+  [FIXED: was "M5 optional; can be parallel" which was ambiguous]
+
+
+===============================
+TICKET-S1-Spike-ScrollObservability [PROMOTED]
+===============================
+Ticket: S1 - Spike: Scroll Observability in SwiftUI
+
+GATE: This spike must close (findings documented) before TICKET-M7-DungeonCrawl-ScrollHunt opens.
+
+User Story
+----------
+As a developer
+I want a proven approach to observe scroll progress in SwiftUI
+So that Scroll Hunt (M7) can be implemented reliably on iOS 18/26 on iPhone and iPad
+without guessing at implementation strategy.
+
+Requirements
+------------
+- Build a minimal prototype that:
+  - Observes scroll progress using SwiftUI scroll APIs
+    (primary: onScrollGeometryChange + ScrollGeometry; see Spike-ScrollObservability-SwiftUI.txt).
+  - Derives a stable, equatable progress signal suitable for game use.
+  - Flips a "target revealed" boolean when progress reaches the intended threshold.
+- Document findings: which derived values were stable, update frequency, any OS/device differences,
+  recommended strategy for M7.
+- Prototype must work on iPhone and iPad, portrait and landscape full-screen.
+- Prototype is throwaway; it does not ship.
+
+Acceptance Criteria
+-------------------
+- Scrolling causes the derived progress value to update.
+- "Target revealed" flips only at the intended threshold.
+- Findings document exists and includes a clear recommended approach for M7.
+- Prototype verified on both iPhone and iPad, portrait + landscape.
+
+Useful Unit Test
+----------------
+- Pure function: mapping from raw scroll signal(s) to DerivedProgress is monotonic
+  and reaches "targetVisible = true" at the configured threshold.
+
+Dependencies
+------------
+- M0 (can start early; does not need M1/M2)
+
+
+===============================
+TICKET-M7-Game-DungeonCrawl-ScrollHunt [FIXED]
+===============================
+Ticket: M7 - Game 3 (Dungeon Crawl) - Scroll Hunt
+
+User Story
+----------
+As a user
+I want a dungeon-crawl simulation that trains scrolling to reveal hidden content
+So that I can reliably access offscreen items with VoiceOver.
+
+Theme / Narrative
+-----------------
+- Dungeon Crawl simulator: scroll deeper into the training dungeon to find the objective.
+
+Requirements
+------------
+- SwiftUI-first implementation using the approach validated in S1 Spike.
+- ScrollView with content longer than the viewport.
+- Target objective exists below the fold; cannot be activated until scroll reveals it.
+- We do not detect the exact gesture; we validate the scroll outcome (progress / visibility).
+- No "Jump to target" UI element. Success requires scroll progress AND target activation.
+- Session managed via GameSessionLifecycle.
+- Mistakes: wrong activation of decoys, time-based mistake buckets,
+  optional wrong-direction scroll penalty only if reliably measurable
+  (per GameSpec-ScrollHunt + S1 findings).
+- Optional hint button does not affect scoring.
+- On completion: route to SharedGameResultView.
+- Persist best result.
+
+Acceptance Criteria
+-------------------
+- User must scroll to reach the target; target is not activatable until reachable.
+- Anti-cheat: no affordance allows bypassing the scroll requirement.
+- Result persists; best score updates correctly.
+
+Useful Unit Test
+----------------
+- Rank evaluation for Dungeon Crawl uses the correct per-game thresholds
+  (e.g., Perfect: 0 mistakes AND time <= 15s).
+- Scroll progress mapping function: given a mocked scroll offset sequence,
+  "targetVisible" becomes true only at the expected threshold.
+
+Dependencies
+------------
+- S1 Spike (must be closed before this ticket opens) [FIXED: was mislabeled "M7 Spike"]
+- M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
+
+
+================================================================================
+TRACK: Polish
+================================================================================
+
+
+===============================
+TICKET-M8-Accessibility-Audit-Polish
+===============================
+Ticket: M8 - Accessibility Audit + MVP Polish
+
+User Story
+----------
+As a user
+I want the app to be a best-practice accessibility example
+So that it is comfortable, readable, and reliable across a wide range of needs.
+
+Requirements
+------------
+- Verify compatibility with:
+  - Dynamic Type (all sizes, including largest accessibility sizes)
+  - Increase Contrast
+  - Reduce Transparency
+  - Reduce Motion (no motion-only cues for critical information)
+- Verify VoiceOver quality across all screens:
+  - Deterministic reading order
+  - Correct labels and hints on all interactive controls
+  - Decorative imagery marked as decorative
+  - Rank + metrics announced correctly via speech (from SharedGameResultView)
+- Verify iPhone + iPad, portrait and landscape in full-screen.
+- Verify game session stops cleanly on full-screen exit (via GameSessionLifecycle abandoned state).
+- Copy pass: instructional copy is clear, concise, consistent.
+- Visual polish pass: native look, consistent use of design tokens.
+
+Acceptance Criteria
+-------------------
+- Smoke test passes on iPhone + iPad, portrait and landscape.
+- No critical information conveyed only via color on any screen.
+- Leaving full-screen stops gameplay and does not write a result.
+- No blocking accessibility defects in the smoke test path.
+
+Useful Unit Test
+----------------
+- Given a running GameSession, a "fullScreenExited" event causes the session to transition
+  to abandoned state (not completed), and the storage write is not invoked.
+
+Dependencies
+------------
+- All game tickets (M5, M6, M7), M3 Hub, M4 First Run
+
+
+================================================================================
+TRACK: Design (Parallel — see Design/ folder)
+================================================================================
+
+Design tickets live in: memlog/requirements/Design/
+
+Files
+-----
+- DesignTicket-AssetListDefinition.txt   Per-game sprite + background asset list.
+- DesignTicket-PromptSheet.txt           Image generation prompt templates (per game).
+- DesignTicket-AssetReviewChecklist.txt  Accessibility + quality review checklist.
+- DesignTicket-AssetDeliveryNaming.txt   Naming conventions + Xcode integration guidance.
+
+Scheduling
+----------
+Start:    After M1-GameCatalog-Definitions closes (asset list references stable game IDs).
+Gate:     All Design tickets must close (assets delivered + reviewed) before M5 opens.
+Parallel: Design track runs alongside M0/M1 infrastructure and M2/M3/M4 UX work.
+
+Design Track Dependency Order
+------------------------------
+1. DesignTicket-AssetListDefinition    (requires: M1 catalog stable)
+2. DesignTicket-PromptSheet            (requires: Asset list)
+3. DesignTicket-AssetReviewChecklist   (requires: Asset list; can run in parallel with Prompt Sheet)
+4. DesignTicket-AssetDeliveryNaming    (requires: Asset list)
+   -> Assets produced + reviewed using checklist -> delivered before M5 opens.
+
+
+================================================================================
+Backlog (Explicitly Not MVP)
+================================================================================
+- Lockpick game variant (later difficulty for Activate)
+- Curriculum mode (structured path, progressive difficulty)
+- Localization (add translations; String Catalog structure is already in place from M0)
+- Opt-in GameKit / social features
+- Advanced "broken accessibility" challenge levels
+- tvOS / macOS targets
