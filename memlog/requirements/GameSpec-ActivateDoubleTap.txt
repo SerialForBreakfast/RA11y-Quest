@@ -12,6 +12,14 @@ Player Instructions (VoiceOver)
 ===============================
 - “Move focus to the highlighted control and double-tap to activate it.”
 
+Theme / Narrative
+=================
+- "Bomb Defusal" simulation exercise (safe, stylized training device) in the Training Academy. Later difficulty variant: "Lockpick" practice module (precision activation sequences).
+
+Art / Assets
+============
+- Follow Phase1-GameSpecs-Overview: flat, high-contrast, vector-like; no text in images; sprites usable at small sizes. Accessibility quality bar and asset dimensions apply.
+
 Gameplay Loop
 =============
 1) Game presents multiple controls with similar labels.

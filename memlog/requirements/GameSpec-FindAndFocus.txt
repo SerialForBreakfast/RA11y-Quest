@@ -12,6 +12,14 @@ Player Instructions (VoiceOver)
 ===============================
 - “Swipe right until you hear the target item. Then double-tap to select it.”
 
+Theme / Narrative
+=================
+- "Simon Says" training drill inside the Training Academy.
+
+Art / Assets
+============
+- Follow Phase1-GameSpecs-Overview: flat, high-contrast, vector-like; no text in images; sprites usable at small sizes. Accessibility quality bar and asset dimensions apply.
+
 Gameplay Loop
 =============
 1) Game displays a small set of labeled controls (one target + multiple decoys).

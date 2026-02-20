@@ -22,6 +22,31 @@ Guiding Decisions (Locked)
 - Metrics stored: time + mistakes. Rank is derived from these per-game.
 - Rotation supported in full screen; leaving full screen (minimized / half-screen) stops the game.
 
+Theme + Narrative (Locked)
+==========================
+- Shared world theme: "Training Academy" that ties all games together.
+- Player progression goal: become an "Accessibility Champion" (preferred; alternatives: "Accessibility Expert", "Accessibility Pro", "Accessibility Ace"; avoid "master").
+- Each game has a specific narrative pattern mapped in its GameSpec (Simon Says, Bomb Defusal, Dungeon Crawl, etc.).
+
+Art Direction (Locked)
+=====================
+- Visual style: Flat, high-contrast, vector-like. Simple shapes, clean edges, bold silhouettes.
+- No baked-in text, letters, or numbers in images. Sprites must be usable at small sizes without losing meaning.
+
+Accessibility Quality Bar (Locked)
+===================================
+- The app must be a best-practice example for accessibility.
+- Contrast: UI and assets must remain legible under Increase Contrast / Reduce Transparency. Avoid low-contrast gradients and detail-heavy textures.
+- Text / Dynamic Type: All instructional copy and UI labels must scale with Dynamic Type. No critical information conveyed only by color.
+- VoiceOver: Predictable reading order; clear labels and hints; decorative images marked decorative. Results must be fully understandable via spoken output (rank + optional metrics).
+
+Asset Requirements (MVP)
+=========================
+- Sprites: Transparent background PNG; 1024x1024 generation size (downscaled in asset catalog).
+- Backgrounds: Non-transparent; 1920x1080 (plus optional tall variant if needed).
+- Rank emblems (optional): Decorative only; rank must always be present as text.
+- Design work: Asset list per game, prompt sheet for image generation (consistent style), production + review (contrast, clarity, no embedded text), delivery format + naming for Xcode asset catalogs.
+
 Cross-cutting Scoring Rules
 ===========================
 Metrics
@@ -46,6 +71,12 @@ Notes
 =====
 - Hints are optional and do NOT count as mistakes.
 - Thresholds are initial guesses and must be validated via short playtests.
+
+Open follow-ups (from Game Spec revisions)
+------------------------------------------
+- Confirm final term for player progression (default: "Accessibility Champion").
+- Rank visuals: purely SwiftUI (preferred) or include decorative emblem images.
+- Academy theme: "modern training facility" vs "retro arcade training room" (both compatible with flat-vector).
 
 Related Spike
 =============

@@ -1,0 +1,81 @@
+RA11y - Design Ticket
+Prompt Sheet for Image Generation
+
+Date: 2026-02-20
+Owner: Design (Requirements)
+
+User Story
+==========
+As a designer
+I want a standardized prompt sheet for generating consistent game assets
+So that sprites and backgrounds share a cohesive look and meet accessibility constraints.
+
+Global Prompt Constraints (Include in EVERY prompt)
+===================================================
+- flat vector illustration
+- high contrast
+- simple shapes, clean edges, bold silhouette
+- no text, no letters, no numbers
+- no watermark, no logo
+- centered subject with generous padding (for sprites)
+- friendly modern iOS game aesthetic
+- avoid tiny details; readable at small sizes
+
+Sprite Prompt Template (Transparent)
+====================================
+Flat vector sprite of {SUBJECT}, {THEME_CONTEXT}, high contrast, simple shapes, bold silhouette,
+no text, no letters, no numbers, centered, lots of padding, transparent background, 1024x1024
+
+Background Prompt Template (Non-transparent)
+============================================
+Flat illustrated background for {SCENE} in {TRAINING_ACADEMY_THEME}, subtle depth, high contrast but not harsh,
+minimal detail, no text, no UI elements, 16:9 composition with safe margins, 1920x1080
+
+Game-Specific Prompt Sets
+=========================
+
+A) Find & Focus (Simon Says)
+----------------------------
+Background
+- Flat illustrated background for a “Training Academy command room”, playful but clean, panels and lights (no text),
+high contrast, minimal detail, no UI elements, 16:9 safe margins, 1920x1080
+
+Sprites
+- Target icon: Flat vector sprite of a “star-shaped training token”, high contrast, simple shapes, no text,
+centered, transparent background, 1024x1024
+- Decoy icons (vary silhouettes): shield token, lightning token, triangle token, circle token, gear token
+
+B) Activate (Bomb Defusal)
+--------------------------
+Background
+- Flat illustrated background of an academy workbench with tools and a training device (no text, no digits),
+dramatic spotlight, minimal detail, 16:9 safe margins, 1920x1080
+
+Sprites
+- Device body: Flat vector sprite of a “training device panel” with compartments, no digits, high contrast,
+centered, transparent background, 1024x1024
+- Wires: Flat vector sprite of a single coiled wire, color {RED/BLUE/YELLOW/GREEN}, no text, bold silhouette,
+transparent background, 1024x1024
+- Tools (decorative): cutter, screwdriver (simple shapes)
+
+C) Scroll Hunt (Dungeon Crawl)
+------------------------------
+Background
+- Flat illustrated background of an “academy dungeon simulator corridor” with arches and torches, minimal detail,
+high contrast, no text, 16:9 safe margins, 1920x1080
+
+Sprites
+- Door, torch, key, chest: Flat vector sprites, bold silhouettes, no text, transparent background, 1024x1024
+- Objective item: “ancient training relic” token (no text/digits)
+- Decoy items: potion bottle, coin, gem, scroll tube (simple silhouettes)
+
+Acceptance Criteria
+===================
+- Prompt templates exist for sprites and backgrounds.
+- Prompts explicitly prevent embedded text/numbers/logos.
+- Prompts specify output size and transparency requirements.
+- Each listed asset in the Asset List has at least one matching prompt.
+
+Useful Unit Test (Process-Oriented)
+===================================
+- Given the asset registry, assert each asset has a non-empty prompt entry in the prompt sheet mapping.

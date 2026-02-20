@@ -1,0 +1,63 @@
+RA11y - Design Ticket
+Asset Delivery Format + Naming Conventions
+
+Date: 2026-02-20
+Owner: Design / Engineering (Requirements)
+
+User Story
+==========
+As an engineer
+I want assets delivered with consistent naming and formats
+So that integration into Xcode asset catalogs is frictionless.
+
+Naming Convention
+=================
+- Use lowercase snake_case.
+- Prefix with game identifier:
+  - simon_*
+  - bomb_*
+  - dungeon_*
+- Suffix by role:
+  - *_bg for backgrounds
+  - *_icon_* for icons/tokens
+  - *_decoy_* for decoys
+  - *_tool_* for tools
+  - *_device_* for bomb device parts
+
+Examples
+========
+- simon_room_bg
+- simon_target_icon_01
+- simon_decoy_icon_03
+- bomb_workbench_bg
+- bomb_device_body
+- bomb_wire_red
+- dungeon_corridor_bg
+- dungeon_scroll_target_item
+- dungeon_decoy_item_02
+
+Formats + Sizes
+===============
+- Sprites: PNG, transparent, 1024x1024 source.
+- Backgrounds: PNG or JPEG (PNG preferred if gradients band), 1920x1080 source.
+- Deliver as a structured folder:
+  - Assets/simon/
+  - Assets/bomb/
+  - Assets/dungeon/
+
+Xcode Integration Guidance
+==========================
+- Provide 1x/2x/3x variants only if necessary; otherwise let Xcode scale down from a high-res source.
+- If a true vector format is used, confirm Xcode asset pipeline support before committing.
+
+Acceptance Criteria
+===================
+- Delivered zip contains the folder structure and exact filenames in the Asset List.
+- No missing assets.
+- All sprites have transparent backgrounds.
+- Backgrounds are correctly sized and framed.
+
+Useful Unit Test (Process-Oriented)
+===================================
+- Asset registry test:
+  - Iterate required asset names and assert they load from the bundle (UIImage / Image).

@@ -13,6 +13,14 @@ Player Instructions (VoiceOver)
 - “Use three fingers to scroll down until you find the hidden item. Then double-tap it.”
 Note: We do not detect the exact gesture; we validate the scroll outcome.
 
+Theme / Narrative
+=================
+- "Dungeon Crawl" simulator: scroll deeper into the training dungeon to find the objective (Training Academy).
+
+Art / Assets
+============
+- Follow Phase1-GameSpecs-Overview: flat, high-contrast, vector-like; no text in images; sprites usable at small sizes. Accessibility quality bar and asset dimensions apply.
+
 Gameplay Loop
 =============
 1) Game shows a ScrollView with content longer than the viewport.

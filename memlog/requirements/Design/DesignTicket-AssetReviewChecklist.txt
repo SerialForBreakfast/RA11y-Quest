@@ -1,0 +1,63 @@
+RA11y - Design Ticket
+Asset Review Checklist (Accessibility + Consistency)
+
+Date: 2026-02-20
+Owner: Design / QA (Requirements)
+
+User Story
+==========
+As a reviewer
+I want a checklist for validating generated assets
+So that assets are consistent, accessible, and shippable.
+
+Checklist
+=========
+
+A) Style Consistency
+--------------------
+- Flat vector look (no painterly textures).
+- Clean edges; consistent stroke/shape language across assets.
+- Bold silhouettes; readable when scaled down.
+- No embedded text, letters, numbers, logos, or watermarks.
+
+B) Accessibility + Clarity
+--------------------------
+- High contrast against likely backgrounds.
+- Meaning does not rely on color alone (shape cues exist).
+- Avoid low-contrast gradients that degrade with Increase Contrast / Reduce Transparency.
+- Any “state” indicated by color also has a shape/icon cue (e.g., safe vs danger).
+
+C) Technical Quality
+--------------------
+- Sprites are transparent PNG.
+- Backgrounds are non-transparent and match 16:9 framing.
+- No visible clipping at edges; includes padding for sprite trimming.
+- File names match the asset list exactly.
+
+D) In-App Verification (Smoke)
+------------------------------
+- Sprite remains recognizable at:
+  - Small icon size (e.g., 24–32pt)
+  - Card size (e.g., 64–96pt)
+- Background does not reduce legibility of overlay UI text.
+- With Dynamic Type at largest sizes:
+  - UI text remains readable over the background.
+- With Increase Contrast enabled:
+  - UI remains legible; background does not overpower text.
+- With Reduce Transparency enabled:
+  - UI remains legible; overlay panels remain readable.
+
+Acceptance Criteria
+===================
+- All MVP assets pass all checklist sections A–C.
+- At least one representative screen per game is smoke-tested against:
+  - Largest Dynamic Type
+  - Increase Contrast
+  - Reduce Transparency
+
+Useful Unit Test (Process-Oriented)
+===================================
+- Snapshot/UI test for one representative screen per game verifying:
+  - Primary text remains readable at largest Dynamic Type.
+  - High-level contrast assertions are satisfied where automated checks are feasible,
+    otherwise a manual audit flag is recorded for the build.
