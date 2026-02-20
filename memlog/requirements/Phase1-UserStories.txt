@@ -1,0 +1,116 @@
+RA11y - Accessibility Training Gamification
+Phase 1 User Stories (Draft)
+
+Date: 2026-02-20
+
+Notes
+-----
+- Phase 1 focuses on requirements capture for the iOS MVP.
+- This document defines product-level stories (not implementation tickets yet).
+
+Story 1 — Hub lists games and best rank
+---------------------------------------
+As a user
+I want a home screen that lists VoiceOver mini-games and my best rank per game
+So that I can pick what to practice and see progress
+
+Requirements
+- Game list comes from a lightweight catalog (GameDefinition).
+- Each game shows: title, 1-line goal, estimated duration, and best rank (if present).
+- Selecting a game routes to its screen.
+
+Acceptance Criteria
+- With no prior plays, games show “Not played” (or equivalent).
+- After completing a game once, hub updates best rank for that game.
+- Hub works fully offline.
+
+Useful Unit Test
+- Given stored best ranks for game IDs, hub view model renders correct rank labels per ID
+  and “Not played” for missing entries.
+
+
+Story 2 — First-run Basics sequence
+-----------------------------------
+As a first-time user
+I want an optional “Start VoiceOver Basics” sequence
+So that I can learn the fundamentals in a guided order
+
+Requirements
+- On first launch, present “Start Basics” and “Go to Hub”.
+- “Start Basics” runs games in order: Focus → Activate → Scroll.
+- Persist “Basics completed” state locally.
+
+Acceptance Criteria
+- First launch shows the entry choice.
+- Completing the sequence returns to hub and marks Basics as completed.
+- Subsequent launches go directly to hub (Basics remains accessible from hub).
+
+Useful Unit Test
+- When “Basics completed” flag is true in storage, app routing selects hub as initial destination.
+
+
+Story 3 — VoiceOver required gate (when VO is off)
+--------------------------------------------------
+As a user
+I want a clear prompt when VoiceOver is off
+So that I understand why the game won’t work and can enable it quickly
+
+Requirements
+- No preview mode: games are VoiceOver-on only.
+- Before starting a VO-dependent game, detect VoiceOver state.
+- If VoiceOver is off: show an interstitial with:
+  - brief explanation,
+  - “Open Settings” best-effort deep-link + fallback,
+  - “How to enable VoiceOver” opens in-app help sheet.
+
+Acceptance Criteria
+- Starting a game with VO off always shows the interstitial.
+- Open Settings attempts the happy-path deep-link when available, otherwise falls back.
+- Help sheet is accessible from the interstitial.
+- The “help/info” affordance is shown ONLY when VoiceOver is not enabled.
+
+Useful Unit Test
+- Given isVoiceOverRunning == false, game start routes to interstitial (not the game screen).
+
+
+Story 4 — Scoring supports rank + optional metrics
+--------------------------------------------------
+As a user
+I want a simple rank (Perfect/Good/Ok/Failed)
+So that I can understand results quickly, while still supporting richer scoring later
+
+Requirements
+- Result model = { rank, optionalMetrics }.
+- Optional metrics may include time, accuracy, mistakes, etc. (per-game defined).
+- Storage persists best result per game, comparing by rank first (tie-breakers per game).
+
+Acceptance Criteria
+- Hub displays rank only for MVP.
+- Results UI can show rank + metrics if provided by that game.
+- Best score updates when rank improves (or tie-breaker improves).
+
+Useful Unit Test
+- Comparing two results: higher rank wins; if ranks equal, tie-breaker is applied consistently.
+
+
+Story 5 — StorageComponent abstraction (UserDefaults first)
+-----------------------------------------------------------
+As a developer
+I want a storage abstraction
+So that we can swap UserDefaults for SwiftData without rewriting feature logic
+
+Requirements
+- StorageComponent API supports:
+  - get/set best result per game
+  - get/set basics completed
+- MVP implementation uses UserDefaults.
+- Future SwiftData implementation can be added without changing call sites.
+
+Acceptance Criteria
+- App logic depends only on StorageComponent, not UserDefaults directly.
+- Data survives app relaunch.
+- No network or analytics dependencies.
+
+Useful Unit Test
+- Using an in-memory storage implementation, verify saving then reading returns the same value,
+  and that best-result comparison logic is respected.

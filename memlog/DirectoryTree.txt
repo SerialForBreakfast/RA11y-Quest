@@ -1,0 +1,61 @@
+# RA11y Project — Directory Tree
+
+Maintained snapshot of the repository file structure for context and onboarding.
+Update this file when adding/removing significant directories or moving modules.
+
+How to refresh (from repo root):
+  tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
+
+---
+Current structure (as of 2025-02-20)
+---
+
+.
+├── RA11y-iOS
+│   ├── RA11y-iOS
+│   │   ├── Assets.xcassets
+│   │   │   ├── AccentColor.colorset
+│   │   │   │   └── Contents.json
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   └── Contents.json
+│   │   │   └── Contents.json
+│   │   ├── ContentView.swift
+│   │   └── RA11y_iOSApp.swift
+│   ├── RA11y-iOS.xcodeproj
+│   │   ├── xcuserdata
+│   │   │   └── josephmccraw.xcuserdatad
+│   │   │       └── xcschemes
+│   │   │           └── xcschememanagement.plist
+│   │   └── project.pbxproj
+│   ├── RA11y-iOSTests
+│   │   └── RA11y_iOSTests.swift
+│   └── RA11y-iOSUITests
+│       ├── RA11y_iOSUITests.swift
+│       └── RA11y_iOSUITestsLaunchTests.swift
+├── RA11y.xcworkspace
+│   ├── xcshareddata
+│   │   └── swiftpm
+│   │       └── configuration
+│   ├── xcuserdata
+│   │   └── josephmccraw.xcuserdatad
+│   └── contents.xcworkspacedata
+├── RA11yCore
+│   ├── Sources
+│   │   └── RA11yCore
+│   │       └── RA11yCore.swift
+│   ├── Tests
+│   │   └── RA11yCoreTests
+│   │       └── RA11yCoreTests.swift
+│   └── Package.swift
+└── memlog
+    └── research
+        ├── InitialBrainstorming.txt
+        └── NativeAccessibility.txt
+
+---
+Notes
+---
+- RA11y-iOS: iOS app target (SwiftUI); tests and UI tests under same folder.
+- RA11y.xcworkspace: Workspace that ties the app and local packages together.
+- RA11yCore: Shared Swift package (SPM); used for cross-target logic.
+- memlog: Project log, research, and docs (e.g. DirectoryTree.txt, research/).

@@ -1,0 +1,61 @@
+RA11y - Accessibility Training Gamification
+Phase 1 Requirements (Captured)
+
+Date: 2026-02-20
+
+Product
+-------
+- Primary audience: General users (also useful for designers/dev/QA).
+- Goal: Learn accessibility concepts + practice skill proficiency.
+- Privacy: Offline-first, no tracking for MVP.
+
+Platform + OS Targeting
+-----------------------
+- MVP platform: iOS.
+- Future platforms: Best-fit games per platform (not strict feature parity).
+- OS targets: iOS current (26.x) and current - 1 (18.x), unless a requirement-breaking complexity forces adjustment.
+
+Navigation Model
+----------------
+- Sandbox-first: A hub lists mini-games and allows starting any game.
+- First-run experience: Optional “VoiceOver Basics” sequence that runs the 3 MVP games in order.
+
+VoiceOver MVP Skill Set
+-----------------------
+1) Focus navigation (move VoiceOver focus / explore items)
+2) Activate (double-tap)
+3) Scroll (3-finger swipe in scrollable content)
+
+VoiceOver Gating + Help
+-----------------------
+- No preview mode: Games are VoiceOver-on only.
+- If VoiceOver is OFF: show an interstitial that explains why the game is gated.
+  - Primary action: attempt to open Settings (happy path deep-link where possible).
+  - Fallback: if deep-link fails/unavailable, provide an alternate Settings path and/or in-app steps.
+  - Secondary action: open in-app help sheet (“How to enable VoiceOver”).
+- Help affordance (info button) is shown ONLY when VoiceOver is not enabled.
+
+Scoring + Progress
+------------------
+- MVP hub displays rank only: Perfect / Good / Ok / Failed.
+- Scoring architecture supports optional per-game metrics (e.g., time, accuracy, mistakes).
+- Persistence: Store best result per game (offline).
+
+Architecture + Storage
+----------------------
+- MVVM.
+- Games can be SwiftUI-only or SpriteKit where appropriate.
+- Use a lightweight `GameDefinition` catalog for game metadata + routing.
+- Storage: `StorageComponent` abstraction (start with UserDefaults; design to support SwiftData later).
+- Maintenance: ad-hoc updates by request.
+
+Localization
+------------
+- Localization is a later MVP.
+- Avoid hard-coded strings from the start (prefer String Catalogs `.xcstrings` + localized keys).
+
+Planned MVP Games (Draft)
+-------------------------
+- Find & Focus (SwiftUI): land focus on targets.
+- Activate (SwiftUI): focus then double-tap to activate correct controls.
+- Scroll Hunt (SwiftUI): 3-finger scroll to reveal and find targets.

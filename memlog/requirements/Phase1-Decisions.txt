@@ -1,0 +1,38 @@
+RA11y - Accessibility Training Gamification
+Phase 1 Decisions (Snapshot)
+
+Date: 2026-02-20
+
+Scope
+-----
+- Audience: General users (also useful for designers/dev/QA).
+- MVP Platform: iOS.
+- OS Targets: iOS current (26.x) and current - 1 (18.x).
+
+Navigation
+----------
+- Sandbox-first hub.
+- First-run optional “VoiceOver Basics” sequence.
+
+VoiceOver
+---------
+- MVP Skills: Focus navigation, Activate (double-tap), Scroll (3-finger).
+- Games are VoiceOver-on only (no preview mode).
+- VO off: gate with interstitial + Settings open (best-effort deep-link + fallback) + in-app steps.
+
+Scoring + Storage
+-----------------
+- Hub displays rank only (Perfect/Good/Ok/Failed).
+- Scoring model supports optional per-game metrics.
+- Persist best result per game.
+- StorageComponent abstraction; UserDefaults first; SwiftData later.
+
+Privacy + Telemetry
+-------------------
+- Offline-first, no tracking for MVP.
+- Future: modular opt-in GameKit possible.
+
+Localization
+------------
+- Later MVP.
+- Avoid hard-coded strings from day 1 (use String Catalogs / localized keys).

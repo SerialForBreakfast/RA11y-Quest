@@ -1,0 +1,27 @@
+RA11y - Accessibility Training Gamification
+
+This application seeks to train users on the various native Accessibility features for iOS, tvOS, and macOS using simple familiar games to familiarize users with specific native Apple accessibility tools.
+
+Context
+We will use a modern UI design for each platform using SwiftUI for all UI.  Design all elements as if you are an Apple Developer working on Native Apps.  
+The Architecture will be MVVM.
+There will be different games which require using accessibility features like Rotor action, Containers, VoiceOver, Dynamic type etc.
+Minimum deployments will target current - 1 version(year) back(for example the.  We must support version changes.
+Games will be developed using SpriteKit natively.
+Architecture should be modular.  For shared code, we should consider using shared local packages.
+We will have a unified logging system based on OSLog which has proper categorization of each features for easy filtering
+We will support modern Async Await system with proper error catching/handling
+We will use the new Swift Testing framework for testing our components.
+
+
+Phase 1 will be requirements gathering
+1 List all Accessibility features for each platform.
+2 Develop training games
+What games to include that best to leverage specific Accessibility tools? For example these could be a basic reference:
+Tic tac toe could be used for basic navigation(using gestures or Container navigation).
+Trivia with Rotor Actions to select answers
+Fogger style game to avoid collisions using 3 fingers swipe to scroll up/down, controlling frog motion
+3 Design
+	How to make each screen beautiful and native looking while being exhaustively Accessible
+3 What are the main components?  How should the architecture be broken down?  What should be shared?
+
