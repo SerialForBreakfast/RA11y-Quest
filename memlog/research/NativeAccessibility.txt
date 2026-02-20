@@ -1,0 +1,446 @@
+NativeAccessibility.txt
+Timestamp: 2026-02-19 (America/Los_Angeles)
+
+Scope and version targeting
+- This document focuses on Apple’s current major OS line (26.x) and the previous major line (18.x), per your targeting constraints.
+- Apple’s security releases page lists the latest versions as iOS/iPadOS 26.3, macOS 26.3, tvOS 26.3, and visionOS 26.3 (as of Feb 2026):
+  https://support.apple.com/en-us/100100
+
+How to read this document
+- “Feature” = an accessibility capability users can turn on in Settings (or during setup).
+- “Human interactions” = the primary physical / sensory interaction model (gestures, voice, switches, remote, keyboard, gaze + pinch, etc.).
+- “Controls” = the knobs users can adjust (speed, verbosity, scanning style, captions styling, etc.).
+- Each feature section includes Apple documentation links (Support and/or Developer Documentation).
+
+──────────────────────────────────────────────────────────────────────────────
+1) Accessibility architecture across Apple platforms (high-level)
+
+1.1 System-level design goals
+Apple’s accessibility stack is designed to:
+- Provide consistent, system-wide assistive technologies (AT): screen reading, magnification, alternative input, captions/transcription, etc.
+- Expose a common “semantic UI model” so AT can understand:
+  - What an element is (role / traits), what it says (label/value), and what it does (actions/hints).
+- Allow per-app customization while keeping system gestures/controls consistent.
+
+1.2 Two perspectives: user-facing vs developer-facing
+User-facing features (Settings → Accessibility) include:
+- Vision: VoiceOver, Zoom, display accommodations, text size, etc.
+- Hearing: captions, Live Captions, hearing devices, Sound Recognition, etc.
+- Mobility: Switch Control, AssistiveTouch, Voice Control, pointer control, etc.
+- Speech: Type to Speak / Live Speech, Personal Voice, Vocal Shortcuts, etc.
+- Cognitive: Guided Access, Assistive Access, focus/attention helpers, etc.
+
+Developer-facing responsibilities include:
+- Making UI elements discoverable and understandable:
+  - Provide labels, values, hints; correct traits/roles; logical order; actionable controls.
+- Ensuring custom controls work with AT:
+  - Support accessibility actions; avoid “images as buttons without labels”; ensure focus/navigation works.
+- Testing:
+  - Accessibility Inspector (Xcode) and platform-specific inspectors.
+
+Key Apple developer docs
+- UIAccessibility protocol (UIKit): https://developer.apple.com/documentation/uikit/uiaccessibility-protocol
+- Accessibility Inspector: https://developer.apple.com/documentation/accessibility/accessibility-inspector
+- SwiftUI accessibility modifiers (entry point): https://developer.apple.com/documentation/SwiftUI/View-Accessibility
+- Example SwiftUI hint API: https://developer.apple.com/documentation/swiftui/view/accessibility%28hint%3A%29
+
+──────────────────────────────────────────────────────────────────────────────
+2) iOS (iPhone) accessibility features
+
+Primary user entry points
+- Settings → Accessibility
+- Accessibility during setup: https://support.apple.com/guide/iphone/use-accessibility-features-during-setup-iph2f623a095/ios
+- “Get started” overview: https://support.apple.com/guide/iphone/get-started-with-accessibility-features-iph3e2e4367/ios
+
+2.1 Vision (screen reading, magnification, visual accommodations)
+Overview: https://support.apple.com/guide/iphone/overview-of-accessibility-features-for-vision-iph732dc028d/ios
+
+A) VoiceOver (screen reader)
+What it is:
+- Speaks what’s on screen; provides focus navigation; supports Braille displays; offers “rotor” navigation.
+
+Human interactions:
+- Touch exploration (drag finger to hear items)
+- “Select + activate” pattern:
+  - Single tap selects (focuses) an element; double-tap activates.
+- Rotor gesture:
+  - Two-finger “dial” rotation changes navigation granularity (headings, links, characters, etc.).
+- Multi-finger gestures for scroll, escape, etc.
+
+Controls users can adjust:
+- Voice, speaking rate, verbosity, audio ducking, rotor options, typing feedback, etc.
+
+Docs:
+- Turn on / practice: https://support.apple.com/guide/iphone/turn-on-and-practice-voiceover-iph3e2e415f/ios
+- Gestures: https://support.apple.com/guide/iphone/use-voiceover-gestures-iph3e2e2281/ios
+- Settings: https://support.apple.com/guide/iphone/change-your-voiceover-settings-iphfa3d32c50/ios
+- VoiceOver in apps + recognition: https://support.apple.com/guide/iphone/use-voiceover-in-apps-iphe4ee74be8/ios
+
+B) Zoom (screen magnification)
+What it is:
+- System-wide magnifier: full screen or window “lens” zoom.
+Human interactions:
+- Triple-tap / drag handles (varies by configuration).
+Controls:
+- Zoom region, maximum zoom level, follow focus, filter choices, etc.
+Docs:
+- Zoom overview article: https://support.apple.com/en-us/111779
+
+C) Display & Text accommodations (reduce visual strain / improve legibility)
+Typical capabilities (names may vary by OS build):
+- Larger text, bold text, increased contrast, reduce transparency, color filters, reduce white point,
+  smart invert, differentiate without color, button shapes, reduce motion, dim flashing lights.
+Where to start:
+- Vision overview (links onward): https://support.apple.com/guide/iphone/overview-of-accessibility-features-for-vision-iph732dc028d/ios
+
+D) Braille Access (Braille displays + Braille screen input workflows)
+What it is:
+- Work with refreshable Braille displays; in some modes, interact via Braille directly.
+Docs:
+- Braille Access with a braille display: https://support.apple.com/guide/iphone/use-braille-access-with-a-braille-display-iph5953d3c7a/ios
+
+2.2 Hearing (captions, audio alerts, hearing devices)
+Overview: https://support.apple.com/guide/iphone/overview-accessibility-features-hearing-iphb210be03a/ios
+
+A) Live Captions (on-device captions of spoken audio)
+What it is:
+- Captions for speech from apps/calls or nearby audio (depending on settings and context).
+Human interactions:
+- Toggle in Settings; captions appear as an overlay; users can resize/position in supported contexts.
+Controls:
+- Appearance (text size/style), whether to keep call captions, etc.
+Docs:
+- iPhone Live Captions: https://support.apple.com/guide/iphone/get-live-captions-of-spoken-audio-iphe0990f7bb/ios
+
+B) Subtitles & Closed Captions (CC/SDH styling)
+What it is:
+- System caption preferences used by media apps when captions are available.
+Docs:
+- (Entry point is in hearing overview above; per-app settings vary.)
+
+C) Hearing devices (Made for iPhone / compatible devices)
+Human interactions:
+- Pair via Bluetooth; quick access via Accessibility Shortcut / Control Center.
+Controls:
+- Connection status, microphone levels, streaming settings, etc.
+Docs:
+- Use hearing devices: https://support.apple.com/guide/iphone/use-hearing-devices-iph470b1833/ios
+
+D) Sound Recognition / Name Recognition
+What it is:
+- Detect doorbells, alarms, sirens, and optionally your name; alerts via notifications/haptics.
+Docs:
+- Hearing overview (jump links): https://support.apple.com/guide/iphone/overview-accessibility-features-hearing-iphb210be03a/ios
+
+2.3 Mobility (alternative input and interaction)
+Overview: https://support.apple.com/guide/iphone/overview-accessibility-features-mobility-iph76d37ce7d/ios
+
+A) Switch Control (scanning-based control with switches)
+What it is:
+- Navigate via scanning focus and activate actions with one or more switches.
+Human interactions:
+- External switch, screen taps, camera-based triggers, back tap, sound triggers, AirPods gestures, etc.
+Controls:
+- Scanning style/speed, recipes, switch sets, cursor style, actions menu.
+Docs:
+- Set up and turn on: https://support.apple.com/guide/iphone/set-up-and-turn-on-switch-control-iph400b2f114/ios
+- Select items / actions (includes Eye Tracking mode references where available): https://support.apple.com/guide/iphone/select-items-perform-actions-and-more-iph8de250c54/ios
+
+B) AssistiveTouch (gesture and hardware-button assistance)
+What it is:
+- On-screen menu / custom actions; can map custom gestures, shortcuts, and even sound actions.
+Human interactions:
+- Tap floating AssistiveTouch menu; use custom gesture triggers; sound actions.
+Controls:
+- Menu customization, single/double-tap actions, idle opacity, custom gestures, sound actions mapping.
+Docs:
+- AssistiveTouch: https://support.apple.com/guide/iphone/use-assistivetouch-iph96b21954/ios
+
+C) Voice Control (hands-free voice interaction)
+What it is:
+- Speak commands to tap items, perform gestures, dictate/edit text.
+Human interactions:
+- Spoken commands (“Tap <label>”, “Scroll down”, “Show numbers”, etc.).
+Controls:
+- Command sets, language, microphone behavior, vocabulary.
+Docs:
+- Voice Control commands: https://support.apple.com/guide/iphone/use-voice-control-iph2c21a3c88/ios
+
+2.4 Speech (communication aids)
+Overview: https://support.apple.com/guide/iphone/overview-of-accessibility-features-for-speech-iph8b6c223ac/ios
+
+A) Type to Speak / Live Speech (system speaks typed phrases)
+What it is:
+- A text-to-speech pathway optimized for communication; users can type and have the device speak.
+Controls:
+- Voices, favorite phrases, speaking rate, etc.
+Docs:
+- Start at the speech overview above (links onward).
+
+B) Personal Voice (create a synthetic voice that sounds like you)
+What it is:
+- Record prompts to create a personalized synthetic voice; can be used across devices (when enabled).
+Docs:
+- Record your Personal Voice: https://support.apple.com/guide/iphone/record-your-personal-voice-iph51936468d/ios
+
+C) Vocal Shortcuts (custom phrase triggers)
+What it is:
+- Speak a custom phrase to run a defined action (often integrated with system/Shortcuts).
+Docs:
+- Start at the speech overview above (links onward).
+
+2.5 Cognitive (focus/structure/simplified interaction)
+Overview: https://support.apple.com/guide/iphone/overview-of-cognitive-accessibility-features-iph0ede5b8d6/ios
+
+A) Guided Access (lock to one app + restrict input)
+What it is:
+- Temporarily restrict to one app; optionally disable areas of the screen and hardware buttons.
+Human interactions:
+- Start/stop via guided access shortcut; set session time limits.
+Controls:
+- Touch restriction regions, hardware button availability, keyboard control, time limits.
+Docs:
+- Guided Access: https://support.apple.com/guide/iphone/lock-iphone-to-one-app-iph7fad0d10/ios
+
+B) Assistive Access (simplified UI for specific users)
+What it is:
+- A streamlined experience for core tasks, intended for users who benefit from simplified flows.
+Docs:
+- Assistive Access guide entry: https://support.apple.com/guide/assistive-access-iphone/set-up-other-accessibility-features-devc2c575de5/ios
+
+──────────────────────────────────────────────────────────────────────────────
+3) tvOS (Apple TV 4K) accessibility features
+
+Primary entry points
+- Settings → Accessibility
+- “At a glance” overview: https://support.apple.com/guide/tv/accessibility-features-at-a-glance-atvbaeff85db/tvos
+
+3.1 Vision
+A) VoiceOver (screen reader for TV UI)
+What it is:
+- Speaks focused UI elements; supports Braille displays.
+Human interactions:
+- Siri Remote clickpad/touch surface navigation; rotor via two-finger rotation gesture on remote surface.
+Controls:
+- Voice, navigation style, rotor items, verbosity.
+Docs:
+- Use VoiceOver: https://support.apple.com/guide/tv/use-voiceover-atvbfa4ff6cd/tvos
+- Adjust settings: https://support.apple.com/guide/tv/adjust-voiceover-settings-atvbbcb628a8/tvos
+
+B) Zoom (screen magnification up to high levels)
+What it is:
+- Magnifies screen content; can follow focus as you navigate.
+Human interactions:
+- Remote gestures and clicks; zoom controller behaviors vary by OS.
+Docs:
+- Zoom: https://support.apple.com/guide/tv/use-zoom-to-magnify-atvb4dc7fb7e/tvos
+
+C) Hover Text (enlarge focused text)
+What it is:
+- Shows enlarged text for focused items (useful at typical TV viewing distances).
+Docs:
+- Hover Text is linked from Zoom page navigation: https://support.apple.com/guide/tv/use-zoom-to-magnify-atvb4dc7fb7e/tvos
+
+3.2 Hearing
+A) Closed captions + SDH
+Docs:
+- Captions/SDH: https://support.apple.com/guide/tv/turn-closed-captions-sdh-apple-tv-4k-atvb1d61ca06/tvos
+
+B) Audio Descriptions
+What it is:
+- Narration of visual content where available (movies/TV).
+Docs:
+- Audio Descriptions: https://support.apple.com/guide/tv/use-audio-descriptions-atvb372a82a4/tvos
+
+C) Live Captions in FaceTime (Apple TV)
+Docs:
+- FaceTime live captions: https://support.apple.com/guide/tv/turn-on-live-captions-in-facetime-atvb5bca1813/tvos
+
+3.3 Mobility
+A) Switch Control
+What it is:
+- Scanning-based control using switches; can adjust scanning and menu behaviors.
+Docs:
+- Adjust Switch Control settings: https://support.apple.com/guide/tv/adjust-switch-control-settings-atvb3478d78e/tvos
+
+3.4 Motion / flashing / comfort
+- Reduce Motion and dim flashing lights are included in the “at a glance” accessibility overview:
+  https://support.apple.com/guide/tv/accessibility-features-at-a-glance-atvbaeff85db/tvos
+
+──────────────────────────────────────────────────────────────────────────────
+4) macOS accessibility features
+
+Primary entry points
+- System Settings → Accessibility
+- “Get started” overview: https://support.apple.com/guide/mac-help/get-started-mh35884/mac
+- “Change Accessibility settings” hub: https://support.apple.com/guide/mac-help/change-accessibility-settings-mchlp1400/mac
+
+4.1 Vision
+A) VoiceOver (screen reader)
+What it is:
+- Speaks UI; navigated with keyboard, trackpad gestures, and Braille displays.
+Docs:
+- Vision features overview: https://support.apple.com/guide/mac-help/accessibility-features-for-vision-mchl67c83f41/mac
+
+B) Zoom (screen magnification)
+- Included in vision features overview above.
+
+C) Pointer visibility and display accommodations
+- Larger pointer, color filters, contrast, etc.
+- Start at the vision overview: https://support.apple.com/guide/mac-help/accessibility-features-for-vision-mchl67c83f41/mac
+
+4.2 Hearing
+A) Live Captions
+What it is:
+- On-device captions for spoken audio; styling controls and FaceTime options.
+Docs:
+- Live Captions settings: https://support.apple.com/guide/mac-help/change-live-captions-settings-accessibility-mchla0b36db8/mac
+
+B) Captions and audio descriptions
+- Captions and descriptions settings are accessible from the hub:
+  https://support.apple.com/guide/mac-help/change-accessibility-settings-mchlp1400/mac
+
+C) Hearing Devices + Headphone Accommodations
+Docs:
+- Hearing features overview: https://support.apple.com/guide/mac-help/accessibility-features-for-hearing-mchlb4f015b1/mac
+- Hearing Devices settings: https://support.apple.com/guide/mac-help/change-hearing-devices-settings-accessibility-mchl096a5035/mac
+- Use hearing devices: https://support.apple.com/guide/mac-help/use-hearing-devices-with-your-mac-mchle83953a5/mac
+- Headphone Accommodations: https://support.apple.com/guide/mac-help/use-headphone-accommodations-mchl8028e24e/mac
+- Audio settings (mono audio, background sounds, spatial audio head tracking): https://support.apple.com/guide/mac-help/change-audio-settings-for-accessibility-unac611/mac
+
+4.3 Mobility (alternative input)
+A) Voice Control
+What it is:
+- Control the desktop and apps with spoken commands; dictation and editing.
+Docs:
+- Get started: https://support.apple.com/guide/mac-help/get-started-with-voice-control-mchl1a04f324/mac
+- Settings: https://support.apple.com/guide/mac-help/change-voice-control-settings-spc002/mac
+
+B) Switch Control
+What it is:
+- Operate Mac with switches; scanning UI; custom actions.
+Docs:
+- Use Switch Control: https://support.apple.com/guide/mac-help/use-switch-control-mh43607/mac
+- Switch Control settings: https://support.apple.com/guide/mac-help/change-switch-control-settings-accessibility-mh43181/mac
+
+C) Pointer Control (Mouse Keys, head pointer, facial expressions, dwell)
+What it is:
+- Alternative cursor movement and click actions using keyboard, switches, head tracking, dwell.
+Docs:
+- Pointer Control settings: https://support.apple.com/guide/mac-help/change-pointer-control-settings-accessibility-unac899/mac
+- Head pointer: https://support.apple.com/guide/mac-help/use-head-pointer-mchlb2d4782b/mac
+- Dwell (via Accessibility Keyboard): https://support.apple.com/guide/mac-help/use-dwell-mchl437b47b0/mac
+
+4.4 Quick access / shortcuts
+- Add Accessibility Shortcuts to menu bar / Control Center:
+  https://support.apple.com/guide/mac-help/quickly-turn-accessibility-features-on-or-off-mchlp2975/mac
+
+──────────────────────────────────────────────────────────────────────────────
+5) visionOS (Apple Vision Pro) accessibility features
+
+Primary entry points
+- Settings → Accessibility
+- “Get started” overview: https://support.apple.com/guide/apple-vision-pro/get-started-with-accessibility-features-tan426c48bdc/visionos
+- Basic interaction model (hands/eyes/voice + Digital Crown): https://support.apple.com/guide/apple-vision-pro/basic-gestures-and-controls-tan1e2a29e00/visionos
+
+5.1 Vision
+A) VoiceOver (screen reader in spatial UI)
+Human interactions:
+- Hand gestures (pinches/double-pinches) + spatial focus model.
+- VoiceOver gesture “handedness” support.
+Controls:
+- Quick Settings invoked via gesture chord; verbosity, voice, rotor-like command sets.
+Docs:
+- Turn on and practice: https://support.apple.com/guide/apple-vision-pro/turn-on-and-practice-voiceover-tanae5174040/visionos
+- See all gestures/commands: https://support.apple.com/guide/apple-vision-pro/learn-voiceover-gestures-tanf5c9d873d/visionos
+- VoiceOver settings / Quick Settings: https://support.apple.com/guide/apple-vision-pro/change-your-voiceover-settings-tanb65d26bab/visionos
+
+B) Zoom (magnification in spatial windows)
+Human interactions:
+- Zoom controller window; keyboard shortcuts (Magic Keyboard) supported.
+Controls:
+- Region, border color, controller, keyboard shortcuts.
+Docs:
+- Zoom: https://support.apple.com/guide/apple-vision-pro/zoom-tan563db5e24/visionos
+
+5.2 Hearing
+A) Live Captions
+What it is:
+- Transcribes spoken audio in apps or nearby; transcription window can be resized/moved.
+Human interactions:
+- Toggle captions; tap microphone to caption nearby conversation.
+Docs:
+- Live Captions: https://support.apple.com/guide/apple-vision-pro/live-captions-tan0b3d5c0c9/visionos
+
+B) Subtitles & Captioning + Audio Descriptions
+Docs:
+- Subtitles and captions: https://support.apple.com/guide/apple-vision-pro/subtitles-and-captions-tan0201bdfb1/visionos
+- Audio descriptions: https://support.apple.com/guide/apple-vision-pro/hear-audio-descriptions-tan7daefbf61/visionos
+
+C) Hearing Devices
+Docs:
+- Use hearing devices: https://support.apple.com/guide/apple-vision-pro/use-hearing-devices-tan0654b02b7/visionos
+
+5.3 Mobility / Interaction
+A) Switch Control (item scanning and point scanning)
+What it is:
+- Select items in your view using scanning focus or crosshair scanning.
+Controls:
+- Scanning method, Scanner Menu actions (tap, drag, pinch), cursor behavior.
+Docs:
+- Set up: https://support.apple.com/guide/apple-vision-pro/set-up-switch-control-tanfddd1bb7c/visionos
+- Use Switch Control: https://support.apple.com/guide/apple-vision-pro/use-switch-control-tan1248f5483/visionos
+
+B) Dwell Control (eye-only interaction mode)
+What it is:
+- Perform actions by maintaining gaze on a control for a set dwell time.
+Docs:
+- Dwell Control: https://support.apple.com/guide/apple-vision-pro/perform-actions-with-your-eyes-tan0ba69a1f1/visionos
+
+C) Voice Control (voice-driven gestures and UI interaction)
+Docs:
+- Voice Control on visionOS: https://support.apple.com/guide/apple-vision-pro/perform-actions-with-your-voice-tan14d179ad1/visionos
+
+5.4 Quick access (Accessibility Shortcut)
+What it is:
+- Rapidly toggle selected accessibility features via a hardware shortcut.
+Docs:
+- Triple-click Digital Crown shortcut: https://support.apple.com/guide/apple-vision-pro/turn-features-accessibility-shortcut-tand0a8a65a4/visionos
+
+──────────────────────────────────────────────────────────────────────────────
+6) Practical developer mapping (what to implement so features work)
+
+6.1 Core semantic fields you should provide
+Across platforms, assistive technologies typically need:
+- Label: what the element is called (user-facing description).
+- Value: the current state/value (“75%”, “On”, “3 items selected”).
+- Hint: what happens when activated (“Double-tap to play”).
+- Traits/role: button, header, selected, adjustable, etc.
+- Actions: activate, increment/decrement, custom actions where relevant.
+
+UIKit entry point
+- UIAccessibility protocol: https://developer.apple.com/documentation/uikit/uiaccessibility-protocol
+- Example: accessibilityHint property doc: https://developer.apple.com/documentation/uikit/uiaccessibilityelement/accessibilityhint
+
+SwiftUI entry point
+- Accessibility modifiers overview: https://developer.apple.com/documentation/SwiftUI/View-Accessibility
+- Example hint modifier doc: https://developer.apple.com/documentation/swiftui/view/accessibility%28hint%3A%29
+
+6.2 Testing and auditing
+- Accessibility Inspector (Xcode): https://developer.apple.com/documentation/accessibility/accessibility-inspector
+- WWDC talk (older but still a useful mental model): https://developer.apple.com/videos/play/wwdc2019/257/
+
+6.3 Cross-platform input differences you must account for
+- iOS: touch + VoiceOver gestures + external keyboard/switches.
+- tvOS: remote focus engine + rotor controls on remote surface.
+- macOS: keyboard, pointer, trackpad, VoiceOver commands, head pointer/dwell.
+- visionOS: gaze + pinch, hand gestures, VoiceOver gesture sets, dwell control.
+
+──────────────────────────────────────────────────────────────────────────────
+7) Notes, gaps, and next steps
+- Apple’s Support “overview” pages are the best canonical, platform-specific feature lists; each overview page links to deeper per-feature pages.
+- Developer-facing docs are organized by frameworks (UIKit, SwiftUI, Accessibility APIs) and by tools (Accessibility Inspector).
+
+If you want the next iteration:
+- I can expand this into a per-feature matrix (Feature × Platform × Primary Input × Key settings knobs × Dev responsibilities).
+- Or: add an “App Implementation Checklist” section that maps each user-facing feature to concrete developer behaviors (labels/traits/order/actions, dynamic type, reduced motion handling, captions/audio descriptions metadata, etc.).
