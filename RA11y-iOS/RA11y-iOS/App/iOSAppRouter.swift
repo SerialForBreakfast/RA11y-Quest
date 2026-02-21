@@ -17,6 +17,11 @@ enum AppRoute: Hashable {
     /// Carries the `GameResult` so the view can display rank, time, and mistakes.
     /// Games in M5+ push this route on session completion.
     case gameResult(GameResult)
+
+    /// "VoiceOver required" interstitial shown when a user attempts to start a game
+    /// with VoiceOver disabled. Carries the intended `GameKind` so the interstitial
+    /// can offer the correct follow-up once the user enables VoiceOver.
+    case voiceOverInterstitial(kind: GameKind)
 }
 
 // MARK: - Router

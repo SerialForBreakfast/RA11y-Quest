@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-02-20) — M0 complete
+Current structure (as of 2026-02-20) — M2 complete
 ---
 
 .
@@ -24,35 +24,70 @@ Current structure (as of 2026-02-20) — M0 complete
 │   │   ├── Design
 │   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
 │   │   ├── Hub
-│   │   │   └── iOSHubView.swift            Placeholder hub (M3 will be full impl)
+│   │   │   └── iOSHubView.swift            HubViewModel integration; help affordance button
+│   │   ├── Results
+│   │   │   └── iOSGameResultView.swift     Shared game result screen
 │   │   ├── VoiceOver
-│   │   │   └── iOSVoiceOverHelpSheet.swift VoiceOver enable guide sheet
+│   │   │   ├── iOSLiveVoiceOverStateProvider.swift  UIAccessibility + NotificationCenter stream
+│   │   │   └── iOSVoiceOverHelpSheet.swift          VoiceOver enable guide sheet
+│   │   ├── VoiceOverRequired
+│   │   │   └── iOSVORequiredView.swift     VO off interstitial; Settings deep link + fallback
 │   │   ├── Localizable.xcstrings           String catalog (localization foundation)
 │   │   └── RA11y_iOSApp.swift              @main entry point -> iOSRootView
 │   ├── RA11y-iOS.xcodeproj
 │   │   └── project.pbxproj                Links RA11yCore; Swift 6; iOS 26.2
 │   ├── RA11y-iOSTests
-│   │   └── RA11y_iOSTests.swift            RouterTests (4 passing)
+│   │   └── RA11y_iOSTests.swift            RouterTests + VoiceOverGatingTests
 │   └── RA11y-iOSUITests
 │       ├── RA11y_iOSUITests.swift
 │       └── RA11y_iOSUITestsLaunchTests.swift
 ├── RA11y.xcworkspace
 │   └── contents.xcworkspacedata            Ties RA11y-iOS.xcodeproj + RA11yCore
-├── RA11yCore                               Shared Swift package (iOS 18+)
+├── RA11yCore                               Shared Swift package (iOS 18+ / macOS 15+)
 │   ├── Sources/RA11yCore
 │   │   ├── Design
 │   │   │   ├── RA11yFont.swift             Font.ra11y* Dynamic Type extensions
 │   │   │   └── RA11yTokens.swift           RA11ySpacing + RA11yRadius enums
+│   │   ├── GameCatalog
+│   │   │   └── GameDefinition.swift        GameKind + GameDefinition + GameCatalog
+│   │   ├── GameSession
+│   │   │   ├── GameSession.swift           Actor state machine (start/pause/resume/complete/abandon)
+│   │   │   ├── GameSessionCoordinator.swift  @Observable bridge: VO state → session lifecycle
+│   │   │   └── GameSessionState.swift      State enum + GameSessionError
+│   │   ├── Hub
+│   │   │   └── HubViewModel.swift          @Observable: showHelpAffordance driven by VO state
 │   │   ├── Logging
 │   │   │   └── RA11yLogger.swift           OSLog Logger namespace (5 categories)
-│   │   └── RA11yCore.swift                 Module doc header
+│   │   ├── Results
+│   │   │   └── GameResultPresenter.swift   Pure formatting for result display + a11y announcement
+│   │   ├── Scoring
+│   │   │   ├── GameRank.swift              Rank enum (Comparable, Codable, CaseIterable)
+│   │   │   ├── GameResult.swift            Result struct (Codable, Hashable, Equatable)
+│   │   │   └── RankThresholds.swift        Rank evaluation logic + per-game presets
+│   │   ├── Storage
+│   │   │   ├── StorageComponent.swift      Persistence protocol (async)
+│   │   │   └── UserDefaultsStorageComponent.swift  Actor impl; JSON encode/decode
+│   │   └── VoiceOver
+│   │       ├── GameStartDecision.swift     .proceed / .requireVoiceOver routing enum
+│   │       └── VoiceOverStateProvider.swift  Protocol + StubVoiceOverStateProvider
 │   ├── Tests/RA11yCoreTests
-│   └── Package.swift                       platforms: [.iOS(.v18)]
+│   │   ├── GameCatalogTests.swift
+│   │   ├── GameResultPresenterTests.swift
+│   │   ├── GameSessionCoordinatorTests.swift  VO-off mid-game → abandon; 9 tests
+│   │   ├── GameSessionTests.swift
+│   │   ├── HubViewModelTests.swift
+│   │   ├── RA11yCoreTests.swift            Index (comments only)
+│   │   ├── ScoringModelTests.swift
+│   │   ├── StorageTests.swift
+│   │   ├── TestHelpers.swift               InMemoryStorageComponent
+│   │   └── VoiceOverTests.swift
+│   └── Package.swift                       platforms: [.iOS(.v18), .macOS(.v15)]
 └── memlog
     ├── DirectoryTree.txt
     ├── requirements
     │   ├── Design/                         Design track tickets + assets (simon MVP)
-    │   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
+    │   ├── GameRules-MVP.txt               Full D&D-themed string spec + pedagogy framework
+│   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
     │   ├── Phase1-*.txt                    Phase 1 requirements, decisions, user stories
     │   ├── Phase2-Roadmap.txt
     │   ├── Phase3-TicketBreakdown.txt

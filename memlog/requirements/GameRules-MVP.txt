@@ -1,0 +1,1036 @@
+RA11y — MVP Game Rules
+Per-Screen Strings, Accessibility Labels, and Pedagogical Design
+
+Date: 2026-02-20 (revised)
+Scope: iOS MVP (VoiceOver required ON; no preview mode)
+Style: High-contrast, Dynamic Type friendly; no meaning conveyed by color alone.
+
+===========================================================================
+CONVENTIONS
+===========================================================================
+
+Localization
+------------
+- All user-visible strings must be localized (String Catalog: Localizable.xcstrings).
+- This document provides: localization keys and default English values.
+
+Accessibility Standards
+-----------------------
+- Every interactive element: accessibilityLabel (required), accessibilityHint (if it adds value).
+- Every non-interactive image: accessibilityHidden = true.
+- Reading order must be deterministic and linearizable.
+- No accessibility meaning conveyed by color alone.
+
+D&D Tone Guide
+--------------
+- The app speaks as the Dungeon Master (DM) — authoritative, brief, atmospheric.
+- Player is always addressed as "Adventurer" or "you" (second person).
+- Mistakes are not failures, they are "missteps" or "fumbles."
+- The DM never mocks. Failure is narrated with consequence, not shame.
+- Success language is earned: "Well done." / "Trial passed." / "The vault yields."
+
+===========================================================================
+PEDAGOGY FRAMEWORK — Three VoiceOver Paradigm Shifts
+===========================================================================
+
+RA11y teaches VoiceOver through three progressive games, each targeting one
+core paradigm shift that trips up new VoiceOver users.
+
+Game 1 — The Enchanter's Trial (Find & Focus)
+----------------------------------------------
+Paradigm shift: VoiceOver reads ONE element at a time.
+Users expect to see the whole screen at once. VoiceOver changes the model:
+swiping right moves focus to the next element. The screen is now linear.
+Teaching goal: Swipe to move focus. Listen to identify. Double-tap to act.
+
+Game 2 — The Rogue's Gauntlet (Activate / Double-Tap)
+------------------------------------------------------
+Paradigm shift: Tapping no longer activates.
+With VoiceOver on, a single tap on an element moves focus to it — it does
+NOT activate it. Double-tap (anywhere on screen) activates the focused element.
+This is the single most common source of confusion for new VoiceOver users.
+Teaching goal: Touch = examine (focus). Double-tap = invoke (activate).
+
+Game 3 — The Dungeon Descent (Scroll Hunt)
+-------------------------------------------
+Paradigm shift: Single-finger swipe no longer scrolls.
+VoiceOver "steals" the single-finger swipe for focus navigation. To scroll
+a page, the user must use three fingers. Users get stuck at the bottom of
+visible content with no knowledge of how to go deeper.
+Teaching goal: Three-finger swipe scrolls the page. Swipe to navigate, three-finger to descend.
+
+Level Progression (Shared Across All Games)
+--------------------------------------------
+Each game follows a 4-step arc:
+
+  L0 — Prologue (No timer)
+    The DM introduces the quest and the VoiceOver skill.
+    The player is TOLD what is different about VoiceOver before they try.
+    No challenge yet — just orientation and curiosity.
+
+  L1 — First Attempt (No timer)
+    Minimal complexity. One target. One or two decoys maximum.
+    The player performs the skill exactly once with no time pressure.
+    Mistakes allowed. Restart available. The goal is confidence.
+
+  L2 — Rising Challenge (Soft timer — optional, generous)
+    More elements. Similar-sounding or closely placed targets.
+    A soft timer introduces gentle urgency but with enough time to succeed.
+    Mistakes begin to count. The player is being assessed.
+
+  L3 — Timed Trial (Hard timer + progress bar)
+    Full complexity. Hard time limit. Failure occurs when time runs out.
+    The progress bar depletes visually. VoiceOver announces at thresholds.
+    This is the scored challenge. Rank is awarded here.
+
+===========================================================================
+SHARED STRINGS
+===========================================================================
+
+Rank Words
+----------
+These are the four ranks awarded at the Results screen.
+D&D-themed display names supplement (not replace) the code-level enum keys.
+
+KEY: rank.perfect          VALUE: Legendary
+KEY: rank.good             VALUE: Skilled
+KEY: rank.ok               VALUE: Novice
+KEY: rank.failed           VALUE: Defeated
+
+Shared Buttons
+--------------
+KEY: button.restart        VALUE: Try Again
+KEY: button.back           VALUE: Back to Tavern
+KEY: button.exit           VALUE: Abandon Quest
+
+Level Control Buttons
+---------------------
+KEY: level.button.start    VALUE: Begin Trial
+KEY: level.button.next     VALUE: Continue
+KEY: level.button.retry    VALUE: Try Again
+
+Level Screen Titles
+-------------------
+KEY: level.explain.title   VALUE: The Quest
+KEY: level.do_once.title   VALUE: First Attempt
+KEY: level.complex.title   VALUE: Rising Challenge
+KEY: level.timed.title     VALUE: Timed Trial
+
+Shared HUD
+----------
+KEY: hud.time              VALUE: Time Remaining
+KEY: hud.mistakes          VALUE: Missteps
+KEY: hud.depth             VALUE: Depth
+
+Shared Level Accessibility
+--------------------------
+After any level success:
+KEY: a11y.level.completed  VALUE: Level complete.
+
+After any wrong activation (mistake):
+KEY: a11y.level.mistake    VALUE: Misstep. Try again.
+
+===========================================================================
+TIMER UI — Shared (L2 Optional, L3 Required)
+===========================================================================
+
+Visual Design
+-------------
+- A horizontal progress bar that depletes left-to-right as time runs out.
+- Bar width shrinks as time passes — NOT purely color-coded (accessible).
+- At ≥50%: full-height bar.
+- At 25–49%: bar height reduces to 75% (subtle urgency cue).
+- At <25%: bar height reduces to 50%, animated pulse.
+- Text label below bar: "{N}s remaining" — NOT updated every second.
+- Text updates: every 10s, then every 5s in the final 15s, then every second
+  in the final 5s.
+
+This prevents the visual from flickering and VoiceOver from being overwhelmed.
+
+Localization Keys (Visual)
+--------------------------
+KEY: hud.timer.label            VALUE: Time Remaining
+KEY: hud.timer.format           VALUE: {seconds}s remaining
+
+VoiceOver Behavior
+------------------
+The timer group is a SINGLE accessibility element. It does NOT update
+continuously — doing so would interrupt the player's focus navigation.
+
+Update thresholds for VoiceOver announcement:
+  - At 75% elapsed    → KEY: a11y.timer.75pct   VALUE: Three-quarters of your time is gone.
+  - At 50% elapsed    → KEY: a11y.timer.50pct   VALUE: Half your time remains.
+  - At 25% elapsed    → KEY: a11y.timer.25pct   VALUE: A quarter of your time remains.
+  - At 10s remaining  → KEY: a11y.timer.10s     VALUE: Ten seconds.
+  - At 5s remaining   → announce every second:
+      KEY: a11y.timer.5s VALUE: Five.
+      KEY: a11y.timer.4s VALUE: Four.
+      KEY: a11y.timer.3s VALUE: Three.
+      KEY: a11y.timer.2s VALUE: Two.
+      KEY: a11y.timer.1s VALUE: One.
+
+Timer Group Accessibility Element
+-----------------------------------
+accessibilityLabel:
+  KEY: a11y.timer.group
+  VALUE: Time remaining. {seconds} seconds.
+
+accessibilityHint:
+  KEY: a11y.timer.group.hint
+  VALUE: Complete your objective before time runs out.
+
+Timeout Announcement (generic fallback)
+----------------------------------------
+KEY: a11y.timer.timeout VALUE: Time's up.
+
+Game-specific timeout announcements override this — see each game below.
+
+===========================================================================
+RESULTS SCREEN — Shared
+===========================================================================
+
+Title
+-----
+KEY: results.title VALUE: Trial Complete
+
+Rank Headline
+-------------
+KEY: results.rank.format VALUE: {rank}
+
+Time and Mistakes
+-----------------
+KEY: results.time.format     VALUE: Time: {time}
+KEY: results.mistakes.format VALUE: Missteps: {mistakes}
+
+Accessibility (Results container)
+----------------------------------
+accessibilityLabel:
+  KEY: a11y.results.summary
+  VALUE: {rank}. Time: {time}. Missteps: {mistakes}.
+
+accessibilityHint:
+  KEY: a11y.results.hint
+  VALUE: Double-tap Back to return to the hub. Double-tap Try Again to repeat the trial.
+
+Rank-specific congratulations (announced on results screen load)
+----------------------------------------------------------------
+KEY: a11y.results.legendary VALUE: Legendary. A flawless trial. The realm takes note.
+KEY: a11y.results.skilled   VALUE: Skilled. A strong showing. The Guild is pleased.
+KEY: a11y.results.novice    VALUE: Novice. You completed the trial. Keep training.
+KEY: a11y.results.defeated  VALUE: Defeated. The trial bested you. Try again.
+
+Buttons
+-------
+KEY: button.restart VALUE: Try Again
+KEY: button.back    VALUE: Back to Tavern
+
+
+
+======================================================================
+GAME 1: THE ENCHANTER'S TRIAL
+======================================================================
+
+Game ID: simon_find_focus
+VoiceOver Skill: Focus navigation (swipe left/right) + targeted activation (double-tap)
+
+Narrative Context
+-----------------
+In the Enchanter's tower, relics are arranged on a shelf. The Enchanter
+calls the name of one relic. The apprentice must navigate their awareness
+(VoiceOver focus) through the shelf — one relic at a time — until the
+named relic is reached, then invoke it (double-tap).
+
+Why this teaches the skill:
+  VoiceOver makes the screen LINEAR. You cannot see everything at once —
+  you hear one element at a time as you move focus. Swiping is the only
+  way to explore. This game makes that constraint the entire mechanic.
+
+
+----------------------------------------------------------------------
+Screen 0: The Enchanter's Trial — Prologue (L0)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: simon.explain.title
+VALUE: The Enchanter's Trial
+
+DM Narration
+------------
+KEY: simon.explain.narration
+VALUE: The Enchanter gestures to a row of relics. "I will name one. Touch your way through them — one at a time — until you hear it. Then invoke it."
+
+VoiceOver Lesson Card (displayed visually, read by VoiceOver as a group)
+-------------------------------------------------------------------------
+KEY: simon.explain.lesson.heading
+VALUE: How VoiceOver Works Here
+
+KEY: simon.explain.lesson.body
+VALUE: With VoiceOver on, the screen is read one element at a time. Swipe right to move to the next item. Swipe left to go back. When you hear the Enchanter's relic, double-tap to activate it.
+
+accessibilityLabel for the lesson card group:
+  KEY: simon.a11y.explain.lesson
+  VALUE: VoiceOver Lesson. With VoiceOver on, you navigate one element at a time. Swipe right to move forward, swipe left to move back. Double-tap to activate the element you hear.
+
+Gesture Reference (Small visual guide below the lesson card)
+-------------------------------------------------------------
+KEY: simon.explain.gesture.swipe   VALUE: Swipe right — next item
+KEY: simon.explain.gesture.back    VALUE: Swipe left — previous item
+KEY: simon.explain.gesture.tap     VALUE: Double-tap — invoke
+These icons are decorative; their labels are in-lined to the lesson card.
+
+Start Button
+------------
+KEY: level.button.start
+VALUE: Begin Trial
+accessibilityLabel: level.button.start
+accessibilityHint:
+  KEY: simon.explain.start.hint
+  VALUE: Begins your first practice attempt. No timer.
+
+
+----------------------------------------------------------------------
+Screen 1: The Enchanter's Trial — First Attempt (L1)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: simon.l1.title
+VALUE: First Attempt
+
+DM Prompt (announced on screen load, read once)
+-----------------------------------------------
+KEY: simon.l1.dm_prompt
+VALUE: The Enchanter names the relic. Find it.
+
+Target Call Card (reads the target name; updates each round)
+------------------------------------------------------------
+KEY: simon.l1.target.format
+VALUE: The Enchanter calls: {targetName}
+
+accessibilityLabel:
+  KEY: simon.a11y.l1.target
+  VALUE: The Enchanter calls: {targetName}. Navigate to it and double-tap to invoke it.
+
+accessibilityHint:
+  KEY: simon.a11y.l1.target.hint
+  VALUE: Swipe right to move through the relics. Double-tap when you hear the correct name.
+
+Relic Tokens (L1 set: 3 relics, 1 target, 2 decoys)
+-----------------------------------------------------
+Example tokens — specific selection is randomized per round:
+  KEY: simon.token.dragon_scale.label    VALUE: Dragon Scale
+  KEY: simon.token.iron_shard.label      VALUE: Iron Shard
+  KEY: simon.token.moonstone.label       VALUE: Moonstone
+  KEY: simon.token.ember_glass.label     VALUE: Ember Glass
+
+Every token accessibilityHint (shared):
+  KEY: simon.token.hint
+  VALUE: Double-tap to invoke this relic.
+
+HUD (mistake counter only — no timer in L1)
+-------------------------------------------
+KEY: simon.hud.mistakes.format
+VALUE: Missteps: {mistakes}
+accessibilityLabel:
+  KEY: simon.a11y.hud.l1
+  VALUE: Missteps: {mistakes}
+
+Inline Feedback (announced after each activation)
+-------------------------------------------------
+Correct:
+  KEY: simon.feedback.correct
+  VALUE: Correct. {targetName} invoked.
+Wrong:
+  KEY: simon.feedback.wrong
+  VALUE: That was {activatedName}. The Enchanter waits. Keep searching.
+
+Level Complete Announcement
+---------------------------
+KEY: simon.l1.complete
+VALUE: Trial passed. The Enchanter nods.
+
+
+----------------------------------------------------------------------
+Screen 2: The Enchanter's Trial — Rising Challenge (L2)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: simon.l2.title
+VALUE: Rising Challenge
+
+DM Narration (screen load)
+--------------------------
+KEY: simon.l2.dm_prompt
+VALUE: More relics crowd the shelf. Listen carefully — names are similar. The Enchanter's patience has limits.
+
+Relic Set (L2: 6 relics, intentionally similar-sounding names)
+--------------------------------------------------------------
+  KEY: simon.token.dragon_scale.label    VALUE: Dragon Scale
+  KEY: simon.token.dragon_claw.label     VALUE: Dragon Claw
+  KEY: simon.token.shadow_stone.label    VALUE: Shadow Stone
+  KEY: simon.token.sunstone.label        VALUE: Sunstone
+  KEY: simon.token.ember_glass.label     VALUE: Ember Glass
+  KEY: simon.token.frost_glass.label     VALUE: Frost Glass
+  KEY: simon.token.iron_shard.label      VALUE: Iron Shard
+  KEY: simon.token.moonstone.label       VALUE: Moonstone
+
+(6 selected per round. Target is always one of the above.)
+
+Target Call Card
+----------------
+KEY: simon.l2.target.format
+VALUE: The Enchanter calls: {targetName}
+
+accessibilityLabel:
+  KEY: simon.a11y.l2.target
+  VALUE: The Enchanter calls: {targetName}. Navigate carefully — names are similar.
+
+Soft Timer (L2 uses a generous timer — 45s — as a pacing guide only)
+---------------------------------------------------------------------
+Timer text: KEY: hud.timer.format   VALUE: {seconds}s remaining
+The timer HUD is visible but VoiceOver only announces at 50% and 25% elapsed.
+Timeout is a loss. VoiceOver announces at standard thresholds.
+
+Level Complete Announcement
+---------------------------
+KEY: simon.l2.complete
+VALUE: Trial passed. The relics grow quiet.
+
+
+----------------------------------------------------------------------
+Screen 3: The Enchanter's Trial — Timed Trial (L3)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: simon.l3.title
+VALUE: Timed Trial
+
+DM Narration (screen load — announced by VoiceOver before trial begins)
+-----------------------------------------------------------------------
+KEY: simon.l3.dm_prompt
+VALUE: The Enchanter grows impatient. Name a relic. Invoke it before the candles die.
+
+Relic Set (L3: 8 relics, all similar-sounding, randomized each round)
+----------------------------------------------------------------------
+Same token set as L2. All 8 used.
+
+Target Call Card
+----------------
+KEY: simon.l3.target.format
+VALUE: The Enchanter commands: {targetName}
+
+accessibilityLabel:
+  KEY: simon.a11y.l3.target
+  VALUE: The Enchanter commands: {targetName}. Act quickly.
+
+Timer (Hard limit: 20s)
+-----------------------
+Timer group accessibilityLabel:
+  KEY: simon.a11y.l3.timer
+  VALUE: Time remaining. {seconds} seconds. The candles burn.
+
+Timer threshold announcements (supplement shared timer phrases):
+  75% elapsed → KEY: simon.a11y.timer.75pct  VALUE: Three-quarters of your time is gone.
+  50% elapsed → KEY: simon.a11y.timer.50pct  VALUE: Half your time. The Enchanter watches.
+  25% elapsed → KEY: simon.a11y.timer.25pct  VALUE: The candles gutter.
+  Final 5s   → shared countdown (5, 4, 3, 2, 1)
+
+Timeout Announcement (replaces generic timeout)
+-----------------------------------------------
+KEY: simon.timeout
+VALUE: The candles die. The Enchanter withdraws the relic.
+
+Success Announcement
+--------------------
+KEY: simon.l3.success
+VALUE: {targetName} invoked in time. The Enchanter is satisfied.
+
+Scoring (reference GameSpec-FindAndFocus.txt)
+---------------------------------------------
+  Perfect:  mistakes == 0 AND timeSeconds <= 10
+  Skilled:  mistakes <= 1 AND timeSeconds <= 20
+  Novice:   success AND timeSeconds <= 45
+  Defeated: timeout at 45s OR mistakes >= 5
+
+
+----------------------------------------------------------------------
+Screen R: The Enchanter's Trial — Results
+----------------------------------------------------------------------
+
+(Uses shared Results screen strings above.)
+
+Game-specific results announcement (appended to shared summary):
+  Legendary: KEY: simon.results.legendary  VALUE: The Enchanter bows. A perfect invocation.
+  Skilled:   KEY: simon.results.skilled    VALUE: The Enchanter nods. A solid invocation.
+  Novice:    KEY: simon.results.novice     VALUE: The Enchanter sighs. You found it eventually.
+  Defeated:  KEY: simon.results.defeated   VALUE: The relic vanished. Return when you are ready.
+
+
+
+======================================================================
+GAME 2: THE ROGUE'S GAUNTLET
+======================================================================
+
+Game ID: bomb_defusal_wires
+VoiceOver Skill: Double-tap activation — understanding that touch ≠ action
+
+Narrative Context
+-----------------
+A rogue's greatest tool is precision: touch to sense, act to strike.
+In the Trap Room, magical seals line a locked door. Each seal is labeled.
+One seal must be severed. The wrong seal springs the trap.
+
+With VoiceOver, touching a seal reads it aloud — it does NOT activate it.
+Only a deliberate double-tap invokes the seal. This is the Rogue's advantage:
+examine first, then strike with intention.
+
+Why this teaches the skill:
+  This is the most common VoiceOver confusion: "I tapped it but nothing happened."
+  With VoiceOver, tapping once MOVES FOCUS (examines). Double-tapping ACTIVATES.
+  The trap theme makes "accidental activation" feel consequential and teaches
+  the player to be deliberate. Touch = sense. Double-tap = sever.
+
+
+----------------------------------------------------------------------
+Screen 0: The Rogue's Gauntlet — Prologue (L0)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: rogue.explain.title
+VALUE: The Rogue's Gauntlet
+
+DM Narration
+------------
+KEY: rogue.explain.narration
+VALUE: The Trap Room stands between you and the vault. The door is sealed by magical runes. One rune will open it. The others will spring the trap. Touch to sense. Double-tap to sever.
+
+VoiceOver Lesson Card
+---------------------
+KEY: rogue.explain.lesson.heading
+VALUE: The Rogue's Creed
+
+KEY: rogue.explain.lesson.body
+VALUE: With VoiceOver on, tapping an element reads it aloud — it does not activate it. To activate the element you have focused, double-tap anywhere on the screen. One touch to examine. Two taps to act. This is different from normal iOS.
+
+accessibilityLabel for the lesson card group:
+  KEY: rogue.a11y.explain.lesson
+  VALUE: VoiceOver Lesson. With VoiceOver on, tapping once reads an element — it does not activate it. To activate, double-tap anywhere on the screen after focusing the element. Touch to examine. Double-tap to sever.
+
+Gesture Reference
+-----------------
+KEY: rogue.explain.gesture.tap1    VALUE: One tap — read the seal (focus only)
+KEY: rogue.explain.gesture.tap2    VALUE: Double-tap — sever the seal (activate)
+KEY: rogue.explain.gesture.wrong   VALUE: Severing the wrong seal springs the trap
+
+Start Button
+------------
+KEY: level.button.start
+VALUE: Begin Trial
+accessibilityHint:
+  KEY: rogue.explain.start.hint
+  VALUE: Begins your first attempt in the Trap Room. No timer.
+
+
+----------------------------------------------------------------------
+Screen 1: The Rogue's Gauntlet — First Attempt (L1)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: rogue.l1.title
+VALUE: First Attempt
+
+DM Prompt (announced on screen load)
+-------------------------------------
+KEY: rogue.l1.dm_prompt
+VALUE: One seal stands before you. Touch to sense it. Double-tap to sever it.
+
+Objective Card
+--------------
+KEY: rogue.l1.objective.format
+VALUE: Sever the seal: {sealName}
+
+accessibilityLabel:
+  KEY: rogue.a11y.l1.objective
+  VALUE: Your objective: sever the {sealName} seal. Touch it to read it. Double-tap to sever.
+
+accessibilityHint:
+  KEY: rogue.a11y.l1.objective.hint
+  VALUE: Navigate to the seal and double-tap. Single tap only reads — it does not sever.
+
+Seals (L1: 1 correct seal, no decoys — confidence builder)
+-----------------------------------------------------------
+  KEY: rogue.seal.passage.label       VALUE: Seal of Passage
+  KEY: rogue.seal.hint                VALUE: Double-tap to sever this seal.
+
+Inline Feedback
+---------------
+Correct:
+  KEY: rogue.feedback.correct
+  VALUE: Seal severed. The door yields.
+Wrong (impossible in L1 with single seal — shown if UI is misused):
+  KEY: rogue.feedback.trap
+  VALUE: Trap sprung. Misstep recorded.
+
+Level Complete Announcement
+---------------------------
+KEY: rogue.l1.complete
+VALUE: First attempt passed. The Rogue's instinct awakens.
+
+
+----------------------------------------------------------------------
+Screen 2: The Rogue's Gauntlet — Rising Challenge (L2)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: rogue.l2.title
+VALUE: Rising Challenge
+
+DM Narration
+------------
+KEY: rogue.l2.dm_prompt
+VALUE: The door has four seals. One opens it. The others will spring the trap. Identify the correct seal before you sever.
+
+Seals (L2: 1 correct + 3 traps, distinct descriptive labels)
+-------------------------------------------------------------
+Correct seal (varies per round):
+  KEY: rogue.seal.passage.label      VALUE: Seal of Passage
+  KEY: rogue.seal.ward.label         VALUE: Warding Seal
+  KEY: rogue.seal.binding.label      VALUE: Binding Seal
+
+Trap seals (wrong activations = mistakes):
+  KEY: rogue.seal.spike.label        VALUE: Spike Trap Seal
+  KEY: rogue.seal.alarm.label        VALUE: Alarm Seal
+  KEY: rogue.seal.collapse.label     VALUE: Collapse Seal
+  KEY: rogue.seal.reveal.label       VALUE: Reveal Seal
+
+All seals share the same hint:
+  KEY: rogue.seal.hint               VALUE: Double-tap to sever this seal.
+
+Trap Activation Feedback (wrong seal double-tapped)
+----------------------------------------------------
+  KEY: rogue.feedback.trap
+  VALUE: Trap sprung. Misstep.
+
+Correct Activation Feedback
+----------------------------
+  KEY: rogue.feedback.correct
+  VALUE: Seal severed. The lock disengages.
+
+Soft Timer (L2: 40s — generous)
+--------------------------------
+Same timer rules as other L2 levels. VoiceOver announces at 50% and 25%.
+
+Level Complete Announcement
+---------------------------
+KEY: rogue.l2.complete
+VALUE: The door yields. The Rogue's precision holds.
+
+
+----------------------------------------------------------------------
+Screen 3: The Rogue's Gauntlet — Timed Trial (L3)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: rogue.l3.title
+VALUE: Timed Trial
+
+DM Narration
+------------
+KEY: rogue.l3.dm_prompt
+VALUE: Six seals. One passage. The trap room activates in seconds. Sever the correct seal before the mechanism locks.
+
+Seals (L3: 1 correct + 5 traps; subset randomly selected each round)
+---------------------------------------------------------------------
+Full pool — same keys as L2 plus:
+  KEY: rogue.seal.freeze.label       VALUE: Freeze Seal
+  KEY: rogue.seal.silence.label      VALUE: Silence Seal
+
+Timer (Hard limit: 20s)
+-----------------------
+Timer group accessibilityLabel:
+  KEY: rogue.a11y.l3.timer
+  VALUE: Time remaining. {seconds} seconds. The trap room charges.
+
+Timer threshold announcements:
+  75% elapsed → KEY: rogue.a11y.timer.75pct   VALUE: The mechanisms warm.
+  50% elapsed → KEY: rogue.a11y.timer.50pct   VALUE: Half your time. The floor shifts.
+  25% elapsed → KEY: rogue.a11y.timer.25pct   VALUE: The trap room is nearly ready.
+  Final 5s   → shared countdown (5, 4, 3, 2, 1)
+
+Timeout Announcement
+--------------------
+KEY: rogue.timeout
+VALUE: The trap room sealed. You were caught.
+
+Success Announcement
+--------------------
+KEY: rogue.l3.success
+VALUE: Seal severed. The door opens just in time.
+
+Scoring (reference GameSpec-ActivateDoubleTap.txt)
+---------------------------------------------------
+  Perfect:  mistakes == 0 AND timeSeconds <= 8
+  Skilled:  mistakes <= 1 AND timeSeconds <= 16
+  Novice:   success AND timeSeconds <= 40
+  Defeated: timeout at 40s OR mistakes >= 5
+
+
+----------------------------------------------------------------------
+Screen R: The Rogue's Gauntlet — Results
+----------------------------------------------------------------------
+
+(Uses shared Results screen strings.)
+
+Game-specific results announcements:
+  Legendary: KEY: rogue.results.legendary  VALUE: Flawless. No trap touched you. The Guild is impressed.
+  Skilled:   KEY: rogue.results.skilled    VALUE: Skilled hands. One misstep, but the door opened.
+  Novice:    KEY: rogue.results.novice     VALUE: The trap room tested you. You escaped — barely.
+  Defeated:  KEY: rogue.results.defeated   VALUE: The trap room claimed you. Study the seals and return.
+
+
+
+======================================================================
+GAME 3: THE DUNGEON DESCENT
+======================================================================
+
+Game ID: dungeon_scroll_hunt
+VoiceOver Skill: 3-finger scroll to reveal and reach offscreen content
+
+Narrative Context
+-----------------
+The dungeon's deepest chamber holds the relic. The dungeon is tall —
+deeper than any one screen. To descend, the adventurer uses three fingers
+to scroll. The dungeon rooms unfold one level at a time.
+
+Why this teaches the skill:
+  With VoiceOver active, swiping with one finger navigates between elements.
+  Scrolling the page requires THREE fingers. New users get stranded at the
+  last visible item with no idea how to go deeper. This dungeon makes
+  "three-finger scroll" the only path forward — teaching the gesture by
+  making it necessary.
+
+Note on detection:
+  We do not detect the exact scroll gesture. We observe the scroll outcome
+  (did content scroll?). Validate via scroll progress, then activation of
+  the target. See GameSpec-ScrollHunt.txt.
+
+
+----------------------------------------------------------------------
+Screen 0: The Dungeon Descent — Prologue (L0)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: dungeon.explain.title
+VALUE: The Dungeon Descent
+
+DM Narration
+------------
+KEY: dungeon.explain.narration
+VALUE: The relic lies deep in the dungeon — below what the eye can see. You must descend. But in this world, your single touch navigates, not scrolls. To go deeper, use three fingers.
+
+VoiceOver Lesson Card
+---------------------
+KEY: dungeon.explain.lesson.heading
+VALUE: Descending the Dungeon
+
+KEY: dungeon.explain.lesson.body
+VALUE: With VoiceOver on, swiping with one finger moves focus between items — it does NOT scroll the page. To scroll down and reveal deeper content, use three fingers and swipe up. To scroll back up, use three fingers and swipe down.
+
+accessibilityLabel for lesson card group:
+  KEY: dungeon.a11y.explain.lesson
+  VALUE: VoiceOver Lesson. With VoiceOver on, swiping moves between items, not the page. To scroll the page down, use three fingers and swipe up. Three fingers swipe down to scroll back up.
+
+Gesture Reference
+-----------------
+KEY: dungeon.explain.gesture.swipe1   VALUE: One-finger swipe — move between rooms (navigate)
+KEY: dungeon.explain.gesture.swipe3   VALUE: Three-finger swipe up — descend (scroll down)
+KEY: dungeon.explain.gesture.swipe3u  VALUE: Three-finger swipe down — ascend (scroll up)
+
+Scroll Practice Note
+--------------------
+KEY: dungeon.explain.practice_tip
+VALUE: Try three-finger scrolling before beginning. Practice here — it's safe.
+
+accessibilityHint (scroll practice area):
+  KEY: dungeon.a11y.explain.practice.hint
+  VALUE: Use three fingers to scroll and practice before your trial begins.
+
+Start Button
+------------
+KEY: level.button.start
+VALUE: Begin Descent
+accessibilityHint:
+  KEY: dungeon.explain.start.hint
+  VALUE: Begins your first descent. No timer.
+
+
+----------------------------------------------------------------------
+Screen 1: The Dungeon Descent — First Attempt (L1)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: dungeon.l1.title
+VALUE: First Attempt
+
+DM Prompt (announced on screen load)
+-------------------------------------
+KEY: dungeon.l1.dm_prompt
+VALUE: The dungeon has two levels. Descend to the second room.
+
+Objective Card
+--------------
+KEY: dungeon.l1.objective
+VALUE: Descend to: The Guard Room
+
+accessibilityLabel:
+  KEY: dungeon.a11y.l1.objective
+  VALUE: Objective: Descend to the Guard Room. Use three fingers to scroll.
+
+accessibilityHint:
+  KEY: dungeon.a11y.l1.objective.hint
+  VALUE: Swipe with three fingers to scroll the dungeon deeper.
+
+Depth HUD
+---------
+KEY: dungeon.hud.depth.format
+VALUE: Depth: {current} of {total}
+
+accessibilityLabel:
+  KEY: dungeon.a11y.hud.depth
+  VALUE: Depth: {current} of {total}.
+
+Dungeon Rooms (L1 — 4 rooms, 2 visible, 2 below fold)
+------------------------------------------------------
+Room items are list rows with descriptive labels. Each row is a discrete
+accessibility element. Non-target rooms are informational (not interactive).
+Target room is a button.
+
+Room labels (L1 set):
+  KEY: dungeon.room.entry_hall    VALUE: Entry Hall. Torchlit. Safe.
+  KEY: dungeon.room.guard_room    VALUE: Guard Room. Empty. The objective.     ← TARGET
+  (2 additional rooms below fold, reached by scrolling)
+
+Scroll Container Accessibility
+------------------------------
+accessibilityLabel:
+  KEY: dungeon.a11y.scroll.container
+  VALUE: Dungeon scroll list. Scroll to descend.
+
+accessibilityHint:
+  KEY: dungeon.a11y.scroll.container.hint
+  VALUE: Use three fingers to scroll and reveal deeper rooms.
+
+Target Room Accessibility (button)
+------------------------------------
+accessibilityLabel:
+  KEY: dungeon.room.target.label   VALUE: {roomName}. The objective.
+accessibilityHint:
+  KEY: dungeon.room.target.hint    VALUE: Double-tap to claim this room.
+
+Dungeon Log (announced when scroll threshold reached)
+------------------------------------------------------
+KEY: dungeon.log.descend   VALUE: You descend. The torch light dims.
+KEY: dungeon.log.found     VALUE: You find it.
+
+Level Complete Announcement
+---------------------------
+KEY: dungeon.l1.complete
+VALUE: First descent complete. The dungeon yields its first secret.
+
+
+----------------------------------------------------------------------
+Screen 2: The Dungeon Descent — Rising Challenge (L2)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: dungeon.l2.title
+VALUE: Rising Challenge
+
+DM Narration
+------------
+KEY: dungeon.l2.dm_prompt
+VALUE: The dungeon deepens. Eight rooms. The Relic Vault waits at the bottom. Some rooms will call to you — ignore them. Descend.
+
+Dungeon Rooms (L2 — 8 rooms, 3 visible, 5 below fold)
+------------------------------------------------------
+Non-interactive rooms (descriptive — read by VoiceOver, not tappable):
+  KEY: dungeon.room.entry_hall        VALUE: Entry Hall. Torchlit.
+  KEY: dungeon.room.guard_post        VALUE: Guard Post. Abandoned.
+  KEY: dungeon.room.armory            VALUE: Armory. Empty racks.
+  KEY: dungeon.room.well_chamber      VALUE: Well Chamber. The water is still.
+  KEY: dungeon.room.store_room        VALUE: Store Room. Dusty barrels.
+  KEY: dungeon.room.barracks          VALUE: Barracks. Cold hearths.
+  KEY: dungeon.room.trophy_room       VALUE: Trophy Room. Faded banners.
+
+Target room (interactive button):
+  KEY: dungeon.room.relic_vault       VALUE: Relic Vault. The objective.      ← TARGET
+
+Decoy interaction note:
+  Non-interactive rooms have no accessibilityTrait .button and no hint.
+  They can be focused, but double-tapping them does nothing (or gives a
+  "Nothing here" response to reinforce: not every element is interactive).
+
+  KEY: dungeon.feedback.non_target   VALUE: Nothing useful here. Keep descending.
+
+Soft Timer (L2: 60s — generous)
+--------------------------------
+Timer visible. VoiceOver announces at 50% and 25%.
+
+Level Complete Announcement
+---------------------------
+KEY: dungeon.l2.complete
+VALUE: Relic Vault reached. The vault glows faintly.
+
+
+----------------------------------------------------------------------
+Screen 3: The Dungeon Descent — Timed Trial (L3)
+----------------------------------------------------------------------
+
+Navigation Title
+----------------
+KEY: dungeon.l3.title
+VALUE: Timed Trial
+
+DM Narration
+------------
+KEY: dungeon.l3.dm_prompt
+VALUE: The dungeon seals at midnight. Twelve rooms deep. The Ancient Vault holds the relic. Descend and claim it before the gate falls.
+
+Dungeon Rooms (L3 — 12 rooms, 3 visible, 9 below fold)
+-------------------------------------------------------
+Extended room set (L2 rooms + additional):
+  KEY: dungeon.room.ritual_chamber    VALUE: Ritual Chamber. Symbols cover the walls.
+  KEY: dungeon.room.flooded_hall      VALUE: Flooded Hall. Knee-deep water.
+  KEY: dungeon.room.bone_room         VALUE: Bone Room. Don't look too closely.
+  KEY: dungeon.room.collapsed_wall    VALUE: Collapsed Wall. A gap you can pass.
+  KEY: dungeon.room.ancient_vault     VALUE: Ancient Vault. The relic glows.     ← TARGET (depth 10+)
+
+Timer (Hard limit: 45s)
+-----------------------
+Timer group accessibilityLabel:
+  KEY: dungeon.a11y.l3.timer
+  VALUE: Time remaining. {seconds} seconds. The gate descends.
+
+Timer threshold announcements:
+  75% elapsed → KEY: dungeon.a11y.timer.75pct  VALUE: Three-quarters of your time is gone. Keep descending.
+  50% elapsed → KEY: dungeon.a11y.timer.50pct  VALUE: Half your time. The torches begin to die.
+  25% elapsed → KEY: dungeon.a11y.timer.25pct  VALUE: The gate is nearly down. Move.
+  Final 5s   → shared countdown (5, 4, 3, 2, 1)
+
+Timeout Announcement
+--------------------
+KEY: dungeon.timeout
+VALUE: The gate fell. The relic is sealed below. Trial failed.
+
+Success Announcement
+--------------------
+KEY: dungeon.l3.success
+VALUE: Ancient Vault reached. The relic is yours. Trial passed.
+
+Scoring (reference GameSpec-ScrollHunt.txt)
+-------------------------------------------
+  Perfect:  mistakes == 0 AND timeSeconds <= 15
+  Skilled:  mistakes <= 1 AND timeSeconds <= 30
+  Novice:   success AND timeSeconds <= 60
+  Defeated: timeout at 60s OR mistakes >= 6
+
+
+----------------------------------------------------------------------
+Screen R: The Dungeon Descent — Results
+----------------------------------------------------------------------
+
+(Uses shared Results screen strings.)
+
+Game-specific results announcements:
+  Legendary: KEY: dungeon.results.legendary  VALUE: Legendary descent. No misstep. The dungeon bows.
+  Skilled:   KEY: dungeon.results.skilled    VALUE: Skilled explorer. The vault yielded to you.
+  Novice:    KEY: dungeon.results.novice     VALUE: You found the vault. The dungeon was not kind.
+  Defeated:  KEY: dungeon.results.defeated   VALUE: The dungeon sealed. Rest. Then try again.
+
+
+
+======================================================================
+VOICEOVER OFF GATE (Interstitial)
+======================================================================
+
+Context: Shown when a player attempts to start a game with VoiceOver disabled.
+
+Navigation Title
+----------------
+KEY: gate.title
+VALUE: VoiceOver Required
+
+DM Narration
+------------
+KEY: gate.body
+VALUE: These trials require VoiceOver. Without it, the game cannot be played as intended. Enable VoiceOver, then return to begin your quest.
+
+Note on timed challenges
+------------------------
+KEY: gate.note.timed
+VALUE: If VoiceOver is disabled mid-trial, the session will be abandoned. Timed challenges will fail if time runs out.
+
+Open Settings Button
+--------------------
+KEY: gate.button.open_settings
+VALUE: Open Accessibility Settings
+accessibilityLabel: gate.button.open_settings
+accessibilityHint:
+  KEY: gate.button.open_settings.hint
+  VALUE: Opens Settings to the Accessibility section so you can enable VoiceOver.
+
+How to Enable Button
+--------------------
+KEY: gate.button.how_to_enable
+VALUE: How to Enable VoiceOver
+accessibilityLabel: gate.button.how_to_enable
+accessibilityHint:
+  KEY: gate.button.how_to_enable.hint
+  VALUE: Shows step-by-step instructions for enabling VoiceOver on this device.
+
+
+----------------------------------------------------------------------
+Help Sheet: Enable VoiceOver
+----------------------------------------------------------------------
+
+Title
+-----
+KEY: help.title
+VALUE: Enable VoiceOver
+
+Steps
+-----
+KEY: help.steps.1  VALUE: Open the Settings app.
+KEY: help.steps.2  VALUE: Tap Accessibility.
+KEY: help.steps.3  VALUE: Tap VoiceOver.
+KEY: help.steps.4  VALUE: Toggle VoiceOver on.
+
+Tips
+----
+KEY: help.tip.siri
+VALUE: You can also ask Siri: "Turn on VoiceOver."
+
+KEY: help.tip.triple_click
+VALUE: If you set up Accessibility Shortcut, triple-click the side button to toggle VoiceOver.
+
+KEY: help.tip.scroll
+VALUE: Use three fingers to scroll through these steps.
+
+Accessibility (Help Sheet Scroll Container)
+-------------------------------------------
+accessibilityLabel:
+  KEY: help.a11y.scroll.label
+  VALUE: VoiceOver setup steps.
+accessibilityHint:
+  KEY: help.a11y.scroll.hint
+  VALUE: Use three fingers to scroll through the steps.

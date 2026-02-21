@@ -67,6 +67,11 @@
         }
       }
     },
+    "hub.helpAffordance" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to enable VoiceOver" } }
+      }
+    },
     "hub.navigationTitle" : {
       "localizations" : {
         "en" : {
@@ -105,6 +110,41 @@
             "value" : "VoiceOver Basics — coming in M4"
           }
         }
+      }
+    },
+    "voiceOverRequired.navigationTitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "VoiceOver Required" } }
+      }
+    },
+    "voiceOverRequired.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "VoiceOver is Required" } }
+      }
+    },
+    "voiceOverRequired.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This game trains VoiceOver skills and requires VoiceOver to be enabled. Enable it in Settings, then return to start the game." } }
+      }
+    },
+    "voiceOverRequired.openSettings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Accessibility Settings" } }
+      }
+    },
+    "voiceOverRequired.howToEnable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to Enable VoiceOver" } }
+      }
+    },
+    "voiceOverRequired.settingsFallback" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Go to Settings → Accessibility → VoiceOver and turn it on, then return here." } }
+      }
+    },
+    "voiceOverRequired.returnToHub" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Return to Hub" } }
       }
     },
     "result.navigationTitle" : {

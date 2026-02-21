@@ -3,4 +3,7 @@
 //   ScoringModelTests.swift
 //   StorageTests.swift
 //   GameSessionTests.swift
+//   GameSessionCoordinatorTests.swift
 //   GameResultPresenterTests.swift
+//   HubViewModelTests.swift
+//   VoiceOverTests.swift

@@ -332,22 +332,31 @@ Requirements
 ------------
 - Shared SwiftUI view used by all 3 games (not duplicated per game).
 - Displays: rank (text-first; badge/pill is visual decoration only), timeSeconds, mistakes.
+- Rank display values: Legendary / Skilled / Novice / Defeated (maps to Perfect/Good/Ok/Failed enum).
 - VoiceOver: result must be fully understandable via speech.
   - Rank must be announced as text, not only conveyed visually.
   - Metrics are announced in a logical order (rank, then time, then mistakes).
-- Actions: "Play Again", "Return to Hub".
+- Actions: "Try Again", "Back to Tavern" (was: Play Again / Return to Hub).
 - Dynamic Type: all text scales; layout adapts at largest sizes.
+- Game-specific result copy: the view accepts an optional game-specific announcement string
+  (provided by each game's result presenter) that is announced after the summary.
+  Falls back to the shared summary when not provided.
+  Example: "The Enchanter bows. A perfect invocation." (Game 1, Legendary)
+  See GameRules-MVP.txt for per-game result announcement strings.
 
 Acceptance Criteria
 -------------------
 - All 3 games route to this view on completion.
 - With VoiceOver enabled, rank + metrics are all announced correctly.
-- "Play Again" restarts the same game; "Return to Hub" navigates back.
+- "Try Again" restarts the same game; "Back to Tavern" navigates back.
+- Game-specific announcement is announced after the shared summary when provided.
 
 Useful Unit Test
 ----------------
 - Given a Result with rank Perfect, 0 mistakes, 8.5s, the view model produces
   the correct accessibility announcement string (rank first, then metrics).
+- Given a game-specific announcement string, the combined announcement includes
+  both the shared summary and the game-specific string.
 
 Dependencies
 ------------
@@ -460,7 +469,7 @@ Dependencies
 
 
 ===============================
-TICKET-M2-VOStateChangeMidGame [NEW]
+TICKET-M2-VOStateChangeMidGame [COMPLETE]
 ===============================
 Ticket: M2 - VoiceOver Disabled Mid-Gameplay
 
@@ -585,92 +594,169 @@ TRACK: Games
 
 
 ===============================
-TICKET-M5-Game-SimonSays-FindAndFocus
+TICKET-M5-Game-EnchantersTrial-FindAndFocus
 ===============================
-Ticket: M5 - Game 1 (Simon Says) - Find & Focus
+Ticket: M5 - Game 1 (The Enchanter's Trial) - Find & Focus
+[RENAMED from M5-Game-SimonSays-FindAndFocus to align with GameRules-MVP.txt theme]
 
 User Story
 ----------
 As a user
-I want a Simon Says-style drill that trains focus navigation and correct activation
-So that I can reliably select the intended element with VoiceOver.
+I want a relic-finding drill that trains VoiceOver focus navigation and activation
+So that I can reliably swipe to an element and invoke it with VoiceOver.
+
+VoiceOver Concept Taught
+-------------------------
+"The screen is linear with VoiceOver — swipe to move, listen to identify, double-tap to act."
+This is explicitly taught in L0 before any challenge begins.
 
 Theme / Narrative
 -----------------
-- Simon Says training drill inside the Training Academy.
+- The Enchanter's Tower. Magical relics on a shelf. The Enchanter calls a name.
+  The player navigates to the named relic and invokes it.
+- See GameSpec-FindAndFocus.txt for full narrative and relic pool.
 
 Requirements
 ------------
 - SwiftUI-first implementation.
-- Present a small set of controls: 1 target + multiple decoys.
-- Prompt: "Simon says: activate <target>."
-- Success: target control's activation handler is invoked.
+- 4-level structure (L0 Prologue, L1 First Attempt, L2 Rising Challenge, L3 Timed Trial).
+
+  L0 — Prologue:
+  - DM narration card ("The Enchanter's Tower" context).
+  - VoiceOver Lesson Card with heading "How VoiceOver Works Here" and explicit
+    explanation of the linear navigation paradigm. See GameRules-MVP.txt for exact copy.
+  - Gesture reference: swipe right, swipe left, double-tap.
+  - "Begin Trial" button (no timer starts until L1).
+
+  L1 — First Attempt:
+  - 3 relics: 1 target + 2 decoys. Names are distinct (no close matches).
+  - Enchanter's prompt card reads the target name aloud on screen load.
+  - No timer. Mistakes allowed but counted.
+
+  L2 — Rising Challenge:
+  - 6 relics: includes at least one similar-sounding pair (e.g., Dragon Scale vs Dragon Claw).
+  - Soft timer: 45s. VoiceOver announces at 50% and 25% elapsed.
+
+  L3 — Timed Trial:
+  - 8 relics, all from the similar-sounding pool.
+  - Hard timer: 20s. VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5s countdown.
+  - Thematic timeout: "The candles die. The Enchanter withdraws the relic."
+  - Thematic success: "{targetName} invoked in time. The Enchanter is satisfied."
+
+- Relic tokens: see GameSpec-FindAndFocus.txt for full relic pool.
+- Prompt format: "The Enchanter calls: {targetName}" (not "Simon says").
 - Session managed via GameSessionLifecycle (start, mistake, complete/abandon).
-- Mistakes: wrong activation of a decoy, time-based mistake buckets (per GameSpec-FindAndFocus).
-- Optional hint button does not affect scoring.
-- On completion: route to SharedGameResultView with computed rank + metrics.
+- Mistakes: wrong relic activation (+1), time-based mistake buckets (bucket: 10s).
+- Optional hint button: "The Enchanter whispers: the target is {name}." No scoring penalty.
+- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
+  Game-specific copy: "The Enchanter bows. A perfect invocation." (Legendary), etc.
 - Persist best result via StorageComponent.
+- GameSessionCoordinator monitors VoiceOver state; VO disabled mid-session → abandon.
 
 Acceptance Criteria
 -------------------
-- With VoiceOver ON, the game can be completed reliably.
-- Wrong activation increments the mistake count in the session.
-- Timeout transitions session to abandoned (not completed).
-- Result persists and best result updates when improved.
+- L0 lesson card is shown before any challenge. Player cannot bypass it.
+- With VoiceOver ON, all 4 levels are completable by swipe navigation alone.
+- Wrong relic activation increments the mistake count.
+- Timeout transitions session to abandoned (not completed); no result written.
+- Timer announces at all required thresholds (see GameRules-MVP.txt timer spec).
+- Thematic timeout/success strings are announced by VoiceOver.
+- Result persists; best result updates when improved.
 
 Useful Unit Test
 ----------------
-- Given (timeSeconds: 9, mistakes: 0), rank evaluates to Perfect for this game's thresholds.
-- Given (timeSeconds: 46, mistakes: 0), rank evaluates to Failed (timeout exceeded).
+- Given (timeSeconds: 9, mistakes: 0), rank evaluates to Legendary for this game's thresholds.
+- Given (timeSeconds: 46, mistakes: 0), rank evaluates to Defeated (timeout exceeded).
 
 Dependencies
 ------------
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
+- Design track: enchanter relic assets must land before this ticket opens.
 
 
 ===============================
-TICKET-M6-Game-BombDefusal-Activate [FIXED]
+TICKET-M6-Game-RoguesGauntlet-Activate
 ===============================
-Ticket: M6 - Game 2 (Bomb Defusal) - Activate
+Ticket: M6 - Game 2 (The Rogue's Gauntlet) - Activate / Double-Tap
+[RENAMED and REVISED from M6-Game-BombDefusal-Activate to align with GameRules-MVP.txt theme]
 
 User Story
 ----------
 As a user
-I want a bomb-defusal simulation that trains focusing the correct element and activating it
-So that I can build confidence using double-tap activation with VoiceOver.
+I want a seal-severing challenge that explicitly teaches double-tap activation in VoiceOver
+So that I understand that single tap examines, and double-tap invokes — and I can use this reliably.
+
+VoiceOver Concept Taught
+-------------------------
+"With VoiceOver on, tapping once reads an element — it does NOT activate it. Double-tap to act."
+This is the single most common VoiceOver confusion. L0 must make this explicit.
 
 Theme / Narrative
 -----------------
-- Bomb Defusal simulation exercise (safe, stylized training device) in the Training Academy.
+- The Trap Room. Magical seals on a locked door. One seal unlocks the door; others spring traps.
+- "Touch to sense. Double-tap to sever."
+- See GameSpec-ActivateDoubleTap.txt for full narrative and seal pool.
 
 Requirements
 ------------
 - SwiftUI-first implementation.
-- Present multiple similar controls (wires/modules), one is the correct objective.
-- Prompt: "Disarm: cut the <wire/module>."
-- Success: correct control's activation handler is invoked.
-- Session managed via GameSessionLifecycle.
-- Mistakes: wrong activation, time-based mistake buckets (per GameSpec-ActivateDoubleTap).
-- Optional hint button does not affect scoring.
-- On completion: route to SharedGameResultView.
-- Persist best result.
+- 4-level structure (L0 Prologue, L1 First Attempt, L2 Rising Challenge, L3 Timed Trial).
+
+  L0 — Prologue:
+  - DM narration card ("The Trap Room" context).
+  - VoiceOver Lesson Card with heading "The Rogue's Creed" and explicit explanation:
+    "Tapping once reads the element — it does not activate it. Double-tap to activate."
+    Contrast clearly: "This is different from normal iOS."
+  - Gesture reference: one tap (examine/focus only), double-tap (sever/activate).
+  - "Begin Trial" button.
+
+  L1 — First Attempt (confidence builder):
+  - 1 seal only (Seal of Passage). No trap seals.
+  - Purpose: isolate the double-tap mechanic with no ambiguity about which seal to pick.
+  - "Touch it to hear it speak. Double-tap to sever it."
+
+  L2 — Rising Challenge:
+  - 4 seals: 1 passage seal + 3 trap seals with distinct descriptive names.
+  - Wrong activation = trap springs = misstep.
+  - Soft timer: 40s. VoiceOver announces at 50% and 25% elapsed.
+
+  L3 — Timed Trial:
+  - 6 seals: 1 passage seal + 5 trap seals.
+  - Hard timer: 20s. VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5s countdown.
+  - Thematic timeout: "The trap room sealed. You were caught."
+  - Thematic success: "Seal severed. The door opens just in time."
+
+- Seal names: see GameSpec-ActivateDoubleTap.txt for full seal pool (passage + trap seals).
+- Prompt format: "Sever the seal: {sealName}" (not "Disarm: cut the <wire>").
+- Elements are "seals" (not wires). Distinct descriptive labels; no color-only differentiation.
+- Session managed via GameSessionLifecycle (start, mistake, complete/abandon).
+- Mistakes: wrong seal activation (+1), time-based mistake buckets (bucket: 8s).
+- Optional hint: "The Enchanter reminds you: double-tap to sever." No scoring penalty.
+- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
+  Game-specific copy: "Flawless. No trap touched you." (Legendary), etc.
+- Persist best result via StorageComponent.
+- GameSessionCoordinator monitors VoiceOver state; VO disabled mid-session → abandon.
 
 Acceptance Criteria
 -------------------
-- Correct activation required to pass.
-- Wrong activation increments mistakes.
+- L0 lesson card explicitly teaches the touch ≠ activate paradigm.
+- L1 has exactly one seal; no wrong activation possible.
+- With VoiceOver ON, all levels are completable.
+- Trap seal activation increments mistakes; passage seal activation succeeds.
+- Timeout transitions to abandoned; no result written.
+- Timer announces at all required thresholds.
 - Result persists; best score updates correctly.
 
 Useful Unit Test
 ----------------
-- Given two results with equal rank, the result with fewer mistakes is selected as best
-  by the comparison function.
+- Given (timeSeconds: 7, mistakes: 0), rank evaluates to Legendary for this game's thresholds.
+- Given two results with equal rank, the result with fewer mistakes is selected as best.
 
 Dependencies
 ------------
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
 - Can be built in parallel with M5 once shared infrastructure (M0/M1/M2) is complete.
-  [FIXED: was "M5 optional; can be parallel" which was ambiguous]
+- Design track: rogue seal assets must land before this ticket opens.
 
 
 ===============================
@@ -717,52 +803,93 @@ Dependencies
 
 
 ===============================
-TICKET-M7-Game-DungeonCrawl-ScrollHunt [FIXED]
+TICKET-M7-Game-DungeonDescent-ScrollHunt
 ===============================
-Ticket: M7 - Game 3 (Dungeon Crawl) - Scroll Hunt
+Ticket: M7 - Game 3 (The Dungeon Descent) - Scroll Hunt
+[RENAMED from M7-Game-DungeonCrawl-ScrollHunt to align with GameRules-MVP.txt theme]
 
 User Story
 ----------
 As a user
-I want a dungeon-crawl simulation that trains scrolling to reveal hidden content
-So that I can reliably access offscreen items with VoiceOver.
+I want a dungeon-descent challenge that trains three-finger scrolling with VoiceOver
+So that I can reliably scroll to reveal and reach offscreen content.
+
+VoiceOver Concept Taught
+-------------------------
+"Single-finger swipe navigates elements — it does NOT scroll the page. Use three fingers to scroll."
+This is explicitly taught in L0, with a practice scroll area before the first challenge.
 
 Theme / Narrative
 -----------------
-- Dungeon Crawl simulator: scroll deeper into the training dungeon to find the objective.
+- The Dungeon Descent. Vertical dungeon chambers. The relic lies below the visible screen.
+  Three-finger scroll to descend. Each room read by VoiceOver as focus moves to it.
+- See GameSpec-ScrollHunt.txt for full room list and narrative.
 
 Requirements
 ------------
 - SwiftUI-first implementation using the approach validated in S1 Spike.
-- ScrollView with content longer than the viewport.
-- Target objective exists below the fold; cannot be activated until scroll reveals it.
-- We do not detect the exact gesture; we validate the scroll outcome (progress / visibility).
-- No "Jump to target" UI element. Success requires scroll progress AND target activation.
+- 4-level structure (L0 Prologue, L1 First Attempt, L2 Rising Challenge, L3 Timed Trial).
+
+  L0 — Prologue:
+  - DM narration card ("The Dungeon Descent" context).
+  - VoiceOver Lesson Card with heading "Descending the Dungeon" and explicit explanation:
+    "Swiping moves between items — not the page. Use three fingers to scroll."
+  - Gesture reference: 1-finger swipe (items), 3-finger swipe up (scroll down), 3-finger swipe down (scroll up).
+  - Practice scroll area: labeled scrollable zone where player practices 3-finger scroll
+    before attempting L1. This zone must be present and accessible before "Begin Descent" appears.
+  - "Begin Descent" button.
+
+  L1 — First Attempt (no timer):
+  - 4 rooms: 2 visible, 2 below fold. Target: Guard Room (depth 2).
+  - Single scroll + activation to succeed.
+  - Non-interactive rooms give "Nothing useful here. Keep descending." on double-tap.
+
+  L2 — Rising Challenge (soft timer: 60s):
+  - 8 rooms: 3 visible, 5 below fold. Target: Relic Vault (near bottom).
+  - Non-interactive rooms give feedback on double-tap.
+  - VoiceOver announces at 50% and 25% elapsed.
+
+  L3 — Timed Trial (hard timer: 45s):
+  - 12 rooms: 3 visible, 9 below fold. Target: Ancient Vault (depth 10+).
+  - Hard timer. VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5s countdown.
+  - Thematic timeout: "The gate fell. The relic is sealed below. Trial failed."
+  - Thematic success: "Ancient Vault reached. The relic is yours. Trial passed."
+
+- Room list: see GameSpec-ScrollHunt.txt for full room pool with accessibility labels.
+- Non-interactive rooms: no button trait; double-tap gives "Nothing useful here" feedback.
+- Target rooms: button trait; accessibilityHint "Double-tap to claim this room."
+- No "Jump to target" UI. Success requires scroll progress AND target activation.
+- We do not detect the exact gesture; we validate scroll outcome (progress / visibility).
 - Session managed via GameSessionLifecycle.
-- Mistakes: wrong activation of decoys, time-based mistake buckets,
-  optional wrong-direction scroll penalty only if reliably measurable
-  (per GameSpec-ScrollHunt + S1 findings).
-- Optional hint button does not affect scoring.
-- On completion: route to SharedGameResultView.
-- Persist best result.
+- Mistakes: non-target activation (+1), time-based mistake buckets (bucket: 15s).
+  Optional wrong-direction scroll penalty only if S1 Spike confirms reliable detection.
+- Optional hint button: "Use three fingers to scroll downward." No scoring penalty.
+- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
+  Game-specific copy: "Legendary descent. No misstep. The dungeon bows." (Legendary), etc.
+- Persist best result via StorageComponent.
+- GameSessionCoordinator monitors VoiceOver state; VO disabled mid-session → abandon.
 
 Acceptance Criteria
 -------------------
+- L0 practice scroll area is present and usable before L1 begins.
+- L0 lesson card explicitly teaches the 3-finger scroll paradigm.
 - User must scroll to reach the target; target is not activatable until reachable.
-- Anti-cheat: no affordance allows bypassing the scroll requirement.
+- Non-target room double-tap gives feedback but does not record success.
+- Anti-cheat: no affordance allows bypassing scroll.
+- Timer announces at all required thresholds.
 - Result persists; best score updates correctly.
 
 Useful Unit Test
 ----------------
-- Rank evaluation for Dungeon Crawl uses the correct per-game thresholds
-  (e.g., Perfect: 0 mistakes AND time <= 15s).
-- Scroll progress mapping function: given a mocked scroll offset sequence,
-  "targetVisible" becomes true only at the expected threshold.
+- Rank evaluation: given (mistakes: 0, timeSeconds: 14), evaluates to Legendary.
+- Scroll progress mapping: given a mocked scroll offset sequence,
+  "targetIsReachable" becomes true only at the expected threshold.
 
 Dependencies
 ------------
-- S1 Spike (must be closed before this ticket opens) [FIXED: was mislabeled "M7 Spike"]
+- S1 Spike (must be closed before this ticket opens)
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
+- Design track: dungeon room assets must land before this ticket opens.
 
 
 ================================================================================
@@ -792,10 +919,19 @@ Requirements
   - Deterministic reading order
   - Correct labels and hints on all interactive controls
   - Decorative imagery marked as decorative
-  - Rank + metrics announced correctly via speech (from SharedGameResultView)
+  - Rank + metrics announced correctly via speech (from SharedGameResultScreen)
+  - Game-specific result announcements are spoken after the shared summary
+- Verify timer threshold announcements fire at the correct points in L2/L3:
+  - 75%, 50%, 25% elapsed; 10s remaining; 5-4-3-2-1 countdown.
+  - Timer does NOT announce continuously (VoiceOver spam check).
 - Verify iPhone + iPad, portrait and landscape in full-screen.
 - Verify game session stops cleanly on full-screen exit (via GameSessionLifecycle abandoned state).
-- Copy pass: instructional copy is clear, concise, consistent.
+- D&D tone pass: all in-game copy matches the DM voice tone from GameRules-MVP.txt.
+  - Prompt format: "The Enchanter calls: {targetName}" / "Sever the seal: {sealName}" / etc.
+  - Rank names displayed: Legendary / Skilled / Novice / Defeated.
+  - Timeout/success strings are game-specific (not generic "Time's up").
+- Copy pass: instructional copy in L0 lesson cards is clear, pedagogically correct,
+  and matches exact text in GameRules-MVP.txt.
 - Visual polish pass: native look, consistent use of design tokens.
 
 Acceptance Criteria

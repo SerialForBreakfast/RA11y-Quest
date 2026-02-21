@@ -1,87 +1,218 @@
 RA11y - Accessibility Training Gamification
-Game Spec - Scroll Hunt (SwiftUI)
+Game Spec - The Dungeon Descent (Scroll Hunt)
 
-Date: 2026-02-20
-MVP Skill: 3-finger scroll outcome (scroll to reveal offscreen content) + activation
+Date: 2026-02-20 (revised to align with GameRules-MVP.txt)
+Game ID: dungeon_scroll_hunt
+MVP Skill: 3-finger scroll to reveal and reach offscreen content; activate target once visible
 
-Player Goal
-===========
-Scroll until a hidden target becomes reachable/visible, then activate it.
+VoiceOver Paradigm Shift Taught
+================================
+"Single-finger swipe navigates elements — it does not scroll the page."
+With VoiceOver active, the single-finger swipe that normally scrolls a page is
+repurposed for focus navigation (moving between elements). To actually scroll,
+the user must use THREE fingers.
 
-Player Instructions (VoiceOver)
-===============================
-- “Use three fingers to scroll down until you find the hidden item. Then double-tap it.”
-Note: We do not detect the exact gesture; we validate the scroll outcome.
+This is one of the most common support questions from new VoiceOver users:
+"I got to the bottom of the list and couldn't go further."
+The dungeon makes three-finger scrolling the only way to reach the objective.
+The mechanic IS the lesson.
 
 Theme / Narrative
 =================
-- "Dungeon Crawl" simulator: scroll deeper into the training dungeon to find the objective (Training Academy).
+A dungeon with many chambers stacked vertically. The relic lies in a lower chamber
+beyond what the screen can show. The player must descend by scrolling with three
+fingers. Each room is encountered in sequence. Non-target rooms can be examined
+(VoiceOver reads them) but are not interactive. The target room is a button.
+
+The DM speaks in all narrative prompts. The player is always "you."
+
+Player Goal
+===========
+Use three-finger scroll to descend through dungeon rooms until the target room is
+reachable, then double-tap to claim it.
+
+Player Instructions (L0 Lesson Card — exact copy in GameRules-MVP.txt)
+=======================================================================
+"With VoiceOver on, swiping moves between items, not the page. To scroll the page
+down, use three fingers and swipe up. Three fingers swipe down to scroll back up."
+
+L0 Includes a Practice Scroll Area
+  A safe, labeled scrollable zone appears in L0 so players can practice the 3-finger
+  scroll before their first challenge. This must not be skippable — if the player
+  cannot 3-finger scroll, they cannot proceed. The "Begin Descent" button appears
+  below the practice area and requires (at minimum) that L0 was shown.
+
+Level Structure
+===============
+L0 — Prologue (no timer)
+  DM narrates the dungeon. Lesson card explains the paradigm shift.
+  Gestures shown: 1-finger swipe (navigates items), 3-finger swipe up (scrolls page down),
+  3-finger swipe down (scrolls page up).
+  Practice scroll area: a short scrollable list, labeled as a practice zone.
+  "Begin Descent" button launches L1.
+
+L1 — First Attempt (no timer)
+  4 dungeon rooms: 2 visible, 2 below the fold.
+  Target: Guard Room (depth 2).
+  Single scroll + activation to succeed.
+  Non-interactive rooms are informational (no button trait).
+  Correct activation ends the level.
+
+L2 — Rising Challenge (soft timer: 60s)
+  8 rooms: 3 visible, 5 below fold.
+  Non-target rooms give a soft feedback response when VoiceOver focus lands on them:
+    "Nothing useful here. Keep descending."
+  Target: Relic Vault (near bottom).
+  Timer visible. VoiceOver announces at 50% and 25% elapsed.
+
+L3 — Timed Trial (hard timer: 45s)
+  12 rooms: 3 visible, 9 below fold.
+  Target: Ancient Vault (at depth 10 or deeper).
+  Hard time limit. Failure occurs when timer reaches 0.
+  VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5-4-3-2-1 countdown.
+  D&D timeout: "The gate fell. The relic is sealed below. Trial failed."
+  D&D success: "Ancient Vault reached. The relic is yours. Trial passed."
+
+Dungeon Room List
+=================
+Rooms are presented in vertical order (top = shallowest, bottom = deepest).
+All rooms have descriptive, atmospheric accessibility labels. Non-interactive rooms
+do not have the button accessibilityTrait. Target room is always a button.
+
+Room Labels (Full Pool)
+  Entry Hall. Torchlit. Safe.
+  Guard Post. Abandoned.
+  Armory. Empty racks.
+  Well Chamber. The water is still.
+  Store Room. Dusty barrels.
+  Barracks. Cold hearths.
+  Trophy Room. Faded banners.
+  Ritual Chamber. Symbols cover the walls.
+  Flooded Hall. Knee-deep water.
+  Bone Room. Don't look too closely.
+  Collapsed Wall. A gap you can pass.
+  Ancient Vault. The relic glows.     ← TARGET in L3
+
+L1 Target: Guard Room. Empty. The objective.
+L2 Target: Relic Vault. The objective.
+L3 Target: Ancient Vault. The relic glows.
+
+Target Room Accessibility
+  accessibilityLabel: "{roomName}. The objective."
+  accessibilityHint:  "Double-tap to claim this room."
+
+Non-interactive Room Behavior
+  Rooms are read by VoiceOver when focused but cannot be double-tapped to success.
+  If the player attempts to double-tap a non-target room, VoiceOver announces:
+    "Nothing useful here. Keep descending."
+  Non-target rooms must not accidentally register as success.
 
 Art / Assets
 ============
-- Follow Phase1-GameSpecs-Overview: flat, high-contrast, vector-like; no text in images; sprites usable at small sizes. Accessibility quality bar and asset dimensions apply.
+See DesignTicket-AssetListDefinition.txt (dungeon section).
+Flat, high-contrast, vector-like; no text in images.
+Background: dungeon_descent_bg.
+Room row icons: dungeon_room_* (one per room type).
+Target room icon: dungeon_ancient_vault.
 
 Gameplay Loop
 =============
-1) Game shows a ScrollView with content longer than the viewport.
-2) Target exists below the fold and cannot be reached without scrolling.
-3) Player scrolls until the target is reachable and activates it.
-4) Game ends on success or timeout.
+1. L0 lesson card presented. Player reads (or VoiceOver reads) the paradigm shift.
+2. Practice scroll area is available; player must interact with L0 before proceeding.
+3. "Begin Descent" starts L1.
+4. ScrollView shows dungeon rooms. Depth HUD shows current depth and total.
+5. Player single-finger swipes to move VoiceOver focus between visible rooms.
+6. Player three-finger swipes to scroll and reveal deeper rooms.
+7. VoiceOver reads each room label as focus moves to it.
+8. At the target room: player double-taps to claim it → success.
+9. Non-target room double-tapped → "Nothing useful here" feedback → player continues.
+10. Timeout (L2/L3) → session abandoned → no result written.
 
 Observable Signals (Measurable)
-===============================
+================================
 Primary
-- Scroll progress changes (derived from SwiftUI scroll geometry APIs).
-- Target activation handler invoked (success).
+- Scroll progress changes (derived from SwiftUI scroll geometry APIs — see S1 Spike).
+- Target room button activation handler invoked AND scroll progress confirms target was reachable.
 
 Secondary
-- Wrong activation of decoy targets (mistake).
-- Optional: wrong-direction scroll beyond threshold (if measurable).
+- Non-target room activation handler invoked (optional mistake, based on S1 findings).
 - Elapsed time (monotonic clock).
-- Timeout fired (fail).
+- Timeout fired (fail/abandon).
+
+Anti-Cheat / Integrity
+=======================
+- No "Jump to bottom" UI.
+- Success requires BOTH:
+  1. Scroll progress confirming the target region is reachable/visible.
+  2. Target room activation.
+- If scroll progress is not confirming target visibility, activation is ignored.
+
+Note on Detection
+=================
+We do not detect the exact gesture used to scroll. We observe the OUTCOME:
+did the scroll position change such that the target is now reachable?
+Validation is scroll-progress-based. See GameSpec validated approach from S1 Spike
+(TICKET-S1-Spike-ScrollObservability in TicketBreakdown.txt).
 
 Scoring
 =======
 Metrics
-- timeSeconds: from “Start” to success (or timeout).
+- timeSeconds: from "Begin Descent" tap to target activation (or timeout).
 - mistakes:
-  - +1 per wrong activation of decoys.
-  - +1 per timeout bucket exceeded (see below).
-  - Optional: +1 if wrong-direction scroll exceeds a threshold (only if reliably measurable).
+  - +1 per wrong room activation (if non-target button double-tapped).
+  - +1 per timeout bucket exceeded (bucket: 15s; see below).
+  - Optional: +1 per excessive wrong-direction scroll (only if reliably detectable per S1).
 
-Timeout bucket (initial)
-------------------------
-- Bucket size: 15 seconds
-- Each full bucket elapsed beyond the first bucket adds +1 mistake.
+Timeout Bucket
+--------------
+- Bucket size: 15 seconds.
+- Each full 15s bucket beyond the first adds +1 mistake.
+  Example: 0–15s → +0; 15–30s → +1; 30–45s → +2.
+  Tunable post-playtest.
 
-Rank Thresholds (Initial Guess; Tunable)
-========================================
-- Perfect: mistakes == 0 AND timeSeconds <= 15
-- Good: mistakes <= 1 AND timeSeconds <= 30
-- Ok: success AND timeSeconds <= 60
-- Failed: timeout at 60s OR mistakes >= 6
+Rank Thresholds
+---------------
+  Legendary (Perfect): mistakes == 0 AND timeSeconds <= 15
+  Skilled   (Good):    mistakes <= 1 AND timeSeconds <= 30
+  Novice    (Ok):      success AND timeSeconds <= 60
+  Defeated  (Failed):  timeout at 60s OR mistakes >= 6
 
-Anti-cheat / Integrity
-======================
-- No “Jump to target” UI.
-- Success requires:
-  - scroll progress to indicate target region is reachable/visible AND
-  - target activation.
+Game-Specific Result Announcements
+===================================
+These are displayed on the shared results screen after L3 completes.
+The SharedGameResultScreen accepts a game-specific announcement string.
+
+  Legendary: "Legendary descent. No misstep. The dungeon bows."
+  Skilled:   "Skilled explorer. The vault yielded to you."
+  Novice:    "You found the vault. The dungeon was not kind."
+  Defeated:  "The dungeon sealed. Rest. Then try again."
 
 Failure States + Mitigations
-============================
-- Player doesn’t know how to scroll:
-  - Optional hint explains 3-finger scrolling.
-- Provide “Restart” action.
+=============================
+- Player doesn't know how to 3-finger scroll:
+  - L0 practice area must be clearly explained before L1 begins.
+  - Optional hint button (no penalty): "Use three fingers to scroll downward."
+- Player is stuck at the bottom of visible content:
+  - Hint should specifically address the 3-finger scroll behavior.
+- Provide "Try Again" action to reset the current level.
 
 Accessibility Requirements
-==========================
-- ScrollView must be clearly indicated as scrollable by VO.
-- Target must be a standard accessible control with label + hint.
+===========================
+- ScrollView: labeled as a scroll container with 3-finger scroll hint.
+  accessibilityLabel: "Dungeon scroll list. Scroll to descend."
+  accessibilityHint:  "Use three fingers to scroll and reveal deeper rooms."
+- Depth HUD: announced as a group (depth: {current} of {total}).
+- Target room: button trait, distinct label, hint to double-tap.
+- Non-target rooms: NO button trait; no activation-success handler.
+- Timer group: single accessibility element; NOT updated every second.
+  Announced only at defined thresholds (see GameRules-MVP.txt timer spec).
+- ScrollView must surface the standard iOS scrollable indicator trait so VoiceOver
+  can inform the user that more content exists below.
 
-Unit-testable Logic
-===================
-- rankFor(timeSeconds:mistakes:) -> Rank
-- bucketMistakes(timeSeconds:) -> Int
-- bestResult(lhs:rhs:) -> Result
-- progressMapping(scrollGeometry:) -> DerivedProgress (if represented as pure derived value)
+Unit-Testable Logic
+====================
+- rankFor(timeSeconds:mistakes:) -> GameRank
+- bucketMistakes(timeSeconds:bucketSize:) -> Int
+- bestResult(lhs:rhs:) -> GameResult
+- progressMapping(scrollGeometry:threshold:) -> DerivedProgress (pure function; testable)
+- targetIsReachable(progress:threshold:) -> Bool

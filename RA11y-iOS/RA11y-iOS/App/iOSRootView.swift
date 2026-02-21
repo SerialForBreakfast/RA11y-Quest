@@ -43,6 +43,8 @@ struct iOSRootView: View {
                 onPlayAgain: { router.popToRoot() },   // M5+ will push the specific game route here
                 onReturnToHub: { router.popToRoot() }
             )
+        case .voiceOverInterstitial(let kind):
+            iOSVORequiredView(kind: kind)
         }
     }
 }

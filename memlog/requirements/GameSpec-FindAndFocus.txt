@@ -1,82 +1,162 @@
 RA11y - Accessibility Training Gamification
-Game Spec - Find & Focus (SwiftUI)
+Game Spec - The Enchanter's Trial (Find & Focus)
 
-Date: 2026-02-20
-MVP Skill: Focus navigation (by swiping VO focus) + correct activation
+Date: 2026-02-20 (revised to align with GameRules-MVP.txt)
+Game ID: simon_find_focus
+MVP Skill: VoiceOver focus navigation (swipe left/right) + targeted activation (double-tap)
 
-Player Goal
-===========
-Navigate by swiping left/right through items until the target is reached, then activate it.
-
-Player Instructions (VoiceOver)
-===============================
-- “Swipe right until you hear the target item. Then double-tap to select it.”
+VoiceOver Paradigm Shift Taught
+================================
+"The screen is linear with VoiceOver."
+Users expect to see the full screen at a glance. VoiceOver changes this: you move
+through elements one at a time by swiping. The screen becomes a sequence, not a grid.
+This game makes that constraint the core mechanic — the player MUST navigate linearly
+to find the target.
 
 Theme / Narrative
 =================
-- "Simon Says" training drill inside the Training Academy.
+The Enchanter's tower. A row of magical relics sits on a shelf. The Enchanter
+calls the name of one relic. The player (apprentice) must navigate their VoiceOver
+focus through the relics — one at a time — until they hear the correct name, then
+invoke it (double-tap).
+
+The DM (Dungeon Master) speaks in all narrative prompts. The player is always "you."
+
+Player Goal
+===========
+Swipe right through relics until VoiceOver reads the target name. Double-tap to invoke it.
+
+Player Instructions (L0 Lesson Card — exact copy in GameRules-MVP.txt)
+=======================================================================
+"With VoiceOver on, the screen is read one element at a time. Swipe right to move
+to the next item. Swipe left to go back. When you hear the Enchanter's relic,
+double-tap to activate it."
+
+Level Structure
+===============
+L0 — Prologue (no timer)
+  DM narrates. Lesson card explains the paradigm shift.
+  3 gestures shown: swipe right, swipe left, double-tap.
+  "Begin Trial" button launches L1.
+
+L1 — First Attempt (no timer)
+  3 relics (1 target, 2 decoys). Simple names, no close matches.
+  Target is drawn from: Dragon Scale, Iron Shard, Moonstone, Ember Glass.
+  Single correct activation ends the level.
+  Incorrect activation = misstep; announcement given; player continues.
+
+L2 — Rising Challenge (soft timer: 45s)
+  6 relics. Deliberately similar-sounding pairs are included:
+    "Dragon Scale" vs "Dragon Claw"
+    "Shadow Stone" vs "Sunstone"
+    "Ember Glass" vs "Frost Glass"
+  Timer is visible. VoiceOver announces at 50% and 25% elapsed.
+  Correct activation ends level; timeout = loss.
+
+L3 — Timed Trial (hard timer: 20s)
+  8 relics, all similar-sounding. Drawn from full relic pool.
+  Hard time limit. Failure occurs when timer reaches 0.
+  VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5-4-3-2-1 countdown.
+  D&D timeout: "The candles die. The Enchanter withdraws the relic."
+  D&D success: "{targetName} invoked in time. The Enchanter is satisfied."
+
+Relic Pool (Shared Across Levels)
+===================================
+All relics have distinct accessibility labels. No relic is identified by color alone.
+Labels must be readable by VoiceOver as the player navigates.
+
+  Dragon Scale
+  Dragon Claw
+  Shadow Stone
+  Sunstone
+  Ember Glass
+  Frost Glass
+  Iron Shard
+  Moonstone
+
+L1 uses 3. L2 uses 6 (at least one similar-sounding pair). L3 uses all 8.
+Selection within a level is randomized per session, but the target is always explicitly
+announced by the Enchanter's prompt card.
 
 Art / Assets
 ============
-- Follow Phase1-GameSpecs-Overview: flat, high-contrast, vector-like; no text in images; sprites usable at small sizes. Accessibility quality bar and asset dimensions apply.
+See DesignTicket-AssetListDefinition.txt (enchanter section).
+Flat, high-contrast, vector-like; no text in images.
+Each relic is a distinct silhouette sprite (enchanter_relic_*).
+Background: enchanter_tower_shelf_bg.
 
 Gameplay Loop
 =============
-1) Game displays a small set of labeled controls (one target + multiple decoys).
-2) Player uses VO focus navigation to locate the target.
-3) Player double-taps to activate the focused element.
-4) Game ends on successful target activation (win) or timeout (fail).
+1. L0 lesson card presented. Player reads (or VoiceOver reads) the paradigm shift.
+2. "Begin Trial" starts L1.
+3. Game displays relic tokens in a row. Enchanter's prompt card announces the target.
+4. Player swipes through relics; VoiceOver reads each label.
+5. Player double-taps when focused on the target.
+6. Success → brief feedback → next level (or results if L3).
+7. Wrong activation → misstep feedback → player continues (no restart required).
+8. Timeout (L2/L3) → session abandoned → no result written.
 
 Observable Signals (Measurable)
-===============================
+================================
 Primary
-- Target control activation handler invoked (success).
+- Target relic button activation handler invoked (success).
 
 Secondary
-- Any decoy control activation handler invoked (mistake).
+- Decoy relic button activation handler invoked (mistake: +1).
 - Elapsed time (monotonic clock).
-- Timeout fired (fail).
+- Timeout fired (fail/abandon).
 
 Scoring
 =======
 Metrics
-- timeSeconds: from “Start” to success (or timeout).
+- timeSeconds: from "Begin Trial" tap to target activation (or timeout).
 - mistakes:
-  - +1 per wrong activation of a decoy control.
-  - +1 per timeout bucket exceeded (see below).
+  - +1 per wrong relic activation.
+  - +1 per timeout bucket exceeded (bucket: 10s; see below).
 
-Timeout bucket (initial)
-------------------------
+Timeout Bucket
+--------------
 - Bucket size: 10 seconds
-- Each full bucket elapsed beyond the first bucket adds +1 mistake.
-  - Example: 0–10s => +0 bucket mistakes
-             10–20s => +1
-             20–30s => +2
-  - This is tunable after playtest.
+- Each full 10s bucket beyond the first adds +1 mistake.
+  Example: 0–10s → +0; 10–20s → +1; 20–30s → +2.
+  Tunable post-playtest.
 
-Rank Thresholds (Initial Guess; Tunable)
-========================================
-- Perfect: mistakes == 0 AND timeSeconds <= 10
-- Good: mistakes <= 1 AND timeSeconds <= 20
-- Ok: success AND timeSeconds <= 45
-- Failed: timeout at 45s OR mistakes >= 5
+Rank Thresholds
+---------------
+  Legendary (Perfect): mistakes == 0 AND timeSeconds <= 10
+  Skilled   (Good):    mistakes <= 1 AND timeSeconds <= 20
+  Novice    (Ok):      success AND timeSeconds <= 45
+  Defeated  (Failed):  timeout at 45s OR mistakes >= 5
+
+Game-Specific Result Announcements
+===================================
+These are displayed on the shared results screen after L3 completes.
+The SharedGameResultScreen accepts a game-specific announcement string.
+
+  Legendary: "The Enchanter bows. A perfect invocation."
+  Skilled:   "The Enchanter nods. A solid invocation."
+  Novice:    "The Enchanter sighs. You found it eventually."
+  Defeated:  "The relic vanished. Return when you are ready."
 
 Failure States + Mitigations
-============================
+=============================
 - Player cannot find target:
-  - Optional: provide an in-app hint button that announces: “Try swiping right; the target name is …”
-  - Hints do NOT change scoring.
-- Player gets stuck:
-  - Provide “Restart” action.
+  - Optional hint button (no scoring penalty): "The Enchanter whispers: the target is {name}."
+  - Hint re-announces the target name via VoiceOver.
+- Player is stuck:
+  - "Try Again" action resets the current level.
 
 Accessibility Requirements
-==========================
-- All controls have clear labels and helpful hints.
-- Reading order should be deterministic.
-- Avoid rapid UI changes that disrupt VO.
+===========================
+- All relic tokens: accessibilityLabel (relic name) + accessibilityHint ("Double-tap to invoke.").
+- Enchanter's prompt card: accessibilityLabel includes target name + navigation instruction.
+- Reading order is deterministic and linear (relics in display order).
+- No rapid UI changes that would disrupt active VoiceOver focus.
+- Timer group: single accessibility element; NOT updated every second.
+  Announced only at defined thresholds (see GameRules-MVP.txt timer spec).
 
-Unit-testable Logic
-===================
-- rankFor(timeSeconds:mistakes:) -> Rank
-- bucketMistakes(timeSeconds:) -> Int
-- bestResult(lhs:rhs:) -> Result
+Unit-Testable Logic
+====================
+- rankFor(timeSeconds:mistakes:) -> GameRank
+- bucketMistakes(timeSeconds:bucketSize:) -> Int
+- bestResult(lhs:rhs:) -> GameResult

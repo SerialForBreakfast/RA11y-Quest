@@ -5,7 +5,7 @@ import Foundation
 /// Identifies the routing and logic variant for a training game.
 ///
 /// - Important: Raw values are stable routing identifiers. Do not rename or reorder post-ship.
-public enum GameKind: String, Hashable, Sendable, Codable {
+public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     /// Find & Focus — Simon Says drill training focus navigation and element identification.
     case findAndFocus
     /// Activate — Bomb Defusal drill training double-tap activation on the correct control.

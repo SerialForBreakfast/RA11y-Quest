@@ -1,7 +1,7 @@
 RA11y - Design Ticket
 Asset List Definition (Per Game)
 
-Date: 2026-02-20
+Date: 2026-02-20 (revised to align with GameRules-MVP.txt theme rename)
 Owner: Product / Design (Requirements)
 
 User Story
@@ -12,10 +12,10 @@ So that asset generation is scoped, consistent, and deliverable without guesswor
 
 Scope (MVP)
 ===========
-Games in scope:
-- Find & Focus (Simon Says drill)
-- Activate (Bomb Defusal simulation)
-- Scroll Hunt (Dungeon Crawl simulator)
+Games in scope (using canonical D&D theme names from GameRules-MVP.txt):
+- The Enchanter's Trial    (game ID: simon_find_focus)
+- The Rogue's Gauntlet     (game ID: bomb_defusal_wires)
+- The Dungeon Descent      (game ID: dungeon_scroll_hunt)
 
 Art Direction (Locked)
 ======================
@@ -23,6 +23,8 @@ Art Direction (Locked)
 - Simple shapes, clean edges, bold silhouettes.
 - No text/letters/numbers embedded in images.
 - Must remain legible at small sizes.
+- D&D fantasy aesthetic: stone, runes, torchlight palette.
+  Consistent art style across all three games — they inhabit the same world.
 
 Requirements
 ============
@@ -31,71 +33,135 @@ Global
 - Each sprite must have an accessibility label when interactive; purely decorative images must be marked decorative.
 - Sprites: transparent background, generated at 1024x1024.
 - Backgrounds: non-transparent, generated at 1920x1080 (optional tall variant if needed).
+- Asset naming must be stable; used as keys in GameDefinition.thumbnailAssetName and
+  in code references. Do NOT rename after M1-GameCatalog-Definitions closes.
 
 Per-Game Asset List (Draft MVP Counts)
 ======================================
 
-1) Find & Focus (Simon Says)
-----------------------------
-Backgrounds (1)
-- academy_simon_room_bg (16:9)
+1) The Enchanter's Trial (simon_find_focus)
+-------------------------------------------
+Theme: Ancient tower. Shelf of magical relics. Atmospheric torchlight.
 
-Sprites (8)
-- simon_target_icon_01 (primary target)
-- simon_decoy_icon_01..05 (distinct silhouettes)
-- simon_instructor_badge (decorative, optional)
-- simon_signal_light (decorative feedback, optional)
+Background (1)
+- enchanter_tower_shelf_bg (16:9)
+  Depicts a stone shelf in a tower. Atmospheric. No text. No relic sprites embedded.
 
-2) Activate (Bomb Defusal)
---------------------------
-Backgrounds (1)
-- academy_bomb_workbench_bg (16:9)
+Relic Sprites (10)
+Each relic is a distinct silhouette readable at small size. Flat vector style.
+Named to match in-game accessibility labels exactly.
+  - enchanter_relic_dragon_scale    (Dragon Scale)
+  - enchanter_relic_dragon_claw     (Dragon Claw)
+  - enchanter_relic_shadow_stone    (Shadow Stone)
+  - enchanter_relic_sunstone        (Sunstone)
+  - enchanter_relic_ember_glass     (Ember Glass)
+  - enchanter_relic_frost_glass     (Frost Glass)
+  - enchanter_relic_iron_shard      (Iron Shard)
+  - enchanter_relic_moonstone       (Moonstone)
 
-Sprites (10)
-- bomb_device_body
-- bomb_wire_red
-- bomb_wire_blue
-- bomb_wire_yellow
-- bomb_wire_green (optional, if needed for variety)
-- bomb_tool_cutter (decorative)
-- bomb_tool_screwdriver (decorative)
-- bomb_indicator_safe (decorative)
-- bomb_indicator_danger (decorative)
-- bomb_module_plate (decorative frame)
+UI / Decorative (2, optional)
+  - enchanter_prompt_badge          (decorative DM prompt frame, optional)
+  - enchanter_shelf_divider         (decorative shelf separator, optional)
 
-3) Scroll Hunt (Dungeon Crawl)
-------------------------------
-Backgrounds (1)
-- academy_dungeon_corridor_bg (16:9)
+Accessibility notes:
+- All 8 relic sprites are interactive in-game. Each has a label (relic name) and hint.
+- Background and decorative sprites: accessibilityHidden = true.
+- Sprites must be distinguishable by shape alone (not color alone).
 
-Sprites (12)
-- dungeon_door
-- dungeon_torch
-- dungeon_key
-- dungeon_chest
-- dungeon_scroll_target_item (the “objective”)
-- dungeon_decoy_item_01..04
-- dungeon_stone_tile (optional)
-- dungeon_trap (decorative, optional)
-- dungeon_exit_marker (decorative, optional)
 
-Optional Shared UI Emblems (SwiftUI preferred)
-==============================================
+2) The Rogue's Gauntlet (bomb_defusal_wires)
+--------------------------------------------
+Theme: Stone door with magical rune seals. Trap Room. Ominous atmosphere.
+
+Background (1)
+- rogue_trap_door_bg (16:9)
+  A heavy stone door with empty rune slots. Torchlit. No seal sprites embedded.
+
+Seal Sprites (9)
+Each seal is a distinct glyph/rune shape. Named to match in-game accessibility labels.
+Passage seals (correct options, visually distinct from trap seals by silhouette only):
+  - rogue_seal_passage              (Seal of Passage)
+  - rogue_seal_ward                 (Warding Seal)
+  - rogue_seal_binding              (Binding Seal)
+
+Trap seals (wrong activations):
+  - rogue_seal_spike                (Spike Trap Seal)
+  - rogue_seal_alarm                (Alarm Seal)
+  - rogue_seal_collapse             (Collapse Seal)
+  - rogue_seal_reveal               (Reveal Seal)
+  - rogue_seal_freeze               (Freeze Seal)
+  - rogue_seal_silence              (Silence Seal)
+
+UI / Decorative (2, optional)
+  - rogue_trap_indicator_safe       (decorative "door sealed" indicator)
+  - rogue_trap_indicator_danger     (decorative "trap active" indicator)
+
+Accessibility notes:
+- ALL seal sprites are interactive in-game (button). Each has a label + hint.
+- Passage vs trap seals must NOT be differentiated by color alone — shape/glyph must differ.
+- Background and decorative sprites: accessibilityHidden = true.
+- In L1, only 1 seal is shown (rogue_seal_passage). Other assets not needed for L1 rendering.
+
+
+3) The Dungeon Descent (dungeon_scroll_hunt)
+--------------------------------------------
+Theme: Vertical dungeon corridor. Stone rooms stacked. Ancient, atmospheric.
+
+Background (1)
+- dungeon_descent_bg (16:9)
+  A vertical stone passage. Torches on walls. Atmospheric depth cues. No room sprites embedded.
+
+Room Row Icons (12)
+Each room has a small icon used as the row's visual identifier.
+Not interactive on their own — the row/button is the interactive element.
+Decorative within each row (accessibilityHidden = true; label is on the row element).
+  - dungeon_room_entry_hall         (Entry Hall)
+  - dungeon_room_guard_post         (Guard Post)
+  - dungeon_room_armory             (Armory)
+  - dungeon_room_well_chamber       (Well Chamber)
+  - dungeon_room_store_room         (Store Room)
+  - dungeon_room_barracks           (Barracks)
+  - dungeon_room_trophy_room        (Trophy Room)
+  - dungeon_room_ritual_chamber     (Ritual Chamber)
+  - dungeon_room_flooded_hall       (Flooded Hall)
+  - dungeon_room_bone_room          (Bone Room)
+  - dungeon_room_collapsed_wall     (Collapsed Wall)
+  - dungeon_room_ancient_vault      (Ancient Vault — TARGET)
+
+The ancient vault icon should visually suggest importance (glowing rune, open arch).
+All others should be atmospheric but neutral in visual weight.
+
+UI / Decorative (2, optional)
+  - dungeon_depth_hud_frame         (HUD frame for depth counter, optional)
+  - dungeon_scroll_indicator        (decorative "scroll to descend" arrow, optional)
+
+Accessibility notes:
+- Room row icons are decorative within their row (accessibilityHidden = true).
+- The interactive element is the row/button itself, labeled with the room description.
+- Non-target rooms have no button trait; ancient vault row has button trait + hint.
+
+
+Optional Shared UI Emblems (SwiftUI Preferred)
+===============================================
 - Rank badge visuals should be SwiftUI-generated by default.
-- If decorative emblems are desired later, define:
-  - rank_emblem_perfect
-  - rank_emblem_good
-  - rank_emblem_ok
-  - rank_emblem_failed
+  Rank names: Legendary / Skilled / Novice / Defeated (matches GameRules-MVP.txt).
+- If decorative emblems are desired post-MVP, define:
+  - rank_emblem_legendary
+  - rank_emblem_skilled
+  - rank_emblem_novice
+  - rank_emblem_defeated
+
 
 Acceptance Criteria
 ===================
-- A single authoritative list exists with stable filenames for every required asset.
+- A single authoritative asset list exists with stable filenames for every required asset.
 - Counts are MVP-feasible (<= 1 background + <= 12 sprites per game).
 - Each asset is categorized as Interactive vs Decorative.
 - The list includes size requirements and naming conventions.
+- Passage seals and relic silhouettes are distinguishable by shape alone (no color-only differentiation).
+- Dungeon room icons are consistent in style but the ancient vault is visually distinct.
 
 Useful Unit Test (Process-Oriented)
-===================================
+=====================================
 - Validate the in-app asset catalog registry:
   - Given a GameDefinition, all required asset names resolve to existing assets (no missing files).
