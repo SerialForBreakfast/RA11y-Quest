@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AA11C04E2F4787AC000001A5 /* RA11yCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA11C04E2F4787AB000001A5 /* RA11yCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		44C85CA12F4787A7000C982C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA11C04E2F4787AC000001A5 /* RA11yCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = "RA11y-iOS";
 			packageProductDependencies = (
+				AA11C04E2F4787AB000001A5 /* RA11yCore */,
 			);
 			productName = "RA11y-iOS";
 			productReference = 44C85C932F4787A5000C982C /* RA11y-iOS.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 44C85C8A2F4787A5000C982C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AA11C04E2F4787AA000001A5 /* XCLocalSwiftPackageReference "../RA11yCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 44C85C942F4787A5000C982C /* Products */;
 			projectDirPath = "";
@@ -417,7 +426,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -449,7 +458,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -470,7 +479,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RA11y-iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RA11y-iOS";
 			};
@@ -492,7 +501,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RA11y-iOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RA11y-iOS";
 			};
@@ -512,7 +521,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "RA11y-iOS";
 			};
@@ -532,7 +541,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "RA11y-iOS";
 			};
@@ -578,6 +587,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AA11C04E2F4787AA000001A5 /* XCLocalSwiftPackageReference "../RA11yCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../RA11yCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA11C04E2F4787AB000001A5 /* RA11yCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA11C04E2F4787AA000001A5 /* XCLocalSwiftPackageReference "../RA11yCore" */;
+			productName = RA11yCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 44C85C8B2F4787A5000C982C /* Project object */;
 }

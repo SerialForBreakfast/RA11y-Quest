@@ -7,68 +7,67 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-02-20)
+Current structure (as of 2026-02-20) — M0 complete
 ---
 
 .
 ├── RA11y-iOS
 │   ├── RA11y-iOS
+│   │   ├── App
+│   │   │   ├── iOSAppRouter.swift          AppRoute enum + iOSAppRouter (@Observable)
+│   │   │   └── iOSRootView.swift           Root NavigationStack; owns router
 │   │   ├── Assets.xcassets
 │   │   │   ├── AccentColor.colorset
-│   │   │   │   └── Contents.json
 │   │   │   ├── AppIcon.appiconset
-│   │   │   │   └── Contents.json
-│   │   │   └── Contents.json
-│   │   ├── ContentView.swift
-│   │   └── RA11y_iOSApp.swift
+│   │   │   └── RA11y Colors
+│   │   │       └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
+│   │   ├── Design
+│   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
+│   │   ├── Hub
+│   │   │   └── iOSHubView.swift            Placeholder hub (M3 will be full impl)
+│   │   ├── VoiceOver
+│   │   │   └── iOSVoiceOverHelpSheet.swift VoiceOver enable guide sheet
+│   │   ├── Localizable.xcstrings           String catalog (localization foundation)
+│   │   └── RA11y_iOSApp.swift              @main entry point -> iOSRootView
 │   ├── RA11y-iOS.xcodeproj
-│   │   ├── xcuserdata
-│   │   │   └── josephmccraw.xcuserdatad
-│   │   │       └── xcschemes
-│   │   │           └── xcschememanagement.plist
-│   │   └── project.pbxproj
+│   │   └── project.pbxproj                Links RA11yCore; Swift 6; iOS 26.2
 │   ├── RA11y-iOSTests
-│   │   └── RA11y_iOSTests.swift
+│   │   └── RA11y_iOSTests.swift            RouterTests (4 passing)
 │   └── RA11y-iOSUITests
 │       ├── RA11y_iOSUITests.swift
 │       └── RA11y_iOSUITestsLaunchTests.swift
 ├── RA11y.xcworkspace
-│   ├── xcshareddata
-│   │   └── swiftpm
-│   │       └── configuration
-│   ├── xcuserdata
-│   │   └── josephmccraw.xcuserdatad
-│   └── contents.xcworkspacedata
-├── RA11yCore
-│   ├── Sources
-│   │   └── RA11yCore
-│   │       └── RA11yCore.swift
-│   ├── Tests
-│   │   └── RA11yCoreTests
-│   │       └── RA11yCoreTests.swift
-│   └── Package.swift
+│   └── contents.xcworkspacedata            Ties RA11y-iOS.xcodeproj + RA11yCore
+├── RA11yCore                               Shared Swift package (iOS 18+)
+│   ├── Sources/RA11yCore
+│   │   ├── Design
+│   │   │   ├── RA11yFont.swift             Font.ra11y* Dynamic Type extensions
+│   │   │   └── RA11yTokens.swift           RA11ySpacing + RA11yRadius enums
+│   │   ├── Logging
+│   │   │   └── RA11yLogger.swift           OSLog Logger namespace (5 categories)
+│   │   └── RA11yCore.swift                 Module doc header
+│   ├── Tests/RA11yCoreTests
+│   └── Package.swift                       platforms: [.iOS(.v18)]
 └── memlog
     ├── DirectoryTree.txt
     ├── requirements
-    │   ├── GameSpec-ActivateDoubleTap.txt
-    │   ├── GameSpec-FindAndFocus.txt
-    │   ├── GameSpec-ScrollHunt.txt
-    │   ├── Phase1-Decisions.txt
-    │   ├── Phase1-GameSpecs-Overview.txt
-    │   ├── Phase1-Requirements.txt
-    │   ├── Phase1-UserStories.txt
+    │   ├── Design/                         Design track tickets + assets (simon MVP)
+    │   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
+    │   ├── Phase1-*.txt                    Phase 1 requirements, decisions, user stories
     │   ├── Phase2-Roadmap.txt
     │   ├── Phase3-TicketBreakdown.txt
     │   ├── Requirements-Index.txt
-    │   └── Spike-ScrollObservability-SwiftUI.txt
-    └── research
-        ├── InitialBrainstorming.txt
-        └── NativeAccessibility.txt
+    │   ├── Spike-ScrollObservability-SwiftUI.txt
+    │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
+    └── research/
 
 ---
 Notes
 ---
-- RA11y-iOS: iOS app target (SwiftUI); tests and UI tests under same folder.
-- RA11y.xcworkspace: Workspace that ties the app and local packages together.
-- RA11yCore: Shared Swift package (SPM); used for cross-target logic.
-- memlog: Project log and docs. requirements/: Phase 1–3 docs, game specs, spike; see Requirements-Index.txt. research/: brainstorming and reference.
+- RA11y-iOS uses PBXFileSystemSynchronizedRootGroup — new files in subdirectories are
+  auto-included in the target without editing project.pbxproj.
+- RA11yCore is linked to the RA11y-iOS app target as a local SPM package.
+- SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor is set at the project level — all app code
+  is implicitly @MainActor unless annotated otherwise.
+- String Catalog (Localizable.xcstrings) is set up with English strings; localization
+  support requires only new catalog entries (no code changes) in future.

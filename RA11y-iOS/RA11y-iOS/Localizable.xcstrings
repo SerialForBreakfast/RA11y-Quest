@@ -1,0 +1,352 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "game.activateDoubleTap.goal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double-tap the correct control to disarm."
+          }
+        }
+      }
+    },
+    "game.activateDoubleTap.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activate"
+          }
+        }
+      }
+    },
+    "game.findAndFocus.goal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus the right element and activate it."
+          }
+        }
+      }
+    },
+    "game.findAndFocus.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find & Focus"
+          }
+        }
+      }
+    },
+    "game.scrollHunt.goal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll to reveal and activate the hidden objective."
+          }
+        }
+      }
+    },
+    "game.scrollHunt.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll Hunt"
+          }
+        }
+      }
+    },
+    "hub.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training Academy"
+          }
+        }
+      }
+    },
+    "hub.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a game to begin your VoiceOver training."
+          }
+        }
+      }
+    },
+    "hub.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training Academy"
+          }
+        }
+      }
+    },
+    "placeholder.firstRun" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Basics — coming in M4"
+          }
+        }
+      }
+    },
+    "result.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result"
+          }
+        }
+      }
+    },
+    "result.playAgain" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play Again"
+          }
+        }
+      }
+    },
+    "result.returnToHub" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to Hub"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.done.accessibilityHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes VoiceOver help"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.done.accessibilityLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.header.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver is Apple's screen reader. It reads items on screen and changes how touch gestures work."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.header.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable VoiceOver"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.inApp.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This help sheet is a ScrollView. With VoiceOver on, use three-finger swipes to move through content. Tap Done to close."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.inApp.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In this app"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.quickToggle.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set up an Accessibility Shortcut in Settings → Accessibility → Accessibility Shortcut. Triple-click the Side button (most iPhones), Home button (older models), or Top button (many iPads) to toggle VoiceOver."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.quickToggle.tip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip: Adjust triple-click speed in Accessibility settings if the gesture feels too fast."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.quickToggle.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick toggle"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.scroll.swipeDown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To scroll up a page: swipe down with three fingers."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.scroll.swipeUp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To scroll down a page: swipe up with three fingers."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.scroll.tip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If scrolling doesn't work, make sure your fingers are slightly apart and swipe with a quick motion."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.scroll.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrolling with VoiceOver"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.step1.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the Settings app on your iPhone or iPad."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.step1.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Open Settings"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.step2.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Settings, tap Accessibility."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.step2.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Go to Accessibility"
+          }
+        }
+      }
+    },
+    "voiceOverHelp.step3.detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap VoiceOver, then turn it on. VoiceOver changes how gestures work: single-tap selects, double-tap activates."
+          }
+        }
+      }
+    },
+    "voiceOverHelp.step3.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Turn on VoiceOver"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

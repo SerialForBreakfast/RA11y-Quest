@@ -1,6 +1,6 @@
-import Testing
-@testable import RA11yCore
-
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-}
+// RA11yCoreTests — see individual test files per module:
+//   GameCatalogTests.swift
+//   ScoringModelTests.swift
+//   StorageTests.swift
+//   GameSessionTests.swift
+//   GameResultPresenterTests.swift

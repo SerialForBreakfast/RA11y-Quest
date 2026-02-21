@@ -1,17 +1,14 @@
-//
-//  RA11y_iOSApp.swift
-//  RA11y-iOS
-//
-//  Created by Joseph McCraw on 2/19/26.
-//
-
 import SwiftUI
 
+/// App entry point for RA11y on iOS.
+///
+/// `iOSRootView` owns the navigation router and provides it to the SwiftUI
+/// view hierarchy. All routing decisions flow through `iOSAppRouter`.
 @main
 struct RA11y_iOSApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            iOSRootView()
         }
     }
 }
