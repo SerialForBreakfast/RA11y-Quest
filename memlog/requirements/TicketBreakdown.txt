@@ -638,29 +638,95 @@ Increase Contrast: card borders and text meet WCAG AA contrast against the dark 
 Reduce Motion: no ambient animations (torch flicker, sparkle) when Reduce Motion is ON.
 Tap target: entire card is one interactive element, minimum 44x44pt.
 
+Component Architecture
+-----------------------
+Portrait-locked. Single adaptive layout covers all iPhone and iPad sizes.
+
+View files (RA11y-iOS/Hub/):
+  iOSHubView.swift              Root; owns HubViewModel; ZStack (bg + content layers)
+  iOSHubBackgroundView.swift    Full-bleed image + dark gradient overlay; ignoresSafeArea; no game data
+  iOSHubDMGreetingView.swift    "Choose Your Trial, Adventurer"; .isHeader; non-interactive
+  iOSQuestCardView.swift        Button wrapper; combined a11y label; HStack/VStack per dynamicTypeSize
+  iOSQuestCardInfoView.swift    Title / goal / duration text; .layoutPriority(1)
+  iOSQuestThumbnailView.swift   Asset image + SF Symbol placeholder; @ScaledMetric size, capped
+  iOSRankBadgeView.swift        SwiftUI Canvas shape (no PNG) + rank label; fixed width ~60pt
+  iOSHubFooterView.swift        safeAreaInset .bottom container; basics button + conditional affordance
+
+Layer model (ZStack):
+  Layer 0: iOSHubBackgroundView — Image(.fill) + LinearGradient — ignoresSafeArea
+    Overlay: LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0.25)],
+                            startPoint: .top, endPoint: .bottom)
+    Ensures WCAG AA contrast for text against any image lighting condition.
+  Layer 1: VStack(spacing: 0) — DM greeting | ScrollView | safeAreaInset footer
+
+Quest card internal layout — HStack(alignment: .top, spacing: 12):
+  Left:   iOSQuestThumbnailView — fixed frame; capped @ScaledMetric; not DT-driven
+  Center: iOSQuestCardInfoView  — .layoutPriority(1); wraps text naturally; grows card height
+  Right:  iOSRankBadgeView      — fixed ~60pt wide; Canvas shape + .caption label (may wrap 2 lines)
+
+Dynamic Type:
+  Standard layout: HStack (thumbnail | info | badge)
+  At dynamicTypeSize >= .accessibility2 → VStack layout:
+    Top row: thumbnail (leading) + badge (trailing) in HStack
+    Below:   iOSQuestCardInfoView full width
+  Thumbnail: @ScaledMetric(relativeTo: .body) starting 72pt; capped 96pt iPhone / 108pt iPad
+  Rank badge Canvas shape: always 48x48pt; label (.caption) allowed to wrap
+
+iPhone vs iPad (portrait locked):
+  Metric                  iPhone (.compact)      iPad (.regular)
+  Content max width       screen − 32pt          600pt centered (.frame(maxWidth: 600))
+  Card horizontal padding 16pt                   24pt
+  Card spacing            16pt                   20pt
+  Thumbnail cap           96pt                   108pt
+
+Footer pinning:
+  .safeAreaInset(edge: .bottom) on ScrollView — NOT an overlay.
+  Automatically insets scroll content by footer height; last card never occluded.
+
+Asset vs SwiftUI-drawn:
+  Background images   → .xcassets (supports Dark Mode variants)
+  Game thumbnails     → .xcassets with SF Symbol placeholder until Design track delivers
+  Rank badge shapes   → SwiftUI Canvas / Path — geometric, no PNG, perfect at any point size
+  Footer icons        → SF Symbols — automatic weight + DT scaling
+
+Accessibility containment:
+  Each iOSQuestCardView Button is a single VoiceOver focus element.
+  All sub-views (thumbnail, info, badge) carry .accessibilityHidden(true).
+  Button label: "{title}. {goal}. {duration}. Rank: {rankLabel}."
+  Button hint: "Double-tap to begin this trial."
+  DM greeting: .accessibilityAddTraits(.isHeader)
+  VO help affordance: removed from view hierarchy when VO is ON (not just hidden).
+
+Annotated component diagram: memlog/requirements/Design/Mockups-v2/mock_v3_hub_component_diagram.png
+
 Requirements
 ------------
 - Render 3 MVP games from GameDefinition catalog using the Quest Card spec above.
 - DM greeting header is non-interactive and read as a heading by VoiceOver.
 - Each card combines title + goal + duration + rank into a single accessibility label.
-- Rank badge uses shape AND text (not color alone).
+- Rank badge uses SwiftUI Canvas shape AND text label (no PNG, no color-only differentiation).
 - "Quest Awaits" state for unplayed games (not "Not played").
-- VoiceOver help affordance: visible when VO OFF, absent from hierarchy when VO ON.
+- VoiceOver help affordance: absent from view hierarchy (not hidden) when VO is ON.
 - VoiceOver Basics button: always present.
 - After a game completes, hub rank updates without relaunch.
 - Reduce Motion respected: no ambient animations when enabled.
-- Dynamic Type and Increase Contrast verified.
+- Dynamic Type layout switch at .accessibility2+: card switches to VStack arrangement.
+- iPad: content max 600pt centered; iPhone: full width minus 32pt padding.
+- Dark gradient overlay ensures contrast at all Dynamic Type sizes.
 
 Acceptance Criteria
 -------------------
 - Hub renders all 3 games from catalog with correct titles, goals, and durations.
 - After a game completes, hub reflects updated best rank without requiring relaunch.
-- Rank badge displays both a distinct shape and a text label.
+- Rank badge displays both a Canvas-drawn shape and a text label.
 - With VO OFF: help affordance is present and tappable.
-- With VO ON: help affordance is absent from view hierarchy.
+- With VO ON: help affordance is absent from view hierarchy entirely.
 - "VoiceOver Basics" is always accessible.
 - With Reduce Motion ON: no ambient animations render.
 - Reading order is correct and linear in VoiceOver.
+- At dynamicTypeSize .accessibility2+: card uses VStack layout with no truncation.
+- On iPad (768pt+ canvas): content is max 600pt and centered.
+- Last quest card is not occluded by footer at any Dynamic Type size or device.
 
 Useful Unit Test
 ----------------
