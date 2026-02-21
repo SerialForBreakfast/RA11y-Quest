@@ -17,7 +17,7 @@ Phase 1 Inputs (Summary)
 - VO OFF behavior: Interstitial gate with best-effort Settings open + fallback + in-app steps.
 - MVP skills: Focus navigation, Activate (double-tap), Scroll (3-finger scroll).
 - Navigation: Hub (sandbox) + optional first-run "Basics" sequence.
-- Progress: Store best result per game; hub displays rank only (Perfect/Good/Ok/Failed).
+- Progress: Store best result per game; hub displays rank only (display names: Legendary / Skilled / Novice / Defeated).
 - Metrics: Persist time + mistakes (per game), with rank-first best-result comparison.
 - Architecture: MVVM, lightweight GameDefinition catalog, StorageComponent abstraction (UserDefaults first).
 

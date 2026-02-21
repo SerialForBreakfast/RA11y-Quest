@@ -37,7 +37,8 @@ VoiceOver Gating + Help
 
 Scoring + Progress
 ------------------
-- MVP hub displays rank only: Perfect / Good / Ok / Failed.
+- MVP hub displays rank only (display names: Legendary / Skilled / Novice / Defeated).
+- Internal rank enum remains Perfect / Good / Ok / Failed.
 - Scoring architecture supports optional per-game metrics (e.g., time, accuracy, mistakes).
 - Persistence: Store best result per game (offline).
 
@@ -51,8 +52,8 @@ Architecture + Storage
 
 Localization
 ------------
-- Localization is a later MVP.
-- Avoid hard-coded strings from the start (prefer String Catalogs `.xcstrings` + localized keys).
+- All user-visible strings must be localized from day 1 via String Catalogs (`Localizable.xcstrings`).
+- Avoid hard-coded strings; always use localized keys even for English defaults.
 
 Planned MVP Games (Draft)
 -------------------------

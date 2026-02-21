@@ -22,7 +22,8 @@ VoiceOver
 
 Scoring + Storage
 -----------------
-- Hub displays rank only (Perfect/Good/Ok/Failed).
+- Hub displays rank only (display names: Legendary / Skilled / Novice / Defeated).
+- Internal rank enum: Perfect / Good / Ok / Failed.
 - Scoring model supports optional per-game metrics.
 - Persist best result per game.
 - StorageComponent abstraction; UserDefaults first; SwiftData later.
@@ -34,5 +35,5 @@ Privacy + Telemetry
 
 Localization
 ------------
-- Later MVP.
-- Avoid hard-coded strings from day 1 (use String Catalogs / localized keys).
+- All user-visible strings are localized from day 1 using String Catalogs (`Localizable.xcstrings`).
+- Avoid hard-coded strings; always use localized keys even for English defaults.

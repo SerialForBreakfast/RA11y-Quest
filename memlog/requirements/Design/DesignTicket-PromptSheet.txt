@@ -18,7 +18,7 @@ Global Prompt Constraints (Include in EVERY prompt)
 - no text, no letters, no numbers
 - no watermark, no logo
 - centered subject with generous padding (for sprites)
-- friendly modern iOS game aesthetic
+- D&D fantasy aesthetic (stone, runes, torchlight palette)
 - avoid tiny details; readable at small sizes
 
 Sprite Prompt Template (Transparent)
@@ -28,46 +28,41 @@ no text, no letters, no numbers, centered, lots of padding, transparent backgrou
 
 Background Prompt Template (Non-transparent)
 ============================================
-Flat illustrated background for {SCENE} in {TRAINING_ACADEMY_THEME}, subtle depth, high contrast but not harsh,
+Flat illustrated background for {SCENE} in {DND_THEME}, subtle depth, high contrast but not harsh,
 minimal detail, no text, no UI elements, 16:9 composition with safe margins, 1920x1080
 
 Game-Specific Prompt Sets
 =========================
 
-A) Find & Focus (Simon Says)
-----------------------------
+A) The Enchanter's Trial (Find & Focus)
+---------------------------------------
 Background
-- Flat illustrated background for a “Training Academy command room”, playful but clean, panels and lights (no text),
-high contrast, minimal detail, no UI elements, 16:9 safe margins, 1920x1080
+- Flat illustrated background of an ancient tower shelf in a wizard's study, stone, candles, torchlight,
+high contrast, minimal detail, no text, no relic sprites embedded, 16:9 safe margins, 1920x1080
 
 Sprites
-- Target icon: Flat vector sprite of a “star-shaped training token”, high contrast, simple shapes, no text,
-centered, transparent background, 1024x1024
-- Decoy icons (vary silhouettes): shield token, lightning token, triangle token, circle token, gear token
+- Relic sprites (distinct silhouettes): dragon scale, dragon claw, shadow stone, sunstone, ember glass, frost glass,
+iron shard, moonstone. Flat vector, no text, centered, transparent background, 1024x1024
 
-B) Activate (Bomb Defusal)
---------------------------
+B) The Rogue's Gauntlet (Activate / Double-Tap)
+-----------------------------------------------
 Background
-- Flat illustrated background of an academy workbench with tools and a training device (no text, no digits),
-dramatic spotlight, minimal detail, 16:9 safe margins, 1920x1080
+- Flat illustrated background of a heavy stone door with empty rune slots, torchlit, ominous atmosphere,
+high contrast, minimal detail, no text, no seal sprites embedded, 16:9 safe margins, 1920x1080
 
 Sprites
-- Device body: Flat vector sprite of a “training device panel” with compartments, no digits, high contrast,
-centered, transparent background, 1024x1024
-- Wires: Flat vector sprite of a single coiled wire, color {RED/BLUE/YELLOW/GREEN}, no text, bold silhouette,
-transparent background, 1024x1024
-- Tools (decorative): cutter, screwdriver (simple shapes)
+- Seal sprites (distinct rune glyphs): Seal of Passage, Warding Seal, Binding Seal, Spike Trap Seal, Alarm Seal,
+Collapse Seal, Reveal Seal, Freeze Seal, Silence Seal. Flat vector, no text, centered, transparent background, 1024x1024
 
-C) Scroll Hunt (Dungeon Crawl)
-------------------------------
+C) The Dungeon Descent (Scroll Hunt)
+-----------------------------------
 Background
-- Flat illustrated background of an “academy dungeon simulator corridor” with arches and torches, minimal detail,
-high contrast, no text, 16:9 safe margins, 1920x1080
+- Flat illustrated background of a vertical stone dungeon corridor with arches and torches, atmospheric depth cues,
+high contrast, minimal detail, no text, 16:9 safe margins, 1920x1080
 
 Sprites
-- Door, torch, key, chest: Flat vector sprites, bold silhouettes, no text, transparent background, 1024x1024
-- Objective item: “ancient training relic” token (no text/digits)
-- Decoy items: potion bottle, coin, gem, scroll tube (simple silhouettes)
+- Room row icons (distinct silhouettes): entry hall, guard post, armory, library, prison, ritual room,
+treasury, crypt, workshop, gatehouse, chapel, vault. Flat vector, no text, centered, transparent background, 1024x1024
 
 Acceptance Criteria
 ===================

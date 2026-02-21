@@ -76,7 +76,7 @@ Useful Unit Test
 Story 4 — Scoring supports rank + optional metrics
 --------------------------------------------------
 As a user
-I want a simple rank (Perfect/Good/Ok/Failed)
+I want a simple rank (display names: Legendary / Skilled / Novice / Defeated)
 So that I can understand results quickly, while still supporting richer scoring later
 
 Requirements

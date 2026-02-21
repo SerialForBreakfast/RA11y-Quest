@@ -28,5 +28,4 @@ Phase 2 — Roadmap
 Phase 3 — Tickets
 -----------------
 - TicketBreakdown.txt        All MVP tickets in dependency order (tracks: Infrastructure, UX/Gating, Games, Polish).
-- Phase3-TicketBreakdown.txt Archived placeholder (superseded by TicketBreakdown.txt).
 - Design/                    Design track tickets (AssetListDefinition, PromptSheet, AssetReviewChecklist, AssetDeliveryNaming).

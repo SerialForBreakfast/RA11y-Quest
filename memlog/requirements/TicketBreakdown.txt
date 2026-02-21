@@ -9,11 +9,18 @@ Notes
 - Design track lives in memlog/requirements/Design/ (separate files); this document references timing only.
 - NEW = added during review. FIXED = corrected from original.
 
+Status Values
+=============
+- Done       — Implemented, tested, and merged. All acceptance criteria verified.
+- In Progress — Actively being worked. Only one ticket should be In Progress at a time.
+- Ready      — All dependencies met. Can be picked up immediately.
+- Blocked    — Waiting on one or more incomplete dependencies (listed in each ticket).
+
 Tracks
 ======
 - Infrastructure (M0, M1)      — Foundation; unblock all other tracks.
 - UX / Gating (M2, M3, M4)    — User flows; depends on Infrastructure.
-- Games (M5, M6, S1, M7)      — Game implementations; depends on Infrastructure + UX/Gating.
+- Games (M5, M6, M7)           — Game implementations; depends on Infrastructure + UX/Gating. (S1 spike closed)
 - Polish (M8)                  — Stability + audit; depends on all Games.
 - Design (Parallel)            — Asset work; starts M1, must land before M5.
 
@@ -27,6 +34,7 @@ TRACK: Infrastructure
 TICKET-M0-AppShell-Navigation
 ===============================
 Ticket: M0 - App Shell + Navigation Skeleton
+Status: Done
 
 User Story
 ----------
@@ -60,6 +68,7 @@ Dependencies
 TICKET-M0-DesignTokens [NEW]
 ===============================
 Ticket: M0 - Shared Design Token System
+Status: Done
 
 User Story
 ----------
@@ -99,6 +108,7 @@ Dependencies
 TICKET-M0-StringCatalog-Setup [NEW]
 ===============================
 Ticket: M0 - String Catalog Infrastructure (Localization Foundation)
+Status: Done
 
 User Story
 ----------
@@ -134,6 +144,7 @@ Dependencies
 TICKET-M0-OSLog-Logging [NEW]
 ===============================
 Ticket: M0 - Unified Logging System (OSLog)
+Status: Done
 
 User Story
 ----------
@@ -168,6 +179,7 @@ Dependencies
 TICKET-M1-GameCatalog-Definitions [FIXED]
 ===============================
 Ticket: M1 - GameDefinition Catalog (MVP)
+Status: Done
 
 User Story
 ----------
@@ -205,6 +217,7 @@ Dependencies
 TICKET-M1-ScoringModel-RankMetrics
 ===============================
 Ticket: M1 - Scoring Model (Rank + Metrics)
+Status: Done
 
 User Story
 ----------
@@ -238,6 +251,7 @@ Dependencies
 TICKET-M1-StorageComponent-UserDefaults
 ===============================
 Ticket: M1 - StorageComponent Abstraction (UserDefaults Implementation)
+Status: Done
 
 User Story
 ----------
@@ -275,6 +289,7 @@ Dependencies
 TICKET-M1-GameSessionLifecycle [NEW]
 ===============================
 Ticket: M1 - Game Session Lifecycle / State Machine
+Status: Done
 
 User Story
 ----------
@@ -321,6 +336,7 @@ Dependencies
 TICKET-M1-SharedGameResultScreen [NEW]
 ===============================
 Ticket: M1 - Shared Game Result View
+Status: Done
 
 User Story
 ----------
@@ -372,6 +388,7 @@ TRACK: UX / Gating
 TICKET-M2-VoiceOverStateProvider
 ===============================
 Ticket: M2 - VoiceOverStateProvider (Testable)
+Status: Done
 
 User Story
 ----------
@@ -404,6 +421,7 @@ Dependencies
 TICKET-M2-VOOff-Interstitial-SettingsFallback
 ===============================
 Ticket: M2 - VO Off Interstitial (Settings + Fallback + Help Sheet)
+Status: Done
 
 User Story
 ----------
@@ -440,6 +458,7 @@ Dependencies
 TICKET-M2-HelpAffordance-Visibility
 ===============================
 Ticket: M2 - Help Affordance Visibility (VO Off Only)
+Status: Done
 
 User Story
 ----------
@@ -472,6 +491,7 @@ Dependencies
 TICKET-M2-VOStateChangeMidGame [COMPLETE]
 ===============================
 Ticket: M2 - VoiceOver Disabled Mid-Gameplay
+Status: Done
 
 User Story
 ----------
@@ -508,42 +528,146 @@ Dependencies
 ===============================
 TICKET-M3-Hub-UI-Progress [FIXED]
 ===============================
-Ticket: M3 - Hub UI (Sandbox) + Best Rank Display
+Ticket: M3 - Hub UI + Quest Board
+Status: Ready
 
 User Story
 ----------
 As a user
-I want a hub that lists games and shows my best rank
-So that I can choose what to practice and see improvement.
+I want a hub that feels like a D&D quest board and shows my progress per game
+So that I can choose a trial, see my best rank, and feel like I'm inside a game — not a tutorial app.
+
+Visual Theme — The Tavern Quest Board
+--------------------------------------
+The hub is a tavern quest board. Three quests are pinned to it, each on an aged parchment
+quest card. The environment is a warm, torchlit stone interior. The Dungeon Master's
+voice greets the player at the top.
+
+This is the player's home base. It should feel atmospheric and inviting, not clinical.
+Reference the existing background art style: warm amber torchlight, stone arches,
+dark but not oppressive. See simon_room_bg.png for the established palette and feel.
+
+Screen Structure
+----------------
+Navigation bar
+  - Title: "RA11y" (small, system font)
+  - No back button at hub level
+
+DM Greeting Header (below nav bar)
+  - Text: "Choose Your Trial, Adventurer"
+  - Style: slightly stylized heading; parchment-toned text on a dark stone band
+  - Not interactive; purely atmospheric
+
+Scrollable Quest Card List (3 cards, one per game)
+  - See Quest Card spec below
+  - Cards scroll vertically; no horizontal scroll
+  - Sufficient spacing between cards to prevent accidental activation
+
+Footer Area (always visible, does not scroll away)
+  - "VoiceOver Basics" scroll button (secondary, parchment-style)
+  - Conditional: "Enable VoiceOver" help affordance (see below)
+
+Quest Card Spec (one per game)
+--------------------------------
+Each card represents one game. Tapping anywhere on the card starts the game
+(after VoiceOver gating check — M2). Cards must be large enough for comfortable
+VoiceOver focus (minimum 44pt height; recommended ~120pt).
+
+Content per card:
+  - Thumbnail: square illustration, rounded corners, 72x72pt
+    (use game-specific asset when available; placeholder until Design track delivers)
+  - Game title (large, bold): e.g., "The Enchanter's Trial"
+  - One-line goal (secondary text): e.g., "Navigate focus and invoke the named relic"
+  - Estimated duration: e.g., "~5 min"
+  - Rank badge (trailing side):
+    - D&D rank display names: Legendary / Skilled / Novice / Defeated / Quest Awaits
+    - "Quest Awaits" when no result exists (not "Not played")
+    - Badge MUST convey rank by BOTH shape and color (wax seal shape per rank, not color alone):
+        Legendary → 6-pointed star seal
+        Skilled   → shield seal
+        Novice    → circle seal
+        Defeated  → broken shield seal
+        Quest Awaits → open scroll seal (no color fill)
+    - Badge shows rank text label below the shape (text is primary; shape is reinforcement)
+
+Card visual treatment:
+  - Background: dark warm-toned card surface (dark brown/charcoal, NOT flat gray)
+  - Border: subtle amber/gold accent border
+  - Slight elevation shadow to lift card off background
+  - Thumbnail area: slightly inset panel
+
+State variations:
+  - Unplayed: thumbnail is slightly desaturated; rank area shows "Quest Awaits" scroll
+  - Played: thumbnail at full saturation; wax seal with rank color
+  - Best rank improved (just returned from game): brief accessible announcement only —
+    no animation unless Reduce Motion is OFF
+
+VoiceOver Help Affordance (conditional — VO OFF only)
+------------------------------------------------------
+- Shown only when VoiceOver is disabled (from HubViewModel.showHelpAffordance)
+- Pinned at the bottom of the screen, above the safe area
+- Visual: torch/lantern icon + "Enable VoiceOver to play"
+- Tapping opens the VO interstitial (M2)
+- Must NOT be present in the view hierarchy when VO is ON (not focusable, not hidden)
+
+VoiceOver Basics Button (always visible)
+-----------------------------------------
+- Always accessible regardless of VO state or first-run status
+- Visual: parchment scroll style, secondary prominence
+- Label: "VoiceOver Basics"
+- Navigates to the first-run basics sequence (M4 entry point)
+
+Accessibility
+-------------
+Reading order (linear, top to bottom):
+  1. "RA11y" (navigation title)
+  2. "Choose Your Trial, Adventurer" (heading role)
+  3. Quest card 1 — combined label: "{title}. {goal}. {duration}. Rank: {rank}."
+     accessibilityHint: "Double-tap to begin this trial."
+  4. Quest card 2 — same pattern
+  5. Quest card 3 — same pattern
+  6. "VoiceOver Basics" button
+  7. "Enable VoiceOver to play" button (only if VO OFF)
+
+Rank badge: accessibilityLabel on the badge itself is empty (decorative);
+  rank is part of the card's combined accessibility label.
+"Quest Awaits" accessibility label: "Quest Awaits. Not yet attempted."
+
+Dynamic Type: all text uses ra11y* font tokens; layout reflows at large sizes.
+Increase Contrast: card borders and text meet WCAG AA contrast against the dark card background.
+Reduce Motion: no ambient animations (torch flicker, sparkle) when Reduce Motion is ON.
+Tap target: entire card is one interactive element, minimum 44x44pt.
 
 Requirements
 ------------
-- Render 3 MVP games from GameDefinition catalog. Each game card shows:
-  - title
-  - one-line goal
-  - estimated duration
-  - best rank badge/pill (text is the canonical accessibility label; badge is visual decoration)
-  - "Not played" when no result exists
-  - start action
-- When VoiceOver is OFF: show a persistent "How to enable VoiceOver" help affordance
-  (from M2-HelpAffordance-Visibility). [FIXED: was missing]
-- Provide a "VoiceOver Basics" entry point accessible from the hub at all times
-  (visible regardless of first-run state; from M4). [FIXED: was missing]
-- Rank badge must not rely on color alone; shape or text cue required.
-- Dynamic Type and Increase Contrast must keep the hub readable.
+- Render 3 MVP games from GameDefinition catalog using the Quest Card spec above.
+- DM greeting header is non-interactive and read as a heading by VoiceOver.
+- Each card combines title + goal + duration + rank into a single accessibility label.
+- Rank badge uses shape AND text (not color alone).
+- "Quest Awaits" state for unplayed games (not "Not played").
+- VoiceOver help affordance: visible when VO OFF, absent from hierarchy when VO ON.
+- VoiceOver Basics button: always present.
+- After a game completes, hub rank updates without relaunch.
+- Reduce Motion respected: no ambient animations when enabled.
+- Dynamic Type and Increase Contrast verified.
 
 Acceptance Criteria
 -------------------
-- Hub renders all 3 games from catalog.
+- Hub renders all 3 games from catalog with correct titles, goals, and durations.
 - After a game completes, hub reflects updated best rank without requiring relaunch.
-- With VO OFF: help affordance is visible.
-- With VO ON: help affordance is not present.
-- "VoiceOver Basics" entry is always accessible from hub.
+- Rank badge displays both a distinct shape and a text label.
+- With VO OFF: help affordance is present and tappable.
+- With VO ON: help affordance is absent from view hierarchy.
+- "VoiceOver Basics" is always accessible.
+- With Reduce Motion ON: no ambient animations render.
+- Reading order is correct and linear in VoiceOver.
 
 Useful Unit Test
 ----------------
-- Given stored results for two games, hub view model returns correct rank strings
-  for those games and "Not played" for the third.
+- Given stored results for two games (one Legendary, one Novice), hub view model returns:
+  "Legendary" and "Novice" for those games and "Quest Awaits" for the third.
+- Given VO ON, HubViewModel.showHelpAffordance is false.
+- Given VO OFF, HubViewModel.showHelpAffordance is true.
 
 Dependencies
 ------------
@@ -554,6 +678,7 @@ Dependencies
 TICKET-M4-FirstRun-BasicsSequence
 ===============================
 Ticket: M4 - First-Run "VoiceOver Basics" Sequence
+Status: Blocked — waiting on M3
 
 User Story
 ----------
@@ -598,6 +723,7 @@ TICKET-M5-Game-EnchantersTrial-FindAndFocus
 ===============================
 Ticket: M5 - Game 1 (The Enchanter's Trial) - Find & Focus
 [RENAMED from M5-Game-SimonSays-FindAndFocus to align with GameRules-MVP.txt theme]
+Status: Blocked — waiting on Design track (enchanter relic assets)
 
 User Story
 ----------
@@ -679,6 +805,7 @@ TICKET-M6-Game-RoguesGauntlet-Activate
 ===============================
 Ticket: M6 - Game 2 (The Rogue's Gauntlet) - Activate / Double-Tap
 [RENAMED and REVISED from M6-Game-BombDefusal-Activate to align with GameRules-MVP.txt theme]
+Status: Blocked — waiting on Design track (rogue seal assets)
 
 User Story
 ----------
@@ -760,46 +887,56 @@ Dependencies
 
 
 ===============================
-TICKET-S1-Spike-ScrollObservability [PROMOTED]
+TICKET-S1-Spike-ScrollObservability [CLOSED — RESOLVED BY ANALYSIS]
 ===============================
 Ticket: S1 - Spike: Scroll Observability in SwiftUI
+Status: Done
 
-GATE: This spike must close (findings documented) before TICKET-M7-DungeonCrawl-ScrollHunt opens.
+Resolution (2026-02-20)
+-----------------------
+Closed without prototype. All three spike unknowns are resolved by analysis:
 
-User Story
-----------
+1. API stability:
+   `onScrollGeometryChange(for:of:action:)` + `ScrollGeometry` are iOS 18+ native
+   APIs (stable, documented). Our minimum deployment is iOS 18. No fallback needed.
+   `ScrollGeometry` exposes `visibleRect`, `contentOffset`, `contentSize`, `bounds`.
+
+2. Update frequency:
+   Using `Bool` as the equatable transform output means the action closure fires
+   at most once — when the target first enters the visible rect. No update spam.
+
+3. Recommended strategy:
+   Strategy B from Spike-ScrollObservability-SwiftUI.txt ("target visibility boolean")
+   is confirmed correct. Canonical implementation pattern for M7:
+
+     .onScrollGeometryChange(for: Bool.self) { geometry in
+         geometry.visibleRect.intersects(targetFrame)
+     } action: { _, isReachable in
+         if isReachable { targetIsReachable = true }
+     }
+
+   The pure function `targetIsReachable(visibleRect:targetFrame:) -> Bool` is
+   unit-testable without device (injected geometry values).
+
+One Remaining Question (folded into M7)
+----------------------------------------
+Does `onScrollGeometryChange` fire correctly when VoiceOver performs a 3-finger
+scroll? Since the modifier observes scroll geometry (the outcome, not the gesture),
+the answer is almost certainly yes — but this must be confirmed on device at the
+start of M7 implementation before proceeding with the full level build.
+Add this as the first M7 acceptance criterion.
+
+Spike gate is lifted. M7 may open once M0/M1/M2 and Design track are complete.
+
+Original User Story
+-------------------
 As a developer
 I want a proven approach to observe scroll progress in SwiftUI
-So that Scroll Hunt (M7) can be implemented reliably on iOS 18/26 on iPhone and iPad
-without guessing at implementation strategy.
-
-Requirements
-------------
-- Build a minimal prototype that:
-  - Observes scroll progress using SwiftUI scroll APIs
-    (primary: onScrollGeometryChange + ScrollGeometry; see Spike-ScrollObservability-SwiftUI.txt).
-  - Derives a stable, equatable progress signal suitable for game use.
-  - Flips a "target revealed" boolean when progress reaches the intended threshold.
-- Document findings: which derived values were stable, update frequency, any OS/device differences,
-  recommended strategy for M7.
-- Prototype must work on iPhone and iPad, portrait and landscape full-screen.
-- Prototype is throwaway; it does not ship.
-
-Acceptance Criteria
--------------------
-- Scrolling causes the derived progress value to update.
-- "Target revealed" flips only at the intended threshold.
-- Findings document exists and includes a clear recommended approach for M7.
-- Prototype verified on both iPhone and iPad, portrait + landscape.
-
-Useful Unit Test
-----------------
-- Pure function: mapping from raw scroll signal(s) to DerivedProgress is monotonic
-  and reaches "targetVisible = true" at the configured threshold.
+So that Scroll Hunt (M7) can be implemented reliably on iOS 18/26.
 
 Dependencies
 ------------
-- M0 (can start early; does not need M1/M2)
+- M0 (was start-early; now closed)
 
 
 ===============================
@@ -807,6 +944,7 @@ TICKET-M7-Game-DungeonDescent-ScrollHunt
 ===============================
 Ticket: M7 - Game 3 (The Dungeon Descent) - Scroll Hunt
 [RENAMED from M7-Game-DungeonCrawl-ScrollHunt to align with GameRules-MVP.txt theme]
+Status: Blocked — waiting on Design track (dungeon room assets)
 
 User Story
 ----------
@@ -871,6 +1009,9 @@ Requirements
 
 Acceptance Criteria
 -------------------
+- FIRST: Verify on device that `onScrollGeometryChange` fires correctly when
+  VoiceOver performs a 3-finger scroll (S1 spike's one remaining open question).
+  If this fails, pause and re-evaluate the scroll detection approach before proceeding.
 - L0 practice scroll area is present and usable before L1 begins.
 - L0 lesson card explicitly teaches the 3-finger scroll paradigm.
 - User must scroll to reach the target; target is not activatable until reachable.
@@ -901,6 +1042,7 @@ TRACK: Polish
 TICKET-M8-Accessibility-Audit-Polish
 ===============================
 Ticket: M8 - Accessibility Audit + MVP Polish
+Status: Blocked — waiting on M3, M4, M5, M6, M7
 
 User Story
 ----------
@@ -953,6 +1095,7 @@ Dependencies
 
 ================================================================================
 TRACK: Design (Parallel — see Design/ folder)
+Status: Ready — M1 catalog is closed; asset list definition updated; assets not yet generated.
 ================================================================================
 
 Design tickets live in: memlog/requirements/Design/

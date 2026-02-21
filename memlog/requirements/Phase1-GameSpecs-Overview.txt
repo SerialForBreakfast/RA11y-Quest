@@ -24,13 +24,17 @@ Guiding Decisions (Locked)
 
 Theme + Narrative (Locked)
 ==========================
-- Shared world theme: "Training Academy" that ties all games together.
-- Player progression goal: become an "Accessibility Champion" (preferred; alternatives: "Accessibility Expert", "Accessibility Pro", "Accessibility Ace"; avoid "master").
-- Each game has a specific narrative pattern mapped in its GameSpec (Simon Says, Bomb Defusal, Dungeon Crawl, etc.).
+- Shared world theme: D&D fantasy dungeon training trials with a Dungeon Master (DM) voice.
+- Player is addressed as "Adventurer" or "you" (second person).
+- Each game maps to the D&D-named trials in GameRules-MVP.txt:
+  - The Enchanter's Trial (Find & Focus)
+  - The Rogue's Gauntlet (Activate / Double-Tap)
+  - The Dungeon Descent (Scroll Hunt)
 
 Art Direction (Locked)
 =====================
 - Visual style: Flat, high-contrast, vector-like. Simple shapes, clean edges, bold silhouettes.
+- D&D fantasy aesthetic: stone, runes, torchlight palette (consistent across all games).
 - No baked-in text, letters, or numbers in images. Sprites must be usable at small sizes without losing meaning.
 
 Accessibility Quality Bar (Locked)
@@ -59,7 +63,8 @@ Mistake taxonomy (MVP default)
 - Optional (per game): +1 for measurable wrong-direction scroll beyond a threshold.
 
 Ranks
-- Perfect / Good / Ok / Failed
+- Code-level ranks: Perfect / Good / Ok / Failed.
+- Display names (D&D tone): Legendary / Skilled / Novice / Defeated.
 - Ranks are derived from thresholds per game and can be tuned after hands-on playtests.
 
 Best-result comparison (MVP default)
@@ -74,9 +79,7 @@ Notes
 
 Open follow-ups (from Game Spec revisions)
 ------------------------------------------
-- Confirm final term for player progression (default: "Accessibility Champion").
 - Rank visuals: purely SwiftUI (preferred) or include decorative emblem images.
-- Academy theme: "modern training facility" vs "retro arcade training room" (both compatible with flat-vector).
 
 Related Spike
 =============

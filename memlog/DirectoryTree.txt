@@ -85,12 +85,11 @@ Current structure (as of 2026-02-20) — M2 complete
 └── memlog
     ├── DirectoryTree.txt
     ├── requirements
-    │   ├── Design/                         Design track tickets + assets (simon MVP)
+    │   ├── Design/                         Design track tickets + assets (D&D theme)
     │   ├── GameRules-MVP.txt               Full D&D-themed string spec + pedagogy framework
-│   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
+    │   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
     │   ├── Phase1-*.txt                    Phase 1 requirements, decisions, user stories
     │   ├── Phase2-Roadmap.txt
-    │   ├── Phase3-TicketBreakdown.txt
     │   ├── Requirements-Index.txt
     │   ├── Spike-ScrollObservability-SwiftUI.txt
     │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
