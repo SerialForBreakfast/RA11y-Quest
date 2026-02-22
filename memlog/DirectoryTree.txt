@@ -7,10 +7,14 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-02-20) — M2 complete
+Current structure (as of 2026-02-22) — M3 Hub UI complete; fastlane screenshots lane active
 ---
 
 .
+├── .github
+│   └── workflows
+│       ├── ios-ci.yml
+│       └── ios-screenshots.yml
 ├── RA11y-iOS
 │   ├── RA11y-iOS
 │   │   ├── App
@@ -24,7 +28,14 @@ Current structure (as of 2026-02-20) — M2 complete
 │   │   ├── Design
 │   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
 │   │   ├── Hub
-│   │   │   └── iOSHubView.swift            HubViewModel integration; help affordance button
+│   │   │   ├── iOSHubView.swift              Root hub; uses .background{} pattern for bg image
+│   │   │   ├── iOSHubBackgroundView.swift    Full-bleed bg: fallback color + image + gradient
+│   │   │   ├── iOSHubDMGreetingView.swift    "Choose Your Trial, Adventurer" header
+│   │   │   ├── iOSQuestCardView.swift        Tappable card; HStack/VStack adaptive layout
+│   │   │   ├── iOSQuestCardInfoView.swift    Title / goal / duration text block
+│   │   │   ├── iOSQuestThumbnailView.swift   Asset image + SF Symbol placeholder
+│   │   │   ├── iOSRankBadgeView.swift        SwiftUI Canvas rank shape + label
+│   │   │   └── iOSHubFooterView.swift        safeAreaInset footer; VO basics + enable buttons
 │   │   ├── Results
 │   │   │   └── iOSGameResultView.swift     Shared game result screen
 │   │   ├── VoiceOver
@@ -35,12 +46,15 @@ Current structure (as of 2026-02-20) — M2 complete
 │   │   ├── Localizable.xcstrings           String catalog (localization foundation)
 │   │   └── RA11y_iOSApp.swift              @main entry point -> iOSRootView
 │   ├── RA11y-iOS.xcodeproj
-│   │   └── project.pbxproj                Links RA11yCore; Swift 6; iOS 26.2
+│   │   ├── project.pbxproj                Links RA11yCore; Swift 6; iOS 18.0
+│   │   └── xcshareddata/xcschemes/RA11y-iOS.xcscheme
 │   ├── RA11y-iOSTests
 │   │   └── RA11y_iOSTests.swift            RouterTests + VoiceOverGatingTests
 │   └── RA11y-iOSUITests
 │       ├── RA11y_iOSUITests.swift
 │       └── RA11y_iOSUITestsLaunchTests.swift
+│       ├── RA11y_iOSScreenshots.swift
+│       └── SnapshotHelper.swift
 ├── RA11y.xcworkspace
 │   └── contents.xcworkspacedata            Ties RA11y-iOS.xcodeproj + RA11yCore
 ├── RA11yCore                               Shared Swift package (iOS 18+ / macOS 15+)
@@ -94,6 +108,10 @@ Current structure (as of 2026-02-20) — M2 complete
     │   ├── Spike-ScrollObservability-SwiftUI.txt
     │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
     └── research/
+├── fastlane
+│   ├── Fastfile
+│   └── Snapfile
+├── Gemfile
 
 ---
 Notes

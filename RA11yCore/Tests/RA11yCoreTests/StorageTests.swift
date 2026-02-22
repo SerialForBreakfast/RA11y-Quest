@@ -8,6 +8,8 @@ import Testing
 /// Validates TICKET-M1-StorageComponent-UserDefaults acceptance criteria.
 struct StorageTests {
 
+    // MARK: - Read / Write
+
     @Test func saveAndRetrieveBestResult() async {
         let storage = InMemoryStorageComponent()
         let result  = GameResult(gameID: "find-and-focus", rank: .perfect, timeSeconds: 10, mistakes: 0)
@@ -18,6 +20,15 @@ struct StorageTests {
         #expect(stored == result)
     }
 
+    @Test func returnsNilForUnplayedGame() async {
+        let storage = InMemoryStorageComponent()
+        let stored  = await storage.bestResult(for: "never-played")
+        #expect(stored == nil)
+    }
+
+    // MARK: - Best-Result Semantics
+
+    /// A worse result must not replace the stored best.
     @Test func doesNotOverwriteBetterResultWithWorse() async {
         let storage = InMemoryStorageComponent()
         let better  = GameResult(gameID: "g", rank: .perfect, timeSeconds: 10, mistakes: 0)
@@ -30,6 +41,7 @@ struct StorageTests {
         #expect(stored?.rank == .perfect)
     }
 
+    /// A better result must replace the previously stored one.
     @Test func overwritesWithBetterResult() async {
         let storage = InMemoryStorageComponent()
         let initial = GameResult(gameID: "g", rank: .good,    timeSeconds: 20, mistakes: 2)
@@ -42,11 +54,22 @@ struct StorageTests {
         #expect(stored?.rank == .perfect)
     }
 
-    @Test func returnsNilForUnplayedGame() async {
+    // MARK: - Key Isolation
+
+    /// Saving a result for game A must not affect game B.
+    ///
+    /// Critical: verifies that results are keyed by game ID, not shared state.
+    @Test func resultsForDifferentGamesAreIsolated() async {
         let storage = InMemoryStorageComponent()
-        let stored  = await storage.bestResult(for: "never-played")
-        #expect(stored == nil)
+        let result  = GameResult(gameID: "find-and-focus", rank: .perfect, timeSeconds: 10, mistakes: 0)
+
+        await storage.saveResultIfBetter(result)
+
+        let other = await storage.bestResult(for: "activate-double-tap")
+        #expect(other == nil)
     }
+
+    // MARK: - Basics Flag
 
     @Test func basicsCompletedFlagPersists() async {
         let storage = InMemoryStorageComponent()
@@ -55,5 +78,17 @@ struct StorageTests {
         await storage.markBasicsCompleted()
 
         #expect(await storage.isBasicsCompleted() == true)
+    }
+
+    /// Basics flag for one storage instance must not affect a separate instance.
+    ///
+    /// Validates that `InMemoryStorageComponent` does not share state between instances.
+    @Test func basicsCompletedFlagIsInstanceIsolated() async {
+        let a = InMemoryStorageComponent()
+        let b = InMemoryStorageComponent()
+
+        await a.markBasicsCompleted()
+
+        #expect(await b.isBasicsCompleted() == false)
     }
 }

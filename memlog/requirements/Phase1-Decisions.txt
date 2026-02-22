@@ -7,7 +7,8 @@ Scope
 -----
 - Audience: General users (also useful for designers/dev/QA).
 - MVP Platform: iOS.
-- OS Targets: iOS current (26.x) and current - 1 (18.x).
+- OS Targets: iOS 18+ (current + previous line under year-based naming).
+- Future platforms follow the same policy: macOS 15+, tvOS 18+.
 
 Navigation
 ----------

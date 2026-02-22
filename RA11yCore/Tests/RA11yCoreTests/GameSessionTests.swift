@@ -4,10 +4,12 @@ import Testing
 
 // MARK: - GameSessionTests
 
-/// Tests for `GameSession` state machine transitions and storage integration.
+/// Tests for `GameSession` state machine transitions, elapsed-time accounting,
+/// mistake handling, and storage integration.
 ///
 /// Validates TICKET-M1-GameSessionLifecycle acceptance criteria.
-/// Uses fixed `Date` values to make elapsed-time assertions deterministic.
+/// All time-sensitive assertions use injected `Date` values so there is no
+/// dependency on wall-clock timing.
 struct GameSessionTests {
 
     // MARK: - Helpers
@@ -16,17 +18,25 @@ struct GameSessionTests {
         GameSession(gameID: "find-and-focus", thresholds: .findAndFocus, storage: storage)
     }
 
-    private let t0 = Date(timeIntervalSinceReferenceDate: 0)
-    private var t10: Date { Date(timeIntervalSinceReferenceDate: 10) }
-    private var t20: Date { Date(timeIntervalSinceReferenceDate: 20) }
-    private var t30: Date { Date(timeIntervalSinceReferenceDate: 30) }
+    // Fixed time points for deterministic elapsed-time assertions.
+    private let t0  = Date(timeIntervalSinceReferenceDate: 0)
+    private let t5  = Date(timeIntervalSinceReferenceDate: 5)
+    private let t10 = Date(timeIntervalSinceReferenceDate: 10)
+    private let t15 = Date(timeIntervalSinceReferenceDate: 15)
+    private let t20 = Date(timeIntervalSinceReferenceDate: 20)
+    private let t25 = Date(timeIntervalSinceReferenceDate: 25)
+    private let t30 = Date(timeIntervalSinceReferenceDate: 30)
+    private let t40 = Date(timeIntervalSinceReferenceDate: 40)
+    private let t45 = Date(timeIntervalSinceReferenceDate: 45)
 
-    // MARK: - Basic Transitions
+    // MARK: - Initial State
 
     @Test func initialStateIsIdle() async {
         let session = makeSession()
         #expect(await session.state == .idle)
     }
+
+    // MARK: - Valid Transitions
 
     @Test func startTransitionsToRunning() async throws {
         let session = makeSession()
@@ -51,7 +61,19 @@ struct GameSessionTests {
 
     // MARK: - Abandon
 
-    /// TICKET-M1-GameSessionLifecycle: paused then abandoned → `.abandoned`, no storage write.
+    /// Abandon from running → abandoned, no storage write.
+    @Test func runningThenAbandonIsAbandoned() async throws {
+        let storage = InMemoryStorageComponent()
+        let session = makeSession(storage: storage)
+
+        try await session.start(at: t0)
+        await session.abandon()
+
+        #expect(await session.state == .abandoned)
+        #expect(await storage.bestResult(for: "find-and-focus") == nil)
+    }
+
+    /// Abandon from paused → abandoned, no storage write.
     @Test func pauseThenAbandonIsAbandoned() async throws {
         let storage = InMemoryStorageComponent()
         let session = makeSession(storage: storage)
@@ -64,44 +86,34 @@ struct GameSessionTests {
         #expect(await storage.bestResult(for: "find-and-focus") == nil)
     }
 
-    @Test func runningThenAbandonIsAbandoned() async throws {
-        let storage = InMemoryStorageComponent()
-        let session = makeSession(storage: storage)
-
-        try await session.start(at: t0)
-        await session.abandon()
-
-        #expect(await session.state == .abandoned)
-        #expect(await storage.bestResult(for: "find-and-focus") == nil)
-    }
-
-    @Test func abandonFromTerminalStateIsNoOp() async throws {
+    /// Abandon from a terminal state (.completed) is silently ignored.
+    @Test func abandonFromCompletedStateIsNoOp() async throws {
         let session = makeSession()
         try await session.start(at: t0)
         try await session.complete(at: t10)
-        // Calling abandon on a completed session should silently do nothing.
+
         await session.abandon()
-        // State remains completed (with some result)
+
         if case .completed = await session.state { } else {
-            Issue.record("Expected .completed state after complete()")
+            Issue.record("Expected .completed state — abandon must not change terminal state.")
         }
     }
 
     // MARK: - Complete + Storage
 
-    /// TICKET-M1-GameSessionLifecycle: completed session writes result matching elapsed time and mistakes.
+    /// Complete from running → writes result with correct elapsed time and rank.
     @Test func completedSessionWritesResultToStorage() async throws {
         let storage = InMemoryStorageComponent()
         let session = makeSession(storage: storage)
 
         try await session.start(at: t0)
-        try await session.complete(at: t10)  // 10 seconds, 0 mistakes
+        try await session.complete(at: t10) // 10s, 0 mistakes → Perfect per findAndFocus thresholds
 
         let stored = await storage.bestResult(for: "find-and-focus")
         #expect(stored != nil)
         #expect(stored?.timeSeconds == 10)
         #expect(stored?.mistakes == 0)
-        #expect(stored?.rank == .perfect)  // 10s, 0 mistakes → Perfect per findAndFocus thresholds
+        #expect(stored?.rank == .perfect)
     }
 
     // MARK: - Mistakes
@@ -114,32 +126,52 @@ struct GameSessionTests {
         #expect(await session.mistakeCount == 2)
     }
 
+    /// Mistakes degrade the awarded rank on completion — end-to-end scoring contract.
     @Test func mistakeAffectsRankOnCompletion() async throws {
         let storage = InMemoryStorageComponent()
         let session = makeSession(storage: storage)
 
         try await session.start(at: t0)
-        try await session.recordMistake()  // 1 mistake
-        try await session.complete(at: t10)  // 10s, 1 mistake → Good (not Perfect)
+        try await session.recordMistake() // 1 mistake: 10s + 1 mistake → Good (not Perfect)
+        try await session.complete(at: t10)
 
         let stored = await storage.bestResult(for: "find-and-focus")
         #expect(stored?.rank == .good)
     }
 
-    // MARK: - Elapsed Time Across Pause/Resume
+    // MARK: - Elapsed Time
 
-    /// Pause + resume preserves elapsed time correctly.
+    /// Single pause/resume: active time excludes the pause window.
     @Test func elapsedTimeAccountsForPauseDuration() async throws {
         let storage = InMemoryStorageComponent()
         let session = makeSession(storage: storage)
 
-        try await session.start(at: t0)    // start at 0
-        try await session.pause(at: t10)   // pause at 10s → 10s elapsed
-        try await session.resume(at: t20)  // resume at 20s (paused for 10s)
-        try await session.complete(at: t30) // complete at 30s → 10s + (30-20) = 20s active
+        try await session.start(at: t0)   // start at 0
+        try await session.pause(at: t10)  // 10s active
+        try await session.resume(at: t20) // pause window = 10s (not counted)
+        try await session.complete(at: t30) // 10s + 10s active = 20s total
 
         let stored = await storage.bestResult(for: "find-and-focus")
         #expect(stored?.timeSeconds == 20)
+    }
+
+    /// Multiple pause/resume cycles: only active periods sum into elapsed time.
+    @Test func multiplePauseResumeAccumulatesElapsedTimeCorrectly() async throws {
+        let storage = InMemoryStorageComponent()
+        let session = makeSession(storage: storage)
+
+        // Active: 0→5 = 5s, paused: 5→15 (10s gap, excluded)
+        // Active: 15→20 = 5s, paused: 20→40 (20s gap, excluded)
+        // Active: 40→45 = 5s → total active = 15s
+        try await session.start(at: t0)
+        try await session.pause(at: t5)
+        try await session.resume(at: t15)
+        try await session.pause(at: t20)
+        try await session.resume(at: t40)
+        try await session.complete(at: t45)
+
+        let stored = await storage.bestResult(for: "find-and-focus")
+        #expect(stored?.timeSeconds == 15)
     }
 
     // MARK: - Invalid Transitions
@@ -156,6 +188,26 @@ struct GameSessionTests {
         let session = makeSession()
         await #expect(throws: GameSessionError.self) {
             try await session.pause(at: self.t0)
+        }
+    }
+
+    /// Cannot complete a paused session — must resume to running first.
+    @Test func completeFromPausedThrows() async throws {
+        let session = makeSession()
+        try await session.start(at: t0)
+        try await session.pause(at: t10)
+        await #expect(throws: GameSessionError.self) {
+            try await session.complete(at: self.t20)
+        }
+    }
+
+    /// Mistakes may only be recorded while running. Paused sessions reject them.
+    @Test func recordMistakeFromPausedThrows() async throws {
+        let session = makeSession()
+        try await session.start(at: t0)
+        try await session.pause(at: t10)
+        await #expect(throws: GameSessionError.self) {
+            try await session.recordMistake()
         }
     }
 }

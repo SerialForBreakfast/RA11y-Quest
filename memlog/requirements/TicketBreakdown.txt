@@ -529,7 +529,7 @@ Dependencies
 TICKET-M3-Hub-UI-Progress [FIXED]
 ===============================
 Ticket: M3 - Hub UI + Quest Board
-Status: Ready
+Status: Done
 
 User Story
 ----------
@@ -643,8 +643,8 @@ Component Architecture
 Portrait-locked. Single adaptive layout covers all iPhone and iPad sizes.
 
 View files (RA11y-iOS/Hub/):
-  iOSHubView.swift              Root; owns HubViewModel; ZStack (bg + content layers)
-  iOSHubBackgroundView.swift    Full-bleed image + dark gradient overlay; ignoresSafeArea; no game data
+  iOSHubView.swift              Root; owns HubViewModel; uses .background{} modifier (not ZStack peer)
+  iOSHubBackgroundView.swift    Full-bleed bg; fallback color + image + gradient; ignoresSafeArea; no game data
   iOSHubDMGreetingView.swift    "Choose Your Trial, Adventurer"; .isHeader; non-interactive
   iOSQuestCardView.swift        Button wrapper; combined a11y label; HStack/VStack per dynamicTypeSize
   iOSQuestCardInfoView.swift    Title / goal / duration text; .layoutPriority(1)
@@ -652,12 +652,14 @@ View files (RA11y-iOS/Hub/):
   iOSRankBadgeView.swift        SwiftUI Canvas shape (no PNG) + rank label; fixed width ~60pt
   iOSHubFooterView.swift        safeAreaInset .bottom container; basics button + conditional affordance
 
-Layer model (ZStack):
-  Layer 0: iOSHubBackgroundView — Image(.fill) + LinearGradient — ignoresSafeArea
-    Overlay: LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0.25)],
-                            startPoint: .top, endPoint: .bottom)
+Layer model (.background {} modifier pattern):
+  Background: iOSHubBackgroundView — fallback Color + Image(.fill, .clipped) + LinearGradient
+    Applied via .background { } on the content ScrollView, NOT as a ZStack peer.
+    Reason: ZStack peer approach causes landscape image intrinsic width (~1500pt) to inflate
+    the ZStack's reported width, breaking the content layout. .background{} isolates sizing.
+    Gradient: LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0.25)], top→bottom)
     Ensures WCAG AA contrast for text against any image lighting condition.
-  Layer 1: VStack(spacing: 0) — DM greeting | ScrollView | safeAreaInset footer
+  Foreground: ScrollView (VStack: DM greeting | quest card list | safeAreaInset footer)
 
 Quest card internal layout — HStack(alignment: .top, spacing: 12):
   Left:   iOSQuestThumbnailView — fixed frame; capped @ScaledMetric; not DT-driven
@@ -744,7 +746,7 @@ Dependencies
 TICKET-M4-FirstRun-BasicsSequence
 ===============================
 Ticket: M4 - First-Run "VoiceOver Basics" Sequence
-Status: Blocked — waiting on M3
+Status: Ready
 
 User Story
 ----------

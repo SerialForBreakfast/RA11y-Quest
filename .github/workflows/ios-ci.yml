@@ -1,0 +1,28 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    env:
+      CI_SIMULATOR: "iPhone 15"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build + Test (Core + iOS)
+        run: |
+          ./utility/build_and_test.sh --fast --sim "${CI_SIMULATOR}"
+
+      - name: Upload Build Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-results
+          path: build_results

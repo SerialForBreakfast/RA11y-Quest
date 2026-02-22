@@ -2,8 +2,8 @@ NativeAccessibility.txt
 Timestamp: 2026-02-19 (America/Los_Angeles)
 
 Scope and version targeting
-- This document focuses on Apple’s current major OS line (26.x) and the previous major line (18.x), per your targeting constraints.
-- Apple’s security releases page lists the latest versions as iOS/iPadOS 26.3, macOS 26.3, tvOS 26.3, and visionOS 26.3 (as of Feb 2026):
+- This document focuses on Apple’s current major OS line and the previous major line under year-based naming.
+- Targeting policy: iOS 18+, macOS 15+, tvOS 18+ (current + previous line).
   https://support.apple.com/en-us/100100
 
 How to read this document

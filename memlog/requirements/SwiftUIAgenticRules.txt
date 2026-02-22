@@ -1,0 +1,134 @@
+
+
+RA11y - SwiftUI Agentic Rules (Distilled)
+Date: 2026-02-21
+Source: Distilled from AvdLee/SwiftUI-Agent-Skill (swiftui-expert-skill)
+
+Purpose
+=======
+This document captures the useful, SAFE, non-destructive SwiftUI guidance from the SwiftUI Agent Skill.
+It is intended to guide AI-assisted work inside this repo without introducing risky behaviors (broad refactors,
+architectural mandates, tooling commands, or secret access).
+
+Scope
+=====
+- SwiftUI-focused guidance only.
+- iOS-first (RA11y MVP), with modern APIs preferred.
+- When bridging to UIKit is required, keep it minimal and explicitly justified.
+
+Non-negotiable Safety Rules (Agent Behavior)
+============================================
+1) No tool / command instructions
+- Do not instruct running shell commands, curl/wget, installing packages, or using external tools.
+- No “automated profiling steps.” You can mention Instruments exists, but never prescribe steps.
+
+2) No architecture mandates
+- Do not enforce MVVM/MVC/VIPER, coordinators, routers, DI frameworks, or folder structures.
+- You may suggest separating business logic for testability, without prescribing how.
+
+3) Suggestions vs requirements
+- Use MUST/NEVER only for correctness issues.
+- Use CONSIDER/SUGGEST for optimizations.
+
+4) Minimal-change bias
+- Prefer the smallest change that fixes correctness, accessibility, or performance issues.
+- Avoid large sweeping refactors unless explicitly requested.
+
+SwiftUI Correctness Rules (High Signal)
+=======================================
+
+State Management (Modern)
+-------------------------
+- Prefer @Observable over ObservableObject for new code.
+- Use @State for owned @Observable instances (not @StateObject).
+- Always mark @State (and legacy @StateObject) properties as private.
+- Never declare passed-in values as @State or @StateObject (they only take an initial value).
+- Use @Binding ONLY when the child must modify parent state; otherwise use let.
+- Use @Bindable when a view receives an @Observable object and needs bindings.
+- @Observable classes may need @MainActor for SwiftUI safety unless the project uses Default Actor Isolation == MainActor.
+
+Modern SwiftUI API Defaults
+---------------------------
+Prefer these modern APIs unless there is a specific, justified need for legacy behavior:
+- foregroundStyle() instead of foregroundColor()
+- clipShape(.rect(cornerRadius:)) instead of cornerRadius()
+- NavigationStack instead of NavigationView
+- navigationDestination(for:) for type-safe navigation
+- Button instead of onTapGesture() (unless you need gesture location/count)
+- .sheet(item:) for model-based sheet content (instead of .sheet(isPresented:))
+- ScrollViewReader for programmatic scrolling with stable IDs
+- Avoid UIScreen.main.bounds for sizing
+- Avoid GeometryReader when alternatives exist (e.g., containerRelativeFrame)
+
+View Composition
+----------------
+- Keep body pure: no side effects and no heavy logic.
+- Prefer modifiers over switching entire view types for state changes (helps keep view identity stable).
+- Extract complex views into subviews early for readability and better diffing.
+- Prefer method references for actions (move inline logic into named functions).
+- Prefer relative layout over hard-coded constants.
+- Keep views context-agnostic (don’t assume screen size/presentation style).
+
+Lists / ForEach (Stability is correctness)
+------------------------------------------
+MUST / NEVER rules:
+- Always provide stable identity for ForEach.
+- Never use .indices for dynamic content.
+- Avoid variable view count per element inside ForEach (can break identity/animations).
+- Avoid inline filtering inside ForEach; pre-filter and cache.
+- Avoid AnyView inside list rows.
+- Convert enumerated() sequences to arrays before ForEach.
+
+Performance (Only when justified)
+--------------------------------
+Correctness-oriented performance rules:
+- SwiftUI doesn’t compare before re-render: guard assignments to state so you only write when values change.
+- In hot paths (scroll handlers / frequent updates), gate state updates by thresholds.
+
+Optional optimizations (SUGGEST, don’t auto-apply):
+- Equatable views for expensive subtrees.
+- POD wrapper pattern for fast diffing (advanced).
+- Suggest downsampling when encountering UIImage(data:) (only if relevant to current performance issue).
+
+Animations
+----------
+- Prefer .animation(_:value:) (value-based) over deprecated broad animations.
+- Use withAnimation for event-driven changes.
+- Prefer transform animations (offset/scale/rotation) over layout changes for performance.
+
+Liquid Glass (iOS 26+)
+----------------------
+- Only adopt glass effects when explicitly requested.
+- Gate iOS 26+ APIs with #available and provide a sensible fallback.
+
+Accessibility Defaults (RA11y Alignment)
+========================================
+These rules align the SwiftUI skill’s “accessibility best practices” with RA11y’s product goals.
+
+- Interactive controls MUST have:
+  - accessibilityLabel (user-facing name)
+  - accessibilityHint when it clarifies the action
+- Decorative imagery MUST be hidden from accessibility.
+- Do not rely on color alone to convey meaning.
+- Ensure Dynamic Type works end-to-end:
+  - avoid fixed text sizes for critical content
+  - avoid clipping/truncation in common large size categories
+- Prefer semantic controls (Button, Toggle, Slider, etc.) over gesture-only interactions.
+
+What to Avoid (Common Failure Modes)
+====================================
+- Don’t “optimize everything.” Performance changes must be motivated by an observed issue.
+- Don’t rewrite app architecture while “improving SwiftUI.”
+- Don’t introduce tooling/CLI steps into instructions.
+- Don’t migrate to Liquid Glass styling unless requested.
+
+Primary Source Pointers
+=======================
+- SwiftUI Expert Skill core guidelines and checklists:
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/SKILL.md
+- Agent guidelines (what the skill explicitly excludes / how to phrase guidance):
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/AGENTS.md
+- Reference deep dives (state, lists, performance):
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/references/state-management.md
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/references/list-patterns.md
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/references/performance-patterns.md

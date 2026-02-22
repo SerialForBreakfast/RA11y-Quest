@@ -93,7 +93,7 @@ struct iOSGameResultView: View {
 
 // MARK: - Preview
 
-#Preview("Perfect") {
+#Preview("Legendary") {
     NavigationStack {
         iOSGameResultView(
             presenter: GameResultPresenter(
@@ -105,7 +105,7 @@ struct iOSGameResultView: View {
     }
 }
 
-#Preview("Failed") {
+#Preview("Defeated") {
     NavigationStack {
         iOSGameResultView(
             presenter: GameResultPresenter(

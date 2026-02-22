@@ -45,6 +45,9 @@ utility/build_and_test.sh --verbose
 # List workspace schemes
 utility/build_and_test.sh --list-schemes
 
+# Capture screenshots (fastlane snapshot)
+bundle exec fastlane screenshots
+
 # Swift package build/test only (fastest)
 swift build --package-path RA11yCore
 swift test --package-path RA11yCore

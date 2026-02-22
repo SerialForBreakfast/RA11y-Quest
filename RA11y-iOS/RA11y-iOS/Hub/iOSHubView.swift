@@ -1,17 +1,29 @@
+import OSLog
 import SwiftUI
 import RA11yCore
 
 // MARK: - iOSHubView
 
-/// The game hub — central screen listing all available VoiceOver training games.
+/// The game hub — the player's home base and quest board.
 ///
-/// At M2 this is a navigable placeholder that validates VoiceOver help affordance
-/// visibility. Full catalog-driven implementation in M3.
+/// Implemented per `TICKET-M3-Hub-UI-Progress`. Renders three training games as
+/// D&D-themed quest cards, provides VoiceOver gating and help affordance, and
+/// reflects best results from storage without requiring an app relaunch.
 ///
-/// ## Help Affordance
-/// Uses `if viewModel.showHelpAffordance { ... }` — NOT `.hidden()` — so the
-/// affordance is fully absent from the view hierarchy when VoiceOver is active.
-/// This prevents VoiceOver from landing on or announcing a hidden help button.
+/// ## Layout (ZStack)
+/// - Layer 0: `iOSHubBackgroundView` — full-bleed image + gradient; `ignoresSafeArea`
+/// - Layer 1: Content — DM greeting + scrollable quest cards + pinned footer
+///
+/// ## Adaptive Design
+/// - iPhone (.compact): full-width content minus 16pt horizontal padding
+/// - iPad (.regular): content max width 600pt, centered
+///
+/// ## VoiceOver Reading Order
+/// 1. Navigation title "RA11y"
+/// 2. "Choose Your Trial, Adventurer" (.isHeader)
+/// 3–5. Quest cards (combined label per card)
+/// 6. "VoiceOver Basics"
+/// 7. "Enable VoiceOver to play" (only if VO OFF)
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -19,76 +31,117 @@ struct iOSHubView: View {
 
     // MARK: - State
 
-    /// View model sourced from the live VoiceOver provider.
-    /// Reactive: `showHelpAffordance` updates whenever VoiceOver is toggled.
     @State private var viewModel = HubViewModel(
-        voiceOverProvider: iOSLiveVoiceOverStateProvider()
+        voiceOverProvider: iOSLiveVoiceOverStateProvider(),
+        storage: UserDefaultsStorageComponent()
     )
-
     @State private var showHelpSheet = false
+
+    // MARK: - Environment
+
+    @Environment(iOSAppRouter.self) private var router
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    // MARK: - Computed
+
+    private var contentMaxWidth: CGFloat {
+        sizeClass == .regular ? 600 : .infinity
+    }
+
+    private var cardHorizontalPadding: CGFloat {
+        sizeClass == .regular ? RA11ySpacing.lg : RA11ySpacing.md
+    }
+
+    private var cardSpacing: CGFloat {
+        sizeClass == .regular ? RA11ySpacing.lg : RA11ySpacing.md
+    }
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: RA11ySpacing.lg) {
-            Spacer()
-
-            Image(systemName: "figure.walk.motion")
-                .font(.system(size: 64))
-                .foregroundStyle(Color.ra11yAccent)
-                .accessibilityHidden(true)
-
-            Text(String(localized: "hub.title"))
-                .font(.ra11yLargeTitle)
-                .fontWeight(.bold)
-                .accessibilityAddTraits(.isHeader)
-
-            Text(String(localized: "hub.subtitle"))
-                .font(.ra11yBody)
-                .foregroundStyle(Color.ra11ySecondaryLabel)
-                .multilineTextAlignment(.center)
-
-            Spacer()
-
-            // Help affordance — present only when VoiceOver is OFF.
-            // Removed from the hierarchy entirely when VO is ON so it is
-            // not focusable by VoiceOver (per M2-HelpAffordance-Visibility).
-            if viewModel.showHelpAffordance {
-                helpAffordance
+        contentLayer
+            // `.background {}` sizes the background to the content frame, then the
+            // background extends into safe area regions on its own. This prevents the
+            // background image's intrinsic size (1920pt wide for landscape assets)
+            // from widening the ZStack and overflowing the content layout.
+            .background {
+                iOSHubBackgroundView(assetName: "simon_room_bg")
             }
+            .navigationTitle(String(localized: "hub.navigationTitle"))
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showHelpSheet) {
+                iOSVoiceOverHelpSheet()
+            }
+            .task {
+                await viewModel.refreshBestResults()
+            }
+    }
+
+    // MARK: - Content Layer
+
+    private var contentLayer: some View {
+        ScrollView(.vertical) {
+            VStack(spacing: 0) {
+                iOSHubDMGreetingView()
+                    .padding(.top, RA11ySpacing.sm)
+
+                questCardList
+            }
+            .frame(maxWidth: contentMaxWidth)
+            .frame(maxWidth: .infinity)
         }
-        .padding(RA11ySpacing.xl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.ra11yBackground)
-        .navigationTitle(String(localized: "hub.navigationTitle"))
-        .navigationBarTitleDisplayMode(.large)
-        .sheet(isPresented: $showHelpSheet) {
-            iOSVoiceOverHelpSheet()
+        .safeAreaInset(edge: .bottom) {
+            iOSHubFooterView(
+                showHelpAffordance: viewModel.showHelpAffordance,
+                onVoiceOverBasics: navigateToBasics,
+                onEnableVoiceOver: { showHelpSheet = true }
+            )
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - Quest Cards
 
-    /// "How to enable VoiceOver" entry point. Only inserted when VO is OFF.
-    private var helpAffordance: some View {
-        Button {
-            showHelpSheet = true
-        } label: {
-            Label(
-                String(localized: "hub.helpAffordance"),
-                systemImage: "questionmark.circle"
-            )
-            .font(.ra11ySubheadline)
+    private var questCardList: some View {
+        LazyVStack(spacing: cardSpacing) {
+            ForEach(GameCatalog.all) { game in
+                iOSQuestCardView(
+                    game: game,
+                    rank: viewModel.bestRank(for: game.id),
+                    onTap: { startGame(game) }
+                )
+                .padding(.horizontal, cardHorizontalPadding)
+            }
         }
-        .buttonStyle(.bordered)
-        .padding(.bottom, RA11ySpacing.sm)
+        .padding(.top, RA11ySpacing.md)
+        .padding(.bottom, RA11ySpacing.xl)
+    }
+
+    // MARK: - Actions
+
+    /// Initiates the VoiceOver gating check before starting a game.
+    ///
+    /// If VoiceOver is running: route directly to the game (M5+).
+    /// If VoiceOver is off: push the interstitial so the user can enable it.
+    private func startGame(_ game: GameDefinition) {
+        if viewModel.showHelpAffordance {
+            // VoiceOver is OFF — route to interstitial
+            router.push(.voiceOverInterstitial(kind: game.kind))
+        } else {
+            // VoiceOver is ON — proceed to game (M5+: push game route)
+            RA11yLogger.navigation.debug("Game start gating passed for \(game.id)")
+        }
+    }
+
+    private func navigateToBasics() {
+        router.push(.firstRun)
     }
 }
 
 // MARK: - Previews
 
-#Preview("VO Off — help affordance visible") {
+#Preview("VO OFF — help affordance visible") {
     NavigationStack {
         iOSHubView()
+            .environment(iOSAppRouter())
     }
 }

@@ -82,25 +82,25 @@ public enum GameCatalog {
             id: "find-and-focus",
             titleKey: "game.findAndFocus.title",
             goalKey: "game.findAndFocus.goal",
-            estimatedDuration: "~30s",
+            estimatedDuration: "~5 min",
             kind: .findAndFocus,
-            thumbnailAssetName: "simon_target_icon_01"
+            thumbnailAssetName: "enchanter_relic_target"
         ),
         GameDefinition(
             id: "activate-double-tap",
             titleKey: "game.activateDoubleTap.title",
             goalKey: "game.activateDoubleTap.goal",
-            estimatedDuration: "~45s",
+            estimatedDuration: "~5 min",
             kind: .activateDoubleTap,
-            thumbnailAssetName: "simon_signal_light"
+            thumbnailAssetName: "rogue_seal_target"
         ),
         GameDefinition(
             id: "scroll-hunt",
             titleKey: "game.scrollHunt.title",
             goalKey: "game.scrollHunt.goal",
-            estimatedDuration: "~45s",
+            estimatedDuration: "~7 min",
             kind: .scrollHunt,
-            thumbnailAssetName: "simon_room_bg"
+            thumbnailAssetName: "dungeon_room_entrance"
         ),
     ]
 

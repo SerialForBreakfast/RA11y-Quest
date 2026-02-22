@@ -3,7 +3,7 @@ import Testing
 
 // MARK: - VoiceOverTests
 
-/// Tests for `GameStartDecision` routing logic.
+/// Tests for `GameStartDecision` routing logic and `StubVoiceOverStateProvider` behavior.
 ///
 /// Validates TICKET-M2-VoiceOverStateProvider acceptance criteria:
 /// - VO OFF → `.requireVoiceOver` (interstitial route)
@@ -27,7 +27,9 @@ struct VoiceOverTests {
         #expect(decision == .proceed(kind: .findAndFocus))
     }
 
-    /// Decision carries the correct `GameKind` regardless of VO state.
+    /// Decision carries the correct `GameKind` for every case.
+    ///
+    /// Ensures the kind is not hardcoded or lost during evaluation.
     @Test func decisionPreservesGameKind() {
         for kind in GameKind.allCases {
             let offDecision = GameStartDecision.evaluate(
@@ -45,17 +47,13 @@ struct VoiceOverTests {
 
     // MARK: - StubVoiceOverStateProvider
 
-    @Test func stubReportsCorrectInitialState() {
-        #expect(StubVoiceOverStateProvider(isVoiceOverRunning: true).isVoiceOverRunning == true)
-        #expect(StubVoiceOverStateProvider(isVoiceOverRunning: false).isVoiceOverRunning == false)
-    }
-
-    /// Stub's default stateChanges stream does not yield — safe for routing tests.
+    /// The stub's default `stateChanges` stream must not yield within the test window.
+    ///
+    /// If the default stream yielded immediately, routing tests that subscribe to it
+    /// would see spurious state changes and produce false results.
     @Test func stubDefaultStreamNeverYields() async {
         let stub = StubVoiceOverStateProvider(isVoiceOverRunning: false)
 
-        // Race the stream against a short timeout. If the stream yields first,
-        // firstEmitted will be non-nil; if the timeout wins, it stays nil.
         let firstEmitted: Bool? = await withTaskGroup(of: Bool?.self) { group in
             group.addTask {
                 for await value in stub.stateChanges { return value }

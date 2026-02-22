@@ -13,7 +13,8 @@ Platform + OS Targeting
 -----------------------
 - MVP platform: iOS.
 - Future platforms: Best-fit games per platform (not strict feature parity).
-- OS targets: iOS current (26.x) and current - 1 (18.x), unless a requirement-breaking complexity forces adjustment.
+- OS targets: iOS 18+ (current + previous line under year-based naming).
+- Future platforms follow the same policy: macOS 15+, tvOS 18+.
 
 Navigation Model
 ----------------

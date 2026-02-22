@@ -1,0 +1,35 @@
+# Scheme + workspace
+scheme("RA11y-iOS")
+workspace("RA11y.xcworkspace")
+
+# Devices (override with SNAPSHOT_DEVICES="iPhone 17, iPhone 16e, iPad (A16)")
+if ENV["SNAPSHOT_DEVICES"]
+  devices(ENV["SNAPSHOT_DEVICES"].split(",").map(&:strip))
+else
+  devices([
+    "iPhone 17",
+    "iPhone 16e",
+    "iPad (A16)"
+  ])
+end
+
+# Languages
+languages(["en-US"])
+
+# iOS version override for CI
+if ENV["SNAPSHOT_IOS_VERSION"]
+  ios_version(ENV["SNAPSHOT_IOS_VERSION"])
+end
+
+# Limit to screenshot test only
+test_target_name("RA11y-iOSUITests")
+only_testing([
+  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots"
+])
+
+output_directory("fastlane/screenshots")
+clear_previous_screenshots(true)
+skip_open_summary(true)
+
+# Keep logs for CI debugging
+output_simulator_logs(true)

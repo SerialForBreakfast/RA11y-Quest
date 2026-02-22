@@ -15,6 +15,12 @@ We will use the new Swift Testing framework for testing our components.
 
 
 Phase 1 will be requirements gathering
+
+
+Phase 1 Requirements
+--------------------
+Moved to: memlog/requirements/Phase1-Requirements.txt
+
 1 List all Accessibility features for each platform.
 2 Develop training games
 What games to include that best to leverage specific Accessibility tools? For example these could be a basic reference:
@@ -24,4 +30,3 @@ Fogger style game to avoid collisions using 3 fingers swipe to scroll up/down, c
 3 Design
 	How to make each screen beautiful and native looking while being exhaustively Accessible
 3 What are the main components?  How should the architecture be broken down?  What should be shared?
-

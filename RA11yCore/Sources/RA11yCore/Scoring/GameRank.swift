@@ -2,7 +2,8 @@
 
 /// Rank awarded to a completed game session, ordered from worst to best.
 ///
-/// `Int` raw values enable `Comparable` ordering: higher raw value = better rank.
+/// Raw `Int` values power `Comparable` ordering — higher = better rank.
+/// Display names follow the D&D theme established in `GameRules-MVP.txt`.
 /// All cases are `Codable` for persistence in `GameResult`.
 public enum GameRank: Int, Comparable, Hashable, Sendable, Codable, CaseIterable {
 
@@ -26,23 +27,30 @@ public enum GameRank: Int, Comparable, Hashable, Sendable, Codable, CaseIterable
 
     // MARK: Display
 
-    /// Short, localized display text suitable for badges and VoiceOver announcement.
+    /// D&D-themed display text for badges, result screens, and VoiceOver announcements.
+    ///
+    /// Used by `GameResultPresenter.accessibilityAnnouncement` and `iOSRankBadgeView`.
+    /// The hub shows "Quest Awaits" for a nil (unplayed) rank — that string lives in
+    /// `Localizable.xcstrings` as `"hub.questAwaits"`, not here.
     public var displayText: String {
         switch self {
-        case .failed:  return "Failed"
-        case .ok:      return "OK"
-        case .good:    return "Good"
-        case .perfect: return "Perfect"
+        case .failed:  return "Defeated"
+        case .ok:      return "Novice"
+        case .good:    return "Skilled"
+        case .perfect: return "Legendary"
         }
     }
 
     /// SF Symbol name representing the rank without relying on color alone.
+    ///
+    /// Used on the result screen and as a semantic fallback.
+    /// The hub quest board renders custom Canvas shapes instead — see `iOSRankBadgeView`.
     public var symbolName: String {
         switch self {
-        case .failed:  return "xmark.circle"
-        case .ok:      return "minus.circle"
-        case .good:    return "checkmark.circle"
-        case .perfect: return "star.circle.fill"
+        case .failed:  return "shield.slash"
+        case .ok:      return "circle"
+        case .good:    return "shield"
+        case .perfect: return "star.fill"
         }
     }
 }

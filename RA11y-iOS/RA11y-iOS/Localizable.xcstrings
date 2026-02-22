@@ -7,7 +7,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Double-tap the correct control to disarm."
+            "value" : "Touch to examine. Double-tap to sever."
           }
         }
       }
@@ -18,7 +18,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activate"
+            "value" : "The Rogue's Gauntlet"
           }
         }
       }
@@ -29,7 +29,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Focus the right element and activate it."
+            "value" : "Navigate focus and invoke the named relic."
           }
         }
       }
@@ -40,7 +40,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Find & Focus"
+            "value" : "The Enchanter's Trial"
           }
         }
       }
@@ -51,7 +51,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scroll to reveal and activate the hidden objective."
+            "value" : "Scroll three fingers deep to find the relic."
           }
         }
       }
@@ -62,14 +62,50 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scroll Hunt"
+            "value" : "The Dungeon Descent"
+          }
+        }
+      }
+    },
+    "hub.card.accessibilityHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double-tap to begin this trial."
+          }
+        }
+      }
+    },
+    "hub.dmGreeting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Your Trial, Adventurer"
+          }
+        }
+      }
+    },
+    "hub.enableVoiceOver" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable VoiceOver to play"
           }
         }
       }
     },
     "hub.helpAffordance" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to enable VoiceOver" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to enable VoiceOver"
+          }
+        }
       }
     },
     "hub.navigationTitle" : {
@@ -77,27 +113,60 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Training Academy"
+            "value" : "RA11y"
+          }
+        }
+      }
+    },
+    "hub.questAwaits" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quest Awaits"
+          }
+        }
+      }
+    },
+    "hub.questAwaits.accessibility" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quest Awaits. Not yet attempted."
           }
         }
       }
     },
     "hub.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose a game to begin your VoiceOver training."
+            "value" : "Choose a trial to begin your VoiceOver training."
           }
         }
       }
     },
     "hub.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Training Academy"
+            "value" : "RA11y"
+          }
+        }
+      }
+    },
+    "hub.voiceOverBasics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Basics"
           }
         }
       }
@@ -110,41 +179,6 @@
             "value" : "VoiceOver Basics — coming in M4"
           }
         }
-      }
-    },
-    "voiceOverRequired.navigationTitle" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "VoiceOver Required" } }
-      }
-    },
-    "voiceOverRequired.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "VoiceOver is Required" } }
-      }
-    },
-    "voiceOverRequired.body" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This game trains VoiceOver skills and requires VoiceOver to be enabled. Enable it in Settings, then return to start the game." } }
-      }
-    },
-    "voiceOverRequired.openSettings" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Accessibility Settings" } }
-      }
-    },
-    "voiceOverRequired.howToEnable" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "How to Enable VoiceOver" } }
-      }
-    },
-    "voiceOverRequired.settingsFallback" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Go to Settings → Accessibility → VoiceOver and turn it on, then return here." } }
-      }
-    },
-    "voiceOverRequired.returnToHub" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Return to Hub" } }
       }
     },
     "result.navigationTitle" : {
@@ -383,6 +417,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "3. Turn on VoiceOver"
+          }
+        }
+      }
+    },
+    "voiceOverRequired.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This game trains VoiceOver skills and requires VoiceOver to be enabled. Enable it in Settings, then return to start the game."
+          }
+        }
+      }
+    },
+    "voiceOverRequired.howToEnable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to Enable VoiceOver"
+          }
+        }
+      }
+    },
+    "voiceOverRequired.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Required"
+          }
+        }
+      }
+    },
+    "voiceOverRequired.openSettings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Accessibility Settings"
+          }
+        }
+      }
+    },
+    "voiceOverRequired.returnToHub" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to Hub"
+          }
+        }
+      }
+    },
+    "voiceOverRequired.settingsFallback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Settings → Accessibility → VoiceOver and turn it on, then return here."
+          }
+        }
+      }
+    },
+    "voiceOverRequired.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver is Required"
           }
         }
       }
