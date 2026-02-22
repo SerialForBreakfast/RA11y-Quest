@@ -43,11 +43,7 @@ public final class HubViewModel {
     private let storage: any StorageComponent
 
     /// Task that observes VoiceOver state changes for this view model.
-    ///
-    /// Marked `nonisolated(unsafe)` so `deinit` (which is always nonisolated in
-    /// Swift 6) can call `cancel()`. This is safe because `Task.cancel()` is
-    /// itself nonisolated and thread-safe — no actor-isolated state is accessed.
-    nonisolated(unsafe) private var stateObservationTask: Task<Void, Never>?
+    private var stateObservationTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -72,6 +68,7 @@ public final class HubViewModel {
 
         stateObservationTask = Task { @MainActor [weak self] in
             for await isRunning in voiceOverProvider.stateChanges {
+                guard !Task.isCancelled else { break }
                 self?.showHelpAffordance = !isRunning
             }
         }

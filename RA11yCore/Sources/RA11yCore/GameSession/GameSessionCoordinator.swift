@@ -54,11 +54,7 @@ public final class GameSessionCoordinator {
     private let voiceOverProvider: any VoiceOverStateProvider
 
     /// Task that observes VoiceOver state changes during an active session.
-    ///
-    /// Marked `nonisolated(unsafe)` so `deinit` (which is always nonisolated in
-    /// Swift 6) can call `cancel()`. This is safe because `Task.cancel()` is
-    /// itself nonisolated and thread-safe — no actor-isolated state is accessed.
-    nonisolated(unsafe) private var monitorTask: Task<Void, Never>?
+    private var monitorTask: Task<Void, Never>?
 
     // MARK: - Init
 
