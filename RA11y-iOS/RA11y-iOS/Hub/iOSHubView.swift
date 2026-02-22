@@ -133,7 +133,7 @@ struct iOSHubView: View {
     }
 
     private func navigateToBasics() {
-        router.push(.firstRun)
+        router.push(.firstRun(mode: .sequence))
     }
 }
 

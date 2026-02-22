@@ -171,12 +171,182 @@
         }
       }
     },
-    "placeholder.firstRun" : {
+    "app.loading" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceOver Basics — coming in M4"
+            "value" : "Loading..."
+          }
+        }
+      }
+    },
+    "basicsSequence.continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "basicsSequence.continue.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves to the next Basics step."
+          }
+        }
+      }
+    },
+    "basicsSequence.continue.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue Basics"
+          }
+        }
+      }
+    },
+    "basicsSequence.finish" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish"
+          }
+        }
+      }
+    },
+    "basicsSequence.finish.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completes Basics and returns to the hub."
+          }
+        }
+      }
+    },
+    "basicsSequence.finish.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish Basics"
+          }
+        }
+      }
+    },
+    "basicsSequence.stepFormat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step %d of %d"
+          }
+        }
+      }
+    },
+    "basicsSequence.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "firstRun.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn the three core VoiceOver skills in a guided sequence, or explore the hub on your own."
+          }
+        }
+      }
+    },
+    "firstRun.goToHub" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Hub"
+          }
+        }
+      }
+    },
+    "firstRun.goToHub.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skips the Basics sequence and opens the game hub."
+          }
+        }
+      }
+    },
+    "firstRun.goToHub.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Hub"
+          }
+        }
+      }
+    },
+    "firstRun.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "firstRun.startBasics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Basics"
+          }
+        }
+      }
+    },
+    "firstRun.startBasics.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts the guided VoiceOver Basics sequence."
+          }
+        }
+      }
+    },
+    "firstRun.startBasics.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "firstRun.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with VoiceOver Basics"
           }
         }
       }

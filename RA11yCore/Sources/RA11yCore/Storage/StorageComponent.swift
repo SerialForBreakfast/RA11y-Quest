@@ -34,4 +34,10 @@ public protocol StorageComponent: AnyObject, Sendable {
 
     /// Persists the "Basics completed" flag.
     func markBasicsCompleted() async
+
+    /// Returns whether the user dismissed the first-run Basics prompt.
+    func isBasicsDismissed() async -> Bool
+
+    /// Persists the "Basics dismissed" flag when the user opts out of first-run.
+    func markBasicsDismissed() async
 }

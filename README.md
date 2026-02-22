@@ -54,30 +54,33 @@ Screenshots captured automatically via `bundle exec fastlane screenshots`.
 
 <img src="memlog/requirements/Design/Mockups-v2/mock_v3_hub_quest_board.png" width="320" alt="Hub quest board mockup">
 
-### Game Screens
+### VoiceOver Basics — First-Run Lesson Card (M4)
+
+<img src="memlog/requirements/Design/Mockups-v2/mock_v3_lesson_card_l0.png" width="280" alt="VoiceOver Basics lesson card">
+
+### Game Screens (M5–M7)
 
 <table>
   <tr>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_dungeon_roguelike_start.png" width="220" alt="Dungeon Descent — start"></td>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_dungeon_roguelike_scrolled.png" width="220" alt="Dungeon Descent — in play"></td>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_dungeon_roguelike_success.png" width="220" alt="Dungeon Descent — success"></td>
+    <th align="center">The Enchanter's Trial</th>
+    <th align="center">The Rogue's Gauntlet</th>
+    <th align="center">The Dungeon Descent</th>
   </tr>
   <tr>
-    <td align="center"><sub>The Dungeon Descent — start</sub></td>
-    <td align="center"><sub>In play</sub></td>
-    <td align="center"><sub>Success</sub></td>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v3_enchanter_trial_play.png" width="200" alt="Enchanter's Trial — in play"></td>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v3_rogue_gauntlet_play_v2.png" width="200" alt="Rogue's Gauntlet — in play"></td>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v3_dungeon_descent_play.png" width="200" alt="Dungeon Descent — in play"></td>
   </tr>
   <tr>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_bomb_wires_play.png" width="220" alt="Bomb Wires — in play"></td>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_bomb_wires_success.png" width="220" alt="Bomb Wires — success"></td>
-    <td></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>The Rogue's Gauntlet — in play</sub></td>
-    <td align="center"><sub>Success</sub></td>
-    <td></td>
+    <td align="center"><sub>Find the named relic (VoiceOver focus + invoke)</sub></td>
+    <td align="center"><sub>Sever the correct seal (touch to examine, double-tap to act)</sub></td>
+    <td align="center"><sub>Scroll three fingers to reach the Ancient Vault</sub></td>
   </tr>
 </table>
+
+### Shared Results Screen
+
+<img src="memlog/requirements/Design/Mockups-v2/mock_v3_results_legendary.png" width="280" alt="Results screen — Legendary rank">
 
 ---
 

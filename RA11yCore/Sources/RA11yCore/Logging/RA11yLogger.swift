@@ -6,10 +6,22 @@ import OSLog
 /// consistent filtering in Console.app (e.g., subsystem:com.showblender.RA11y).
 /// Each category corresponds to one feature area for fine-grained filtering.
 ///
-/// Usage:
+/// ## Usage
 /// ```swift
 /// RA11yLogger.navigation.debug("Pushing route: hub")
 /// RA11yLogger.storage.error("Failed to persist result: \(error)")
+/// ```
+///
+/// ## Startup Performance Tracing
+/// Use `RA11yLogger.startup` for milestone messages visible in Console.app.
+/// Use `RA11yLogger.startupSignposter` for timed intervals visible in Instruments
+/// under the "Points of Interest" instrument. Filter by:
+///   subsystem = com.showblender.RA11y, category = startup
+///
+/// ```swift
+/// let state = RA11yLogger.startupSignposter.beginInterval("myPhase")
+/// defer { RA11yLogger.startupSignposter.endInterval("myPhase", state) }
+/// // ... async work ...
 /// ```
 ///
 /// - Note: Never log user-identifiable data. Prefer `%{private}@` for sensitive values.
@@ -30,4 +42,21 @@ public enum RA11yLogger {
 
     /// Score evaluation and best-result comparisons.
     public static let scoring = Logger(subsystem: subsystem, category: "scoring")
+
+    /// App startup phase milestones and hangs.
+    ///
+    /// Logs key moments from cold start through the hub becoming interactive.
+    /// Visible in Console.app filtered by subsystem + category = "startup".
+    public static let startup = Logger(subsystem: subsystem, category: "startup")
+
+    /// Timed interval signposter for startup phases.
+    ///
+    /// Produces intervals visible in Instruments → "Points of Interest" instrument.
+    /// Pair every `beginInterval` with a matching `endInterval` — use `defer` in
+    /// async functions to guarantee the interval closes even on early exit.
+    ///
+    /// ## Concurrency
+    /// `OSSignposter` is safe to use across actor boundaries; `beginInterval`
+    /// and `endInterval` may be called from any isolation context.
+    public static let startupSignposter = OSSignposter(subsystem: subsystem, category: "startup")
 }

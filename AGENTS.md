@@ -247,6 +247,30 @@ A passing Core build is not sufficient if the iOS build fails, and vice versa.
 
 ---
 
+## Concurrency Strategy (Swift 6)
+
+Use the Swift Concurrency Agent Skill principles as guardrails when designing or reviewing concurrency.
+These rules are additive to the rest of this document.
+
+### Audit Focus (Before Changes)
+- Identify actor isolation boundaries (App target is `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`).
+- Map async entry points and background work; avoid broad `@MainActor` where a narrower scope fits.
+- Confirm `Sendable` correctness for values crossing task or actor boundaries.
+
+### Implementation Rules
+- Prefer structured concurrency (`Task {}` scoped to the caller) over `Task.detached`.
+- Avoid `nonisolated(unsafe)` and `@unchecked Sendable` unless a documented invariant exists.
+- Keep actor-isolated critical sections minimal; move heavy work to nonisolated helpers.
+- Always handle cancellation in long-running tasks and loops (`Task.isCancelled`).
+- Never block in async contexts; move blocking I/O off the main actor.
+
+### Documentation & Review
+- Document isolation requirements in doc comments for any public/internal async API.
+- When adding concurrency workarounds (e.g., `@preconcurrency`), add a follow-up ticket.
+- Add or update tests that validate concurrent behavior (ordering, cancellation, thread-safety).
+
+---
+
 # RA11y - SwiftUI Agentic Rules (Distilled)
 Date: 2026-02-21
 Source: Distilled from AvdLee/SwiftUI-Agent-Skill (swiftui-expert-skill)

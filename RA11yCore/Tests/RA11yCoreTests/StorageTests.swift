@@ -91,4 +91,25 @@ struct StorageTests {
 
         #expect(await b.isBasicsCompleted() == false)
     }
+
+    @Test func basicsDismissedFlagPersists() async {
+        let storage = InMemoryStorageComponent()
+        #expect(await storage.isBasicsDismissed() == false)
+
+        await storage.markBasicsDismissed()
+
+        #expect(await storage.isBasicsDismissed() == true)
+    }
+
+    /// Dismissed flag for one storage instance must not affect a separate instance.
+    ///
+    /// Validates that `InMemoryStorageComponent` does not share dismissal state.
+    @Test func basicsDismissedFlagIsInstanceIsolated() async {
+        let a = InMemoryStorageComponent()
+        let b = InMemoryStorageComponent()
+
+        await a.markBasicsDismissed()
+
+        #expect(await b.isBasicsDismissed() == false)
+    }
 }

@@ -12,7 +12,7 @@ enum AppRoute: Hashable {
     /// The main game hub — lists all available training games.
     case hub
     /// The first-run "VoiceOver Basics" guided sequence. Implemented in M4.
-    case firstRun
+    case firstRun(mode: FirstRunMode)
     /// The shared result screen shown after any game completes.
     /// Carries the `GameResult` so the view can display rank, time, and mistakes.
     /// Games in M5+ push this route on session completion.
@@ -22,6 +22,18 @@ enum AppRoute: Hashable {
     /// with VoiceOver disabled. Carries the intended `GameKind` so the interstitial
     /// can offer the correct follow-up once the user enables VoiceOver.
     case voiceOverInterstitial(kind: GameKind)
+}
+
+// MARK: - FirstRunMode
+
+/// Entry point for the "VoiceOver Basics" flow.
+///
+/// Controls whether the first-run screen is shown or the Basics sequence starts immediately.
+enum FirstRunMode: Hashable {
+    /// Show the first-run entry screen ("Start Basics" vs "Go to Hub").
+    case entry
+    /// Start the Basics sequence immediately (used by the hub entry point).
+    case sequence
 }
 
 // MARK: - Router
@@ -50,8 +62,7 @@ final class iOSAppRouter {
     /// The destination shown at app launch.
     ///
     /// Returns `.hub` at M0.
-    /// M4 will inject `StorageComponent` to conditionally return `.firstRun`
-    /// when the "Basics completed" flag is absent.
+    /// M4 resolves the first-run entry path via `resolveInitialRoute(using:)`.
     var initialRoute: AppRoute { .hub }
 
     // MARK: - Navigation
@@ -76,5 +87,17 @@ final class iOSAppRouter {
     func popToRoot() {
         path = NavigationPath()
         RA11yLogger.navigation.debug("Navigation reset to root")
+    }
+
+    // MARK: - First-Run Routing
+
+    /// Resolves the initial route based on stored Basics flags.
+    ///
+    /// - Parameter storage: Persistence layer for first-run flags.
+    /// - Returns: `.firstRun(mode: .entry)` when neither flag is set; otherwise `.hub`.
+    func resolveInitialRoute(using storage: any StorageComponent) async -> AppRoute {
+        if await storage.isBasicsCompleted() { return .hub }
+        if await storage.isBasicsDismissed() { return .hub }
+        return .firstRun(mode: .entry)
     }
 }

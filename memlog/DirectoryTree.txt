@@ -27,6 +27,9 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
 │   │   │       └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
 │   │   ├── Design
 │   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
+│   │   ├── FirstRun
+│   │   │   ├── iOSBasicsSequenceView.swift  Basics sequence placeholder + completion flag
+│   │   │   └── iOSFirstRunView.swift        First-run entry screen + sequence container
 │   │   ├── Hub
 │   │   │   ├── iOSHubView.swift              Root hub; uses .background{} pattern for bg image
 │   │   │   ├── iOSHubBackgroundView.swift    Full-bleed bg: fallback color + image + gradient
@@ -99,6 +102,18 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
     ├── DirectoryTree.txt
     ├── requirements
     │   ├── Design/                         Design track tickets + assets (D&D theme)
+    │   │   ├── Mockups-v2/                 Screen composition mockups (v3 current)
+    │   │   │   ├── mock_v3_hub_quest_board.png
+    │   │   │   ├── mock_v3_lesson_card_l0.png          (NEW — VoiceOver Basics L0)
+    │   │   │   ├── mock_v3_enchanter_trial_play.png    (NEW — M5)
+    │   │   │   ├── mock_v3_rogue_gauntlet_play_v2.png  (NEW — M6, rune-seal retheme)
+    │   │   │   ├── mock_v3_dungeon_descent_play.png    (NEW — M7)
+    │   │   │   └── mock_v3_results_legendary.png       (NEW — shared results screen)
+    │   │   ├── Assets/                     Raw generated sprite + background assets
+    │   │   ├── DesignTicket-AssetListDefinition.txt
+    │   │   ├── DesignTicket-PromptSheet.txt
+    │   │   ├── DesignTicket-AssetReviewChecklist.txt
+    │   │   └── DesignTicket-AssetDeliveryNaming.txt
     │   ├── GameRules-MVP.txt               Full D&D-themed string spec + pedagogy framework
     │   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
     │   ├── Phase1-*.txt                    Phase 1 requirements, decisions, user stories
@@ -107,6 +122,9 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
     │   ├── Spike-ScrollObservability-SwiftUI.txt
     │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
     └── research/
+        ├── ADR-0001-Concurrency-Strategy.md
+        ├── InitialBrainstorming.txt
+        └── NativeAccessibility.txt
 ├── scripts
 │   └── extract_screenshots.sh      xcresulttool-based PNG extraction (replaces fastlane snapshot)
 ├── fastlane

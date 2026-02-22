@@ -25,14 +25,14 @@ struct RouterTests {
     /// Pushing a route increases stack depth.
     @Test func pushIncreasesDepth() {
         let router = iOSAppRouter()
-        router.push(.firstRun)
+        router.push(.firstRun(mode: .entry))
         #expect(!router.path.isEmpty)
     }
 
     /// popToRoot resets the path regardless of stack depth.
     @Test func popToRootClearsPath() {
         let router = iOSAppRouter()
-        router.push(.firstRun)
+        router.push(.firstRun(mode: .entry))
         router.popToRoot()
         #expect(router.path.isEmpty)
     }
@@ -90,5 +90,78 @@ struct VoiceOverGatingTests {
             let decision = GameStartDecision.evaluate(kind: kind, provider: stub)
             #expect(decision == .requireVoiceOver(kind: kind))
         }
+    }
+}
+
+// MARK: - M4: First-Run Routing Tests
+
+/// Tests for first-run Basics routing behavior.
+@MainActor
+struct FirstRunRoutingTests {
+
+    /// Completed flag should route directly to Hub.
+    @Test func basicsCompletedRoutesToHub() async {
+        let router = iOSAppRouter()
+        let storage = TestStorageComponent()
+        await storage.markBasicsCompleted()
+
+        let route = await router.resolveInitialRoute(using: storage)
+        #expect(route == .hub)
+    }
+
+    /// Dismissed flag should route directly to Hub.
+    @Test func basicsDismissedRoutesToHub() async {
+        let router = iOSAppRouter()
+        let storage = TestStorageComponent()
+        await storage.markBasicsDismissed()
+
+        let route = await router.resolveInitialRoute(using: storage)
+        #expect(route == .hub)
+    }
+
+    /// No flags should route to first-run entry.
+    @Test func noFlagsRoutesToFirstRunEntry() async {
+        let router = iOSAppRouter()
+        let storage = TestStorageComponent()
+
+        let route = await router.resolveInitialRoute(using: storage)
+        #expect(route == .firstRun(mode: .entry))
+    }
+}
+
+// MARK: - Test Storage
+
+/// In-memory storage used by iOS routing tests.
+actor TestStorageComponent: StorageComponent {
+
+    private var basicsCompleted = false
+    private var basicsDismissed = false
+
+    /// Returns nil; results are not persisted for routing tests.
+    func bestResult(for gameID: String) async -> GameResult? {
+        nil
+    }
+
+    /// No-op; routing tests do not save results.
+    func saveResultIfBetter(_ result: GameResult) async { }
+
+    /// Returns whether basics has been completed.
+    func isBasicsCompleted() async -> Bool {
+        basicsCompleted
+    }
+
+    /// Marks basics as completed.
+    func markBasicsCompleted() async {
+        basicsCompleted = true
+    }
+
+    /// Returns whether basics was dismissed.
+    func isBasicsDismissed() async -> Bool {
+        basicsDismissed
+    }
+
+    /// Marks basics as dismissed.
+    func markBasicsDismissed() async {
+        basicsDismissed = true
     }
 }

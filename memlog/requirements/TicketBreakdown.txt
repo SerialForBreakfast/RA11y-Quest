@@ -746,7 +746,9 @@ Dependencies
 TICKET-M4-FirstRun-BasicsSequence
 ===============================
 Ticket: M4 - First-Run "VoiceOver Basics" Sequence
-Status: Ready
+Status: Done — routing, persistence, and VoiceOver gating complete. iOSBasicsSequenceView is a
+        documented placeholder pending M5–M7 game L0 screens. Visual theming (DM card style, dark
+        background, gesture rows) deferred to M5 polish pass.
 
 User Story
 ----------
@@ -791,7 +793,9 @@ TICKET-M5-Game-EnchantersTrial-FindAndFocus
 ===============================
 Ticket: M5 - Game 1 (The Enchanter's Trial) - Find & Focus
 [RENAMED from M5-Game-SimonSays-FindAndFocus to align with GameRules-MVP.txt theme]
-Status: Blocked — waiting on Design track (enchanter relic assets)
+Status: Partially Unblocked — screen composition mockup delivered (mock_v3_enchanter_trial_play.png);
+        sprite assets (enchanter_relic_*) and background (enchanter_tower_shelf_bg) still needed
+        before full implementation. UI structure and layout are unblocked.
 
 User Story
 ----------
@@ -873,7 +877,10 @@ TICKET-M6-Game-RoguesGauntlet-Activate
 ===============================
 Ticket: M6 - Game 2 (The Rogue's Gauntlet) - Activate / Double-Tap
 [RENAMED and REVISED from M6-Game-BombDefusal-Activate to align with GameRules-MVP.txt theme]
-Status: Blocked — waiting on Design track (rogue seal assets)
+Status: Partially Unblocked — screen composition mockup delivered (mock_v3_rogue_gauntlet_play_v2.png);
+        rune seal sprites (rogue_seal_*) and background (rogue_trap_door_bg) still needed before
+        full implementation. Note: game re-themed from bomb-wire to stone-door-with-rune-seals per
+        current GameSpec. Existing bomb_* assets are deprecated. UI structure is unblocked.
 
 User Story
 ----------
@@ -1012,7 +1019,9 @@ TICKET-M7-Game-DungeonDescent-ScrollHunt
 ===============================
 Ticket: M7 - Game 3 (The Dungeon Descent) - Scroll Hunt
 [RENAMED from M7-Game-DungeonCrawl-ScrollHunt to align with GameRules-MVP.txt theme]
-Status: Blocked — waiting on Design track (dungeon room assets)
+Status: Partially Unblocked — screen composition mockup delivered (mock_v3_dungeon_descent_play.png);
+        dungeon room icons (dungeon_room_*) and background (dungeon_descent_bg) still needed before
+        full implementation. UI structure, ScrollView layout, and depth HUD are unblocked.
 
 User Story
 ----------
@@ -1163,7 +1172,21 @@ Dependencies
 
 ================================================================================
 TRACK: Design (Parallel — see Design/ folder)
-Status: Ready — M1 catalog is closed; asset list definition updated; assets not yet generated.
+Status: In Progress — Screen composition mockups generated (v3) for all games and shared results
+        screen. Mockups committed to memlog/requirements/Design/Mockups-v2/. Sprite assets
+        (enchanter_relic_*, rogue_seal_*, dungeon_room_*) and backgrounds are the remaining
+        deliverable before M5/M6/M7 open fully.
+
+Mockups Delivered (2026-02-20)
+- mock_v3_lesson_card_l0.png           VoiceOver Basics first-run lesson card (M4)
+- mock_v3_enchanter_trial_play.png     The Enchanter's Trial — L2 play state (M5)
+- mock_v3_rogue_gauntlet_play_v2.png   The Rogue's Gauntlet — L2 play state with seals (M6)
+- mock_v3_dungeon_descent_play.png     The Dungeon Descent — L2 play state (M7)
+- mock_v3_results_legendary.png        Shared results screen — Legendary rank (M5–M7)
+
+Note: Rogue's Gauntlet has been re-themed from bomb-wire prototype to rune-seal-on-stone-door
+per the current GameSpec-ActivateDoubleTap.txt. Old bomb-wire mockups (mock_v2_bomb_wires_*)
+are superseded but kept for reference.
 ================================================================================
 
 Design tickets live in: memlog/requirements/Design/
@@ -1198,4 +1221,5 @@ Backlog (Explicitly Not MVP)
 - Localization (add translations; String Catalog structure is already in place from M0)
 - Opt-in GameKit / social features
 - Advanced "broken accessibility" challenge levels
+- App Store submission readiness: support all iPad orientations or set UIRequiresFullScreen; resolve App Store warnings
 - tvOS / macOS targets

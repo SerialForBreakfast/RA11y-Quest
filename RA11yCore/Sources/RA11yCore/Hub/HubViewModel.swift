@@ -42,8 +42,11 @@ public final class HubViewModel {
 
     private let storage: any StorageComponent
 
-    /// `nonisolated(unsafe)` lets `deinit` call `cancel()` without actor-hopping.
-    /// `Task.cancel()` is thread-safe; no data race is possible here.
+    /// Task that observes VoiceOver state changes for this view model.
+    ///
+    /// Marked `nonisolated(unsafe)` so `deinit` (which is always nonisolated in
+    /// Swift 6) can call `cancel()`. This is safe because `Task.cancel()` is
+    /// itself nonisolated and thread-safe — no actor-isolated state is accessed.
     nonisolated(unsafe) private var stateObservationTask: Task<Void, Never>?
 
     // MARK: - Init
@@ -64,6 +67,8 @@ public final class HubViewModel {
     public init(voiceOverProvider: some VoiceOverStateProvider, storage: any StorageComponent) {
         self.storage = storage
         self.showHelpAffordance = !voiceOverProvider.isVoiceOverRunning
+
+        RA11yLogger.startup.debug("HubViewModel.init — voiceOverRunning: \(voiceOverProvider.isVoiceOverRunning)")
 
         stateObservationTask = Task { @MainActor [weak self] in
             for await isRunning in voiceOverProvider.stateChanges {
@@ -109,8 +114,19 @@ public final class HubViewModel {
     /// Iterates all catalog games and loads their best result from storage.
     ///
     /// Runs on `@MainActor`; awaits the storage actor for each game read.
+    /// Each `await` is a cross-actor hop to `UserDefaultsStorageComponent` and back.
     /// Writes `bestResults` atomically after all reads complete.
+    ///
+    /// ## Startup Instrumentation
+    /// Emits a `hubResultsLoad` signpost interval covering all storage reads.
+    /// If this interval is long, suspect sequential actor hops — consider batching
+    /// reads into a single actor call on `StorageComponent` in a future refactor.
     private func loadBestResults() async {
+        let state = RA11yLogger.startupSignposter.beginInterval("hubResultsLoad")
+        defer { RA11yLogger.startupSignposter.endInterval("hubResultsLoad", state) }
+
+        RA11yLogger.startup.debug("hubResultsLoad started — \(GameCatalog.all.count) games")
+
         var results: [String: GameRank] = [:]
         for game in GameCatalog.all {
             if let result = await storage.bestResult(for: game.id) {
@@ -118,5 +134,7 @@ public final class HubViewModel {
             }
         }
         bestResults = results
+
+        RA11yLogger.startup.debug("hubResultsLoad complete — \(results.count) stored result(s)")
     }
 }
