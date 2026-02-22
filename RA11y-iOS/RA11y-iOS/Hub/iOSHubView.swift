@@ -31,16 +31,22 @@ struct iOSHubView: View {
 
     // MARK: - State
 
-    @State private var viewModel = HubViewModel(
-        voiceOverProvider: iOSLiveVoiceOverStateProvider(),
-        storage: UserDefaultsStorageComponent()
-    )
+    @Bindable private var viewModel: HubViewModel
     @State private var showHelpSheet = false
 
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
     @Environment(\.horizontalSizeClass) private var sizeClass
+
+    // MARK: - Init
+
+    /// Creates the hub view with an injected view model.
+    ///
+    /// - Parameter viewModel: Observable hub view model owned by the caller.
+    init(viewModel: HubViewModel) {
+        self._viewModel = Bindable(wrappedValue: viewModel)
+    }
 
     // MARK: - Computed
 
@@ -68,13 +74,10 @@ struct iOSHubView: View {
                 iOSHubBackgroundView(assetName: "simon_room_bg")
             }
             .navigationTitle(String(localized: "hub.navigationTitle"))
-            .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showHelpSheet) {
-                iOSVoiceOverHelpSheet()
-            }
-            .task {
-                await viewModel.refreshBestResults()
-            }
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showHelpSheet) {
+            iOSVoiceOverHelpSheet()
+        }
     }
 
     // MARK: - Content Layer
@@ -141,7 +144,12 @@ struct iOSHubView: View {
 
 #Preview("VO OFF — help affordance visible") {
     NavigationStack {
-        iOSHubView()
+        iOSHubView(
+            viewModel: HubViewModel(
+                voiceOverProvider: StubVoiceOverStateProvider(isVoiceOverRunning: false),
+                storage: UserDefaultsStorageComponent()
+            )
+        )
             .environment(iOSAppRouter())
     }
 }

@@ -47,6 +47,7 @@ public struct iOSLiveVoiceOverStateProvider: VoiceOverStateProvider {
                     named: UIAccessibility.voiceOverStatusDidChangeNotification
                 )
                 for await _ in notifications {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(UIAccessibility.isVoiceOverRunning)
                 }
                 continuation.finish()

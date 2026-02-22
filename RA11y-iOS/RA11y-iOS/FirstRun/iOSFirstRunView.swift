@@ -121,6 +121,7 @@ struct iOSFirstRunView: View {
 
     private func dismissToHub() {
         Task {
+            guard !Task.isCancelled else { return }
             await storage.markBasicsDismissed()
             router.popToRoot()
         }

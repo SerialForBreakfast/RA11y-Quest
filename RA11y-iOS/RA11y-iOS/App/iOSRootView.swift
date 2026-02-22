@@ -20,8 +20,22 @@ struct iOSRootView: View {
     // MARK: - State
 
     @State private var router = iOSAppRouter()
-    @State private var storage = UserDefaultsStorageComponent()
+    @State private var storage: UserDefaultsStorageComponent
+    @State private var hubViewModel: HubViewModel
     @State private var hasResolvedInitialRoute = false
+
+    // MARK: - Init
+
+    init() {
+        let storage = UserDefaultsStorageComponent()
+        _storage = State(initialValue: storage)
+        _hubViewModel = State(
+            initialValue: HubViewModel(
+                voiceOverProvider: iOSLiveVoiceOverStateProvider(),
+                storage: storage
+            )
+        )
+    }
 
     // MARK: - Body
 
@@ -29,7 +43,7 @@ struct iOSRootView: View {
         NavigationStack(path: $router.path) {
             Group {
                 if hasResolvedInitialRoute {
-                    iOSHubView()
+                    iOSHubView(viewModel: hubViewModel)
                 } else {
                     ProgressView(String(localized: "app.loading"))
                         .onAppear {
@@ -53,7 +67,7 @@ struct iOSRootView: View {
     private func routeDestination(for route: AppRoute) -> some View {
         switch route {
         case .hub:
-            iOSHubView()
+            iOSHubView(viewModel: hubViewModel)
         case .firstRun(let mode):
             iOSFirstRunView(mode: mode, storage: storage)
         case .gameResult(let result):

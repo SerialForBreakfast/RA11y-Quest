@@ -263,6 +263,8 @@ These rules are additive to the rest of this document.
 - Keep actor-isolated critical sections minimal; move heavy work to nonisolated helpers.
 - Always handle cancellation in long-running tasks and loops (`Task.isCancelled`).
 - Never block in async contexts; move blocking I/O off the main actor.
+- When the app target uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, still keep
+  heavy or blocking work off the main actor via a dedicated actor or helper.
 
 ### Documentation & Review
 - Document isolation requirements in doc comments for any public/internal async API.

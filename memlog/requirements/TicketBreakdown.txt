@@ -773,6 +773,11 @@ Acceptance Criteria
 - Subsequent launches go directly to Hub.
 - Basics is accessible from Hub at any time.
 
+Optional Polish
+---------------
+- Replace the Basics placeholder screen with the L0 lesson card treatment (mock_v3_lesson_card_l0.png).
+- Use per-game L0 copy and styling once M5–M7 screens land.
+
 Useful Unit Test
 ----------------
 - When basicsCompleted is true in storage, the initial routing decision resolves to Hub,
@@ -781,6 +786,7 @@ Useful Unit Test
 Dependencies
 ------------
 - M0, M1 Storage, M3 Hub
+- Optional polish depends on M5–M7 L0 screens and design assets
 
 
 ================================================================================
@@ -1223,3 +1229,48 @@ Backlog (Explicitly Not MVP)
 - Advanced "broken accessibility" challenge levels
 - App Store submission readiness: support all iPad orientations or set UIRequiresFullScreen; resolve App Store warnings
 - tvOS / macOS targets
+
+
+================================================================================
+Concurrency Audit Track
+================================================================================
+
+TICKET-CONC-001 — Swift Concurrency Audit (RA11yCore)
+Status: Ready
+
+Goal
+----
+Apply the Swift Concurrency strategy (ADR-0001) across RA11yCore for safety and clarity.
+
+Scope
+-----
+- Remove any unsafe isolation escapes that are no longer needed.
+- Add explicit cancellation checks in long-lived tasks/loops.
+- Document isolation expectations on public/internal async APIs.
+
+Acceptance Criteria
+-------------------
+- No `nonisolated(unsafe)` remains without a documented invariant.
+- Long-running async loops check `Task.isCancelled`.
+- Concurrency documentation is present on async APIs that cross actors.
+
+
+TICKET-CONC-002 — Swift Concurrency Audit (RA11y-iOS)
+Status: Ready
+
+Goal
+----
+Apply the Swift Concurrency strategy (ADR-0001) across the iOS target with a focus on
+MainActor usage and task lifecycles.
+
+Scope
+-----
+- Add cancellation guards for any async loops or long-lived tasks.
+- Ensure non-UI work does not execute on the main actor.
+- Document isolation expectations where views trigger async work.
+
+Acceptance Criteria
+-------------------
+- Async loops and long-lived tasks handle cancellation.
+- Any heavy/background work is clearly isolated from the main actor.
+- Concurrency behavior is documented for async actions in views.

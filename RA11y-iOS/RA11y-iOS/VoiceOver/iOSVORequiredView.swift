@@ -123,6 +123,7 @@ struct iOSVORequiredView: View {
     /// 3. If both fail, reveal inline manual instructions.
     private func openAccessibilitySettings() {
         Task {
+            guard !Task.isCancelled else { return }
             let accessibilityURL = URL(string: "App-Prefs:root=Accessibility")
             if let url = accessibilityURL, await UIApplication.shared.open(url) {
                 RA11yLogger.navigation.info("Opened Accessibility settings via deep link.")
@@ -136,6 +137,7 @@ struct iOSVORequiredView: View {
             }
 
             RA11yLogger.navigation.error("Both Settings URLs failed; showing manual fallback.")
+            guard !Task.isCancelled else { return }
             withAnimation {
                 showManualFallback = true
             }
