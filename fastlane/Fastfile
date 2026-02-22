@@ -9,6 +9,7 @@ WORKSPACE      = "../RA11y.xcworkspace".freeze
 SCHEME         = "RA11y-iOS".freeze
 UI_TEST_ID     = "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots".freeze
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
+DOCS_BASE      = "../docs/screenshots/en-US".freeze
 EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
 
 # ---------------------------------------------------------------------------
@@ -118,6 +119,12 @@ platform :ios do
           " -resultBundlePath '#{result_path}'"
         )
         sh("bash '#{EXTRACT_SCRIPT}' '#{result_path}' '#{output_dir}'")
+
+        # Publish to docs/screenshots/ so the README can reference committed PNGs.
+        # fastlane/screenshots/ is gitignored (build output); docs/screenshots/ is not.
+        docs_dir = "#{DOCS_BASE}/#{label}"
+        sh("mkdir -p '#{docs_dir}' && cp -f '#{output_dir}'/*.png '#{docs_dir}/' 2>/dev/null || true")
+
         succeeded << label
       rescue => e
         UI.error("FAILED for #{label}: #{e.message}")

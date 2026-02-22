@@ -26,12 +26,67 @@ rising complexity, then a timed trial with a progress bar.
 
 ---
 
+## Current State — Hub Screen
+
+The Hub is the first screen a player sees. It presents the three game quests,
+detects VoiceOver state, and surfaces the help affordance for new users.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/en-US/iPhone_large/01_Hub.png" width="220" alt="Hub on iPhone 17"></td>
+    <td align="center"><img src="docs/screenshots/en-US/iPhone_small/01_Hub.png" width="190" alt="Hub on iPhone 16e"></td>
+    <td align="center"><img src="docs/screenshots/en-US/iPad/01_Hub.png" width="320" alt="Hub on iPad"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>iPhone (large)</sub></td>
+    <td align="center"><sub>iPhone (small)</sub></td>
+    <td align="center"><sub>iPad</sub></td>
+  </tr>
+</table>
+
+Screenshots captured automatically via `bundle exec fastlane screenshots`.
+
+---
+
+## Design Vision — Where We're Going
+
+### Hub — Quest Board
+
+<img src="memlog/requirements/Design/Mockups-v2/mock_v3_hub_quest_board.png" width="320" alt="Hub quest board mockup">
+
+### Game Screens
+
+<table>
+  <tr>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_dungeon_roguelike_start.png" width="220" alt="Dungeon Descent — start"></td>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_dungeon_roguelike_scrolled.png" width="220" alt="Dungeon Descent — in play"></td>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_dungeon_roguelike_success.png" width="220" alt="Dungeon Descent — success"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>The Dungeon Descent — start</sub></td>
+    <td align="center"><sub>In play</sub></td>
+    <td align="center"><sub>Success</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_bomb_wires_play.png" width="220" alt="Bomb Wires — in play"></td>
+    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v2_bomb_wires_success.png" width="220" alt="Bomb Wires — success"></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>The Rogue's Gauntlet — in play</sub></td>
+    <td align="center"><sub>Success</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+---
+
 ## Requirements
 
-- Xcode 16+
-- iOS 18+ deployment target
+- Xcode 26+ (macOS Tahoe)
+- iOS 26 deployment target
 - Swift 6 (strict concurrency)
-- An iOS Simulator named `iPhone 17` (default for the build script; configurable)
+- iOS Simulator (auto-detected at runtime — no hardcoded device name required)
 
 ---
 
@@ -100,8 +155,8 @@ utility/build_and_test.sh --only-core
 # iOS only
 utility/build_and_test.sh --only-ios
 
-# Custom simulator
-utility/build_and_test.sh --sim "iPhone 16 Pro"
+# Prefer a specific simulator (auto-detected from simctl if omitted)
+utility/build_and_test.sh --sim "iPhone 17"
 
 # Clean before build
 utility/build_and_test.sh --clean
@@ -163,6 +218,14 @@ higher bar than most apps:
 
 ## Status
 
-Infrastructure (M0, M1) and VoiceOver gating (M2) are complete.
-Game implementation (M3–M7) and the accessibility audit (M8) are pending.
+| Milestone | Description | Status |
+|---|---|---|
+| M0 | Infrastructure, CI, Swift package setup | Done |
+| M1 | Core models — scoring, session, storage | Done |
+| M2 | VoiceOver gating, interstitial, help affordance | Done |
+| M3 | Hub UI — quest board, D&D theming, all device sizes | Done |
+| M4 | First-run basics sequence | Ready |
+| M5–M7 | Game implementation (Enchanter, Rogue, Dungeon) | Pending |
+| M8 | Full accessibility audit | Pending |
+
 See `memlog/requirements/TicketBreakdown.txt` for the full ticket breakdown.
