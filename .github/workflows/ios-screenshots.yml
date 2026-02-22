@@ -7,8 +7,11 @@ jobs:
   screenshots:
     runs-on: macos-15
     env:
-      SNAPSHOT_DEVICES: "iPhone 15, iPhone SE (3rd generation), iPad (10th generation)"
-      SNAPSHOT_IOS_VERSION: "17.5"
+      # No SNAPSHOT_DEVICES override: the Fastfile resolves simulators at
+      # runtime via xcrun simctl using the preference hierarchy in Fastfile.
+      # Set SNAPSHOT_DEVICES to override, e.g.:
+      #   SNAPSHOT_DEVICES: "iPhone 16, iPad Pro (13-inch)"
+      # See AGENTS.md — "Simulator Detection — Required Pattern".
       FASTLANE_SKIP_UPDATE_CHECK: "1"
     steps:
       - name: Checkout

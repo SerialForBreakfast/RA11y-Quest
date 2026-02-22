@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-02-22) — M3 Hub UI complete; fastlane screenshots lane active
+Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcresulttool (Xcode 16+ compatible)
 ---
 
 .
@@ -52,9 +52,8 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; fastlane screenshot
 │   │   └── RA11y_iOSTests.swift            RouterTests + VoiceOverGatingTests
 │   └── RA11y-iOSUITests
 │       ├── RA11y_iOSUITests.swift
-│       └── RA11y_iOSUITestsLaunchTests.swift
-│       ├── RA11y_iOSScreenshots.swift
-│       └── SnapshotHelper.swift
+│       ├── RA11y_iOSUITestsLaunchTests.swift
+│       └── RA11y_iOSScreenshots.swift  XCTAttachment capture (SnapshotHelper removed — Xcode 16 incompatible)
 ├── RA11y.xcworkspace
 │   └── contents.xcworkspacedata            Ties RA11y-iOS.xcodeproj + RA11yCore
 ├── RA11yCore                               Shared Swift package (iOS 18+ / macOS 15+)
@@ -108,9 +107,11 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; fastlane screenshot
     │   ├── Spike-ScrollObservability-SwiftUI.txt
     │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
     └── research/
+├── scripts
+│   └── extract_screenshots.sh      xcresulttool-based PNG extraction (replaces fastlane snapshot)
 ├── fastlane
-│   ├── Fastfile
-│   └── Snapfile
+│   ├── Fastfile                    screenshots lane: xcodebuild test + extract_screenshots.sh
+│   └── Snapfile                    retained for device/language config reference
 ├── Gemfile
 
 ---

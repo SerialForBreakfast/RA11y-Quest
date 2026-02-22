@@ -1,8 +1,217 @@
 default_platform(:ios)
 
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# Paths are relative to the fastlane/ directory; `../` escapes to repo root.
+WORKSPACE      = "../RA11y.xcworkspace".freeze
+SCHEME         = "RA11y-iOS".freeze
+UI_TEST_ID     = "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots".freeze
+OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
+EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
+
+# ---------------------------------------------------------------------------
+# Simulator preferences
+#
+# Preferred device names per form-factor, in order of preference.
+# The `screenshots` lane resolves each entry to an available UDID at runtime
+# via xcrun simctl. If a preferred name is unavailable the lane falls back
+# through the list rather than failing immediately.
+#
+# See AGENTS.md — "Simulator Detection — Required Pattern".
+# ---------------------------------------------------------------------------
+
+# Per-family fallback hierarchy (prefix-matched, newest first within each tier).
+SIM_PREFS = {
+  "iPhone" => [
+    "iPhone 17",
+    "iPhone 16 Pro",
+    "iPhone 16",
+    "iPhone 15 Pro",
+    "iPhone 15",
+    "iPhone 14 Pro",
+    "iPhone 14",
+  ].freeze,
+  "iPad" => [
+    "iPad Pro (13-inch)",
+    "iPad Pro (12.9-inch)",
+    "iPad Pro",
+    "iPad Air",
+    "iPad",
+  ].freeze,
+}.freeze
+
+# Form-factors to capture. Each entry has:
+#   label:     used as the output subdirectory name
+#   family:    "iPhone" or "iPad" — controls fallback hierarchy
+#   preferred: exact device name to try first (may be unavailable)
+#
+# Override the entire set via SNAPSHOT_DEVICES env var:
+#   SNAPSHOT_DEVICES="iPhone 16,iPad Pro (13-inch)" bundle exec fastlane screenshots
+SCREENSHOT_DEVICE_SPECS =
+  if ENV["SNAPSHOT_DEVICES"]
+    ENV["SNAPSHOT_DEVICES"].split(",").map(&:strip).reject(&:empty?).map do |name|
+      family = name.include?("iPad") ? "iPad" : "iPhone"
+      { label: name.gsub(/[^A-Za-z0-9]/, "_"), family: family, preferred: name }
+    end
+  else
+    [
+      { label: "iPhone_large", family: "iPhone", preferred: "iPhone 17" },
+      { label: "iPhone_small", family: "iPhone", preferred: "iPhone 16e" },
+      { label: "iPad",         family: "iPad",   preferred: "iPad" },
+    ]
+  end.freeze
+
+# ---------------------------------------------------------------------------
+# Lanes
+# ---------------------------------------------------------------------------
+
 platform :ios do
-  desc "Capture UI screenshots across multiple devices"
+  desc <<~DESC
+    Capture UI screenshots across multiple simulators.
+
+    Simulator selection is dynamic — xcrun simctl is queried at runtime and
+    each preferred device is resolved to a UDID. Hardcoded names are used only
+    as preferences, never as bare destination specifiers.
+
+    Uses xcodebuild test + xcresulttool (Xcode 16+ compatible). Replaces
+    fastlane `snapshot`, which cannot parse the zstd-compressed xcresult
+    attachment format introduced in Xcode 16.
+
+    Screenshots land in fastlane/screenshots/en-US/<label>/
+
+    Fails loudly (UI.user_error!) if zero devices succeed.
+  DESC
   lane :screenshots do
-    snapshot
+    require "json"
+
+    sh("rm -rf '#{OUTPUT_BASE}' && mkdir -p '#{OUTPUT_BASE}'")
+
+    succeeded  = []
+    failed     = []
+    seen_udids = []
+
+    SCREENSHOT_DEVICE_SPECS.each do |spec|
+      udid = resolve_simulator_udid(family: spec[:family], preferred: spec[:preferred])
+
+      if seen_udids.include?(udid)
+        UI.important("[simulator] Skipping duplicate: #{spec[:label]} resolved to same UDID as a prior device")
+        next
+      end
+      seen_udids << udid
+
+      label       = spec[:label]
+      result_path = "/tmp/RA11y_screenshot_#{udid}.xcresult"
+      output_dir  = "#{OUTPUT_BASE}/#{label}"
+
+      sh("rm -rf '#{result_path}'")
+      UI.message("Capturing screenshots — #{label} (id: #{udid[0..7]}...)")
+
+      begin
+        sh(
+          "xcodebuild test" \
+          " -workspace '#{WORKSPACE}'" \
+          " -scheme '#{SCHEME}'" \
+          " -destination 'platform=iOS Simulator,id=#{udid}'" \
+          " -only-testing:'#{UI_TEST_ID}'" \
+          " -resultBundlePath '#{result_path}'"
+        )
+        sh("bash '#{EXTRACT_SCRIPT}' '#{result_path}' '#{output_dir}'")
+        succeeded << label
+      rescue => e
+        UI.error("FAILED for #{label}: #{e.message}")
+        failed << label
+      end
+    end
+
+    # Fail loudly — never report success when zero screenshots were captured.
+    if succeeded.empty?
+      UI.user_error!(
+        "All screenshot captures failed.\n" \
+        "Attempted: #{failed.join(', ')}\n" \
+        "Check that Simulator.app is running and the iOS runtime is available."
+      )
+    elsif !failed.empty?
+      UI.important("Partial success — captured: #{succeeded.join(', ')} | failed: #{failed.join(', ')}")
+    else
+      UI.success("Screenshots written to: fastlane/screenshots/en-US/")
+    end
   end
+end
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+# Resolves an available iOS simulator UDID using xcrun simctl.
+#
+# Queries available simulators at runtime, tries the preferred device name
+# first (exact match), then falls back through SIM_PREFS for the given
+# family, then picks any available device in that family as a last resort.
+#
+# Calls UI.user_error! if no simulator of the requested family is found at all,
+# listing all available simulators to help the user diagnose the problem.
+#
+# @param family    [String] "iPhone" or "iPad"
+# @param preferred [String] preferred device name (exact match attempted first)
+# @return          [String] UDID of the resolved simulator
+def resolve_simulator_udid(family:, preferred: "")
+  require "json"
+
+  raw = `xcrun simctl list devices available --json 2>/dev/null`
+
+  if raw.strip.empty?
+    UI.user_error!(
+      "xcrun simctl returned no output.\n" \
+      "Ensure Xcode is installed and Simulator.app has been opened at least\n" \
+      "once since the last reboot. Check Xcode → Settings → Platforms."
+    )
+  end
+
+  begin
+    data = JSON.parse(raw)
+  rescue JSON::ParserError => e
+    UI.user_error!("Failed to parse xcrun simctl JSON: #{e.message}")
+  end
+
+  available = data.fetch("devices", {}).flat_map do |_runtime, devices|
+    devices.select { |d| d["isAvailable"] && d["name"].include?(family) }
+  end
+
+  if available.empty?
+    all_names = data.fetch("devices", {})
+                    .flat_map { |_, ds| ds.select { |d| d["isAvailable"] }.map { |d| d["name"] } }
+                    .sort.uniq
+    UI.user_error!(
+      "No available #{family} simulator found.\n" \
+      "All available simulators: #{all_names.join(', ')}\n" \
+      "Open Simulator.app or check Xcode → Settings → Platforms."
+    )
+  end
+
+  # 1. Exact preferred name match.
+  unless preferred.empty?
+    exact = available.find { |d| d["name"] == preferred }
+    if exact
+      UI.message("[simulator] Resolved: #{exact['name']} (#{exact['udid'][0..7]}...)")
+      return exact["udid"]
+    end
+    UI.important("[simulator] '#{preferred}' not found; falling back to preference list")
+  end
+
+  # 2. Preference hierarchy — prefix match, newest first within each tier.
+  (SIM_PREFS[family] || []).each do |pref|
+    candidates = available.select { |d| d["name"].start_with?(pref) }
+    next if candidates.empty?
+
+    chosen = candidates.max_by { |d| d["name"] }
+    UI.message("[simulator] Resolved via preference list: #{chosen['name']} (#{chosen['udid'][0..7]}...)")
+    return chosen["udid"]
+  end
+
+  # 3. Last-resort: any available device in the requested family.
+  chosen = available.max_by { |d| d["name"] }
+  UI.important("[simulator] WARNING: Using last-resort fallback: #{chosen['name']} (#{chosen['udid'][0..7]}...)")
+  chosen["udid"]
 end

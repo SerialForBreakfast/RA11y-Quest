@@ -1,11 +1,24 @@
 #!/bin/bash
+#
+# build_and_test.sh
+#
+# Builds and tests RA11yCore (Swift package) and RA11y-iOS (Xcode workspace).
+#
+# Simulator selection: never hardcodes a destination name. At runtime,
+# xcrun simctl is queried for available simulators and the best match from
+# the preference hierarchy is resolved to a UDID. Pass --sim <name> to
+# express a preference; the script falls back gracefully if unavailable.
+#
+# See AGENTS.md — "Simulator Detection — Required Pattern" for the rule
+# that governs all simulator selection in this repo.
 
 set -u
 
 WORKSPACE="RA11y.xcworkspace"
 IOS_SCHEME="RA11y-iOS"
 CORE_PACKAGE_PATH="RA11yCore"
-SIMULATOR_NAME="iPhone 17"
+# Empty = auto-detect from simctl. Pass --sim <name> to express a preference.
+SIMULATOR_NAME=""
 CONFIGURATION="Debug"
 LOG_ROOT="build_results"
 IOS_UNIT_TEST_TARGET="RA11y-iOSTests"
@@ -32,7 +45,7 @@ usage() {
 Usage: utility/build_and_test.sh [options]
 
 Options:
-  --sim NAME             iOS Simulator name (default: "$SIMULATOR_NAME")
+  --sim NAME             iOS Simulator preferred name (auto-detected if omitted)
   --workspace PATH       Workspace path (default: "$WORKSPACE")
   --ios-scheme NAME      iOS scheme name (default: "$IOS_SCHEME")
   --core-path PATH       Swift package path (default: "$CORE_PACKAGE_PATH")
@@ -116,6 +129,109 @@ IOS_BUILD_FOR_TESTING_LOG="$RUN_DIR/ios_build_for_testing.log"
 IOS_BUILD_RESULT="$RUN_DIR/ios_build.xcresult"
 IOS_TEST_RESULT="$RUN_DIR/ios_test.xcresult"
 DERIVED_DATA_PATH="$RUN_DIR/$DERIVED_DATA_RELATIVE"
+
+# ---------------------------------------------------------------------------
+# resolve_simulator_udid <preferred_name> <family>
+#
+# Resolves an available iOS simulator UDID via xcrun simctl at runtime.
+# Never relies on a hardcoded name as the sole destination selector.
+#
+# Args:
+#   preferred_name  Exact device name to try first. Pass "" to skip.
+#   family          "iPhone" or "iPad"
+#
+# Prints the UDID to stdout. Prints diagnostics to stderr.
+# Exits 1 if no simulator of the requested family is available.
+#
+# Concurrency: pure read-only query; no simulator state is modified.
+# ---------------------------------------------------------------------------
+resolve_simulator_udid() {
+    local preferred_name="$1"
+    local family="$2"
+
+    local json
+    json=$(xcrun simctl list devices available --json 2>/dev/null) || {
+        echo "[simulator] ERROR: 'xcrun simctl list devices available' failed." >&2
+        echo "[simulator] Ensure Xcode is installed and Simulator.app has been" >&2
+        echo "[simulator] opened at least once since the last reboot." >&2
+        return 1
+    }
+
+    python3 - "$preferred_name" "$family" <<PYEOF
+import json, sys
+
+preferred = sys.argv[1]
+family    = sys.argv[2]
+
+# Preference hierarchy per device family (prefix-matched, newest first).
+PREFS = {
+    "iPhone": [
+        "iPhone 17",
+        "iPhone 16 Pro",
+        "iPhone 16",
+        "iPhone 15 Pro",
+        "iPhone 15",
+        "iPhone 14 Pro",
+        "iPhone 14",
+    ],
+    "iPad": [
+        "iPad Pro (13-inch)",
+        "iPad Pro (12.9-inch)",
+        "iPad Pro",
+        "iPad Air",
+        "iPad",
+    ],
+}
+
+try:
+    data = json.loads("""$json""")
+except Exception as exc:
+    print(f"[simulator] Failed to parse simctl JSON: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+available = [
+    d
+    for _runtime, devices in data.get("devices", {}).items()
+    for d in devices
+    if d.get("isAvailable") and family in d.get("name", "")
+]
+
+if not available:
+    all_names = sorted({
+        d["name"]
+        for devices in data.get("devices", {}).values()
+        for d in devices
+        if d.get("isAvailable")
+    })
+    print(f"[simulator] ERROR: No available {family} simulator found.", file=sys.stderr)
+    print(f"[simulator] All available simulators: {all_names}", file=sys.stderr)
+    print("[simulator] Try opening Simulator.app or Xcode -> Settings -> Platforms.", file=sys.stderr)
+    sys.exit(1)
+
+# 1. Exact preferred name match.
+if preferred:
+    for d in available:
+        if d["name"] == preferred:
+            print(f"[simulator] Resolved: {d['name']} ({d['udid'][:8]}...)", file=sys.stderr)
+            print(d["udid"])
+            sys.exit(0)
+    print(f"[simulator] WARNING: '{preferred}' not found; falling back to preference list.", file=sys.stderr)
+
+# 2. Preference hierarchy (prefix match, newest name first within each tier).
+for pref in PREFS.get(family, []):
+    candidates = [d for d in available if d["name"].startswith(pref)]
+    if candidates:
+        chosen = sorted(candidates, key=lambda d: d["name"], reverse=True)[0]
+        print(f"[simulator] Resolved via preference list: {chosen['name']} ({chosen['udid'][:8]}...)", file=sys.stderr)
+        print(chosen["udid"])
+        sys.exit(0)
+
+# 3. Last-resort: any available simulator in the requested family.
+chosen = sorted(available, key=lambda d: d["name"], reverse=True)[0]
+print(f"[simulator] WARNING: Using last-resort fallback: {chosen['name']} ({chosen['udid'][:8]}...)", file=sys.stderr)
+print(chosen["udid"])
+PYEOF
+}
 
 log() {
     local msg="$1"
@@ -231,7 +347,14 @@ fi
 if [ "$SKIP_IOS" = true ]; then
     add_result_row "RA11y-iOS" "⚠️ Skipped" "⚠️ Skipped" "Skipped by flag"
 else
-    destination="platform=iOS Simulator,name=$SIMULATOR_NAME"
+    log "Resolving iOS simulator${SIMULATOR_NAME:+ (preferred: $SIMULATOR_NAME)}"
+    SIMULATOR_UDID=$(resolve_simulator_udid "$SIMULATOR_NAME" "iPhone") || {
+        log "No iOS simulator available. Cannot build or test RA11y-iOS."
+        add_result_row "RA11y-iOS" "❌ No Simulator" "❌ No Simulator" \
+            "No available iPhone simulator found — open Simulator.app and retry"
+        exit 1
+    }
+    destination="platform=iOS Simulator,id=$SIMULATOR_UDID"
     if [ "$FAST_MODE" = true ] && [ "$SKIP_IOS_TESTS" = false ]; then
         log "Building RA11y-iOS for testing ($destination)"
         if run_cmd "$IOS_BUILD_FOR_TESTING_LOG" xcodebuild \

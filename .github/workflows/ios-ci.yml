@@ -10,15 +10,16 @@ on:
 jobs:
   build-and-test:
     runs-on: macos-15
-    env:
-      CI_SIMULATOR: "iPhone 15"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Build + Test (Core + iOS)
+        # No --sim flag: build_and_test.sh resolves the best available
+        # simulator at runtime via xcrun simctl. See AGENTS.md —
+        # "Simulator Detection — Required Pattern".
         run: |
-          ./utility/build_and_test.sh --fast --sim "${CI_SIMULATOR}"
+          ./utility/build_and_test.sh --fast
 
       - name: Upload Build Logs
         if: always()

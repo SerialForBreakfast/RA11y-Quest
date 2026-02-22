@@ -5,6 +5,13 @@ Follow every section. These are not suggestions.
 
 ---
 
+## Precedence
+
+If any guidance below conflicts, the repository operational rules in this file take precedence for work in this repo.
+The SwiftUI rules are intended for design and implementation guidance and should not override repo safety or workflow rules.
+
+---
+
 ## Project Structure
 
 - `RA11y-iOS/` — iOS app target and Xcode project (`RA11y-iOS.xcodeproj`).
@@ -16,6 +23,122 @@ Follow every section. These are not suggestions.
 
 Future platform targets follow the same convention: `RA11y-macOS/`, `RA11y-tvOS/`,
 each with its own `.xcodeproj` referenced by the workspace.
+
+---
+
+## System Safety — Prohibited Commands
+
+The following commands MUST NEVER be run without explicit written approval
+from the user in the current conversation. State the exact command and its
+risk before asking. Do not run it until the user confirms.
+
+### Elevated Privileges
+- Any command prefixed with `sudo`
+- Any command using `su`
+
+### Daemon / Service Termination
+- `killall` or `kill` targeting any Apple system daemon:
+  - `com.apple.CoreSimulator.CoreSimulatorService`
+  - `simdiskimaged`
+  - Any `com.apple.*` launchd service
+- Never use `-9` (SIGKILL) on system services. Always prefer `-TERM` and
+  only after explicit user approval.
+
+### Simulator State Modification
+- `xcrun simctl erase` (any form)
+- `xcrun simctl delete`
+- `xcrun simctl shutdown all`
+- `fastlane snapshot reset_simulators`
+- Any command that wipes or recreates simulator devices
+
+### Platform / Runtime Downloads
+- `xcodebuild -downloadPlatform`
+- `xcodebuild -downloadAllPlatforms`
+- Any action that may trigger a download larger than 100 MB
+- Always ask the user before running anything that could trigger a large download
+
+### Xcode Toolchain Modification
+- `xcode-select --switch` / `xcode-select -s`
+- `xcodebuild -runFirstLaunch`
+- `xcodebuild -license accept`
+
+### Debugging System Issues (Simulators, CoreSimulator, Xcode)
+
+When diagnosing system-level failures (simulator services down,
+CoreSimulatorService crashes, missing runtimes):
+
+1. **Read-only diagnosis first.** Only run commands that query state:
+   - `xcodebuild -showdestinations`
+   - `plutil -p <path>` to read plists
+   - `uptime`, `xcode-select -p`
+   Never run modification commands until read-only diagnosis is complete
+   and presented to the user.
+
+2. **Present findings before acting.** Summarize what the diagnostic output
+   shows, state the hypothesis, and ask which fix to apply.
+
+3. **Never run simctl commands that may hang.** If `xcrun simctl` does not
+   return promptly in a non-interactive context, it is likely blocking on
+   a broken CoreSimulatorService. Stop. Do not kill the process — inform
+   the user and let them handle it.
+
+4. **Treat simulator instability as a system issue, not a code issue.**
+   Do not modify project files, Fastfile, or CI config in response to
+   simulator service failures unless the user explicitly requests it.
+
+---
+
+## Simulator Detection — Required Pattern
+
+Hardcoded simulator names (e.g., `"iPhone 17"`, `"iPad (A16)"`) MUST NOT
+appear in any script, Fastfile, utility file, or CI config as the sole
+destination selector. Simulator names change with every Xcode/iOS release
+and break silently.
+
+### Rule: Always Discover, Never Hardcode Bare
+
+Any code that selects a simulator MUST follow this pattern:
+1. Query what is actually available at runtime via `xcrun simctl list devices available --json`
+2. Match against a preference list (most to least preferred)
+3. Fall back to the best available match if no exact match is found
+4. Fail loudly — listing discovered devices — if no match exists at all
+
+A preference list of names may be hardcoded. The final resolved device must not be.
+
+### Use UDID, Not Name, as the xcodebuild Destination
+
+Once a simulator is resolved, use its UDID rather than its name:
+
+```bash
+# GOOD — stable, resolved at runtime
+xcodebuild test -destination "platform=iOS Simulator,id=$UDID" ...
+
+# BAD — breaks when Xcode updates simulator names
+xcodebuild test -destination "platform=iOS Simulator,name=iPhone 17" ...
+```
+
+### Approved Fallback Hierarchy (preference order)
+
+iPhone: `iPhone 17` → `iPhone 16 Pro` → `iPhone 16` → `iPhone 15 Pro` → `iPhone 15` → any iPhone
+
+iPad: `iPad Pro (13-inch)` → `iPad Pro (12.9-inch)` → `iPad Pro` → `iPad Air` → any iPad
+
+If no simulator of the required family exists, STOP and report:
+- The list of available simulators
+- Which family was needed and why
+- What the user must do (open Simulator.app, check Xcode → Settings → Platforms)
+
+Do NOT attempt to create simulators, download runtimes, or modify simulator
+state without explicit user approval.
+
+### Files That Must Follow This Pattern
+
+When modifying any of the following, verify that simulator detection is
+dynamic and follows the rules above:
+- `fastlane/Fastfile`
+- `utility/build_and_test.sh`
+- `.github/workflows/ios-ci.yml`
+- `.github/workflows/ios-screenshots.yml`
 
 ---
 
@@ -121,122 +244,138 @@ A passing Core build is not sufficient if the iOS build fails, and vice versa.
 ## Mutability
 
 - Prefer `let` over `var`. Only use `var` when mutation is genuinely required.
-- Prefer value types (`struct`, `enum`) over reference types (`class`) unless
-  identity, inheritance, or actor isolation is needed.
-- Use optionals intentionally. `nil` should represent "absence of a value," not
-  "I haven't initialized this yet." Avoid force-unwrap (`!`) in production code.
 
 ---
 
-## Swift 6 Concurrency — Non-Negotiable
+# RA11y - SwiftUI Agentic Rules (Distilled)
+Date: 2026-02-21
+Source: Distilled from AvdLee/SwiftUI-Agent-Skill (swiftui-expert-skill)
 
-This project targets Swift 6 with full strict concurrency checking enabled.
+Purpose
+=======
+This document captures the useful, SAFE, non-destructive SwiftUI guidance from the SwiftUI Agent Skill.
+It is intended to guide AI-assisted work inside this repo without introducing risky behaviors (broad refactors,
+architectural mandates, tooling commands, or secret access).
 
-1. **`async`/`await` only.** No GCD (`DispatchQueue`), no completion handlers,
-   no `OperationQueue` for new code.
+Scope
+=====
+- SwiftUI-focused guidance only.
+- iOS-first (RA11y MVP), with modern APIs preferred.
+- When bridging to UIKit is required, keep it minimal and explicitly justified.
 
-2. **`actor` for shared mutable state.** If multiple tasks can access mutable state,
-   it must be inside an `actor`. Never use `objc_sync_enter` or manual locking.
+Non-negotiable Safety Rules (Agent Behavior)
+============================================
+1) No tool / command instructions
+- Do not instruct running shell commands, curl/wget, installing packages, or using external tools.
+- No “automated profiling steps.” You can mention Instruments exists, but never prescribe steps.
 
-3. **`@MainActor` for UI and routing.** All SwiftUI views, view models, and
-   navigation code run on `@MainActor`. The iOS app target sets
-   `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` at the project level.
+2) No architecture mandates
+- Do not enforce MVVM/MVC/VIPER, coordinators, routers, DI frameworks, or folder structures.
+- You may suggest separating business logic for testability, without prescribing how.
 
-4. **No blocking in async contexts.** Never call synchronous, blocking APIs
-   (heavy computation, synchronous I/O) from an `async` function without
-   dispatching to a background task first.
+3) Suggestions vs requirements
+- Use MUST/NEVER only for correctness issues.
+- Use CONSIDER/SUGGEST for optimizations.
 
-5. **Cancellation.** Long-running tasks must check `Task.isCancelled` at
-   meaningful intervals and exit cleanly. Never swallow cancellation.
+4) Minimal-change bias
+- Prefer the smallest change that fixes correctness, accessibility, or performance issues.
+- Avoid large sweeping refactors unless explicitly requested.
 
-6. **`Sendable` conformance.** Types shared across concurrency boundaries must
-   conform to `Sendable`. Closures crossing actor boundaries must be `@Sendable`.
+SwiftUI Correctness Rules (High Signal)
+=======================================
 
-7. **No `@unchecked Sendable`.** This is a code smell and will be rejected.
-   If you need to suppress a concurrency warning, understand why and fix the
-   underlying issue instead.
+State Management (Modern)
+-------------------------
+- Prefer @Observable over ObservableObject for new code.
+- Use @State for owned @Observable instances (not @StateObject).
+- Always mark @State (and legacy @StateObject) properties as private.
+- Never declare passed-in values as @State or @StateObject (they only take an initial value).
+- Use @Binding ONLY when the child must modify parent state; otherwise use let.
+- Use @Bindable when a view receives an @Observable object and needs bindings.
+- @Observable classes may need @MainActor for SwiftUI safety unless the project uses Default Actor Isolation == MainActor.
 
-8. **No `@preconcurrency`.** Treat its presence as a flag to fix, not a solution.
+Modern SwiftUI API Defaults
+---------------------------
+Prefer these modern APIs unless there is a specific, justified need for legacy behavior:
+- foregroundStyle() instead of foregroundColor()
+- clipShape(.rect(cornerRadius:)) instead of cornerRadius()
+- NavigationStack instead of NavigationView
+- navigationDestination(for:) for type-safe navigation
+- Button instead of onTapGesture() (unless you need gesture location/count)
+- .sheet(item:) for model-based sheet content (instead of .sheet(isPresented:))
+- ScrollViewReader for programmatic scrolling with stable IDs
+- Avoid UIScreen.main.bounds for sizing
+- Avoid GeometryReader when alternatives exist (e.g., containerRelativeFrame)
 
-9. **`deinit` is not `@MainActor`.** Do not access `@MainActor`-isolated properties
-   from `deinit`. Use `nonisolated(unsafe)` only for `Task` cancellation in `deinit`,
-   where `Task.cancel()` is provably thread-safe.
+View Composition
+----------------
+- Keep body pure: no side effects and no heavy logic.
+- Prefer modifiers over switching entire view types for state changes (helps keep view identity stable).
+- Extract complex views into subviews early for readability and better diffing.
+- Prefer method references for actions (move inline logic into named functions).
+- Prefer relative layout over hard-coded constants.
+- Keep views context-agnostic (don’t assume screen size/presentation style).
 
----
+Lists / ForEach (Stability is correctness)
+------------------------------------------
+MUST / NEVER rules:
+- Always provide stable identity for ForEach.
+- Never use .indices for dynamic content.
+- Avoid variable view count per element inside ForEach (can break identity/animations).
+- Avoid inline filtering inside ForEach; pre-filter and cache.
+- Avoid AnyView inside list rows.
+- Convert enumerated() sequences to arrays before ForEach.
 
-## Dependency Injection
+Performance (Only when justified)
+--------------------------------
+Correctness-oriented performance rules:
+- SwiftUI doesn’t compare before re-render: guard assignments to state so you only write when values change.
+- In hot paths (scroll handlers / frequent updates), gate state updates by thresholds.
 
-- Use constructor injection. Inject dependencies at the call site, not inside initializers.
-- Determine whether a protocol abstraction is warranted before injecting a concrete type.
-  A protocol makes sense when: (a) the dependency has a meaningful test double,
-  or (b) the platform boundary requires it (e.g., `VoiceOverStateProvider`).
-- When changing the signature of a protocol, always evaluate whether the protocol
-  should change to match the implementation, or the implementation should conform
-  to the existing protocol. Do not silently change the protocol to match the code.
+Optional optimizations (SUGGEST, don’t auto-apply):
+- Equatable views for expensive subtrees.
+- POD wrapper pattern for fast diffing (advanced).
+- Suggest downsampling when encountering UIImage(data:) (only if relevant to current performance issue).
 
----
+Animations
+----------
+- Prefer .animation(_:value:) (value-based) over deprecated broad animations.
+- Use withAnimation for event-driven changes.
+- Prefer transform animations (offset/scale/rotation) over layout changes for performance.
 
-## Testing
+Liquid Glass (iOS 26+)
+----------------------
+- Only adopt glass effects when explicitly requested.
+- Gate iOS 26+ APIs with #available and provide a sensible fallback.
 
-- Write tests for business logic. Do not write tests for trivial math, array
-  counting, or behavior that the compiler already guarantees.
-- Unit tests for `RA11yCore` live in `RA11yCore/Tests/RA11yCoreTests/`.
-- Unit tests for the iOS app live in `RA11y-iOS/RA11y-iOSTests/`.
-- Never skip or disable a test (`xtestSomething`, `.disabled`, `#if false`) to make
-  a test suite pass. Fix the underlying issue.
-- Test async code correctly: use `await #expect(throws:)` for throwing async
-  expressions. Use `Task.sleep` (not `Task.yield`) for reactive async tests that
-  require cooperative scheduling time.
-- All targets must pass before a change is considered complete.
+Accessibility Defaults (RA11y Alignment)
+========================================
+These rules align the SwiftUI skill’s “accessibility best practices” with RA11y’s product goals.
 
----
+- Interactive controls MUST have:
+  - accessibilityLabel (user-facing name)
+  - accessibilityHint when it clarifies the action
+- Decorative imagery MUST be hidden from accessibility.
+- Do not rely on color alone to convey meaning.
+- Ensure Dynamic Type works end-to-end:
+  - avoid fixed text sizes for critical content
+  - avoid clipping/truncation in common large size categories
+- Prefer semantic controls (Button, Toggle, Slider, etc.) over gesture-only interactions.
 
-## When Changing Existing Code
+What to Avoid (Common Failure Modes)
+====================================
+- Don’t “optimize everything.” Performance changes must be motivated by an observed issue.
+- Don’t rewrite app architecture while “improving SwiftUI.”
+- Don’t introduce tooling/CLI steps into instructions.
+- Don’t migrate to Liquid Glass styling unless requested.
 
-- **Type changes:** If you change a type's name, access level, `async` qualifier,
-  or protocol conformance, search all usage sites across the entire repo and
-  update them. Do not leave stale call sites.
-  ```bash
-  rg "TypeName|methodName" --type swift
-  ```
-- **Async changes:** Document the concurrency contract in the doc comment.
-  Trace all callers and verify the change does not introduce actor-isolation
-  violations or require callers to add `await` they are missing.
-- **Protocol vs implementation:** Before changing a protocol to match an
-  implementation, explicitly question whether the implementation should instead
-  be changed to conform to the protocol as designed.
-
----
-
-## Design and Accessibility
-
-- Use SF Symbols (`Image(systemName:)`) for iconography where an appropriate
-  symbol exists. Do not use custom assets for standard UI concepts.
-- No information conveyed by color alone. Shape, label, or pattern must reinforce
-  any color cue.
-- All interactive elements require `accessibilityLabel`. Add `accessibilityHint`
-  when it adds actionable value beyond what the label already communicates.
-- Decorative images: `accessibilityHidden = true`.
-- Dynamic Type: use `Font.ra11y*` tokens from `RA11yCore`; never hardcode font sizes.
-- VoiceOver reading order must be deterministic on every screen.
-
----
-
-## Memlog
-
-- `memlog/` is the authoritative record of requirements, decisions, and project state.
-- `memlog/DirectoryTree.txt` must be updated when significant files or folders change.
-- `memlog/requirements/TicketBreakdown.txt` is the active ticket tracker.
-  Update ticket status (`[NEW]`, `[COMPLETE]`, etc.) when work is done.
-- Before starting work on a ticket, read the relevant GameSpec, GameRules, and
-  any referenced design tickets to understand the full context.
-
----
-
-## Commit and Pull Request Guidelines
-
-- Concise, imperative commit messages: `add GameSessionCoordinator for VO mid-game handling`.
-- For UI changes, include screenshots or recordings in the PR description.
-- Call out any change that affects: accessibility behavior, permissions, data persistence,
-  or concurrency model.
-- Never commit files that contain secrets or credentials.
+Primary Source Pointers
+=======================
+- SwiftUI Expert Skill core guidelines and checklists:
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/SKILL.md
+- Agent guidelines (what the skill explicitly excludes / how to phrase guidance):
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/AGENTS.md
+- Reference deep dives (state, lists, performance):
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/references/state-management.md
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/references/list-patterns.md
+  https://raw.githubusercontent.com/AvdLee/SwiftUI-Agent-Skill/main/swiftui-expert-skill/references/performance-patterns.md
