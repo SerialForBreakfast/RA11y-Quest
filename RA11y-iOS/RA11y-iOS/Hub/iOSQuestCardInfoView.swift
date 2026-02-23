@@ -35,16 +35,16 @@ struct iOSQuestCardInfoView: View {
             Text(title)
                 .font(.ra11yHeadline)
                 .fontWeight(.bold)
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.ra11yWarmText)
 
             Text(goal)
                 .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11ySecondaryLabel)
+                .foregroundStyle(Color.ra11yWarmTextSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text(estimatedDuration)
                 .font(.ra11yCaption)
-                .foregroundStyle(Color.ra11ySecondaryLabel.opacity(0.8))
+                .foregroundStyle(Color.ra11yWarmTextSecondary.opacity(0.9))
         }
         .accessibilityHidden(true)
     }

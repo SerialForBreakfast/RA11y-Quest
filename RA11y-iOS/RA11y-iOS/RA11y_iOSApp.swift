@@ -15,13 +15,22 @@ import RA11yCore
 @main
 struct RA11y_iOSApp: App {
 
+    /// Creates the app and applies UI-testing defaults when requested.
     init() {
         RA11yLogger.startup.debug("Cold start — RA11y_iOSApp.init")
+        applyUITestingOverridesIfNeeded()
     }
 
     var body: some Scene {
         WindowGroup {
             iOSRootView()
+        }
+    }
+
+    private func applyUITestingOverridesIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTesting") else { return }
+        Task {
+            await UserDefaultsStorageComponent().markBasicsDismissed()
         }
     }
 }

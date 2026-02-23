@@ -38,7 +38,7 @@ struct iOSRankBadgeView: View {
 
     // MARK: - Constants
 
-    private let shapeSize: CGFloat = 48
+    private let shapeSize: CGFloat = 56
     private let labelFont: Font = .ra11yCaption
 
     // MARK: - Body
@@ -58,7 +58,7 @@ struct iOSRankBadgeView: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(width: 60)
+        .frame(width: 72)
         .accessibilityHidden(isAccessibilityHidden)
     }
 
@@ -69,7 +69,7 @@ struct iOSRankBadgeView: View {
     }
 
     private var labelColor: Color {
-        rank.map { sealColor(for: $0) } ?? Color.secondary
+        rank.map { sealColor(for: $0) } ?? Color.ra11yWarmTextSecondary
     }
 
     // MARK: - Canvas Drawing
@@ -77,7 +77,7 @@ struct iOSRankBadgeView: View {
     /// Draws the appropriate seal shape for the given rank (or Quest Awaits scroll).
     private func drawSeal(in context: inout GraphicsContext, size: CGSize) {
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        let color = rank.map { sealColor(for: $0) } ?? Color.secondary
+        let color = rank.map { sealColor(for: $0) } ?? Color.ra11yWarmTextSecondary
 
         switch rank {
         case .perfect:
@@ -89,7 +89,7 @@ struct iOSRankBadgeView: View {
         case .failed:
             drawBrokenShieldSeal(in: &context, center: center, size: size, color: color)
         case nil:
-            drawScrollSeal(in: &context, center: center, size: size)
+            drawScrollSeal(in: &context, center: center, size: size, color: color)
         }
     }
 
@@ -203,7 +203,8 @@ struct iOSRankBadgeView: View {
     private func drawScrollSeal(
         in context: inout GraphicsContext,
         center: CGPoint,
-        size: CGSize
+        size: CGSize,
+        color: Color
     ) {
         let w = size.width * 0.65
         let h = size.height * 0.55
@@ -214,7 +215,7 @@ struct iOSRankBadgeView: View {
             height: h
         )
         let scroll = Path(roundedRect: scrollRect, cornerRadius: 4)
-        context.stroke(scroll, with: .color(.secondary), lineWidth: 1.5)
+        context.stroke(scroll, with: .color(color), lineWidth: 1.5)
 
         // Curled top and bottom edges
         let curlH: CGFloat = 6
@@ -232,12 +233,12 @@ struct iOSRankBadgeView: View {
         )
         context.stroke(
             Path(ellipseIn: topCurlRect),
-            with: .color(.secondary),
+            with: .color(color),
             lineWidth: 1
         )
         context.stroke(
             Path(ellipseIn: botCurlRect),
-            with: .color(.secondary),
+            with: .color(color),
             lineWidth: 1
         )
     }

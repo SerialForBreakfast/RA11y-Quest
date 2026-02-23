@@ -1,0 +1,27 @@
+TICKET-DESIGN-FIRSTRUN-001 — First Run Entry Screen (VoiceOver Basics Intro)
+Status: Ready
+
+Goal
+----
+Deliver the visual design and assets for the first-run entry screen so it
+matches the Hub quest board theme and feels like the same world.
+
+Requirements
+------------
+- Match the lighting, palette, and painterly style of mock_v3_hub_quest_board.png.
+- Provide a calm, readable backdrop for the title/body text and two CTA buttons.
+- No characters in frame. Avoid busy patterns behind the text block.
+- Center-weighted composition with darker edges for legibility.
+- Provide a PNG background asset with portrait aspect ratio.
+- 2x resolution master export (e.g., 2048×4096 or higher).
+- Name: first_run_intro_bg
+
+Prompt (LLM / Image Gen)
+------------------------
+"A richly painted fantasy interior backdrop that matches a quest board tavern
+atmosphere: warm amber lantern light, stone and wood textures, subtle glow,
+soft atmospheric haze, no characters. Center-weighted composition with a calm,
+less busy vertical band for UI text and buttons. Color palette: warm browns,
+deep umbers, golden highlights. Painterly semi-realistic style, high detail
+but soft focus in the background. Portrait orientation, no text, no logos,
+no UI elements."

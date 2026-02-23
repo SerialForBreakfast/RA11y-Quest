@@ -71,7 +71,7 @@ struct iOSHubView: View {
             // background image's intrinsic size (1920pt wide for landscape assets)
             // from widening the ZStack and overflowing the content layout.
             .background {
-                iOSHubBackgroundView(assetName: "simon_room_bg")
+                iOSHubBackgroundView(assetName: "hub_quest_board_bg")
             }
             .navigationTitle(String(localized: "hub.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)

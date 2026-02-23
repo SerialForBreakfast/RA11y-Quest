@@ -77,7 +77,10 @@ public final class GameSessionCoordinator {
     }
 
     deinit {
-        monitorTask?.cancel()
+        Task { @MainActor [weak self] in
+            self?.monitorTask?.cancel()
+            self?.monitorTask = nil
+        }
     }
 
     // MARK: - Monitoring Lifecycle

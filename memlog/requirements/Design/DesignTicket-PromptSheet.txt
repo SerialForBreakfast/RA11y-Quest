@@ -34,6 +34,27 @@ minimal detail, no text, no UI elements, 16:9 composition with safe margins, 192
 Game-Specific Prompt Sets
 =========================
 
+A0) Hub Quest Board (Hub Screen)
+--------------------------------
+Background (simon_room_bg)
+- Painterly fantasy tavern/dungeon interior background, warm amber lantern light,
+  stone arches and wooden beams, subtle torch glow, soft atmospheric haze, no characters.
+  Center-weighted composition with a gently darker vignette at edges; keep a calm,
+  less busy vertical band in the center for UI cards. Color palette: warm browns,
+  deep umbers, golden highlights. High detail but soft focus in the background.
+  Portrait orientation (2x master export, e.g. 2048×4096). No text, no logos, no UI.
+
+Quest Thumbnails (Transparent, 1:1)
+- Enchanter relic (enchanter_relic_target): luminous magical relic crystal, faceted
+  and star-like, glowing icy blue with soft golden rim light, centered composition,
+  subtle sparkles, strong silhouette at small size, transparent background.
+- Rogue seal (rogue_seal_target): carved rune seal medallion, dark metal with
+  purple-green arcane glow, slightly weathered, strong silhouette, centered,
+  transparent background.
+- Dungeon entrance (dungeon_room_entrance): dim stone corridor or arched dungeon
+  doorway with warm torchlight and inviting depth, high contrast, centered,
+  transparent background.
+
 A) The Enchanter's Trial (Find & Focus)
 ---------------------------------------
 Background

@@ -42,7 +42,7 @@ struct iOSHubBackgroundView: View {
             // of `.ignoresSafeArea()` below. `.scaledToFill()` fills that proposal.
             // No explicit frame is needed; the ZStack's `.ignoresSafeArea()` anchors the
             // size correctly when used inside `.background {}`.
-            Image(assetName)
+        Image(assetName)
                 .resizable()
                 .scaledToFill()
                 // Clip prevents the fill-scaled image from bleeding outside
@@ -55,11 +55,23 @@ struct iOSHubBackgroundView: View {
             // lighter toward the bottom so the dark quest card backgrounds dominate.
             LinearGradient(
                 colors: [
-                    Color.black.opacity(0.55),
-                    Color.black.opacity(0.15)
+                    Color.black.opacity(0.62),
+                    Color.black.opacity(0.20)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
+            )
+            .accessibilityHidden(true)
+
+            // Subtle vignette to focus attention on the quest cards.
+            RadialGradient(
+                colors: [
+                    Color.black.opacity(0.05),
+                    Color.black.opacity(0.55)
+                ],
+                center: .center,
+                startRadius: 120,
+                endRadius: 520
             )
             .accessibilityHidden(true)
         }
@@ -70,6 +82,6 @@ struct iOSHubBackgroundView: View {
 // MARK: - Preview
 
 #Preview {
-    iOSHubBackgroundView(assetName: "simon_room_bg")
+    iOSHubBackgroundView(assetName: "hub_quest_board_bg")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
 }

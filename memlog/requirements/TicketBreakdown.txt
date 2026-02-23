@@ -1218,6 +1218,96 @@ Design Track Dependency Order
 4. DesignTicket-AssetDeliveryNaming    (requires: Asset list)
    -> Assets produced + reviewed using checklist -> delivered before M5 opens.
 
+================================================================================
+Design Track — Additional Asset Tickets (Hub Quest Board)
+================================================================================
+
+TICKET-DESIGN-HUB-001 — Hub Background (simon_room_bg)
+Status: Ready
+
+Goal
+----
+Deliver the final hub background artwork matching the Quest Board mockups.
+
+Requirements
+------------
+- Must match the lighting, palette, and painterly style of mock_v3_hub_quest_board.png.
+- Warm tavern/dungeon interior with stone, wood, lantern glow; no characters in frame.
+- Center-weighted composition with darker edges for legibility.
+- Leave visual “quiet” space behind quest cards (center vertical band).
+- 2x resolution master export (e.g., 2048×4096 or higher). Maintain portrait aspect ratio.
+- Provide PNG with transparent-safe edges (no hard borders).
+- Name: simon_room_bg
+
+Prompt (LLM / Image Gen)
+------------------------
+“A richly painted fantasy tavern/dungeon interior background, warm amber lantern light,
+stone arches and wooden beams, subtle torch glow, soft atmospheric haze, no characters.
+Center-weighted composition with a gently darker vignette at edges; keep a calm, less
+busy vertical band in the center for UI cards. Color palette: warm browns, deep umbers,
+golden highlights. Painterly semi-realistic style, high detail but soft focus in the
+background. Match the mood and style of mock_v3_hub_quest_board.png. Portrait orientation,
+no text, no logos, no UI elements.”
+
+
+TICKET-DESIGN-HUB-002 — Quest Thumbnails (Enchanter, Rogue, Dungeon)
+Status: Ready
+
+Goal
+----
+Deliver final quest thumbnail assets matching the mockups and catalog IDs.
+
+Requirements
+------------
+- Square 1:1 assets; target ~512×512 minimum.
+- Painterly semi-realistic style consistent with mock_v3_hub_quest_board.png.
+- Strong silhouette and contrast at 72×72 pt.
+- Subtle inner glow and border-ready edges; avoid harsh outer backgrounds.
+
+
+TICKET-DESIGN-FIRSTRUN-001 — First Run Entry Screen (VoiceOver Basics Intro)
+Status: Ready
+
+Goal
+----
+Deliver the visual design and background asset for the first-run entry screen
+so it matches the Hub quest board theme.
+
+Requirements
+------------
+- Match the lighting, palette, and painterly style of mock_v3_hub_quest_board.png.
+- Provide a calm, readable backdrop for the title/body text and CTA buttons.
+- No characters in frame; avoid busy patterns behind the text block.
+- Center-weighted composition with darker edges for legibility.
+- 2x resolution master export (e.g., 2048×4096 or higher). Portrait aspect ratio.
+- Provide PNG with transparent-safe edges (no hard borders).
+- Name: first_run_intro_bg
+- Provide transparent background PNGs.
+- Asset names must match catalog IDs:
+  - enchanter_relic_target
+  - rogue_seal_target
+  - dungeon_room_entrance
+
+Prompts (LLM / Image Gen)
+-------------------------
+Enchanter relic (enchanter_relic_target):
+“A luminous magical relic crystal, faceted and star-like, glowing icy blue with
+soft golden rim light, floating or resting on a dark velvet/stone backdrop, no text.
+Painterly semi-realistic fantasy style, strong silhouette, subtle sparkles, centered
+composition, transparent background. Match the style of mock_v3_hub_quest_board.png.”
+
+Rogue seal (rogue_seal_target):
+“A carved rune seal medallion, dark metal with purple-green arcane glow, slightly
+weathered, high contrast, centered. Painterly semi-realistic fantasy style, strong
+silhouette, subtle inner glow, transparent background. Match the style of
+mock_v3_hub_quest_board.png.”
+
+Dungeon entrance (dungeon_room_entrance):
+“A dim stone corridor or arched dungeon doorway with warm torchlight, inviting depth,
+high contrast, centered composition. Painterly semi-realistic fantasy style, strong
+silhouette, subtle glow from a torch, transparent background. Match the style of
+mock_v3_hub_quest_board.png.”
+
 
 ================================================================================
 Backlog (Explicitly Not MVP)

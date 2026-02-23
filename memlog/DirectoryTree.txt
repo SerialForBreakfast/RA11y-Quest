@@ -23,8 +23,13 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
 │   │   ├── Assets.xcassets
 │   │   │   ├── AccentColor.colorset
 │   │   │   ├── AppIcon.appiconset
-│   │   │   └── RA11y Colors
-│   │   │       └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
+│   │   │   ├── dungeon_room_entrance.imageset
+│   │   │   ├── enchanter_relic_target.imageset
+│   │   │   ├── hub_quest_board_bg.imageset
+│   │   │   ├── RA11y Colors
+│   │   │   │   └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
+│   │   │   ├── rogue_seal_target.imageset
+│   │   │   └── simon_room_bg.imageset
 │   │   ├── Design
 │   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
 │   │   ├── FirstRun
@@ -110,6 +115,7 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
     │   │   │   ├── mock_v3_dungeon_descent_play.png    (NEW — M7)
     │   │   │   └── mock_v3_results_legendary.png       (NEW — shared results screen)
     │   │   ├── Assets/                     Raw generated sprite + background assets
+    │   │   ├── DesignTicket-FirstRunEntry.txt
     │   │   ├── DesignTicket-AssetListDefinition.txt
     │   │   ├── DesignTicket-PromptSheet.txt
     │   │   ├── DesignTicket-AssetReviewChecklist.txt

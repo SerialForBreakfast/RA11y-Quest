@@ -35,6 +35,10 @@ final class RA11y_iOSScreenshots: XCTestCase {
         app.launchArguments.append("-uiTesting")
         app.launch()
 
+        XCTAssertTrue(
+            app.staticTexts["Choose Your Trial, Adventurer"].waitForExistence(timeout: 5),
+            "Hub greeting did not appear. Expected the hub to be visible for screenshots."
+        )
         captureScreenshot("01_Hub")
     }
 

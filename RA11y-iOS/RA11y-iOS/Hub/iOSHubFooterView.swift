@@ -41,7 +41,12 @@ struct iOSHubFooterView: View {
         }
         .padding(.horizontal, RA11ySpacing.lg)
         .padding(.vertical, RA11ySpacing.md)
-        .background(.ultraThinMaterial)
+        .background(footerBackground)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.ra11yGoldDeep.opacity(0.35))
+                .frame(height: 1)
+        }
     }
 
     // MARK: - Subviews
@@ -49,33 +54,98 @@ struct iOSHubFooterView: View {
     /// "VoiceOver Basics" — always visible.
     private var voiceOverBasicsButton: some View {
         Button(action: onVoiceOverBasics) {
-            Label(
-                String(localized: "hub.voiceOverBasics"),
-                systemImage: "scroll"
-            )
+            HStack(spacing: RA11ySpacing.sm) {
+                Image(systemName: "scroll")
+                Text(String(localized: "hub.voiceOverBasics"))
+                    .fontWeight(.semibold)
+            }
             .font(.ra11ySubheadline)
-            .fontWeight(.medium)
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(BasicsScrollButtonStyle())
         .controlSize(.regular)
-        .tint(Color.ra11yAccent)
     }
 
     /// "Enable VoiceOver to play" — present only when VoiceOver is OFF.
     private var enableVoiceOverButton: some View {
         Button(action: onEnableVoiceOver) {
-            Label(
-                String(localized: "hub.enableVoiceOver"),
-                systemImage: "speaker.wave.2"
-            )
+            HStack(spacing: RA11ySpacing.sm) {
+                Image(systemName: "speaker.wave.2")
+                Text(String(localized: "hub.enableVoiceOver"))
+                    .fontWeight(.semibold)
+            }
             .font(.ra11ySubheadline)
-            .fontWeight(.semibold)
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(EnableVoiceOverButtonStyle())
         .controlSize(.regular)
-        .tint(Color(red: 0.75, green: 0.55, blue: 0.10))
+    }
+
+    private var footerBackground: some View {
+        LinearGradient(
+            colors: [
+                Color.ra11yFooterSurface.opacity(0.95),
+                Color.black.opacity(0.65)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+}
+
+// MARK: - Button Styles
+
+private struct BasicsScrollButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: RA11yRadius.button)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.88, green: 0.82, blue: 0.70),
+                                Color(red: 0.73, green: 0.64, blue: 0.46)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RA11yRadius.button)
+                            .stroke(Color.ra11yGoldDeep.opacity(0.8), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+            )
+            .foregroundStyle(Color.black.opacity(0.85))
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+    }
+}
+
+private struct EnableVoiceOverButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: RA11yRadius.button)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.ra11yGold,
+                                Color.ra11yGoldDeep
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RA11yRadius.button)
+                            .stroke(Color.ra11yGoldDeep.opacity(0.9), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.35), radius: 6, x: 0, y: 3)
+            )
+            .foregroundStyle(Color.black.opacity(0.9))
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
     }
 }
 

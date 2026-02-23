@@ -79,7 +79,10 @@ public final class HubViewModel {
     }
 
     deinit {
-        stateObservationTask?.cancel()
+        Task { @MainActor [weak self] in
+            self?.stateObservationTask?.cancel()
+            self?.stateObservationTask = nil
+        }
     }
 
     // MARK: - Public API

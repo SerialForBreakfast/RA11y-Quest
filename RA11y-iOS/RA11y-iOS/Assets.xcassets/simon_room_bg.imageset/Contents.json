@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "simon_room_bg.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

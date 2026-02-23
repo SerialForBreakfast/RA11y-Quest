@@ -43,10 +43,10 @@ struct iOSQuestCardView: View {
     }
 
     private var cardPadding: CGFloat {
-        sizeClass == .regular ? RA11ySpacing.lg : RA11ySpacing.md
+        sizeClass == .regular ? RA11ySpacing.lg : RA11ySpacing.base
     }
 
-    private var cardSpacing: CGFloat { 12 }
+    private var cardSpacing: CGFloat { 16 }
 
     private var rankLabel: String {
         if let rank {
@@ -149,16 +149,32 @@ private struct QuestCardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(red: 0.13, green: 0.10, blue: 0.09))
+                RoundedRectangle(cornerRadius: RA11yRadius.card)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.ra11yCardSurfaceHighlight,
+                                Color.ra11yCardSurface
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: RA11yRadius.card)
                             .strokeBorder(
-                                Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.6),
-                                lineWidth: 1.5
+                                LinearGradient(
+                                    colors: [
+                                        Color.ra11yCardBorder.opacity(0.9),
+                                        Color.ra11yGoldDeep.opacity(0.55)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.6
                             )
                     )
-                    .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 3)
+                    .shadow(color: .black.opacity(0.45), radius: 10, x: 0, y: 6)
             )
             .opacity(configuration.isPressed ? 0.85 : 1.0)
             // Scale feedback is motion-based; suppress it when Reduce Motion is ON.
