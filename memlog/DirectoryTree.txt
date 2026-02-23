@@ -35,6 +35,8 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
 │   │   ├── FirstRun
 │   │   │   ├── iOSBasicsSequenceView.swift  Basics sequence placeholder + completion flag
 │   │   │   └── iOSFirstRunView.swift        First-run entry screen + sequence container
+│   │   ├── Games
+│   │   │   └── iOSEnchantersTrialView.swift  Game 1 (Find & Focus) — L1 minimal playable
 │   │   ├── Hub
 │   │   │   ├── iOSHubView.swift              Root hub; uses .background{} pattern for bg image
 │   │   │   ├── iOSHubBackgroundView.swift    Full-bleed bg: fallback color + image + gradient

@@ -40,6 +40,19 @@ final class RA11y_iOSScreenshots: XCTestCase {
             "Hub greeting did not appear. Expected the hub to be visible for screenshots."
         )
         captureScreenshot("01_Hub")
+
+        let enchantersTrialCard = app.buttons["questCard.find-and-focus"]
+        XCTAssertTrue(
+            enchantersTrialCard.waitForExistence(timeout: 5),
+            "Enchanter's Trial card did not appear on the hub."
+        )
+        enchantersTrialCard.tap()
+
+        XCTAssertTrue(
+            app.scrollViews["enchanter.trial"].waitForExistence(timeout: 5),
+            "Enchanter's Trial screen did not appear."
+        )
+        captureScreenshot("02_EnchantersTrial")
     }
 
     // MARK: - Private

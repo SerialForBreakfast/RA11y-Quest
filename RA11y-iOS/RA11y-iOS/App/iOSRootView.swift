@@ -70,6 +70,8 @@ struct iOSRootView: View {
             iOSHubView(viewModel: hubViewModel)
         case .firstRun(let mode):
             iOSFirstRunView(mode: mode, storage: storage)
+        case .game(let kind):
+            gameDestination(for: kind)
         case .gameResult(let result):
             iOSGameResultView(
                 presenter: GameResultPresenter(result: result),
@@ -78,6 +80,18 @@ struct iOSRootView: View {
             )
         case .voiceOverInterstitial(let kind):
             iOSVORequiredView(kind: kind)
+        }
+    }
+
+    @ViewBuilder
+    private func gameDestination(for kind: GameKind) -> some View {
+        switch kind {
+        case .findAndFocus:
+            iOSEnchantersTrialView(storage: storage)
+        case .activateDoubleTap, .scrollHunt:
+            Text(String(localized: "game.comingSoon"))
+                .font(.ra11yTitle)
+                .foregroundStyle(.secondary)
         }
     }
 

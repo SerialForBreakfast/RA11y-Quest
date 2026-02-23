@@ -131,7 +131,12 @@ struct iOSHubView: View {
             router.push(.voiceOverInterstitial(kind: game.kind))
         } else {
             // VoiceOver is ON — proceed to game (M5+: push game route)
-            RA11yLogger.navigation.debug("Game start gating passed for \(game.id)")
+            switch game.kind {
+            case .findAndFocus:
+                router.push(.game(kind: game.kind))
+            case .activateDoubleTap, .scrollHunt:
+                RA11yLogger.navigation.debug("Game start gating passed for \(game.id) (not yet implemented)")
+            }
         }
     }
 

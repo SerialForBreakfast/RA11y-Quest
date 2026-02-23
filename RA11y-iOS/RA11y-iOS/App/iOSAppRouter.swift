@@ -13,6 +13,8 @@ enum AppRoute: Hashable {
     case hub
     /// The first-run "VoiceOver Basics" guided sequence. Implemented in M4.
     case firstRun(mode: FirstRunMode)
+    /// Active gameplay route for a given game kind (M5+).
+    case game(kind: GameKind)
     /// The shared result screen shown after any game completes.
     /// Carries the `GameResult` so the view can display rank, time, and mistakes.
     /// Games in M5+ push this route on session completion.

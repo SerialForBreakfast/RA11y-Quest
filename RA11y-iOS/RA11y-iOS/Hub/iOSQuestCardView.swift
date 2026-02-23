@@ -76,6 +76,7 @@ struct iOSQuestCardView: View {
         .accessibilityLabel(combinedAccessibilityLabel)
         .accessibilityHint(String(localized: "hub.card.accessibilityHint"))
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("questCard.\(game.id)")
     }
 
     // MARK: - Card Content
