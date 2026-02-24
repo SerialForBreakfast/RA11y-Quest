@@ -181,6 +181,21 @@ A passing Core build is not sufficient if the iOS build fails, and vice versa.
 
 ---
 
+## Fastlane Screenshot Coverage (Required When Views Change)
+
+When any user-visible view is added, renamed, or significantly restructured, update the
+screenshot flow to keep fastlane coverage current. This avoids silent UI regressions.
+
+Requirements:
+- Add a stable accessibility identifier to the screen root or primary container.
+- Update `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift` to navigate to the view
+  and wait on that identifier before capturing the next screenshot.
+- If a view is gated (VoiceOver, onboarding, etc.), add a `-uiTesting` bypass so the
+  screenshot flow can reach it deterministically.
+- Keep screenshot names sequential and explicit (e.g., `01_Hub`, `02_EnchantersTrial`).
+
+---
+
 ## Before Writing Any Code
 
 1. **Search first.** Before creating a protocol, class, enum, struct, or file,

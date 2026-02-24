@@ -49,7 +49,7 @@ final class RA11y_iOSScreenshots: XCTestCase {
         enchantersTrialCard.tap()
 
         XCTAssertTrue(
-            app.scrollViews["enchanter.trial"].waitForExistence(timeout: 5),
+            app.otherElements["enchanter.trial"].waitForExistence(timeout: 5),
             "Enchanter's Trial screen did not appear."
         )
         captureScreenshot("02_EnchantersTrial")

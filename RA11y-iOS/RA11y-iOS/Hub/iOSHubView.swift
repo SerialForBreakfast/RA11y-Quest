@@ -126,6 +126,10 @@ struct iOSHubView: View {
     /// If VoiceOver is running: route directly to the game (M5+).
     /// If VoiceOver is off: push the interstitial so the user can enable it.
     private func startGame(_ game: GameDefinition) {
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            router.push(.game(kind: game.kind))
+            return
+        }
         if viewModel.showHelpAffordance {
             // VoiceOver is OFF — route to interstitial
             router.push(.voiceOverInterstitial(kind: game.kind))

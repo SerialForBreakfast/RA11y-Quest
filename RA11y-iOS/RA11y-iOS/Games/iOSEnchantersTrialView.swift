@@ -87,8 +87,9 @@ struct iOSEnchantersTrialView: View {
             .padding(.vertical, RA11ySpacing.lg)
             .frame(maxWidth: contentMaxWidth)
             .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("enchanter.trial")
         }
-        .accessibilityIdentifier("enchanter.trial")
     }
 
     private var contentMaxWidth: CGFloat {
