@@ -3,16 +3,16 @@ import Testing
 
 // MARK: - ScoringModelTests
 
-/// Tests for `GameRank` ordering and display, `GameResult.isBetter(than:)`, and
-/// `RankThresholds.evaluate(timeSeconds:mistakes:)`.
+/// Tests for `GameRank`, `GameResult.isBetter(than:)`, and `RankThresholds.evaluate`.
 ///
-/// Validates TICKET-M1-ScoringModel-RankMetrics acceptance criteria.
+/// All threshold assertions use values from `GameSpec-FindAndFocus.txt`,
+/// `GameSpec-ActivateDoubleTap.txt`, `GameSpec-ScrollHunt.txt`, and
+/// `GameRules-MVP.txt`. Update tests here whenever a spec changes.
 struct ScoringModelTests {
 
     // MARK: - GameRank Display Names
 
-    /// All four rank cases must use D&D-themed display text.
-    /// Regression guard: changing "Legendary" back to "Perfect" breaks this test.
+    /// Regression guard: D&D display names must not regress to code-level names.
     @Test func gameRankDisplayNamesMatchDandDTheme() {
         #expect(GameRank.perfect.displayText == "Legendary")
         #expect(GameRank.good.displayText    == "Skilled")
@@ -22,7 +22,6 @@ struct ScoringModelTests {
 
     // MARK: - GameRank Comparable Ordering
 
-    /// `isBetter(than:)` and storage promotion depend on `Comparable` being correct.
     @Test func gameRankComparableOrderingIsCorrect() {
         #expect(GameRank.failed  < GameRank.ok)
         #expect(GameRank.ok      < GameRank.good)
@@ -43,111 +42,161 @@ struct ScoringModelTests {
 
     /// On equal rank, fewer mistakes wins.
     @Test func fewerMistakesWinsOnEqualRank() {
-        let fewer = GameResult(gameID: "g", rank: .good, timeSeconds: 25, mistakes: 1)
-        let more  = GameResult(gameID: "g", rank: .good, timeSeconds: 20, mistakes: 2)
+        let fewer = GameResult(gameID: "g", rank: .good, timeSeconds: 15, mistakes: 0)
+        let more  = GameResult(gameID: "g", rank: .good, timeSeconds: 10, mistakes: 1)
         #expect(fewer.isBetter(than: more))
     }
 
     /// On equal rank and equal mistakes, faster time wins.
     @Test func fasterTimeWinsOnEqualRankAndMistakes() {
-        let faster = GameResult(gameID: "g", rank: .good, timeSeconds: 15, mistakes: 1)
-        let slower = GameResult(gameID: "g", rank: .good, timeSeconds: 20, mistakes: 1)
+        let faster = GameResult(gameID: "g", rank: .good, timeSeconds: 12, mistakes: 1)
+        let slower = GameResult(gameID: "g", rank: .good, timeSeconds: 18, mistakes: 1)
         #expect(faster.isBetter(than: slower))
     }
 
     /// A result is never better than an identical result — prevents infinite promotion loops.
     @Test func resultIsNotBetterThanItself() {
-        let result = GameResult(gameID: "g", rank: .perfect, timeSeconds: 10, mistakes: 0)
+        let result = GameResult(gameID: "g", rank: .perfect, timeSeconds: 8, mistakes: 0)
         #expect(!result.isBetter(than: result))
     }
 
-    // MARK: - RankThresholds — Find & Focus (Game 1)
+    // MARK: - RankThresholds — Find & Focus (Game 1 — The Enchanter's Trial)
+    // Spec: Legendary ≤10s, 0 mistakes | Skilled ≤20s, ≤1 mistake | Novice ≤45s | Defeated ≥5 mistakes
 
-    /// Perfect: ≤15s, 0 mistakes.
-    @Test func findAndFocusPerfectWithinThreshold() {
-        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 15, mistakes: 0)
+    /// Legendary: 0 mistakes AND ≤10s — exact ticket spec value.
+    @Test func findAndFocusLegendaryWithinThreshold() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 9, mistakes: 0)
         #expect(rank == .perfect)
     }
 
-    /// Exactly at the perfect time boundary is still Perfect.
-    @Test func findAndFocusPerfectAtExactTimeBoundary() {
-        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 15.0, mistakes: 0)
+    /// Exactly 10s with 0 mistakes is Legendary (boundary included).
+    @Test func findAndFocusLegendaryAtExactBoundary() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 10, mistakes: 0)
         #expect(rank == .perfect)
     }
 
-    /// One mistake at perfect time → degrades to Good.
-    @Test func findAndFocusPerfectDegradesToGoodWithMistake() {
+    /// 11s with 0 mistakes drops to Skilled (just past perfect boundary).
+    @Test func findAndFocusJustPastPerfectTimeDropsToSkilled() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 11, mistakes: 0)
+        #expect(rank == .good)
+    }
+
+    /// 1 mistake at ≤10s drops to Skilled (mistake exceeds perfect threshold).
+    @Test func findAndFocusOneMistakeDropsFromLegendary() {
         let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 9, mistakes: 1)
         #expect(rank == .good)
     }
 
-    /// Good: ≤25s, ≤1 mistake.
-    @Test func findAndFocusGoodWithinThreshold() {
-        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 25, mistakes: 1)
+    /// Skilled: ≤20s, ≤1 mistake — exact spec values.
+    @Test func findAndFocusSkilledWithinThreshold() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 20, mistakes: 1)
         #expect(rank == .good)
     }
 
-    /// Ok: ≤45s (timeout), ≤2 mistakes — the untested ok tier.
-    @Test func findAndFocusOkRankWithinBoundary() {
-        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 40, mistakes: 2)
+    /// 21s with 1 mistake drops to Novice.
+    @Test func findAndFocusJustPastSkilledTimeDropsToNovice() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 21, mistakes: 1)
         #expect(rank == .ok)
     }
 
-    /// Exactly at the timeout ceiling is still evaluated (not auto-failed).
-    /// The guard is `timeSeconds > timeoutSeconds` (strict), so timeout itself passes.
-    @Test func findAndFocusExactTimeoutIsNotFailed() {
+    /// Novice: success within 45s with 2 mistakes (well below defeat threshold of 5).
+    @Test func findAndFocusNoviceWithinBoundary() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 40, mistakes: 3)
+        #expect(rank == .ok)
+    }
+
+    /// Exactly at the 45s timeout is still Novice (guard is strict >).
+    @Test func findAndFocusExactTimeoutIsNovice() {
         let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 45, mistakes: 0)
         #expect(rank == .ok)
     }
 
-    /// One fraction over the timeout → failed, regardless of mistakes.
-    @Test func findAndFocusJustOverTimeoutIsFailed() {
+    /// Fractionally past 45s is Defeated — session would have been abandoned by timer.
+    @Test func findAndFocusJustOverTimeoutIsDefeated() {
         let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 45.001, mistakes: 0)
         #expect(rank == .failed)
     }
 
-    /// Absolute timeout regardless of time: mistakes > okMaxMistakes → failed even with fast time.
-    @Test func findAndFocusExcessMistakesFailEvenWithFastTime() {
-        // 3 mistakes exceeds all tiers (okMaxMistakes=2); time is well within range
-        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 5, mistakes: 3)
+    /// 5 mistakes triggers Defeated regardless of time (okMaxMistakes = 4).
+    @Test func findAndFocusFiveMistakesDefeated() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 5, mistakes: 5)
         #expect(rank == .failed)
     }
 
-    // MARK: - RankThresholds — Activate Double-Tap (Game 2)
-
-    /// Perfect: ≤20s, 0 mistakes.
-    @Test func activateDoubleTapPerfectWithinThreshold() {
-        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 20, mistakes: 0)
-        #expect(rank == .perfect)
-    }
-
-    /// Good: ≤35s, ≤1 mistake.
-    @Test func activateDoubleTapGoodWithinThreshold() {
-        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 35, mistakes: 1)
-        #expect(rank == .good)
-    }
-
-    /// Ok: ≤60s (timeout ceiling), ≤2 mistakes.
-    @Test func activateDoubleTapOkWithinBoundary() {
-        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 55, mistakes: 2)
+    /// 4 mistakes with fast time is still Novice (boundary: okMaxMistakes = 4).
+    @Test func findAndFocusFourMistakesIsNovice() {
+        let rank = RankThresholds.findAndFocus.evaluate(timeSeconds: 5, mistakes: 4)
         #expect(rank == .ok)
     }
 
-    /// Over 60s → failed.
+    // MARK: - RankThresholds — Activate Double-Tap (Game 2 — The Rogue's Gauntlet)
+    // Spec: Legendary ≤8s, 0 mistakes | Skilled ≤16s, ≤1 mistake | Novice ≤40s | Defeated ≥5 mistakes
+
+    /// Legendary: ≤8s, 0 mistakes.
+    @Test func activateDoubleTapLegendaryWithinThreshold() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 7, mistakes: 0)
+        #expect(rank == .perfect)
+    }
+
+    /// 9s with 0 mistakes drops to Skilled.
+    @Test func activateDoubleTapJustPastPerfectDropsToSkilled() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 9, mistakes: 0)
+        #expect(rank == .good)
+    }
+
+    /// Skilled: ≤16s, ≤1 mistake.
+    @Test func activateDoubleTapSkilledWithinThreshold() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 16, mistakes: 1)
+        #expect(rank == .good)
+    }
+
+    /// Novice: completed within 40s.
+    @Test func activateDoubleTapNoviceWithinBoundary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 35, mistakes: 2)
+        #expect(rank == .ok)
+    }
+
+    /// Timeout: >40s → Defeated.
     @Test func activateDoubleTapFailedOnTimeout() {
-        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 60.001, mistakes: 0)
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 40.001, mistakes: 0)
         #expect(rank == .failed)
     }
 
-    // MARK: - RankThresholds — Scroll Hunt (Game 3)
+    /// Equal rank: fewer mistakes wins.
+    @Test func activateDoubleTapFewerMistakesWins() {
+        let fewer = GameResult(gameID: "activate-double-tap", rank: .good, timeSeconds: 15, mistakes: 0)
+        let more  = GameResult(gameID: "activate-double-tap", rank: .good, timeSeconds: 12, mistakes: 1)
+        #expect(fewer.isBetter(than: more))
+    }
 
-    /// Perfect: ≤15s, 0 mistakes (exact boundary).
-    @Test func scrollHuntPerfectAtExactThreshold() {
+    // MARK: - RankThresholds — Scroll Hunt (Game 3 — The Dungeon Descent)
+    // Spec: Legendary ≤15s, 0 mistakes | Skilled ≤30s, ≤1 mistake | Novice ≤60s | Defeated ≥6 mistakes
+
+    /// Legendary: ≤15s, 0 mistakes (spec exact value from GameSpec-ScrollHunt.txt).
+    @Test func scrollHuntLegendaryAtExactThreshold() {
         let rank = RankThresholds.scrollHunt.evaluate(timeSeconds: 15, mistakes: 0)
         #expect(rank == .perfect)
     }
 
-    /// Over 60s → failed.
+    /// Skilled: ≤30s, ≤1 mistake.
+    @Test func scrollHuntSkilledWithinThreshold() {
+        let rank = RankThresholds.scrollHunt.evaluate(timeSeconds: 28, mistakes: 1)
+        #expect(rank == .good)
+    }
+
+    /// Novice: completed, ≤60s, <6 mistakes.
+    @Test func scrollHuntNoviceWithinBoundary() {
+        let rank = RankThresholds.scrollHunt.evaluate(timeSeconds: 55, mistakes: 4)
+        #expect(rank == .ok)
+    }
+
+    /// 6 mistakes → Defeated (okMaxMistakes = 5, so 6 exceeds it).
+    @Test func scrollHuntSixMistakesDefeated() {
+        let rank = RankThresholds.scrollHunt.evaluate(timeSeconds: 20, mistakes: 6)
+        #expect(rank == .failed)
+    }
+
+    /// >60s → Defeated.
     @Test func scrollHuntFailedOnTimeout() {
         let rank = RankThresholds.scrollHunt.evaluate(timeSeconds: 60.001, mistakes: 0)
         #expect(rank == .failed)

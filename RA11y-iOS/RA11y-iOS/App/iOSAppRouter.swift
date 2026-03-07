@@ -13,10 +13,12 @@ enum AppRoute: Hashable {
     case hub
     /// The first-run "VoiceOver Basics" guided sequence. Implemented in M4.
     case firstRun(mode: FirstRunMode)
+    /// Game 1 — The Enchanter's Trial (Find & Focus). Implemented in M5.
+    case enchantersTrial
     /// The shared result screen shown after any game completes.
-    /// Carries the `GameResult` so the view can display rank, time, and mistakes.
-    /// Games in M5+ push this route on session completion.
-    case gameResult(GameResult)
+    /// Carries the `GameResult` so the view can display rank, time, and mistakes,
+    /// plus an optional game-specific announcement appended to the shared summary.
+    case gameResult(GameResult, gameSpecificAnnouncement: String?)
 
     /// "VoiceOver required" interstitial shown when a user attempts to start a game
     /// with VoiceOver disabled. Carries the intended `GameKind` so the interstitial

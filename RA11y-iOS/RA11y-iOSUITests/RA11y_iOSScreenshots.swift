@@ -12,17 +12,24 @@
 //  extract them via `xcrun xcresulttool export attachments`.
 //
 //  ## Screens Captured
-//  | File           | Screen                        | Launch args                  |
-//  |----------------|-------------------------------|------------------------------|
-//  | 01_Hub         | Game hub — VoiceOver OFF      | -uiTesting                   |
-//  | 02_VORequired  | VoiceOver Required interstitial | navigated from hub          |
-//  | 03_FirstRun    | First Run entry screen        | -uiTesting -screenshotResetOnboarding |
+//  | File                  | Screen                           | Launch args                                       |
+//  |-----------------------|----------------------------------|---------------------------------------------------|
+//  | 01_Hub                | Game hub — VoiceOver OFF         | -uiTesting -screenshotMarkOnboardingComplete      |
+//  | 02_VORequired         | VoiceOver Required interstitial  | navigated from hub (VO OFF)                       |
+//  | 03_FirstRun           | First Run entry screen           | -uiTesting -screenshotResetOnboarding             |
+//  | 04_EnchanterPrologue  | Enchanter's Trial L0 Prologue    | -uiTesting -screenshotDirectToEnchanter           |
 //
 //  ## Navigation Strategy
 //  Screenshots that require navigation (VORequired) are obtained by interacting
 //  with UI elements using stable `accessibilityIdentifier` values assigned in
 //  each respective view. The test uses `waitForExistence(timeout:)` before every
 //  interaction to handle async route resolution.
+//
+//  Game-specific screens (Enchanter, and future games) are captured by launching
+//  with a `-screenshotDirectTo<Game>` arg. iOSRootView detects the arg and pushes
+//  the game route on top of the hub automatically — no VoiceOver required.
+//  To add a new game: add the arg to iOSRootView.applyScreenshotDirectRouteIfNeeded(),
+//  RA11y_iOSApp.directGameArgs, and a new test method here.
 //
 
 import XCTest
@@ -34,9 +41,10 @@ import XCTest
 /// inside the xcresult bundle, which is later extracted by the lane.
 ///
 /// ## Pass Structure
-/// Capture is split into two passes to avoid state pollution across screens:
+/// Capture is split into independent passes to isolate state across screens:
+/// - `testScreenshots_Enchanter`:      Enchanter's Trial L0 Prologue (runs first alphabetically)
+/// - `testScreenshots_FirstRun`:       first-run entry screen (requires reset of onboarding state)
 /// - `testScreenshots_Hub_VORequired`: hub and VoiceOver Required interstitial
-/// - `testScreenshots_FirstRun`: first-run entry screen (requires reset of onboarding state)
 ///
 /// The Fastfile's `UI_TEST_ID` targets the parent class
 /// `RA11y-iOSUITests/RA11y_iOSScreenshots`, which runs both test methods in order.
@@ -116,6 +124,41 @@ final class RA11y_iOSScreenshots: XCTestCase {
         )
 
         captureScreenshot("03_FirstRun")
+    }
+
+    // MARK: - Pass 3: Enchanter's Trial — L0 Prologue
+
+    /// Captures the Enchanter's Trial L0 Prologue screen.
+    ///
+    /// Launches with `-screenshotDirectToEnchanter`, which causes
+    /// `RA11y_iOSApp.applyScreenshotTestingOverridesIfNeeded()` to set
+    /// `basicsCompleted = true` and `iOSRootView.applyScreenshotDirectRouteIfNeeded()`
+    /// to push `.enchantersTrial` on top of the hub.
+    ///
+    /// VoiceOver is not required — the L0 Prologue is always visible as the first
+    /// screen of the game. The existing `enchanter.beginTrial` accessibility identifier
+    /// on the "Begin Trial" button is used as a stable wait target.
+    ///
+    /// As new games become screenshot-ready, clone this method and swap the launch arg
+    /// and wait target. Keep each game in its own `testScreenshots_` method so failures
+    /// are isolated and partial captures still yield the passing game screens.
+    ///
+    /// - Concurrency: `@MainActor` — XCUIApplication interactions require the main thread.
+    @MainActor
+    func testScreenshots_Enchanter() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-screenshotDirectToEnchanter"]
+        app.launch()
+
+        // "Begin Trial" is the primary CTA on the L0 Prologue screen.
+        // It appears only after the route is pushed and the view has rendered.
+        let beginButton = app.buttons["enchanter.beginTrial"]
+        XCTAssertTrue(
+            beginButton.waitForExistence(timeout: 10),
+            "Enchanter 'Begin Trial' button not found — direct route push may have failed"
+        )
+
+        captureScreenshot("04_EnchanterPrologue")
     }
 
     // MARK: - Private

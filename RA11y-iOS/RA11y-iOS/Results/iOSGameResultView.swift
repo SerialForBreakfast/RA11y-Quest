@@ -5,13 +5,15 @@ import RA11yCore
 
 /// Shared result screen displayed by all three training games on completion.
 ///
-/// Accepts a `GameResultPresenter` and two action closures. The view is reused across
-/// all games — no per-game subclasses or duplicates.
+/// Accepts a `GameResultPresenter`, an optional game-specific announcement string,
+/// and two action closures. Reused across all games — no per-game subclasses.
 ///
 /// ## VoiceOver
-/// The result summary (rank + metrics) is collapsed into a single accessibility element
-/// using the full announcement string from `GameResultPresenter.accessibilityAnnouncement`.
-/// Announced order: rank → time → mistakes, as required by TICKET-M1-SharedGameResultScreen.
+/// The result summary (rank + metrics) is a single accessibility element using
+/// `GameResultPresenter.accessibilityAnnouncement`. Order: rank → time → mistakes,
+/// as required by TICKET-M1-SharedGameResultScreen.
+/// If `gameSpecificAnnouncement` is provided, it is appended after the shared summary
+/// on a separate line — announced after VoiceOver reads the shared element.
 ///
 /// ## Dynamic Type
 /// All text uses semantic font styles from `RA11yFont`; layout scrolls at largest sizes.
@@ -24,11 +26,16 @@ struct iOSGameResultView: View {
 
     let presenter: GameResultPresenter
 
-    /// Called when the user taps "Play Again". Restarts the same game.
-    /// Wired to a game-specific restart in M5+; pops to hub until then.
+    /// Optional game-specific flavor text shown below the rank summary.
+    ///
+    /// Each game defines per-rank strings in the localization catalog (e.g.,
+    /// `simon.results.legendary`). Nil when no game-specific copy is available.
+    let gameSpecificAnnouncement: String?
+
+    /// Called when the user taps "Try Again". Restarts the same game.
     let onPlayAgain: () -> Void
 
-    /// Called when the user taps "Return to Hub". Pops the navigation stack to root.
+    /// Called when the user taps "Back to Tavern". Pops to hub root.
     let onReturnToHub: () -> Void
 
     // MARK: - Body
@@ -37,6 +44,13 @@ struct iOSGameResultView: View {
         ScrollView {
             VStack(spacing: RA11ySpacing.xl) {
                 resultSummary
+                if let gameSpecificAnnouncement {
+                    Text(gameSpecificAnnouncement)
+                        .font(.ra11yBody)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, RA11ySpacing.base)
+                }
                 actionButtons
             }
             .padding(RA11ySpacing.base)
@@ -73,7 +87,7 @@ struct iOSGameResultView: View {
         .accessibilityLabel(presenter.accessibilityAnnouncement)
     }
 
-    /// "Play Again" and "Return to Hub" action buttons.
+    /// "Try Again" and "Back to Tavern" action buttons.
     private var actionButtons: some View {
         VStack(spacing: RA11ySpacing.sm) {
             Button(String(localized: "result.playAgain")) {
@@ -99,6 +113,7 @@ struct iOSGameResultView: View {
             presenter: GameResultPresenter(
                 result: GameResult(gameID: "find-and-focus", rank: .perfect, timeSeconds: 8.5, mistakes: 0)
             ),
+            gameSpecificAnnouncement: "The Enchanter bows. A perfect invocation.",
             onPlayAgain: {},
             onReturnToHub: {}
         )
@@ -111,6 +126,7 @@ struct iOSGameResultView: View {
             presenter: GameResultPresenter(
                 result: GameResult(gameID: "find-and-focus", rank: .failed, timeSeconds: 46, mistakes: 3)
             ),
+            gameSpecificAnnouncement: "The relic vanished. Return when you are ready.",
             onPlayAgain: {},
             onReturnToHub: {}
         )

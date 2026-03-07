@@ -72,6 +72,18 @@ struct RA11y_iOSApp: App {
             )
             RA11yLogger.startup.debug("Screenshot: basicsCompleted set for hub route")
         }
+
+        // Direct-to-game screenshot args: ensure the hub is the base route so
+        // iOSRootView.applyScreenshotDirectRouteIfNeeded() can push the game on top.
+        // Any new game-direct arg should be listed here alongside -screenshotMarkOnboardingComplete.
+        let directGameArgs = ["-screenshotDirectToEnchanter"]
+        if directGameArgs.contains(where: { args.contains($0) }) {
+            UserDefaults.standard.set(
+                true,
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
+            )
+            RA11yLogger.startup.debug("Screenshot: basicsCompleted set for direct-game route")
+        }
         #endif
     }
 }

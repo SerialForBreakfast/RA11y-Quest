@@ -67,33 +67,45 @@ public struct RankThresholds: Sendable {
 
 public extension RankThresholds {
 
-    /// Thresholds for Find & Focus (Game 1 — Simon Says).
+    /// Thresholds for Find & Focus — The Enchanter's Trial (Game 1).
     ///
-    /// Perfect: ≤15s, 0 mistakes. Timeout: 45s.
+    /// Per `GameSpec-FindAndFocus.txt` and `GameRules-MVP.txt`:
+    /// - Legendary (Perfect): 0 mistakes, ≤10s
+    /// - Skilled   (Good):    ≤1 mistake, ≤20s
+    /// - Novice    (Ok):      completed,  ≤45s (matches L3 timeout ceiling)
+    /// - Defeated  (Failed):  timed out OR ≥5 mistakes (okMaxMistakes = 4 captures the boundary)
     static let findAndFocus = RankThresholds(
         timeoutSeconds:     45,
-        perfectMaxTime:     15, perfectMaxMistakes: 0,
-        goodMaxTime:        25, goodMaxMistakes:    1,
-        okMaxTime:          45, okMaxMistakes:      2
+        perfectMaxTime:     10, perfectMaxMistakes: 0,
+        goodMaxTime:        20, goodMaxMistakes:    1,
+        okMaxTime:          45, okMaxMistakes:      4
     )
 
-    /// Thresholds for Activate (Game 2 — Bomb Defusal).
+    /// Thresholds for Activate — The Rogue's Gauntlet (Game 2).
     ///
-    /// Perfect: ≤20s, 0 mistakes. Timeout: 60s.
+    /// Per `GameSpec-ActivateDoubleTap.txt` and `GameRules-MVP.txt`:
+    /// - Legendary (Perfect): 0 mistakes, ≤8s
+    /// - Skilled   (Good):    ≤1 mistake, ≤16s
+    /// - Novice    (Ok):      completed,  ≤40s
+    /// - Defeated  (Failed):  timed out OR ≥5 mistakes
     static let activateDoubleTap = RankThresholds(
-        timeoutSeconds:     60,
-        perfectMaxTime:     20, perfectMaxMistakes: 0,
-        goodMaxTime:        35, goodMaxMistakes:    1,
-        okMaxTime:          60, okMaxMistakes:      2
+        timeoutSeconds:     40,
+        perfectMaxTime:      8, perfectMaxMistakes: 0,
+        goodMaxTime:        16, goodMaxMistakes:    1,
+        okMaxTime:          40, okMaxMistakes:      4
     )
 
-    /// Thresholds for Scroll Hunt (Game 3 — Dungeon Crawl).
+    /// Thresholds for Scroll Hunt — The Dungeon Descent (Game 3).
     ///
-    /// Perfect: ≤15s, 0 mistakes. Timeout: 60s.
+    /// Per `GameSpec-ScrollHunt.txt` and `GameRules-MVP.txt`:
+    /// - Legendary (Perfect): 0 mistakes, ≤15s
+    /// - Skilled   (Good):    ≤1 mistake, ≤30s
+    /// - Novice    (Ok):      completed,  ≤60s
+    /// - Defeated  (Failed):  timed out OR ≥6 mistakes
     static let scrollHunt = RankThresholds(
         timeoutSeconds:     60,
         perfectMaxTime:     15, perfectMaxMistakes: 0,
         goodMaxTime:        30, goodMaxMistakes:    1,
-        okMaxTime:          60, okMaxMistakes:      2
+        okMaxTime:          60, okMaxMistakes:      5
     )
 }

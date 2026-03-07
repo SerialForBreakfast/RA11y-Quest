@@ -67,14 +67,31 @@ struct iOSRootView: View {
             iOSHubView()
         case .firstRun(let mode):
             iOSFirstRunView(mode: mode, storage: storage)
-        case .gameResult(let result):
+        case .enchantersTrial:
+            iOSEnchantersTrialView(storage: storage)
+        case .gameResult(let result, let gameSpecificAnnouncement):
             iOSGameResultView(
                 presenter: GameResultPresenter(result: result),
-                onPlayAgain: { router.popToRoot() },   // M5+ will push the specific game route here
+                gameSpecificAnnouncement: gameSpecificAnnouncement,
+                onPlayAgain: { restartGame(for: result) },
                 onReturnToHub: { router.popToRoot() }
             )
         case .voiceOverInterstitial(let kind):
             iOSVORequiredView(kind: kind)
+        }
+    }
+
+    /// Pops the result screen and restarts the correct game based on the result's game ID.
+    ///
+    /// Pops back through the navigation stack to the game entry point so the player
+    /// can retry without returning all the way to the hub.
+    private func restartGame(for result: GameResult) {
+        router.popToRoot()
+        switch result.gameID {
+        case "find-and-focus":
+            router.push(.enchantersTrial)
+        default:
+            break  // Future games added here (M6, M7)
         }
     }
 
@@ -87,6 +104,13 @@ struct iOSRootView: View {
     /// reads (`isBasicsCompleted` + `isBasicsDismissed`) that determine first-run
     /// routing. Visible in Instruments → "Points of Interest". If this interval is
     /// long (> ~50 ms) the storage actor or UserDefaults is the bottleneck.
+    ///
+    /// ## Screenshot Testing — Direct Route Override
+    /// When launched with `-screenshotDirectToEnchanter`, the app pushes `.enchantersTrial`
+    /// on top of the hub immediately after resolution. This allows the fastlane screenshot
+    /// lane to capture the Enchanter's Trial L0 Prologue without requiring VoiceOver to be
+    /// enabled in the simulator. Requires `-screenshotMarkOnboardingComplete` to be present
+    /// so the hub (not first-run) is the initial route.
     private func resolveInitialRouteIfNeeded() async {
         guard !hasResolvedInitialRoute else { return }
 
@@ -101,7 +125,35 @@ struct iOSRootView: View {
         hasResolvedInitialRoute = true
 
         RA11yLogger.startup.debug("routeResolution complete — initial route: \(String(describing: initial))")
+
+        // Screenshot testing: push a specific game screen directly on top of the hub
+        // so the fastlane lane can capture game UI without needing VoiceOver enabled.
+        // Only active when both -uiTesting and the specific direct-route flag are present.
+        #if DEBUG
+        applyScreenshotDirectRouteIfNeeded()
+        #endif
     }
+
+    /// Pushes a direct game route when the appropriate screenshot testing launch args are present.
+    ///
+    /// Each `if`-branch corresponds to one fastlane screenshot pass. As new games
+    /// become screenshot-ready, add a new `else if` here and a matching test method
+    /// in `RA11y_iOSScreenshots.swift`.
+    ///
+    /// - Concurrency: Must be called on `@MainActor`; mutates `router` which is `@MainActor`.
+    #if DEBUG
+    private func applyScreenshotDirectRouteIfNeeded() {
+        let args = ProcessInfo.processInfo.arguments
+        guard args.contains("-uiTesting") else { return }
+
+        if args.contains("-screenshotDirectToEnchanter") {
+            router.push(.enchantersTrial)
+        }
+        // Add future game routes here:
+        // else if args.contains("-screenshotDirectToRogue")  { router.push(.roguesGauntlet) }
+        // else if args.contains("-screenshotDirectToDungeon") { router.push(.dungeonDescent) }
+    }
+    #endif
 }
 
 #Preview {

@@ -77,6 +77,11 @@ public struct GameDefinition: Sendable, Identifiable {
 public enum GameCatalog {
 
     /// All MVP games in display order.
+    ///
+    /// Thumbnails use each game's atmospheric background scene image so the
+    /// card always shows a dark, in-world crop regardless of the system's
+    /// color scheme. Individual relic/seal/room icon sprites (which were
+    /// generated on white backgrounds) are not used as hub thumbnails.
     public static let all: [GameDefinition] = [
         GameDefinition(
             id: "find-and-focus",
@@ -84,7 +89,7 @@ public enum GameCatalog {
             goalKey: "game.findAndFocus.goal",
             estimatedDuration: "~5 min",
             kind: .findAndFocus,
-            thumbnailAssetName: "enchanter_relic_target"
+            thumbnailAssetName: "enchanter_tower_shelf_bg"
         ),
         GameDefinition(
             id: "activate-double-tap",
@@ -92,7 +97,7 @@ public enum GameCatalog {
             goalKey: "game.activateDoubleTap.goal",
             estimatedDuration: "~5 min",
             kind: .activateDoubleTap,
-            thumbnailAssetName: "rogue_seal_target"
+            thumbnailAssetName: "rogue_trap_door_bg"
         ),
         GameDefinition(
             id: "scroll-hunt",
@@ -100,7 +105,7 @@ public enum GameCatalog {
             goalKey: "game.scrollHunt.goal",
             estimatedDuration: "~7 min",
             kind: .scrollHunt,
-            thumbnailAssetName: "dungeon_room_entry_hall"
+            thumbnailAssetName: "dungeon_descent_bg"
         ),
     ]
 

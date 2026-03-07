@@ -140,12 +140,20 @@ struct iOSHubView: View {
     ///
     /// Reads `voiceOverEnabled` from the SwiftUI environment — always current at
     /// the moment the user taps. If VoiceOver is off, routes to the interstitial.
+    /// If VoiceOver is on, routes to the game's entry route.
     private func startGame(_ game: GameDefinition) {
         if !voiceOverEnabled {
             router.push(.voiceOverInterstitial(kind: game.kind))
         } else {
-            // VoiceOver is ON — proceed to game (M5+: push game route)
             RA11yLogger.navigation.debug("Game start gating passed for \(game.id)")
+            switch game.kind {
+            case .findAndFocus:
+                router.push(.enchantersTrial)
+            case .activateDoubleTap:
+                break  // M6 — not yet implemented
+            case .scrollHunt:
+                break  // M7 — not yet implemented
+            }
         }
     }
 
