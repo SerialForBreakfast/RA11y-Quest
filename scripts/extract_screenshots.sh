@@ -68,7 +68,9 @@ UUID_SUFFIX = re.compile(
 # ── Step 1: enumerate exported files (everything except manifest.json) ───────
 exported_files = [
     f for f in os.listdir(temp_dir)
-    if f != "manifest.json" and os.path.isfile(os.path.join(temp_dir, f))
+    if f != "manifest.json"
+    and os.path.isfile(os.path.join(temp_dir, f))
+    and f.lower().endswith(".png")
 ]
 
 if not exported_files:

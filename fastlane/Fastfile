@@ -14,6 +14,7 @@ UI_TEST_ID     = "RA11y-iOSUITests/RA11y_iOSScreenshots".freeze
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
 DOCS_BASE      = "../docs/screenshots/en-US".freeze
 EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
+DERIVED_DATA   = "/tmp/RA11y_screenshots_DerivedData".freeze
 
 # ---------------------------------------------------------------------------
 # Simulator preferences
@@ -91,6 +92,19 @@ platform :ios do
     require "json"
 
     sh("rm -rf '#{OUTPUT_BASE}' && mkdir -p '#{OUTPUT_BASE}'")
+    sh("rm -rf '#{DERIVED_DATA}'")
+
+    # Build once, then run test-without-building per simulator.
+    # This avoids recompiling the app/test bundle for every device pass.
+    UI.message("Prebuilding UI tests once (build-for-testing)")
+    sh(
+      "xcodebuild build-for-testing" \
+      " -workspace '#{WORKSPACE}'" \
+      " -scheme '#{SCHEME}'" \
+      " -destination 'generic/platform=iOS Simulator'" \
+      " -only-testing:'#{UI_TEST_ID}'" \
+      " -derivedDataPath '#{DERIVED_DATA}'"
+    )
 
     succeeded  = []
     failed     = []
@@ -119,9 +133,10 @@ platform :ios do
       xcodebuild_ok = true
       begin
         sh(
-          "xcodebuild test" \
+          "xcodebuild test-without-building" \
           " -workspace '#{WORKSPACE}'" \
           " -scheme '#{SCHEME}'" \
+          " -derivedDataPath '#{DERIVED_DATA}'" \
           " -destination 'platform=iOS Simulator,id=#{udid}'" \
           " -only-testing:'#{UI_TEST_ID}'" \
           " -resultBundlePath '#{result_path}'"
@@ -175,6 +190,12 @@ platform :ios do
     else
       UI.success("Screenshots written to: fastlane/screenshots/en-US/")
     end
+  end
+
+  desc "Fast screenshot pass for iteration: one preferred iPhone device"
+  lane :screenshots_quick do
+    ENV["SNAPSHOT_DEVICES"] = "iPhone 17" if ENV["SNAPSHOT_DEVICES"].to_s.strip.empty?
+    screenshots
   end
 end
 

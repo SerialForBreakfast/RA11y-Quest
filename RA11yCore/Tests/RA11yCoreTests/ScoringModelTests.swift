@@ -251,4 +251,98 @@ struct ScoringModelTests {
         #expect(RankThresholds.bucketMistakes(timeSeconds: 30, bucketSize: 0)  == 0)
         #expect(RankThresholds.bucketMistakes(timeSeconds: 30, bucketSize: -1) == 0)
     }
+
+    // MARK: - RankThresholds.bucketMistakes (8s bucket — Rogue's Gauntlet)
+    //
+    // Spec (GameSpec-ActivateDoubleTap.txt):
+    //   "Bucket size: 8s. First bucket (0–8s) is free. Each subsequent full 8s adds +1.
+    //   Example: 0–8s → +0; 8–16s → +1; 16–24s → +2."
+
+    /// Within first 8s bucket → 0 penalties.
+    @Test func bucketMistakesRogue_withinFirstBucket() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 0,   bucketSize: 8) == 0)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 4,   bucketSize: 8) == 0)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 8,   bucketSize: 8) == 0)
+    }
+
+    /// Just past 8s → enters second bucket → +1.
+    @Test func bucketMistakesRogue_secondBucket() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 8.001, bucketSize: 8) == 1)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 12,    bucketSize: 8) == 1)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 16,    bucketSize: 8) == 1)
+    }
+
+    /// Just past 16s → enters third bucket → +2.
+    @Test func bucketMistakesRogue_thirdBucket() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 16.001, bucketSize: 8) == 2)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 20,     bucketSize: 8) == 2)
+    }
+
+    // MARK: - RankThresholds.activateDoubleTap (Rogue's Gauntlet)
+    //
+    // Spec (GameSpec-ActivateDoubleTap.txt):
+    //   Legendary (Perfect): mistakes == 0 AND timeSeconds <= 8
+    //   Skilled   (Good):    mistakes <= 1 AND timeSeconds <= 16
+    //   Novice    (Ok):      completed AND timeSeconds <= 40
+    //   Defeated  (Failed):  timeout at 40s OR mistakes >= 5
+
+    /// Legendary: ≤8s, 0 mistakes.
+    @Test func rogueGauntletLegendary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 7, mistakes: 0)
+        #expect(rank == .perfect)
+    }
+
+    /// Legendary boundary: exactly 8s, 0 mistakes.
+    @Test func rogueGauntletLegendaryBoundary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 8, mistakes: 0)
+        #expect(rank == .perfect)
+    }
+
+    /// 1 mistake at 8s falls to Skilled (perfectMaxMistakes = 0).
+    @Test func rogueGauntletOneMistakeIsNotLegendary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 8, mistakes: 1)
+        #expect(rank == .good)
+    }
+
+    /// Skilled: ≤16s, ≤1 mistake.
+    @Test func rogueGauntletSkilled() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 15, mistakes: 1)
+        #expect(rank == .good)
+    }
+
+    /// Skilled boundary: exactly 16s, 1 mistake.
+    @Test func rogueGauntletSkilledBoundary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 16, mistakes: 1)
+        #expect(rank == .good)
+    }
+
+    /// Just past 16s with 1 mistake → Novice.
+    @Test func rogueGauntletNoviceAfterSkilledBoundary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 16.001, mistakes: 1)
+        #expect(rank == .ok)
+    }
+
+    /// Novice: completed within 40s, ≤4 mistakes.
+    @Test func rogueGauntletNovice() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 35, mistakes: 3)
+        #expect(rank == .ok)
+    }
+
+    /// 5 mistakes → Defeated (okMaxMistakes = 4, so 5 exceeds boundary).
+    @Test func rogueGauntletFiveMistakesDefeated() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 10, mistakes: 5)
+        #expect(rank == .failed)
+    }
+
+    /// >40s → Defeated (timeout).
+    @Test func rogueGauntletFailedOnTimeout() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 40.001, mistakes: 0)
+        #expect(rank == .failed)
+    }
+
+    /// Exactly 40s → Novice (boundary is inclusive).
+    @Test func rogueGauntletNoviceAtTimeoutBoundary() {
+        let rank = RankThresholds.activateDoubleTap.evaluate(timeSeconds: 40, mistakes: 0)
+        #expect(rank == .ok)
+    }
 }

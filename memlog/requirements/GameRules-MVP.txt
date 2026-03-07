@@ -567,6 +567,24 @@ Seals (L1: 1 correct seal, no decoys — confidence builder)
   KEY: rogue.seal.passage.label       VALUE: Seal of Passage
   KEY: rogue.seal.hint                VALUE: Double-tap to sever this seal.
 
+Objective Card (L1)
+-------------------
+  KEY: rogue.l1.objective.format
+  VALUE: Sever the seal: %@
+
+  accessibilityLabel for objective card group:
+    KEY: rogue.a11y.l1.objective
+    VALUE: Your objective: sever the %@ seal. Touch it to read it. Double-tap to sever.
+
+  accessibilityHint for objective card:
+    KEY: rogue.a11y.l1.objective.hint
+    VALUE: Navigate to the seal and double-tap. Single tap only reads — it does not sever.
+
+Announce on Level Load
+-----------------------
+On L1 appear, post a VoiceOver announcement via UIAccessibility.post with a ~500ms delay.
+Announce the full rogue.a11y.l1.objective string (with seal name substituted).
+
 Inline Feedback
 ---------------
 Correct:
@@ -574,7 +592,7 @@ Correct:
   VALUE: Seal severed. The door yields.
 Wrong (impossible in L1 with single seal — shown if UI is misused):
   KEY: rogue.feedback.trap
-  VALUE: Trap sprung. Misstep recorded.
+  VALUE: Trap sprung. Misstep.
 
 Level Complete Announcement
 ---------------------------
@@ -612,6 +630,24 @@ Trap seals (wrong activations = mistakes):
 All seals share the same hint:
   KEY: rogue.seal.hint               VALUE: Double-tap to sever this seal.
 
+Objective Card (L2)
+-------------------
+  KEY: rogue.l2.objective.format
+  VALUE: Sever the seal: %@
+
+  accessibilityLabel for objective card group:
+    KEY: rogue.a11y.l2.objective
+    VALUE: Your objective: sever the %@ seal. Careful — traps surround it. Listen, then double-tap to sever.
+
+  accessibilityHint for objective card:
+    KEY: rogue.a11y.l2.objective.hint
+    VALUE: Touch each seal to hear its name. Double-tap only when focused on the correct seal.
+
+Announce on Level Load
+-----------------------
+On L2 appear, post a VoiceOver announcement via UIAccessibility.post with a ~500ms delay.
+Announce the full rogue.a11y.l2.objective string (with seal name substituted).
+
 Trap Activation Feedback (wrong seal double-tapped)
 ----------------------------------------------------
   KEY: rogue.feedback.trap
@@ -622,9 +658,39 @@ Correct Activation Feedback
   KEY: rogue.feedback.correct
   VALUE: Seal severed. The lock disengages.
 
+Mistake HUD
+-----------
+  KEY: rogue.hud.mistakes.format
+  VALUE: Missteps: %d
+
+  accessibilityLabel for mistake HUD (L2):
+    KEY: rogue.a11y.hud.l2
+    VALUE: %d misstep(s). Time remaining.
+
+Hint Button
+-----------
+  KEY: rogue.hint.button
+  VALUE: Ask the DM
+
+  KEY: rogue.hint.a11yLabel
+  VALUE: Ask the DM for a hint
+
+  KEY: rogue.hint.a11yHint
+  VALUE: Double-tap to hear the target seal name announced again.
+
+  Hint format string (VoiceOver announcement, not displayed):
+  KEY: rogue.hint.format
+  VALUE: The DM whispers: the correct seal is %@. Double-tap to sever it.
+
 Soft Timer (L2: 40s — generous)
 --------------------------------
-Same timer rules as other L2 levels. VoiceOver announces at 50% and 25%.
+Timer group accessibilityLabel:
+  KEY: rogue.a11y.l2.timer
+  VALUE: Time remaining. %d seconds. Identify the correct seal.
+
+Timer threshold announcements (L2):
+  50% elapsed → KEY: rogue.a11y.timer.50pct   VALUE: Half your time. The floor shifts.
+  25% elapsed → KEY: rogue.a11y.timer.25pct   VALUE: The trap room is nearly ready.
 
 Level Complete Announcement
 ---------------------------
@@ -652,17 +718,41 @@ Full pool — same keys as L2 plus:
   KEY: rogue.seal.freeze.label       VALUE: Freeze Seal
   KEY: rogue.seal.silence.label      VALUE: Silence Seal
 
+Objective Card (L3)
+-------------------
+  KEY: rogue.l3.objective.format
+  VALUE: Sever the seal: %@
+
+  accessibilityLabel for objective card group:
+    KEY: rogue.a11y.l3.objective
+    VALUE: Your objective: sever the %@ seal. Act quickly — the trap room is charging.
+
+Announce on Level Load
+-----------------------
+On L3 appear, post a VoiceOver announcement via UIAccessibility.post with a ~500ms delay.
+Announce the full rogue.a11y.l3.objective string (with seal name substituted).
+
+Mistake HUD (L3)
+----------------
+  KEY: rogue.hud.mistakes.format
+  VALUE: Missteps: %d   (shared with L2)
+
+  accessibilityLabel for mistake HUD (L3):
+    KEY: rogue.a11y.hud.l3
+    VALUE: %d misstep(s). Timer is running.
+
 Timer (Hard limit: 20s)
 -----------------------
 Timer group accessibilityLabel:
   KEY: rogue.a11y.l3.timer
-  VALUE: Time remaining. {seconds} seconds. The trap room charges.
+  VALUE: Time remaining. %d seconds. The trap room charges.
 
 Timer threshold announcements:
   75% elapsed → KEY: rogue.a11y.timer.75pct   VALUE: The mechanisms warm.
   50% elapsed → KEY: rogue.a11y.timer.50pct   VALUE: Half your time. The floor shifts.
   25% elapsed → KEY: rogue.a11y.timer.25pct   VALUE: The trap room is nearly ready.
-  Final 5s   → shared countdown (5, 4, 3, 2, 1)
+  10s remain  → shared key: a11y.timer.10s    VALUE: Ten seconds remaining.
+  Final 5s    → shared countdown keys: a11y.timer.5s … a11y.timer.1s
 
 Timeout Announcement
 --------------------

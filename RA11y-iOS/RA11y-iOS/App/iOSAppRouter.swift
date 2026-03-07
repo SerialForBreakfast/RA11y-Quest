@@ -15,6 +15,8 @@ enum AppRoute: Hashable {
     case firstRun(mode: FirstRunMode)
     /// Game 1 — The Enchanter's Trial (Find & Focus). Implemented in M5.
     case enchantersTrial
+    /// Game 2 — The Rogue's Gauntlet (Activate / Double-Tap). Implemented in M6.
+    case roguesGauntlet
     /// Game 3 — The Dungeon Descent (Scroll Hunt). Implemented in M7.
     case dungeonDescent
     /// The shared result screen shown after any game completes.

@@ -150,7 +150,7 @@ struct iOSHubView: View {
             case .findAndFocus:
                 router.push(.enchantersTrial)
             case .activateDoubleTap:
-                break  // M6 — not yet implemented
+                router.push(.roguesGauntlet)
             case .scrollHunt:
                 router.push(.dungeonDescent)
             }

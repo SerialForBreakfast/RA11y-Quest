@@ -21,6 +21,7 @@ struct iOSDungeonDescentView: View {
     @State private var practiceScrollObserved = false
     @State private var rooms: [DungeonRoom] = DungeonRoom.l1Rooms
     @State private var targetFrame: CGRect = .null
+    @State private var visibleRect: CGRect = .zero
     @State private var targetIsReachable = false
     @State private var scrollSignalObserved = false
     @State private var statusMessage: String?
@@ -177,13 +178,13 @@ struct iOSDungeonDescentView: View {
         .coordinateSpace(name: DungeonRoomCoordinateSpace.name)
         .onPreferenceChange(TargetRoomFramePreferenceKey.self) { frame in
             targetFrame = frame
+            targetIsReachable = targetIsReachable(visibleRect: visibleRect, targetFrame: frame)
         }
-        .onScrollGeometryChange(for: Bool.self, of: { geometry in
-            targetIsReachable(visibleRect: geometry.visibleRect, targetFrame: targetFrame)
-        }, action: { _, reachable in
-            if reachable {
-                targetIsReachable = true
-            }
+        .onScrollGeometryChange(for: CGRect.self, of: { geometry in
+            geometry.visibleRect
+        }, action: { _, newVisibleRect in
+            visibleRect = newVisibleRect
+            targetIsReachable = targetIsReachable(visibleRect: newVisibleRect, targetFrame: targetFrame)
         })
         .onScrollGeometryChange(for: CGFloat.self, of: { geometry in
             geometry.contentOffset.y
@@ -436,9 +437,13 @@ private struct DungeonRoomRow: View {
                 Text(room.title)
                     .font(.ra11yHeadline)
                     .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(room.subtitle)
                     .font(.ra11ySubheadline)
                     .foregroundStyle(Color.ra11yCardTertiaryText)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
@@ -448,8 +453,8 @@ private struct DungeonRoomRow: View {
                     .foregroundStyle(isTargetReachable ? Color.green : Color.ra11yAccent)
             }
         }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, minHeight: 140, alignment: .leading)
+        .padding(RA11ySpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.black.opacity(0.3), in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)

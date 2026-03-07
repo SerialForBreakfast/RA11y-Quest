@@ -1,8 +1,8 @@
 RA11y - Accessibility Training Gamification
 Game Spec - The Rogue's Gauntlet (Activate / Double-Tap)
 
-Date: 2026-02-20 (revised to align with GameRules-MVP.txt)
-Game ID: bomb_defusal_wires
+Date: 2026-02-20 (revised 2026-03-07 — gaps filled, ID corrected, M5 lessons applied)
+Game ID: rogue-gauntlet
 MVP Skill: Double-tap activation — understanding that touch ≠ action in VoiceOver
 
 VoiceOver Paradigm Shift Taught
@@ -43,41 +43,83 @@ Level Structure
 L0 — Prologue (no timer)
   DM narrates the Trap Room. Lesson card explains the paradigm shift explicitly.
   Gestures shown: tap-to-focus (one tap), double-tap-to-activate.
+  Third gesture row: "Severing the wrong seal springs the trap."
   Clear contrast drawn: "This is different from normal iOS."
-  "Begin Trial" button launches L1.
+  "Begin Trial" button launches L1. No timer starts until L1.
 
 L1 — First Attempt (no timer)
-  1 seal only (the Seal of Passage). No decoys.
-  Purpose: build confidence that touch-then-double-tap works.
+  VISUAL LAYOUT: A single large centered seal. No grid or list — one element only.
+  Instructional text above the seal: "Touch to hear it speak. Double-tap to sever it."
+  Seal: Seal of Passage (always, never randomized for L1).
+  Purpose: isolate the double-tap mechanic with zero ambiguity about which seal to pick.
   The player cannot make a mistake here — only one interactive element exists.
-  "Touch it to hear it speak. Double-tap to sever it."
+  VoiceOver: Announce objective on level load (see "Announce Objective on Level Load" below).
+  No mistake HUD displayed (no mistakes possible).
+  No hint button displayed (no decoys to be confused by).
+  After correct activation: thematic completion message → "Continue" → L2.
 
 L2 — Rising Challenge (soft timer: 40s)
-  4 seals: 1 correct (Seal of Passage) + 3 trap seals with distinct names.
-  Correct seal varies per session (any from the passage seal pool).
-  Wrong activation = trap springs = misstep recorded.
+  VISUAL LAYOUT: 4 seals in a 2×2 LazyVGrid. VoiceOver reads row-major (left→right, top→bottom).
+  1 passage seal (randomly selected from passage pool) + 3 trap seals.
+  Correct seal varies per session — see "Seal Pool" and "Passage Seal Selection Rule" below.
+  Wrong activation = trap springs = misstep recorded (+1 mistake).
   Timer is visible. VoiceOver announces at 50% and 25% elapsed.
+  VoiceOver: Announce objective on level load.
+  Hint button available (no scoring penalty).
+  Mistake HUD visible.
+  On timeout: session ends; timeout banner + retry button shown (no result written).
+  On success: thematic completion message → "Continue" → L3.
 
 L3 — Timed Trial (hard timer: 20s)
-  6 seals: 1 correct + 5 traps. Drawn from full seal pool.
+  VISUAL LAYOUT: 6 seals in a 2×3 LazyVGrid. VoiceOver reads row-major (left→right, top→bottom).
+  1 passage seal (randomly selected from passage pool) + 5 trap seals.
   Hard time limit. Failure occurs when timer reaches 0.
   VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5-4-3-2-1 countdown.
+  VoiceOver: Announce objective on level load.
+  Hint button available (no scoring penalty).
+  Mistake HUD visible.
   D&D timeout: "The trap room sealed. You were caught."
   D&D success: "Seal severed. The door opens just in time."
+  On timeout: session abandoned; timeout banner + retry button shown (no result written).
+  On success: session completed; route to shared GameResultScreen.
+
+GameSession Scope
+=================
+GameSession is created ONLY for L3 (the scored Timed Trial).
+L1 and L2 are practice levels with local mistake tracking only.
+This matches the M5 (Enchanter's Trial) pattern and avoids polluting the
+persistence layer with unscored practice data.
+
+On each L3 start (including retries), a fresh GameSession is created.
+The session is started (await session.start()) BEFORE the timer begins
+to avoid the race condition where relic activation fires before the actor hop.
+
+Announce Objective on Level Load
+=================================
+Per the accessibility requirement "objective card reads the correct seal name aloud
+on screen load," each level view (L1, L2, L3) must post a VoiceOver announcement
+when it first appears. The announcement fires with a ~500ms delay so it does not
+get swallowed by the navigation-transition focus announcement.
+
+Announced text is the full accessibility label of the objective card:
+  L1: rogue.a11y.l1.objective (includes seal name + "double-tap to sever")
+  L2: rogue.a11y.l2.objective (includes seal name + "careful — traps are present")
+  L3: rogue.a11y.l3.objective (includes seal name + "act quickly")
 
 Seal Pool
 =========
 Seal names are descriptive and distinct — no ambiguity about what each seal does.
-The correct "passage" seal is drawn from the passage pool. Trap seals are drawn from
-the trap pool. Labels must be readable by VoiceOver and differentiated by function,
-not by color.
+Labels must be readable by VoiceOver and differentiated by function, not by color.
+All seal assets: see DesignTicket-AssetListDefinition.txt (rogue section).
 
 Passage Seals (correct — 1 selected per level)
-  Seal of Passage
-  Warding Seal
-  Binding Seal
+-----------------------------------------------
+  Seal of Passage   (always used in L1; eligible for L2 and L3)
+  Warding Seal      (eligible for L2 and L3 only)
+  Binding Seal      (eligible for L2 and L3 only)
 
 Trap Seals (wrong activations = missteps)
+------------------------------------------
   Spike Trap Seal
   Alarm Seal
   Collapse Seal
@@ -85,28 +127,60 @@ Trap Seals (wrong activations = missteps)
   Freeze Seal
   Silence Seal
 
-L1 uses: Seal of Passage only (always).
-L2 uses: 1 passage seal + 3 trap seals.
-L3 uses: 1 passage seal + 5 trap seals.
-Selection is randomized per session.
+Passage Seal Selection Rule
+============================
+L1: Always "Seal of Passage." Never randomized.
+    Reason: L1 is a confidence builder; the player needs a clear, memorable target name
+    that matches the paradigm ("passage" = the way through).
+
+L2: Randomly select 1 passage seal from the full passage pool (Seal of Passage,
+    Warding Seal, or Binding Seal). Fill remaining 3 slots with trap seals, randomly
+    drawn from the 6-trap pool without repetition.
+
+L3: Randomly select 1 passage seal from the full passage pool. Fill remaining 5 slots
+    with trap seals from the full trap pool. All 6 trap seals are eligible for L3.
+
+UI testing determinism: when -uiTesting launch arg is present, always select
+"Seal of Passage" and the first N trap seals (alphabetically) for predictability.
+
+Seal Layout
+===========
+Seals are displayed in a LazyVGrid (2 columns).
+- L2: 2×2 grid (4 seals, 2 columns × 2 rows).
+- L3: 2×3 grid (6 seals, 2 columns × 3 rows).
+VoiceOver reads LazyVGrid in row-major order (left → right, then next row), which is
+linear and deterministic — equivalent to a vertical list for accessibility purposes.
+The grid layout is preferred for thematic reasons: seals visually occupy a door face.
+
+Retry Button Behavior
+======================
+L1: No retry button — no mistakes possible; "Continue" button after success only.
+L2: Retry button shown ONLY in the timeout state. Success shows "Continue."
+L3: Retry button shown in both timeout state and (no retry on success — goes to results).
+    On retry: fresh session created, new seal layout randomized, timer resets.
 
 Art / Assets
 ============
-See DesignTicket-AssetListDefinition.txt (rogue/gauntlet section).
-Flat, high-contrast, vector-like; no text in images.
 Each seal is a distinct glyph/rune sprite (rogue_seal_*).
 Background: rogue_trap_door_bg.
+All assets exist in Assets.xcassets as of 2026-03-07.
+Flat, high-contrast, vector-like; no text in images.
+See DesignTicket-AssetListDefinition.txt (rogue section).
 
 Gameplay Loop
 =============
 1. L0 lesson card presented. Player reads (or VoiceOver reads) the paradigm shift.
 2. "Begin Trial" starts L1.
-3. Game displays seals on the door. Objective card announces which seal to sever.
-4. Player touches seals to hear each name read aloud (focus only).
-5. Player double-taps when focused on the correct seal to sever it.
-6. Wrong seal double-tapped → trap springs → misstep + feedback → player continues.
-7. Correct seal double-tapped → level success → brief feedback → next level (or results).
-8. Timeout (L2/L3) → session abandoned → no result written.
+3. L1: Single seal displayed. Objective announced on load. Player double-taps to sever.
+4. L1 success → thematic message → Continue → L2.
+5. L2: 4 seals displayed. Objective announced on load. 40s timer visible.
+6. Player touches seals to hear each name read aloud (focus only).
+7. Player double-taps when focused on the correct seal to sever it.
+8. Wrong seal double-tapped → trap springs → misstep + feedback → player continues.
+9. L2 success → thematic message → Continue → L3.
+10. L3: 6 seals displayed. Objective announced on load. 20s hard timer starts.
+11. Correct activation → session completed → route to GameResultScreen.
+12. Timeout (L2/L3) → session abandoned (L3 only) → timeout banner + retry shown.
 
 Observable Signals (Measurable)
 ================================
@@ -115,13 +189,13 @@ Primary
 
 Secondary
 - Trap seal button activation handler invoked (mistake: +1).
-- Elapsed time (monotonic clock).
+- Elapsed time (monotonic clock, L3 session).
 - Timeout fired (fail/abandon).
 
 Scoring
 =======
 Metrics
-- timeSeconds: from "Begin Trial" tap to correct seal activation (or timeout).
+- timeSeconds: from L3 session.start() to correct seal activation (or timeout).
 - mistakes:
   - +1 per wrong seal activation (trap sprung).
   - +1 per timeout bucket exceeded (bucket: 8s; see below).
@@ -131,7 +205,8 @@ Timeout Bucket
 - Bucket size: 8 seconds.
 - Each full 8s bucket beyond the first adds +1 mistake.
   Example: 0–8s → +0; 8–16s → +1; 16–24s → +2.
-  Tunable post-playtest.
+- Formula: max(0, ceil(timeSeconds / 8.0) - 1)  [same as M5 bucketMistakes, different size]
+- Tunable post-playtest.
 
 Rank Thresholds
 ---------------
@@ -142,7 +217,7 @@ Rank Thresholds
 
 Game-Specific Result Announcements
 ===================================
-These are displayed on the shared results screen after L3 completes.
+Displayed on the shared results screen after L3 completes.
 The SharedGameResultScreen accepts a game-specific announcement string.
 
   Legendary: "Flawless. No trap touched you. The Guild is impressed."
@@ -156,24 +231,87 @@ Failure States + Mitigations
   - Ensure adequate spacing and distinct seal labels (no two seals sound alike).
   - Feedback is immediate and non-punishing in tone: "Trap sprung. Misstep."
 - Player doesn't understand double-tap:
-  - Optional hint (no penalty): "The Enchanter reminds you: double-tap to sever."
+  - Optional hint (no penalty): "The DM whispers: double-tap to sever a seal."
   - Hint re-announces the mechanic via VoiceOver.
 - Player is stuck:
-  - "Try Again" resets the current level.
+  - "Try Again" resets the current level (L2/L3 only — L1 has no mistakes).
 
 Accessibility Requirements
 ===========================
 - All seals: accessibilityLabel (seal name) + accessibilityHint ("Double-tap to sever.").
-- Objective card: accessibilityLabel includes correct seal name + instruction.
+- Objective card: accessibilityLabel includes correct seal name + full instruction.
 - Trap activations give clear feedback via VoiceOver announcement.
-- Reading order is deterministic (seals in consistent layout order).
-- Timer group: single accessibility element; NOT updated every second.
+- Reading order is deterministic and linear (vertical list order — seals in display order).
+- Timer group (L2/L3): single accessibility element; NOT updated every second.
   Announced only at defined thresholds (see GameRules-MVP.txt timer spec).
-- L1 note: because only one element exists, no navigation instruction is needed;
-  focus is on teaching the double-tap mechanic in isolation.
+- L1 note: single seal, no navigation instruction needed. Focus is on teaching
+  the double-tap mechanic in isolation.
+- Objective announced on level load (~500ms delay to clear transition noise).
+
+Localization Key Summary (implementor reference)
+=================================================
+All values are defined in GameRules-MVP.txt. Keys not yet in GameRules are marked [NEW].
+
+Screen / use                Key                              Note
+---------------------------  -------------------------------- -------------------------
+L0 nav title                rogue.explain.title
+L0 DM narration             rogue.explain.narration
+L0 lesson heading           rogue.explain.lesson.heading
+L0 lesson body              rogue.explain.lesson.body
+L0 lesson a11y              rogue.a11y.explain.lesson
+L0 gesture: one tap         rogue.explain.gesture.tap1
+L0 gesture: double-tap      rogue.explain.gesture.tap2
+L0 gesture: wrong seal      rogue.explain.gesture.wrong
+L0 begin button a11y hint   rogue.explain.start.hint
+L1 nav title                rogue.l1.title
+L1 objective format         rogue.l1.objective.format        "%@" = sealName
+L1 objective a11y           rogue.a11y.l1.objective          full instruction
+L1 objective a11y hint      rogue.a11y.l1.objective.hint
+L1 completion               rogue.l1.complete
+L2 nav title                rogue.l2.title
+L2 DM prompt                rogue.l2.dm_prompt
+L2 objective format         rogue.l2.objective.format        [NEW] mirror L1 format
+L2 objective a11y           rogue.a11y.l2.objective          [NEW]
+L2 objective a11y hint      rogue.a11y.l2.objective.hint     [NEW]
+L2 completion               rogue.l2.complete
+L2 timer a11y               rogue.a11y.l2.timer              [NEW]
+L2 timer 50% announcement   rogue.a11y.timer.50pct           [NEW]
+L2 timer 25% announcement   rogue.a11y.timer.25pct           [NEW]
+L3 nav title                rogue.l3.title
+L3 DM prompt                rogue.l3.dm_prompt
+L3 objective format         rogue.l3.objective.format        [NEW] mirror L1 format
+L3 objective a11y           rogue.a11y.l3.objective          [NEW]
+L3 timer a11y               rogue.a11y.l3.timer
+L3 timer 75% announcement   rogue.a11y.timer.75pct
+L3 timer 50% announcement   rogue.a11y.timer.50pct
+L3 timer 25% announcement   rogue.a11y.timer.25pct
+L3 10s remaining            a11y.timer.10s                   shared key
+L3 5-1 countdown            a11y.timer.5s … a11y.timer.1s   shared keys
+L3 timeout                  rogue.timeout
+L3 success                  rogue.l3.success
+Shared: seal label          rogue.seal.<id>.label
+Shared: seal hint           rogue.seal.hint
+Shared: correct feedback    rogue.feedback.correct
+Shared: trap feedback       rogue.feedback.trap
+Shared: mistake HUD         rogue.hud.mistakes.format        [NEW]
+Shared: mistake HUD a11y    rogue.a11y.hud.l2                [NEW]
+Hint button label           rogue.hint.button                [NEW]
+Hint button a11y label      rogue.hint.a11yLabel             [NEW]
+Hint button a11y hint       rogue.hint.a11yHint              [NEW]
+Hint message format         rogue.hint.format                [NEW] "%@" = sealName
+Results: Legendary          rogue.results.legendary
+Results: Skilled            rogue.results.skilled
+Results: Novice             rogue.results.novice
+Results: Defeated           rogue.results.defeated
+Continue button             level.button.next                shared key
+Retry button                level.button.retry               shared key
+Begin Trial button          level.button.start               shared key
 
 Unit-Testable Logic
 ====================
-- rankFor(timeSeconds:mistakes:) -> GameRank
-- bucketMistakes(timeSeconds:bucketSize:) -> Int
-- bestResult(lhs:rhs:) -> GameResult
+- rankFor(timeSeconds:mistakes:) -> GameRank  [covered by existing ScoringModelTests]
+- bucketMistakes(timeSeconds:bucketSize:8.0) -> Int  [RankThresholds.bucketMistakes, bucketSize=8]
+- bestResult(lhs:rhs:) -> GameResult  [covered by existing ScoringModelTests]
+- sealSetForL2() returns exactly 1 passage seal + 3 trap seals
+- sealSetForL3() returns exactly 1 passage seal + 5 trap seals
+- L1 always returns Seal of Passage (id: "passage")

@@ -877,10 +877,9 @@ TICKET-M6-Game-RoguesGauntlet-Activate
 ===============================
 Ticket: M6 - Game 2 (The Rogue's Gauntlet) - Activate / Double-Tap
 [RENAMED and REVISED from M6-Game-BombDefusal-Activate to align with GameRules-MVP.txt theme]
-Status: Partially Unblocked — screen composition mockup delivered (mock_v3_rogue_gauntlet_play_v2.png);
-        rune seal sprites (rogue_seal_*) and background (rogue_trap_door_bg) still needed before
-        full implementation. Note: game re-themed from bomb-wire to stone-door-with-rune-seals per
-        current GameSpec. Existing bomb_* assets are deprecated. UI structure is unblocked.
+Status: Done — implemented in iOSRogueGauntletView.swift; all 106 RA11yCore tests pass;
+        build verified for iOS Simulator. Game ID: rogue-gauntlet.
+        Game ID corrected to "rogue-gauntlet" (was stale "bomb_defusal_wires").
 
 User Story
 ----------
@@ -897,11 +896,13 @@ Theme / Narrative
 -----------------
 - The Trap Room. Magical seals on a locked door. One seal unlocks the door; others spring traps.
 - "Touch to sense. Double-tap to sever."
-- See GameSpec-ActivateDoubleTap.txt for full narrative and seal pool.
+- See GameSpec-ActivateDoubleTap.txt for full narrative, seal pool, and localization key list.
 
 Requirements
 ------------
-- SwiftUI-first implementation.
+- SwiftUI-first implementation. MVVM with @Observable RogueGauntletViewModel.
+- File: iOSRogueGauntletView.swift (iOS-prefix required per platform naming convention).
+- Game ID: "rogue-gauntlet"
 - 4-level structure (L0 Prologue, L1 First Attempt, L2 Rising Challenge, L3 Timed Trial).
 
   L0 — Prologue:
@@ -909,56 +910,143 @@ Requirements
   - VoiceOver Lesson Card with heading "The Rogue's Creed" and explicit explanation:
     "Tapping once reads the element — it does not activate it. Double-tap to activate."
     Contrast clearly: "This is different from normal iOS."
-  - Gesture reference: one tap (examine/focus only), double-tap (sever/activate).
-  - "Begin Trial" button.
+  - Three gesture rows: one tap (examine), double-tap (sever), wrong seal (springs trap).
+  - "Begin Trial" button (accessibilityHint: "Begins your first attempt. No timer.").
+  - No timer starts here.
 
   L1 — First Attempt (confidence builder):
-  - 1 seal only (Seal of Passage). No trap seals.
-  - Purpose: isolate the double-tap mechanic with no ambiguity about which seal to pick.
-  - "Touch it to hear it speak. Double-tap to sever it."
+  - LAYOUT: Single large centered seal. No list or grid — one element only.
+  - Seal is always "Seal of Passage" (never randomized for L1).
+  - Purpose: isolate the double-tap mechanic with zero ambiguity.
+  - Instructional text above seal: "Touch to hear it speak. Double-tap to sever it."
+  - Objective card with accessibilityLabel (rogue.a11y.l1.objective) announced on level load
+    (~500ms delay via UIAccessibility.post). See "Announce Objective on Level Load" below.
+  - No mistake HUD (no mistakes possible).
+  - No hint button (no decoys to be confused about).
+  - No timer.
+  - After correct activation: post rogue.l1.complete announcement → "Continue" button → L2.
 
   L2 — Rising Challenge:
-  - 4 seals: 1 passage seal + 3 trap seals with distinct descriptive names.
-  - Wrong activation = trap springs = misstep.
-  - Soft timer: 40s. VoiceOver announces at 50% and 25% elapsed.
+  - LAYOUT: 2×2 LazyVGrid (4 seals). VoiceOver reads row-major (left→right, top→bottom).
+  - 1 passage seal (random from pool) + 3 trap seals (random from trap pool).
+  - Passage seal selection rule: random from {Seal of Passage, Warding Seal, Binding Seal}.
+  - Wrong activation = trap springs = misstep (+1). Feedback: rogue.feedback.trap announced.
+  - Soft timer: 40s. Timer HUD visible. Mistake HUD visible.
+  - VoiceOver timer announcements at 50% and 25% elapsed (rogue.a11y.timer.*).
+  - Hint button available (no scoring penalty). Hint announces rogue.hint.format with seal name.
+  - Objective card announced on level load (~500ms delay).
+  - On timeout: session ends (no GameSession for L2); timeout banner + retry button.
+  - On success: post rogue.l2.complete → "Continue" → L3.
 
   L3 — Timed Trial:
-  - 6 seals: 1 passage seal + 5 trap seals.
-  - Hard timer: 20s. VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5s countdown.
-  - Thematic timeout: "The trap room sealed. You were caught."
-  - Thematic success: "Seal severed. The door opens just in time."
+  - LAYOUT: 2×3 LazyVGrid (6 seals). VoiceOver reads row-major (left→right, top→bottom).
+  - 1 passage seal (random from pool) + 5 trap seals (all 6 trap seals eligible).
+  - GameSession created for L3 ONLY (like M5). await session.start() BEFORE timer starts.
+  - Hard timer: 20s. Timer HUD visible. Mistake HUD visible.
+  - VoiceOver timer announcements: 75%, 50%, 25%, 10s, 5-4-3-2-1 countdown.
+  - Hint button available (no scoring penalty).
+  - Objective card announced on level load (~500ms delay).
+  - Thematic timeout: "The trap room sealed. You were caught." → retry button.
+  - Thematic success: "Seal severed. The door opens just in time." → GameResultScreen.
+  - GameSessionCoordinator monitors VO state; VO disabled mid-L3 → abandon session.
+  - On retry: fresh GameSession, new seal randomization, timer resets.
 
-- Seal names: see GameSpec-ActivateDoubleTap.txt for full seal pool (passage + trap seals).
-- Prompt format: "Sever the seal: {sealName}" (not "Disarm: cut the <wire>").
-- Elements are "seals" (not wires). Distinct descriptive labels; no color-only differentiation.
-- Session managed via GameSessionLifecycle (start, mistake, complete/abandon).
-- Mistakes: wrong seal activation (+1), time-based mistake buckets (bucket: 8s).
-- Optional hint: "The Enchanter reminds you: double-tap to sever." No scoring penalty.
-- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
-  Game-specific copy: "Flawless. No trap touched you." (Legendary), etc.
+Announce Objective on Level Load
+---------------------------------
+Each level view (L1, L2, L3) announces its objective via VoiceOver when it appears.
+Implementation mirrors M5 (Enchanter's Trial) announceTargetPrompt() pattern:
+  - Post UIAccessibility.post(notification: .announcement, argument: message)
+  - Add a Task { try? await Task.sleep(for: .milliseconds(500)) } delay
+  - Called from .onAppear on the level-specific subview
+  - Message: full a11y objective string with seal name substituted
+
+Seal Pool and Selection
+------------------------
+- See GameSpec-ActivateDoubleTap.txt for full pool and selection rules.
+- L1: always Seal of Passage. Never randomized.
+- L2: 1 random passage seal + 3 random trap seals.
+- L3: 1 random passage seal + 5 random trap seals.
+- UI Testing determinism: when -uiTesting arg present, use fixed selection (Seal of Passage,
+  first N traps alphabetically) for repeatability.
+
+Seal Layout
+------------
+All levels with multiple seals use a VERTICAL LIST (VStack), not a grid.
+Rationale: guarantees linear VoiceOver swipe-right navigation order.
+
+Scoring and Session
+--------------------
+- GameSession scope: L3 only. L1/L2 use local mistake counters.
+- Mistakes: wrong seal activation (+1), time-bucket penalty (bucket: 8s) applied at L3 completion.
+- Bucket formula: max(0, ceil(timeSeconds / 8.0) - 1)
+- Rank thresholds: Legendary ≤8s & 0 mistakes; Good ≤16s & ≤1 mistake; Ok ≤40s; Defeated otherwise.
 - Persist best result via StorageComponent.
-- GameSessionCoordinator monitors VoiceOver state; VO disabled mid-session → abandon.
+- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
+
+Optional Hint
+--------------
+- Hint button: rogue.hint.button ("Ask the DM"). No scoring penalty.
+- Hint announcement via VoiceOver: rogue.hint.format with seal name (e.g., "The DM whispers:
+  the correct seal is Warding Seal. Double-tap to sever it.").
+- Distinct from Enchanter's Trail: character is the DM, not "The Enchanter."
+
+Retry Button Behavior
+----------------------
+- L1: No retry (no mistakes possible). Only "Continue" after success.
+- L2: Retry shown on timeout only. Success shows "Continue."
+- L3: Retry shown on timeout. Success routes to results (no in-place retry).
+
+Localization
+-------------
+All keys are defined in GameRules-MVP.txt. New keys added (2026-03-07):
+  rogue.l1.objective.format, rogue.a11y.l1.objective, rogue.a11y.l1.objective.hint
+  rogue.l2.objective.format, rogue.a11y.l2.objective, rogue.a11y.l2.objective.hint
+  rogue.l3.objective.format, rogue.a11y.l3.objective
+  rogue.a11y.l2.timer
+  rogue.a11y.timer.50pct, rogue.a11y.timer.25pct (for L2)
+  rogue.hud.mistakes.format, rogue.a11y.hud.l2, rogue.a11y.hud.l3
+  rogue.hint.button, rogue.hint.a11yLabel, rogue.hint.a11yHint, rogue.hint.format
+All strings must be added to Localizable.xcstrings before or during implementation.
 
 Acceptance Criteria
 -------------------
-- L0 lesson card explicitly teaches the touch ≠ activate paradigm.
-- L1 has exactly one seal; no wrong activation possible.
-- With VoiceOver ON, all levels are completable.
-- Trap seal activation increments mistakes; passage seal activation succeeds.
-- Timeout transitions to abandoned; no result written.
-- Timer announces at all required thresholds.
+- L0 lesson card explicitly teaches the touch ≠ activate paradigm with three gesture rows.
+- L1 displays exactly one seal (Seal of Passage), centered, with no mistake HUD or hint button.
+- L1 cannot produce a mistake — only one interactive element exists.
+- Objective card is announced via VoiceOver on level load for L1, L2, and L3 (~500ms delay).
+- With VoiceOver ON, all levels are completable by swiping to the correct seal and double-tapping.
+- Trap seal activation announces rogue.feedback.trap and increments mistake count.
+- Passage seal activation announces rogue.feedback.correct and advances/completes the level.
+- Soft timer (L2) announces at 50% and 25% elapsed; no announcement at 75% for L2.
+- Hard timer (L3) announces at 75%, 50%, 25%, 10s, and 5-4-3-2-1 countdown.
+- Timeout (L2/L3) transitions to abandoned state; no result written; retry button shown.
+- Timer announces at all required thresholds; timer HUD is a single accessibility element.
+- GameSession is created for L3 only; session.start() is awaited before timer begins.
 - Result persists; best score updates correctly.
+- Hint button available in L2 and L3; no scoring penalty; announces rogue.hint.format.
+- VoiceOver disabled mid-L3 → coordinator triggers session abandon → route to interstitial.
+- All multi-seal levels use a 2-column LazyVGrid; VoiceOver reading order is row-major and deterministic.
 
-Useful Unit Test
-----------------
-- Given (timeSeconds: 7, mistakes: 0), rank evaluates to Legendary for this game's thresholds.
+Useful Unit Tests
+-----------------
+- Given (timeSeconds: 7, mistakes: 0), rank evaluates to Legendary.
+- Given (timeSeconds: 15, mistakes: 1), rank evaluates to Good (Skilled).
+- Given (timeSeconds: 16, mistakes: 0), rank evaluates to Good (boundary).
+- Given (timeSeconds: 17, mistakes: 1), rank evaluates to Novice.
+- Given (timeSeconds: 40, mistakes: 0), rank evaluates to Novice (at boundary).
+- bucketMistakes(timeSeconds: 8, bucketSize: 8) returns 0 (exactly one bucket, free).
+- bucketMistakes(timeSeconds: 9, bucketSize: 8) returns 1 (second bucket entered).
+- sealSetForL2() always contains exactly 1 passage seal and 3 trap seals (no overlap).
+- sealSetForL3() always contains exactly 1 passage seal and 5 trap seals (no overlap).
+- L1 seal is always Seal of Passage.
 - Given two results with equal rank, the result with fewer mistakes is selected as best.
 
 Dependencies
 ------------
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
-- Can be built in parallel with M5 once shared infrastructure (M0/M1/M2) is complete.
-- Design track: rogue seal assets must land before this ticket opens.
+- M5 (Enchanter's Trial) complete — patterns (announceTargetPrompt, session scope, timer task,
+  coordinator monitoring) are established and should be followed here.
+- All rogue assets (rogue_seal_*, rogue_trap_door_bg, rogue_hub_icon) confirmed in Assets.xcassets.
 
 
 ===============================

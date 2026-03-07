@@ -68,6 +68,7 @@ struct iOSEnchantersTrialView: View {
         case .prologue:
             EnchanterPrologueView(onBeginTrial: { viewModel.beginTrial() })
                 .navigationTitle(String(localized: "simon.explain.title"))
+                .accessibilityIdentifier("enchanter.prologue")
         case .attempt:
             EnchanterAttemptView(
                 relics: viewModel.relics,
@@ -82,6 +83,7 @@ struct iOSEnchantersTrialView: View {
             .navigationTitle(String(localized: "simon.l1.title"))
             // Spec: "Enchanter's prompt card reads the target name aloud on screen load."
             .onAppear { viewModel.announceTargetPrompt() }
+            .accessibilityIdentifier("enchanter.attempt")
         case .rising:
             EnchanterRisingView(
                 relics: viewModel.relics,
@@ -98,6 +100,7 @@ struct iOSEnchantersTrialView: View {
             )
             .navigationTitle(String(localized: "simon.l2.title"))
             .onAppear { viewModel.announceTargetPrompt() }
+            .accessibilityIdentifier("enchanter.rising")
         case .timed:
             EnchanterTimedView(
                 relics: viewModel.relics,
@@ -112,6 +115,7 @@ struct iOSEnchantersTrialView: View {
             )
             .navigationTitle(String(localized: "simon.l3.title"))
             .onAppear { viewModel.announceTargetPrompt() }
+            .accessibilityIdentifier("enchanter.timed")
         }
     }
 
@@ -684,7 +688,7 @@ private struct EnchanterPrologueView: View {
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
+        .background(Color.black.opacity(0.72), in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)
                 .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
@@ -703,7 +707,7 @@ private struct EnchanterPrologueView: View {
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: .rect(cornerRadius: RA11yRadius.card))
+        .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)
                 .strokeBorder(.white.opacity(0.15), lineWidth: 1)
@@ -999,7 +1003,7 @@ private func promptCard(title: String, a11yLabel: String, a11yHint: String?) -> 
     }
     .padding(RA11ySpacing.base)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
+    .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
     .overlay(
         RoundedRectangle(cornerRadius: RA11yRadius.card)
             .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
@@ -1019,7 +1023,7 @@ private func promptCard(title: String, a11yLabel: String, a11yHint: String?) -> 
 private func statusRow(_ message: String) -> some View {
     Text(message)
         .font(.ra11ySubheadline)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.ra11yCardSecondaryText)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, RA11ySpacing.xs)
 }
@@ -1056,6 +1060,7 @@ private struct RelicButton: View {
         }
         .accessibilityLabel(relic.displayName)
         .accessibilityHint(String(localized: "simon.token.hint"))
+        .accessibilityIdentifier("enchanter.relic.\(relic.id)")
     }
 }
 
@@ -1104,7 +1109,7 @@ private struct TimerHUD: View {
 
             Text(String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))))
                 .font(.ra11yCaption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.ra11yCardTertiaryText)
         }
         .accessibilityHidden(true)  // L3 view sets accessibilityLabel on this entire HUD
     }
@@ -1120,34 +1125,28 @@ private struct GestureRow: View {
             Image(systemName: symbol)
                 .font(.ra11yHeadline)
                 .frame(width: 32)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
                 .font(.ra11yBody)
+                .foregroundStyle(Color.ra11yCardSecondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 /// Relic asset image with SF Symbol fallback.
-///
-/// Relic sprites were generated on white backgrounds. On the dark game surface
-/// the white background would be jarring, so images are rendered with
-/// `.blendMode(.multiply)` against a dark base. Multiply causes white (1,1,1)
-/// to become transparent against whatever is behind the view, while preserving
-/// the coloured relic silhouette.
 private struct RelicImage: View {
     let assetName: String
 
     var body: some View {
         ZStack {
-            // Dark base so the multiply blend has a surface to work against.
-            Color(white: 0.12)
+            Color.black.opacity(0.35)
 
             if let image = UIImage(named: assetName) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .blendMode(.multiply)
+                    .padding(4)
             } else {
                 Image(systemName: "sparkles")
                     .font(.system(size: 28, weight: .semibold))
@@ -1155,6 +1154,10 @@ private struct RelicImage: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(.white.opacity(0.12), lineWidth: 1)
+        )
     }
 }
 
