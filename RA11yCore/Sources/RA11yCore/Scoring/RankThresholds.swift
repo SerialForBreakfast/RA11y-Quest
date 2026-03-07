@@ -52,7 +52,7 @@ public struct RankThresholds: Sendable {
     ///
     /// - Parameters:
     ///   - timeSeconds: Elapsed active session time.
-    ///   - mistakes: Total mistakes recorded.
+    ///   - mistakes: Total mistakes recorded (include bucket mistakes via `bucketMistakes()`).
     /// - Returns: The highest rank the session qualifies for, or `.failed`.
     public func evaluate(timeSeconds: Double, mistakes: Int) -> GameRank {
         guard timeSeconds <= timeoutSeconds else { return .failed }
@@ -60,6 +60,30 @@ public struct RankThresholds: Sendable {
         if timeSeconds <= goodMaxTime    && mistakes <= goodMaxMistakes    { return .good }
         if timeSeconds <= okMaxTime      && mistakes <= okMaxMistakes      { return .ok }
         return .failed
+    }
+
+    // MARK: - Bucket Mistake Calculation
+
+    /// Computes time-based "bucket" mistake penalties per `GameSpec-FindAndFocus.txt`.
+    ///
+    /// The first bucket (0–`bucketSize` seconds) is free; each subsequent full bucket
+    /// beyond that adds one penalty mistake. Used by the Enchanter's Trial (and any
+    /// future game that uses bucket penalties) to add time-pressure mistakes to the session
+    /// before calling `GameSession.complete()`.
+    ///
+    /// ## Spec Reference
+    /// > "Bucket size: 10 seconds. Each full 10s bucket beyond the first adds +1 mistake.
+    /// > Example: 0–10s → +0; 10–20s → +1; 20–30s → +2."
+    ///
+    /// - Parameters:
+    ///   - timeSeconds: Elapsed time at completion.
+    ///   - bucketSize: Size of each bucket in seconds. Defaults to 10.
+    /// - Returns: Number of bucket-penalty mistakes to record (≥ 0).
+    public static func bucketMistakes(timeSeconds: Double, bucketSize: Double = 10) -> Int {
+        guard timeSeconds > 0, bucketSize > 0 else { return 0 }
+        // ceil(t / bucketSize) gives the number of buckets touched.
+        // Subtract 1 for the free first bucket.
+        return max(0, Int(ceil(timeSeconds / bucketSize)) - 1)
     }
 }
 

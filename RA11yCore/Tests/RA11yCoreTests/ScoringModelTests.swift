@@ -201,4 +201,54 @@ struct ScoringModelTests {
         let rank = RankThresholds.scrollHunt.evaluate(timeSeconds: 60.001, mistakes: 0)
         #expect(rank == .failed)
     }
+
+    // MARK: - RankThresholds.bucketMistakes
+    //
+    // Spec (GameSpec-FindAndFocus.txt):
+    //   "Bucket size: 10s. First bucket (0–10s) is free. Each subsequent full 10s adds +1.
+    //   Example: 0–10s → +0; 10–20s → +1; 20–30s → +2."
+
+    /// 0s (no time elapsed) → 0 bucket mistakes.
+    @Test func bucketMistakesZeroTime() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 0) == 0)
+    }
+
+    /// < 10s: first bucket still running → 0 penalties.
+    @Test func bucketMistakesWithinFirstBucket() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 5) == 0)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 9.9) == 0)
+    }
+
+    /// Exactly 10s: edge of first bucket → 0 penalties (first bucket is free).
+    @Test func bucketMistakesExactlyAtFirstBucketBoundary() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 10) == 0)
+    }
+
+    /// 10–20s range: first paid bucket → +1.
+    @Test func bucketMistakesSecondBucket() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 10.001) == 1)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 15) == 1)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 20) == 1)
+    }
+
+    /// 20–30s range → +2.
+    @Test func bucketMistakesThirdBucket() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 20.001) == 2)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 25) == 2)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 30) == 2)
+    }
+
+    /// Custom bucket size: 5s.
+    @Test func bucketMistakesCustomBucketSize() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 5,    bucketSize: 5) == 0)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 5.01, bucketSize: 5) == 1)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 10,   bucketSize: 5) == 1)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 10.01, bucketSize: 5) == 2)
+    }
+
+    /// Negative or zero bucket size → 0 (guard against bad input).
+    @Test func bucketMistakesInvalidBucketSize() {
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 30, bucketSize: 0)  == 0)
+        #expect(RankThresholds.bucketMistakes(timeSeconds: 30, bucketSize: -1) == 0)
+    }
 }

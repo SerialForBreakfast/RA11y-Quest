@@ -58,6 +58,7 @@ struct iOSGameResultView: View {
         .navigationTitle(String(localized: "result.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .accessibilityIdentifier("gameResult.root")
     }
 
     // MARK: - Subviews

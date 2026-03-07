@@ -78,10 +78,10 @@ public enum GameCatalog {
 
     /// All MVP games in display order.
     ///
-    /// Thumbnails use each game's atmospheric background scene image so the
-    /// card always shows a dark, in-world crop regardless of the system's
-    /// color scheme. Individual relic/seal/room icon sprites (which were
-    /// generated on white backgrounds) are not used as hub thumbnails.
+    /// Thumbnails use dedicated square hub icons (`*_hub_icon`) designed for
+    /// the dark quest card at ~72–96 pt. Background scene images and individual
+    /// sprite assets are not used here as they either crop poorly or have
+    /// white backgrounds that clash with the dark card surface.
     public static let all: [GameDefinition] = [
         GameDefinition(
             id: "find-and-focus",
@@ -89,7 +89,7 @@ public enum GameCatalog {
             goalKey: "game.findAndFocus.goal",
             estimatedDuration: "~5 min",
             kind: .findAndFocus,
-            thumbnailAssetName: "enchanter_tower_shelf_bg"
+            thumbnailAssetName: "enchanter_hub_icon"
         ),
         GameDefinition(
             id: "activate-double-tap",
@@ -97,7 +97,7 @@ public enum GameCatalog {
             goalKey: "game.activateDoubleTap.goal",
             estimatedDuration: "~5 min",
             kind: .activateDoubleTap,
-            thumbnailAssetName: "rogue_trap_door_bg"
+            thumbnailAssetName: "rogue_hub_icon"
         ),
         GameDefinition(
             id: "scroll-hunt",
@@ -105,7 +105,7 @@ public enum GameCatalog {
             goalKey: "game.scrollHunt.goal",
             estimatedDuration: "~7 min",
             kind: .scrollHunt,
-            thumbnailAssetName: "dungeon_descent_bg"
+            thumbnailAssetName: "dungeon_hub_icon"
         ),
     ]
 

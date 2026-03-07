@@ -73,6 +73,39 @@ L3 — Timed Trial (hard timer: 45s)
   D&D timeout: "The gate fell. The relic is sealed below. Trial failed."
   D&D success: "Ancient Vault reached. The relic is yours. Trial passed."
 
+Locked Level Configuration (M7 Implementation Constants)
+========================================================
+These values are now locked for M7 implementation. Changes require a follow-up requirement revision.
+
+L0 Prologue
+  - Timer: disabled.
+  - Practice zone: required to be shown before "Begin Descent" is enabled.
+  - Minimum evidence of interaction before enabling begin button: one non-zero scroll offset event.
+
+L1 First Attempt
+  - Total rooms: 4.
+  - Visible at start: 2.
+  - Target room: Guard Room.
+  - Target depth index: 2 (0-based: 2, third row).
+  - Timer: disabled.
+
+L2 Rising Challenge
+  - Total rooms: 8.
+  - Visible at start: 3.
+  - Target room: Relic Vault.
+  - Target depth index: 6 (0-based, near bottom).
+  - Timer limit: 60 seconds.
+  - VoiceOver timer announcements: 50% elapsed, 25% elapsed.
+
+L3 Timed Trial
+  - Total rooms: 12.
+  - Visible at start: 3.
+  - Target room: Ancient Vault.
+  - Target depth index: 10 (0-based, depth 10+ requirement satisfied).
+  - Timer limit: 45 seconds.
+  - VoiceOver timer announcements: 75% elapsed, 50% elapsed, 25% elapsed, 10 seconds remaining,
+    and countdown 5-4-3-2-1.
+
 Dungeon Room List
 =================
 Rooms are presented in vertical order (top = shallowest, bottom = deepest).
@@ -91,6 +124,7 @@ Room Labels (Full Pool)
   Flooded Hall. Knee-deep water.
   Bone Room. Don't look too closely.
   Collapsed Wall. A gap you can pass.
+  Relic Vault. The objective is near.
   Ancient Vault. The relic glows.     ← TARGET in L3
 
 L1 Target: Guard Room. Empty. The objective.
@@ -154,6 +188,16 @@ did the scroll position change such that the target is now reachable?
 Validation is scroll-progress-based. See GameSpec validated approach from S1 Spike
 (TICKET-S1-Spike-ScrollObservability in TicketBreakdown.txt).
 
+Execution Gate Before Full M7 Build
+===================================
+Before implementing full L0-L3 flow, run this gate check on device or simulator with VoiceOver ON:
+
+1. Start a minimal scroll scene with a tracked target row frame.
+2. Perform VoiceOver 3-finger scroll gestures.
+3. Confirm `onScrollGeometryChange` updates and `targetIsReachable` transitions false -> true
+   only when the target row enters the visible rect.
+4. If this fails, stop feature build and revisit detection strategy before adding level logic.
+
 Scoring
 =======
 Metrics
@@ -216,3 +260,40 @@ Unit-Testable Logic
 - bestResult(lhs:rhs:) -> GameResult
 - progressMapping(scrollGeometry:threshold:) -> DerivedProgress (pure function; testable)
 - targetIsReachable(progress:threshold:) -> Bool
+
+Requirement-to-Test Mapping (Implementation Contract)
+=====================================================
+R1: L0 teaches the 3-finger scroll paradigm and exposes practice zone before play starts.
+  - UI test: L0 renders lesson copy, practice zone exists, and "Begin Descent" is disabled
+    until a practice scroll interaction occurs.
+
+R2: Target cannot be activated until reachable by scroll progress.
+  - Unit test: target reachability remains false for pre-threshold geometry samples.
+  - UI test: activation on target row before reachability does not complete level.
+
+R3: Non-target interactions never complete the level and provide feedback.
+  - Unit test: non-target activation path does not emit success transition.
+  - UI test: double-tap non-target announces/prints "Nothing useful here. Keep descending."
+
+R4: Timer thresholds announce only at specified points (no spam).
+  - Unit test: timer announcer emits events exactly at configured thresholds.
+  - UI test: L2 and L3 runs surface threshold announcements and no per-second announcements.
+
+R5: Result persistence and best-result comparison remain stable.
+  - Unit test: better result overwrites; worse result does not overwrite.
+  - UI test: after completion, hub rank reflects persisted best result for scroll-hunt game ID.
+
+Screenshot Coverage Requirements (Fastlane)
+===========================================
+Maintain deterministic screenshot coverage for Dungeon Descent when M7 UI lands.
+
+- Add a stable accessibility identifier for each capture stage:
+  - `dungeon.prologue` (L0 lesson + practice)
+  - `dungeon.play` (L2/L3 active play state with depth HUD visible)
+  - `dungeon.result` (shared result screen with dungeon-specific announcement)
+- Update `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift` to navigate into Dungeon
+  and wait for each identifier before capture.
+- Keep screenshot names sequential and explicit:
+  - `03_DungeonPrologue`
+  - `04_DungeonPlay`
+  - `05_DungeonResult`

@@ -1,1227 +1,1259 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "a11y.level.completed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Level complete."
+  "sourceLanguage": "en",
+  "strings": {
+    "a11y.level.completed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level complete."
           }
         }
       }
     },
-    "a11y.level.mistake" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Misstep. Try again."
+    "a11y.level.mistake": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Misstep. Try again."
           }
         }
       }
     },
-    "a11y.timer.1s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One."
+    "a11y.timer.1s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One."
           }
         }
       }
     },
-    "a11y.timer.2s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Two."
+    "a11y.timer.2s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two."
           }
         }
       }
     },
-    "a11y.timer.3s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Three."
+    "a11y.timer.3s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three."
           }
         }
       }
     },
-    "a11y.timer.4s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Four."
+    "a11y.timer.4s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Four."
           }
         }
       }
     },
-    "a11y.timer.5s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Five."
+    "a11y.timer.5s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Five."
           }
         }
       }
     },
-    "a11y.timer.10s" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ten seconds."
+    "a11y.timer.10s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten seconds."
           }
         }
       }
     },
-    "a11y.timer.25pct" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A quarter of your time remains."
+    "a11y.timer.25pct": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A quarter of your time remains."
           }
         }
       }
     },
-    "a11y.timer.50pct" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Half your time remains."
+    "a11y.timer.50pct": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half your time remains."
           }
         }
       }
     },
-    "a11y.timer.75pct" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Three-quarters of your time is gone."
+    "a11y.timer.75pct": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three-quarters of your time is gone."
           }
         }
       }
     },
-    "a11y.timer.group.hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Complete your objective before time runs out."
+    "a11y.timer.group.hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete your objective before time runs out."
           }
         }
       }
     },
-    "app.loading" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading..."
+    "app.loading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading..."
           }
         }
       }
     },
-    "basicsSequence.continue" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
+    "basicsSequence.continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
           }
         }
       }
     },
-    "basicsSequence.continue.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Moves to the next Basics step."
+    "basicsSequence.continue.a11yHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moves to the next Basics step."
           }
         }
       }
     },
-    "basicsSequence.continue.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue Basics"
+    "basicsSequence.continue.a11yLabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Basics"
           }
         }
       }
     },
-    "basicsSequence.finish" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finish"
+    "basicsSequence.finish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish"
           }
         }
       }
     },
-    "basicsSequence.finish.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completes Basics and returns to the hub."
+    "basicsSequence.finish.a11yHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completes Basics and returns to the hub."
           }
         }
       }
     },
-    "basicsSequence.finish.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finish Basics"
+    "basicsSequence.finish.a11yLabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish Basics"
           }
         }
       }
     },
-    "basicsSequence.stepFormat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Step %d of %d"
+    "basicsSequence.stepFormat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %d of %d"
           }
         }
       }
     },
-    "basicsSequence.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Basics"
+    "basicsSequence.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver Basics"
           }
         }
       }
     },
-    "dm.label" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dungeon Master"
+    "dm.label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dungeon Master"
           }
         }
       }
     },
-    "enchanter.hint.a11yHint" : {
-      "comment" : "An accessibility hint for the \"Hint\" button in the",
-      "isCommentAutoGenerated" : true
+    "enchanter.hint.a11yHint": {
+      "comment": "An accessibility hint for the \"Hint\" button in the",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to hear the target relic name announced again."
+          }
+        }
+      }
     },
-    "enchanter.hint.a11yLabel" : {
-      "comment" : "The accessibility label for the \"Hint\" button in the",
-      "isCommentAutoGenerated" : true
+    "enchanter.hint.a11yLabel": {
+      "comment": "The accessibility label for the \"Hint\" button in the",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask the Enchanter for a hint"
+          }
+        }
+      }
     },
-    "enchanter.hint.button" : {
-      "comment" : "The text on a button that provides a hint in the Enchanter's Trial.",
-      "isCommentAutoGenerated" : true
+    "enchanter.hint.button": {
+      "comment": "The text on a button that provides a hint in the Enchanter's Trial.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask the Enchanter"
+          }
+        }
+      }
     },
-    "enchanter.hint.format" : {
-      "comment" : "A message displayed when the user taps the \"Hint\" button in the Find & Focus game. The argument is the name of the relic that the player should focus on.",
-      "isCommentAutoGenerated" : true
+    "enchanter.hint.format": {
+      "comment": "A message displayed when the user taps the \"Hint\" button in the Find & Focus game. The argument is the name of the relic that the player should focus on.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter whispers: the target is %@."
+          }
+        }
+      }
     },
-    "firstRun.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Learn the three core VoiceOver skills in a guided sequence, or explore the hub on your own."
+    "firstRun.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn the three core VoiceOver skills in a guided sequence, or explore the hub on your own."
           }
         }
       }
     },
-    "firstRun.goToHub" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Hub"
+    "firstRun.goToHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to Hub"
           }
         }
       }
     },
-    "firstRun.goToHub.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skips the Basics sequence and opens the game hub."
+    "firstRun.goToHub.a11yHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skips the Basics sequence and opens the game hub."
           }
         }
       }
     },
-    "firstRun.goToHub.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Hub"
+    "firstRun.goToHub.a11yLabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to Hub"
           }
         }
       }
     },
-    "firstRun.navigationTitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Basics"
+    "firstRun.navigationTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver Basics"
           }
         }
       }
     },
-    "firstRun.startBasics" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Basics"
+    "firstRun.startBasics": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Basics"
           }
         }
       }
     },
-    "firstRun.startBasics.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starts the guided VoiceOver Basics sequence."
+    "firstRun.startBasics.a11yHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts the guided VoiceOver Basics sequence."
           }
         }
       }
     },
-    "firstRun.startBasics.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start VoiceOver Basics"
+    "firstRun.startBasics.a11yLabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start VoiceOver Basics"
           }
         }
       }
     },
-    "firstRun.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start with VoiceOver Basics"
+    "firstRun.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with VoiceOver Basics"
           }
         }
       }
     },
-    "game.activateDoubleTap.goal" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touch to examine. Double-tap to sever."
+    "game.activateDoubleTap.goal": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch to examine. Double-tap to sever."
           }
         }
       }
     },
-    "game.activateDoubleTap.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Rogue's Gauntlet"
+    "game.activateDoubleTap.title": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Rogue's Gauntlet"
           }
         }
       }
     },
-    "game.findAndFocus.goal" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navigate focus and invoke the named relic."
+    "game.findAndFocus.goal": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigate focus and invoke the named relic."
           }
         }
       }
     },
-    "game.findAndFocus.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter's Trial"
+    "game.findAndFocus.title": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter's Trial"
           }
         }
       }
     },
-    "game.scrollHunt.goal" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scroll three fingers deep to find the relic."
+    "game.scrollHunt.goal": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scroll three fingers deep to find the relic."
           }
         }
       }
     },
-    "game.scrollHunt.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Dungeon Descent"
+    "game.scrollHunt.title": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Dungeon Descent"
           }
         }
       }
     },
-    "hub.card.accessibilityHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double-tap to begin this trial."
+    "hub.card.accessibilityHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to begin this trial."
           }
         }
       }
     },
-    "hub.dmGreeting" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Your Trial, Adventurer"
+    "hub.dmGreeting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Your Trial, Adventurer"
           }
         }
       }
     },
-    "hub.enableVoiceOver" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable VoiceOver to play"
+    "hub.enableVoiceOver": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable VoiceOver to play"
           }
         }
       }
     },
-    "hub.helpAffordance" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How to enable VoiceOver"
+    "hub.helpAffordance": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to enable VoiceOver"
           }
         }
       }
     },
-    "hub.navigationTitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "RA11y"
+    "hub.navigationTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RA11y"
           }
         }
       }
     },
-    "hub.questAwaits" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quest Awaits"
+    "hub.questAwaits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quest Awaits"
           }
         }
       }
     },
-    "hub.questAwaits.accessibility" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quest Awaits. Not yet attempted."
+    "hub.questAwaits.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quest Awaits. Not yet attempted."
           }
         }
       }
     },
-    "hub.subtitle" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a trial to begin your VoiceOver training."
+    "hub.subtitle": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a trial to begin your VoiceOver training."
           }
         }
       }
     },
-    "hub.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "RA11y"
+    "hub.title": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RA11y"
           }
         }
       }
     },
-    "hub.voiceOverBasics" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Basics"
+    "hub.voiceOverBasics": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver Basics"
           }
         }
       }
     },
-    "hud.timer.format" : {
-      "comment" : "Timer label. Argument is the integer seconds remaining.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%ds remaining"
+    "hud.timer.format": {
+      "comment": "Timer label. Argument is the integer seconds remaining.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ds remaining"
           }
         }
       }
     },
-    "level.button.next" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
+    "level.button.next": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
           }
         }
       }
     },
-    "level.button.retry" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try Again"
+    "level.button.retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
           }
         }
       }
     },
-    "level.button.start" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Begin Trial"
+    "level.button.start": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin Trial"
           }
         }
       }
     },
-    "result.navigationTitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Result"
+    "result.navigationTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Result"
           }
         }
       }
     },
-    "result.playAgain" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try Again"
+    "result.playAgain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
           }
         }
       }
     },
-    "result.returnToHub" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back to Tavern"
+    "result.returnToHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to Tavern"
           }
         }
       }
     },
-    "simon.a11y.explain.lesson" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Lesson. With VoiceOver on, you navigate one element at a time. Swipe right to move forward, swipe left to move back. Double-tap to activate the element you hear."
+    "simon.a11y.explain.lesson": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver Lesson. With VoiceOver on, you navigate one element at a time. Swipe right to move forward, swipe left to move back. Double-tap to activate the element you hear."
           }
         }
       }
     },
-    "simon.a11y.hud.l1" : {
-      "comment" : "Accessibility label for the mistake counter. Argument is the integer mistake count.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Missteps: %d"
+    "simon.a11y.hud.l1": {
+      "comment": "Accessibility label for the mistake counter. Argument is the integer mistake count.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missteps: %d"
           }
         }
       }
     },
-    "simon.a11y.l1.target" : {
-      "comment" : "Accessibility label for the target prompt card in L1. Argument is the relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter calls: %@. Navigate to it and double-tap to invoke it."
+    "simon.a11y.l1.target": {
+      "comment": "Accessibility label for the target prompt card in L1. Argument is the relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter calls: %@. Navigate to it and double-tap to invoke it."
           }
         }
       }
     },
-    "simon.a11y.l1.target.hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe right to move through the relics. Double-tap when you hear the correct name."
+    "simon.a11y.l1.target.hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe right to move through the relics. Double-tap when you hear the correct name."
           }
         }
       }
     },
-    "simon.a11y.l2.target" : {
-      "comment" : "Accessibility label for the target prompt card in L2. Argument is the relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter calls: %@. Navigate carefully — names are similar."
+    "simon.a11y.l2.target": {
+      "comment": "Accessibility label for the target prompt card in L2. Argument is the relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter calls: %@. Navigate carefully — names are similar."
           }
         }
       }
     },
-    "simon.a11y.l3.target" : {
-      "comment" : "Accessibility label for the target prompt card in L3. Argument is the relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter commands: %@. Act quickly."
+    "simon.a11y.l3.target": {
+      "comment": "Accessibility label for the target prompt card in L3. Argument is the relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter commands: %@. Act quickly."
           }
         }
       }
     },
-    "simon.a11y.l3.timer" : {
-      "comment" : "Accessibility label for the timer HUD in L3. Argument is the integer seconds remaining.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time remaining. %d seconds. The candles burn."
+    "simon.a11y.l3.timer": {
+      "comment": "Accessibility label for the timer HUD in L3. Argument is the integer seconds remaining.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time remaining. %d seconds. The candles burn."
           }
         }
       }
     },
-    "simon.a11y.timer.25pct" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The candles gutter."
+    "simon.a11y.timer.25pct": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The candles gutter."
           }
         }
       }
     },
-    "simon.a11y.timer.50pct" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Half your time. The Enchanter watches."
+    "simon.a11y.timer.50pct": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half your time. The Enchanter watches."
           }
         }
       }
     },
-    "simon.a11y.timer.75pct" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Three-quarters of your time is gone."
+    "simon.a11y.timer.75pct": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three-quarters of your time is gone."
           }
         }
       }
     },
-    "simon.explain.gesture.back" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe left — previous item"
+    "simon.explain.gesture.back": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left — previous item"
           }
         }
       }
     },
-    "simon.explain.gesture.swipe" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe right — next item"
+    "simon.explain.gesture.swipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe right — next item"
           }
         }
       }
     },
-    "simon.explain.gesture.tap" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double-tap — invoke"
+    "simon.explain.gesture.tap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap — invoke"
           }
         }
       }
     },
-    "simon.explain.lesson.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With VoiceOver on, the screen is read one element at a time. Swipe right to move to the next item. Swipe left to go back. When you hear the Enchanter's relic, double-tap to activate it."
+    "simon.explain.lesson.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With VoiceOver on, the screen is read one element at a time. Swipe right to move to the next item. Swipe left to go back. When you hear the Enchanter's relic, double-tap to activate it."
           }
         }
       }
     },
-    "simon.explain.lesson.heading" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How VoiceOver Works Here"
+    "simon.explain.lesson.heading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How VoiceOver Works Here"
           }
         }
       }
     },
-    "simon.explain.narration" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter gestures to a row of relics. \"I will name one. Touch your way through them — one at a time — until you hear it. Then invoke it.\""
+    "simon.explain.narration": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter gestures to a row of relics. \"I will name one. Touch your way through them — one at a time — until you hear it. Then invoke it.\""
           }
         }
       }
     },
-    "simon.explain.start.hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Begins your first practice attempt. No timer."
+    "simon.explain.start.hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begins your first practice attempt. No timer."
           }
         }
       }
     },
-    "simon.explain.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter's Trial"
+    "simon.explain.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter's Trial"
           }
         }
       }
     },
-    "simon.feedback.correct" : {
-      "comment" : "Success feedback shown after the correct relic is activated. Argument is the relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Correct. %@ invoked."
+    "simon.feedback.correct": {
+      "comment": "Success feedback shown after the correct relic is activated. Argument is the relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct. %@ invoked."
           }
         }
       }
     },
-    "simon.feedback.wrong" : {
-      "comment" : "Mistake feedback. Argument is the name of the incorrectly activated relic.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That was %@. The Enchanter waits. Keep searching."
+    "simon.feedback.wrong": {
+      "comment": "Mistake feedback. Argument is the name of the incorrectly activated relic.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That was %@. The Enchanter waits. Keep searching."
           }
         }
       }
     },
-    "simon.hud.mistakes.format" : {
-      "comment" : "Mistake counter HUD label. Argument is the integer mistake count.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Missteps: %d"
+    "simon.hud.mistakes.format": {
+      "comment": "Mistake counter HUD label. Argument is the integer mistake count.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missteps: %d"
           }
         }
       }
     },
-    "simon.l1.complete" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trial passed. The Enchanter nods."
+    "simon.l1.complete": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trial passed. The Enchanter nods."
           }
         }
       }
     },
-    "simon.l1.target.format" : {
-      "comment" : "Prompt card text in L1. Argument is the target relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter calls: %@"
+    "simon.l1.target.format": {
+      "comment": "Prompt card text in L1. Argument is the target relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter calls: %@"
           }
         }
       }
     },
-    "simon.l1.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "First Attempt"
+    "simon.l1.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First Attempt"
           }
         }
       }
     },
-    "simon.l2.complete" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trial passed. The relics grow quiet."
+    "simon.l2.complete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trial passed. The relics grow quiet."
           }
         }
       }
     },
-    "simon.l2.target.format" : {
-      "comment" : "Prompt card text in L2. Argument is the target relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter calls: %@"
+    "simon.l2.target.format": {
+      "comment": "Prompt card text in L2. Argument is the target relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter calls: %@"
           }
         }
       }
     },
-    "simon.l2.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rising Challenge"
+    "simon.l2.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rising Challenge"
           }
         }
       }
     },
-    "simon.l3.success" : {
-      "comment" : "Announced by VoiceOver when L3 is completed. Argument is the relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ invoked in time. The Enchanter is satisfied."
+    "simon.l3.success": {
+      "comment": "Announced by VoiceOver when L3 is completed. Argument is the relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ invoked in time. The Enchanter is satisfied."
           }
         }
       }
     },
-    "simon.l3.target.format" : {
-      "comment" : "Prompt card text in L3. Argument is the target relic name.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter commands: %@"
+    "simon.l3.target.format": {
+      "comment": "Prompt card text in L3. Argument is the target relic name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter commands: %@"
           }
         }
       }
     },
-    "simon.l3.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timed Trial"
+    "simon.l3.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timed Trial"
           }
         }
       }
     },
-    "simon.results.defeated" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The relic vanished. Return when you are ready."
+    "simon.results.defeated": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The relic vanished. Return when you are ready."
           }
         }
       }
     },
-    "simon.results.legendary" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter bows. A perfect invocation."
+    "simon.results.legendary": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter bows. A perfect invocation."
           }
         }
       }
     },
-    "simon.results.novice" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter sighs. You found it eventually."
+    "simon.results.novice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter sighs. You found it eventually."
           }
         }
       }
     },
-    "simon.results.skilled" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter nods. A solid invocation."
+    "simon.results.skilled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Enchanter nods. A solid invocation."
           }
         }
       }
     },
-    "simon.timeout" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The candles die. The Enchanter withdraws the relic."
+    "simon.timeout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The candles die. The Enchanter withdraws the relic."
           }
         }
       }
     },
-    "simon.token.hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double-tap to invoke this relic."
+    "simon.token.hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to invoke this relic."
           }
         }
       }
     },
-    "voiceOverHelp.done" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+    "voiceOverHelp.done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "voiceOverHelp.done.accessibilityHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Closes VoiceOver help"
+    "voiceOverHelp.done.accessibilityHint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closes VoiceOver help"
           }
         }
       }
     },
-    "voiceOverHelp.done.accessibilityLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+    "voiceOverHelp.done.accessibilityLabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "voiceOverHelp.header.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver is Apple's screen reader. It reads items on screen and changes how touch gestures work."
+    "voiceOverHelp.header.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver is Apple's screen reader. It reads items on screen and changes how touch gestures work."
           }
         }
       }
     },
-    "voiceOverHelp.header.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable VoiceOver"
+    "voiceOverHelp.header.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable VoiceOver"
           }
         }
       }
     },
-    "voiceOverHelp.inApp.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This help sheet is a ScrollView. With VoiceOver on, use three-finger swipes to move through content. Tap Done to close."
+    "voiceOverHelp.inApp.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This help sheet is a ScrollView. With VoiceOver on, use three-finger swipes to move through content. Tap Done to close."
           }
         }
       }
     },
-    "voiceOverHelp.inApp.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In this app"
+    "voiceOverHelp.inApp.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In this app"
           }
         }
       }
     },
-    "voiceOverHelp.navigationTitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver"
+    "voiceOverHelp.navigationTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver"
           }
         }
       }
     },
-    "voiceOverHelp.quickToggle.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set up an Accessibility Shortcut in Settings → Accessibility → Accessibility Shortcut. Triple-click the Side button (most iPhones), Home button (older models), or Top button (many iPads) to toggle VoiceOver."
+    "voiceOverHelp.quickToggle.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up an Accessibility Shortcut in Settings → Accessibility → Accessibility Shortcut. Triple-click the Side button (most iPhones), Home button (older models), or Top button (many iPads) to toggle VoiceOver."
           }
         }
       }
     },
-    "voiceOverHelp.quickToggle.tip" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tip: Adjust triple-click speed in Accessibility settings if the gesture feels too fast."
+    "voiceOverHelp.quickToggle.tip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tip: Adjust triple-click speed in Accessibility settings if the gesture feels too fast."
           }
         }
       }
     },
-    "voiceOverHelp.quickToggle.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick toggle"
+    "voiceOverHelp.quickToggle.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick toggle"
           }
         }
       }
     },
-    "voiceOverHelp.scroll.swipeDown" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To scroll up a page: swipe down with three fingers."
+    "voiceOverHelp.scroll.swipeDown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To scroll up a page: swipe down with three fingers."
           }
         }
       }
     },
-    "voiceOverHelp.scroll.swipeUp" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To scroll down a page: swipe up with three fingers."
+    "voiceOverHelp.scroll.swipeUp": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To scroll down a page: swipe up with three fingers."
           }
         }
       }
     },
-    "voiceOverHelp.scroll.tip" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If scrolling doesn't work, make sure your fingers are slightly apart and swipe with a quick motion."
+    "voiceOverHelp.scroll.tip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If scrolling doesn't work, make sure your fingers are slightly apart and swipe with a quick motion."
           }
         }
       }
     },
-    "voiceOverHelp.scroll.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scrolling with VoiceOver"
+    "voiceOverHelp.scroll.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrolling with VoiceOver"
           }
         }
       }
     },
-    "voiceOverHelp.step1.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open the Settings app on your iPhone or iPad."
+    "voiceOverHelp.step1.detail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the Settings app on your iPhone or iPad."
           }
         }
       }
     },
-    "voiceOverHelp.step1.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Open Settings"
+    "voiceOverHelp.step1.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Open Settings"
           }
         }
       }
     },
-    "voiceOverHelp.step2.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In Settings, tap Accessibility."
+    "voiceOverHelp.step2.detail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Settings, tap Accessibility."
           }
         }
       }
     },
-    "voiceOverHelp.step2.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Go to Accessibility"
+    "voiceOverHelp.step2.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Go to Accessibility"
           }
         }
       }
     },
-    "voiceOverHelp.step3.detail" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap VoiceOver, then turn it on. VoiceOver changes how gestures work: single-tap selects, double-tap activates."
+    "voiceOverHelp.step3.detail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap VoiceOver, then turn it on. VoiceOver changes how gestures work: single-tap selects, double-tap activates."
           }
         }
       }
     },
-    "voiceOverHelp.step3.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Turn on VoiceOver"
+    "voiceOverHelp.step3.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Turn on VoiceOver"
           }
         }
       }
     },
-    "voiceOverRequired.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This game trains VoiceOver skills and requires VoiceOver to be enabled. Enable it in Settings, then return to start the game."
+    "voiceOverRequired.body": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This game trains VoiceOver skills and requires VoiceOver to be enabled. Enable it in Settings, then return to start the game."
           }
         }
       }
     },
-    "voiceOverRequired.howToEnable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How to Enable VoiceOver"
+    "voiceOverRequired.howToEnable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to Enable VoiceOver"
           }
         }
       }
     },
-    "voiceOverRequired.navigationTitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Required"
+    "voiceOverRequired.navigationTitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver Required"
           }
         }
       }
     },
-    "voiceOverRequired.openSettings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Accessibility Settings"
+    "voiceOverRequired.openSettings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Accessibility Settings"
           }
         }
       }
     },
-    "voiceOverRequired.returnToHub" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Return to Hub"
+    "voiceOverRequired.returnToHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to Hub"
           }
         }
       }
     },
-    "voiceOverRequired.settingsFallback" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Settings → Accessibility → VoiceOver and turn it on, then return here."
+    "voiceOverRequired.settingsFallback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to Settings → Accessibility → VoiceOver and turn it on, then return here."
           }
         }
       }
     },
-    "voiceOverRequired.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver is Required"
+    "voiceOverRequired.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver is Required"
           }
         }
       }
     }
   },
-  "version" : "1.1"
+  "version": "1.1"
 }

@@ -1019,9 +1019,9 @@ TICKET-M7-Game-DungeonDescent-ScrollHunt
 ===============================
 Ticket: M7 - Game 3 (The Dungeon Descent) - Scroll Hunt
 [RENAMED from M7-Game-DungeonCrawl-ScrollHunt to align with GameRules-MVP.txt theme]
-Status: Partially Unblocked — screen composition mockup delivered (mock_v3_dungeon_descent_play.png);
-        dungeon room icons (dungeon_room_*) and background (dungeon_descent_bg) still needed before
-        full implementation. UI structure, ScrollView layout, and depth HUD are unblocked.
+Status: Ready — M7 requirements are implementation-ready. Design assets and hub thumbnail are now
+        present in the iOS asset catalog (dungeon_descent_bg, dungeon_room_*, dungeon_hub_icon).
+        Remaining gate is an on-device verification at implementation start.
 
 User Story
 ----------
@@ -1086,9 +1086,9 @@ Requirements
 
 Acceptance Criteria
 -------------------
-- FIRST: Verify on device that `onScrollGeometryChange` fires correctly when
-  VoiceOver performs a 3-finger scroll (S1 spike's one remaining open question).
-  If this fails, pause and re-evaluate the scroll detection approach before proceeding.
+- FIRST (Execution Gate): Verify on device that `onScrollGeometryChange` fires correctly when
+  VoiceOver performs a 3-finger scroll and that `targetIsReachable` flips to true only when
+  the target row enters the visible region. If this fails, pause M7 and re-evaluate scroll detection.
 - L0 practice scroll area is present and usable before L1 begins.
 - L0 lesson card explicitly teaches the 3-finger scroll paradigm.
 - User must scroll to reach the target; target is not activatable until reachable.
@@ -1105,9 +1105,9 @@ Useful Unit Test
 
 Dependencies
 ------------
-- S1 Spike (must be closed before this ticket opens)
+- S1 Spike (closed)
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
-- Design track: dungeon room assets must land before this ticket opens.
+- Design track: dungeon assets delivered in asset catalog; no blocking dependency remains.
 
 
 ================================================================================

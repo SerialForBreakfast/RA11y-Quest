@@ -80,6 +80,8 @@ struct iOSEnchantersTrialView: View {
                 onContinue: { viewModel.advanceToRising() }
             )
             .navigationTitle(String(localized: "simon.l1.title"))
+            // Spec: "Enchanter's prompt card reads the target name aloud on screen load."
+            .onAppear { viewModel.announceTargetPrompt() }
         case .rising:
             EnchanterRisingView(
                 relics: viewModel.relics,
@@ -95,6 +97,7 @@ struct iOSEnchantersTrialView: View {
                 onRetry: { viewModel.retryRising() }
             )
             .navigationTitle(String(localized: "simon.l2.title"))
+            .onAppear { viewModel.announceTargetPrompt() }
         case .timed:
             EnchanterTimedView(
                 relics: viewModel.relics,
@@ -108,6 +111,7 @@ struct iOSEnchantersTrialView: View {
                 onRetry: { viewModel.retryTimed() }
             )
             .navigationTitle(String(localized: "simon.l3.title"))
+            .onAppear { viewModel.announceTargetPrompt() }
         }
     }
 
@@ -186,20 +190,18 @@ final class EnchanterTrialViewModel {
     /// VO monitor for L3. Nil during L0–L2.
     private var coordinator: GameSessionCoordinator?
 
-    /// Countdown task running during L2 or L3. Cancelled on phase change.
+    /// Countdown task running during L2 or L3. Cancelled on phase change via `stopTimer()`.
     ///
-    /// `nonisolated(unsafe)`: allows `deinit` (nonisolated in Swift 6) to cancel
-    /// without accessing `@MainActor`-isolated state. `Task.cancel()` is thread-safe.
-    nonisolated(unsafe) private var timerTask: Task<Void, Never>?
+    /// Declared as a plain stored property (no isolation modifier). The timer closure
+    /// uses `[weak self]` on every iteration so the running task does not retain the
+    /// ViewModel — when the ViewModel is released the next `guard let self` exits
+    /// cleanly. `stopTimer()` provides eager cancellation before any phase transition.
+    private var timerTask: Task<Void, Never>?
 
     // MARK: - Init
 
     init(storage: any StorageComponent) {
         self.storage = storage
-    }
-
-    deinit {
-        timerTask?.cancel()
     }
 
     // MARK: - Phase Transitions
@@ -237,8 +239,11 @@ final class EnchanterTrialViewModel {
     /// Transitions L2 → L3: sets up all 8 relics with a 20 s hard timer and creates a fresh `GameSession`.
     ///
     /// ## Concurrency
-    /// `GameSession` and `GameSessionCoordinator` are created fresh so retries start
-    /// with a clean session. The previous session (if any) is abandoned via the timer.
+    /// `GameSession.start()` must complete before the timer or any relic activation can call
+    /// `recordMistake()` / `complete()`, otherwise those actor methods throw `invalidTransition`.
+    /// Both are `await`-ed inside a single `Task` so the timer only starts once the session
+    /// is in the `.running` state. `GameSession` and `GameSessionCoordinator` are created fresh
+    /// on each call (including retries) so previous state is never reused.
     func advanceToTimed() {
         stopTimer()
         mistakes = 0
@@ -256,34 +261,43 @@ final class EnchanterTrialViewModel {
             thresholds: .findAndFocus,
             storage: storage
         )
-        session = newSession
-        coordinator = GameSessionCoordinator(
+        let newCoordinator = GameSessionCoordinator(
             session: newSession,
             gameKind: .findAndFocus,
             voiceOverProvider: iOSLiveVoiceOverStateProvider()
         )
-        coordinator?.startMonitoring()
+        session = newSession
+        coordinator = newCoordinator
 
+        // Start session and timer in sequence: session MUST be in .running before
+        // the timer fires and any relic activation calls recordMistake/complete.
         Task { @MainActor [weak self] in
             guard let self else { return }
-            do { try await newSession.start() } catch {
+            do {
+                try await newSession.start()
+            } catch {
                 RA11yLogger.gameSession.error("L3 session start failed: \(error.localizedDescription)")
+                return
             }
+            newCoordinator.startMonitoring()
+            self.startTimer(total: 20) { [weak self] in await self?.handleL3Timeout() }
+            self.observeCoordinatorVOState(coordinator: newCoordinator)
         }
+    }
 
-        startTimer(total: 20) { [weak self] in await self?.handleL3Timeout() }
-
-        // Observe coordinator for VO-off mid-L3
+    /// Polls the given coordinator for a VoiceOver-off event and mirrors it onto the ViewModel.
+    ///
+    /// Runs in a `Task` so it does not block the calling context. Exits as soon as the flag
+    /// is set or the task is cancelled (e.g., when the phase transitions or ViewModel is released).
+    private func observeCoordinatorVOState(coordinator: GameSessionCoordinator) {
         Task { @MainActor [weak self] in
-            guard let self, let coordinator = self.coordinator else { return }
-            // Poll coordinator's published flag via a short-sleep loop.
-            // The coordinator sets voiceOverDisabledMidGame on VO-off; we mirror it.
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(200))
+                guard let self, !Task.isCancelled else { return }
                 if coordinator.voiceOverDisabledMidGame {
                     self.voiceOverDisabledMidGame = true
                     self.stopTimer()
-                    break
+                    return
                 }
             }
         }
@@ -317,6 +331,36 @@ final class EnchanterTrialViewModel {
         announce(message)
     }
 
+    /// Announces the Enchanter's prompt (target name + navigation instruction) to VoiceOver.
+    ///
+    /// Called from each level view's `.onAppear` so VoiceOver reads the prompt card when
+    /// the level first appears — satisfying the spec requirement "prompt card reads the
+    /// target name aloud on screen load." Uses the same accessibility label as the visible
+    /// prompt card so sighted and VoiceOver users see/hear identical information.
+    ///
+    /// A brief delay is introduced so VoiceOver's transition focus-move completes before
+    /// the announcement fires; without it the announcement can be swallowed by the
+    /// navigation transition announcement.
+    func announceTargetPrompt() {
+        let message: String
+        switch phase {
+        case .attempt:
+            message = String(format: String(localized: "simon.a11y.l1.target"), targetRelic.displayName)
+        case .rising:
+            message = String(format: String(localized: "simon.a11y.l2.target"), targetRelic.displayName)
+        case .timed:
+            message = String(format: String(localized: "simon.a11y.l3.target"), targetRelic.displayName)
+        case .prologue:
+            return
+        }
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: .milliseconds(500))
+            self.announce(message)
+        }
+    }
+
     // MARK: - Private: Activation Handling
 
     private func handleCorrectActivation(_ relic: EnchanterRelic) async {
@@ -329,7 +373,9 @@ final class EnchanterTrialViewModel {
             levelComplete = true
             let message = String(format: String(localized: "simon.feedback.correct"), relic.displayName)
             statusMessage = message
-            announce(String(localized: "a11y.level.completed"))
+            // Use the thematic L1-specific announcement ("Trial passed. The Enchanter nods.")
+            // rather than the generic "Level complete." used by other contexts.
+            announce(String(localized: "simon.l1.complete"))
 
         case .rising:
             stopTimer()
@@ -340,7 +386,18 @@ final class EnchanterTrialViewModel {
 
         case .timed:
             guard let session else { return }
+            // Stop the timer first so timeRemaining is stable for bucket calculation.
             stopTimer()
+
+            // Compute elapsed from the 20 s L3 window and record any time-bucket penalty
+            // mistakes before completing the session. The first 10 s bucket is free;
+            // each additional full 10 s adds +1 (per GameSpec-FindAndFocus.txt).
+            let elapsed = 20.0 - timeRemaining
+            let buckets = RankThresholds.bucketMistakes(timeSeconds: elapsed, bucketSize: 10)
+            for _ in 0..<buckets {
+                try? await session.recordMistake()
+            }
+
             do {
                 try await session.complete()
                 coordinator?.stopMonitoring()
@@ -379,10 +436,19 @@ final class EnchanterTrialViewModel {
     /// The timer loop runs in a `Task` confined to `@MainActor` to mutate `timeRemaining`
     /// without data races. Threshold announcements are posted via `UIAccessibility` from
     /// the main actor, which is required by UIKit.
+    /// Starts a countdown timer for `total` seconds, calling `onTimeout` when it expires.
+    ///
+    /// The closure captures `[weak self]` on every iteration so the running `Task` does
+    /// not retain the `EnchanterTrialViewModel`. When the ViewModel is released between
+    /// iterations the `guard let self` exits the loop cleanly without a deinit hook.
+    ///
+    /// ## Concurrency
+    /// The timer `Task` is `@MainActor`-isolated to allow mutation of `timeRemaining` and
+    /// other `@Observable` state without crossing actor boundaries. `UIAccessibility.post`
+    /// also requires the main thread.
     private func startTimer(total: Double, onTimeout: @escaping @Sendable () async -> Void) {
         timerTask?.cancel()
         timerTask = Task { @MainActor [weak self] in
-            guard let self else { return }
             let startDate = Date()
             var announced75 = false
             var announced50 = false
@@ -392,7 +458,9 @@ final class EnchanterTrialViewModel {
 
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { break }
+                // Re-check self and cancellation after each sleep — exits cleanly if
+                // the ViewModel was released or stopTimer() cancelled the task.
+                guard let self, !Task.isCancelled else { return }
 
                 let elapsed = Date().timeIntervalSince(startDate)
                 let remaining = max(0, total - elapsed)
@@ -411,7 +479,7 @@ final class EnchanterTrialViewModel {
                     self.announceTimerThreshold(for: self.phase, pct: 0.25)
                 }
 
-                // 10 s remaining (only for L3; L2 uses 50%/25%)
+                // 10 s remaining (only for L3; L2 uses percentage thresholds)
                 if self.phase == .timed && remaining <= 10 && !announced10 {
                     announced10 = true
                     self.announce(String(localized: "a11y.timer.10s"))
@@ -1061,19 +1129,32 @@ private struct GestureRow: View {
 }
 
 /// Relic asset image with SF Symbol fallback.
+///
+/// Relic sprites were generated on white backgrounds. On the dark game surface
+/// the white background would be jarring, so images are rendered with
+/// `.blendMode(.multiply)` against a dark base. Multiply causes white (1,1,1)
+/// to become transparent against whatever is behind the view, while preserving
+/// the coloured relic silhouette.
 private struct RelicImage: View {
     let assetName: String
 
     var body: some View {
-        if let image = UIImage(named: assetName) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFit()
-        } else {
-            Image(systemName: "sparkles")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(.secondary)
+        ZStack {
+            // Dark base so the multiply blend has a surface to work against.
+            Color(white: 0.12)
+
+            if let image = UIImage(named: assetName) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .blendMode(.multiply)
+            } else {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 

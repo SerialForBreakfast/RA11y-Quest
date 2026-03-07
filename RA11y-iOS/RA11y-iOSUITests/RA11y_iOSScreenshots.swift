@@ -18,6 +18,9 @@
 //  | 02_VORequired         | VoiceOver Required interstitial  | navigated from hub (VO OFF)                       |
 //  | 03_FirstRun           | First Run entry screen           | -uiTesting -screenshotResetOnboarding             |
 //  | 04_EnchanterPrologue  | Enchanter's Trial L0 Prologue    | -uiTesting -screenshotDirectToEnchanter           |
+//  | 05_DungeonPrologue    | Dungeon Descent L0 Prologue      | -uiTesting -screenshotDirectToDungeon             |
+//  | 06_DungeonPlay        | Dungeon Descent L1 Play          | continue from direct route launch                 |
+//  | 07_DungeonResult      | Shared result screen (Dungeon)   | activate target from L1                           |
 //
 //  ## Navigation Strategy
 //  Screenshots that require navigation (VORequired) are obtained by interacting
@@ -43,6 +46,7 @@ import XCTest
 /// ## Pass Structure
 /// Capture is split into independent passes to isolate state across screens:
 /// - `testScreenshots_Enchanter`:      Enchanter's Trial L0 Prologue (runs first alphabetically)
+/// - `testScreenshots_Dungeon`:        Dungeon Descent L0 + L1 + result
 /// - `testScreenshots_FirstRun`:       first-run entry screen (requires reset of onboarding state)
 /// - `testScreenshots_Hub_VORequired`: hub and VoiceOver Required interstitial
 ///
@@ -159,6 +163,70 @@ final class RA11y_iOSScreenshots: XCTestCase {
         )
 
         captureScreenshot("04_EnchanterPrologue")
+    }
+
+    // MARK: - Pass 4: Dungeon Descent — L0 Prologue + L1 Play + Result
+
+    /// Captures three Dungeon Descent screens in one deterministic launch:
+    /// - L0 prologue
+    /// - L1 play state
+    /// - shared result screen after claiming the target
+    ///
+    /// Uses `-screenshotDirectToDungeon` so root routing pushes `.dungeonDescent`.
+    /// The test performs a practice-zone scroll to enable "Begin Descent", then
+    /// activates the guard-room target once it is reachable.
+    ///
+    /// - Concurrency: `@MainActor` — XCUIApplication interactions require the main thread.
+    @MainActor
+    func testScreenshots_Dungeon() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-screenshotDirectToDungeon"]
+        app.launch()
+
+        let prologue = app.otherElements["dungeon.prologue"]
+        XCTAssertTrue(
+            prologue.waitForExistence(timeout: 10),
+            "Dungeon prologue root not found — direct route push may have failed"
+        )
+        captureScreenshot("05_DungeonPrologue")
+
+        let practiceZone = app.scrollViews["dungeon.practiceZone"]
+        XCTAssertTrue(
+            practiceZone.waitForExistence(timeout: 5),
+            "Dungeon practice zone not found"
+        )
+        practiceZone.swipeUp()
+
+        let beginButton = app.buttons["dungeon.beginDescent"]
+        XCTAssertTrue(
+            beginButton.waitForExistence(timeout: 5),
+            "Dungeon 'Begin Descent' button not found"
+        )
+        XCTAssertTrue(beginButton.isEnabled, "Dungeon 'Begin Descent' should be enabled after practice scroll")
+        beginButton.tap()
+
+        let playRoot = app.otherElements["dungeon.play"]
+        XCTAssertTrue(
+            playRoot.waitForExistence(timeout: 8),
+            "Dungeon play root not found after beginning descent"
+        )
+        captureScreenshot("06_DungeonPlay")
+
+        app.swipeUp()
+
+        let targetRoom = app.otherElements["dungeon.room.guard_room"]
+        XCTAssertTrue(
+            targetRoom.waitForExistence(timeout: 8),
+            "Dungeon target room not found in L1"
+        )
+        targetRoom.tap()
+
+        let resultRoot = app.otherElements["gameResult.root"]
+        XCTAssertTrue(
+            resultRoot.waitForExistence(timeout: 8),
+            "Result screen not found after activating dungeon target"
+        )
+        captureScreenshot("07_DungeonResult")
     }
 
     // MARK: - Private

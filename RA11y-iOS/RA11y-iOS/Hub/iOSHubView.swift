@@ -152,7 +152,7 @@ struct iOSHubView: View {
             case .activateDoubleTap:
                 break  // M6 — not yet implemented
             case .scrollHunt:
-                break  // M7 — not yet implemented
+                router.push(.dungeonDescent)
             }
         }
     }

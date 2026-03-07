@@ -69,6 +69,8 @@ struct iOSRootView: View {
             iOSFirstRunView(mode: mode, storage: storage)
         case .enchantersTrial:
             iOSEnchantersTrialView(storage: storage)
+        case .dungeonDescent:
+            iOSDungeonDescentView(storage: storage)
         case .gameResult(let result, let gameSpecificAnnouncement):
             iOSGameResultView(
                 presenter: GameResultPresenter(result: result),
@@ -90,6 +92,8 @@ struct iOSRootView: View {
         switch result.gameID {
         case "find-and-focus":
             router.push(.enchantersTrial)
+        case "scroll-hunt":
+            router.push(.dungeonDescent)
         default:
             break  // Future games added here (M6, M7)
         }
@@ -148,10 +152,11 @@ struct iOSRootView: View {
 
         if args.contains("-screenshotDirectToEnchanter") {
             router.push(.enchantersTrial)
+        } else if args.contains("-screenshotDirectToDungeon") {
+            router.push(.dungeonDescent)
         }
         // Add future game routes here:
         // else if args.contains("-screenshotDirectToRogue")  { router.push(.roguesGauntlet) }
-        // else if args.contains("-screenshotDirectToDungeon") { router.push(.dungeonDescent) }
     }
     #endif
 }

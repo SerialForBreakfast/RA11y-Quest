@@ -76,7 +76,7 @@ struct RA11y_iOSApp: App {
         // Direct-to-game screenshot args: ensure the hub is the base route so
         // iOSRootView.applyScreenshotDirectRouteIfNeeded() can push the game on top.
         // Any new game-direct arg should be listed here alongside -screenshotMarkOnboardingComplete.
-        let directGameArgs = ["-screenshotDirectToEnchanter"]
+        let directGameArgs = ["-screenshotDirectToEnchanter", "-screenshotDirectToDungeon"]
         if directGameArgs.contains(where: { args.contains($0) }) {
             UserDefaults.standard.set(
                 true,
