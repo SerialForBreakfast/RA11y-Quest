@@ -50,6 +50,11 @@ final class RA11y_iOSScreenshots: XCTestCase {
 
     /// Captures the Hub and VoiceOver Required screens in a single app launch.
     ///
+    /// `-screenshotMarkOnboardingComplete` ensures the hub is the initial route
+    /// regardless of what a prior test method did to the simulator's UserDefaults.
+    /// This is necessary because `testScreenshots_FirstRun` (which runs first,
+    /// alphabetically) clears the onboarding flags via `-screenshotResetOnboarding`.
+    ///
     /// VoiceOver is not active in the simulator, so tapping any quest card
     /// triggers the interstitial — no special routing is needed.
     ///
@@ -57,7 +62,7 @@ final class RA11y_iOSScreenshots: XCTestCase {
     @MainActor
     func testScreenshots_Hub_VORequired() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
+        app.launchArguments = ["-uiTesting", "-screenshotMarkOnboardingComplete"]
         app.launch()
 
         // Wait for the hub's DM greeting to confirm the hub is fully rendered.

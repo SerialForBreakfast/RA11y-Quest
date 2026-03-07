@@ -112,6 +112,11 @@ platform :ios do
       sh("rm -rf '#{result_path}'")
       UI.message("Capturing screenshots — #{label} (id: #{udid[0..7]}...)")
 
+      # Run xcodebuild but do NOT let a non-zero exit abort this block.
+      # A single failing test method exits non-zero yet still writes a valid xcresult
+      # bundle containing XCTAttachments from all *passing* test methods.
+      # Extraction is always attempted below so partial runs still yield screenshots.
+      xcodebuild_ok = true
       begin
         sh(
           "xcodebuild test" \
@@ -121,16 +126,39 @@ platform :ios do
           " -only-testing:'#{UI_TEST_ID}'" \
           " -resultBundlePath '#{result_path}'"
         )
+      rescue => e
+        UI.error("xcodebuild test non-zero for #{label}: #{e.message}")
+        xcodebuild_ok = false
+      end
+
+      # Always attempt extraction if an xcresult bundle was produced.
+      unless File.exist?(result_path)
+        UI.error("No xcresult bundle at #{result_path}; build failed before any tests ran.")
+        failed << label
+        next
+      end
+
+      begin
         sh("bash '#{EXTRACT_SCRIPT}' '#{result_path}' '#{output_dir}'")
 
-        # Publish to docs/screenshots/ so the README can reference committed PNGs.
-        # fastlane/screenshots/ is gitignored (build output); docs/screenshots/ is not.
-        docs_dir = "#{DOCS_BASE}/#{label}"
-        sh("mkdir -p '#{docs_dir}' && cp -f '#{output_dir}'/*.png '#{docs_dir}/' 2>/dev/null || true")
-
-        succeeded << label
-      rescue => e
-        UI.error("FAILED for #{label}: #{e.message}")
+        png_files = Dir["#{output_dir}/*.png"]
+        if png_files.empty?
+          UI.error("Extraction produced no PNGs for #{label}")
+          failed << label
+        else
+          # Publish to docs/screenshots/ so the README can reference committed PNGs.
+          # fastlane/screenshots/ is gitignored (build output); docs/screenshots/ is not.
+          docs_dir = "#{DOCS_BASE}/#{label}"
+          sh("mkdir -p '#{docs_dir}' && cp -f '#{output_dir}'/*.png '#{docs_dir}/' 2>/dev/null || true")
+          succeeded << label
+          if xcodebuild_ok
+            UI.success("#{png_files.length} screenshot(s) captured for #{label}")
+          else
+            UI.important("#{png_files.length} screenshot(s) captured for #{label} (xcodebuild had failures — some screens may be missing)")
+          end
+        end
+      rescue => extract_err
+        UI.error("Extraction failed for #{label}: #{extract_err.message}")
         failed << label
       end
     end

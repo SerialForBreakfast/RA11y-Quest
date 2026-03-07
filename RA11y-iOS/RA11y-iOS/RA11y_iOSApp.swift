@@ -16,9 +16,9 @@ import RA11yCore
 /// ## Screenshot Testing
 /// The fastlane `screenshots` lane launches the app with specific arguments:
 /// - `-screenshotResetOnboarding`: clears first-run flags so the app routes to
-///   the First Run entry screen. Used by the screenshot test to capture that screen.
-/// - Omitting the flag: preserves any stored state; typically the hub is shown
-///   (first-run flags are set by an earlier test pass).
+///   the First Run entry screen.
+/// - `-screenshotMarkOnboardingComplete`: sets `basicsCompleted = true` so the
+///   app routes directly to the hub, regardless of prior simulator state.
 @main
 struct RA11y_iOSApp: App {
 
@@ -37,11 +37,15 @@ struct RA11y_iOSApp: App {
 
     /// Applies `UserDefaults` overrides requested by the fastlane screenshot lane.
     ///
-    /// - `-screenshotResetOnboarding`: erases the "basics completed / dismissed"
-    ///   flags so `iOSRootView` routes to the First Run entry screen on next launch.
+    /// Recognised launch arguments (all require `-uiTesting`):
+    /// - `-screenshotResetOnboarding`: erases both first-run flags so the app routes
+    ///   to the First Run entry screen. Used by `testScreenshots_FirstRun`.
+    /// - `-screenshotMarkOnboardingComplete`: writes `basicsCompleted = true` so the
+    ///   app routes directly to the hub. Used by `testScreenshots_Hub_VORequired` to
+    ///   ensure a deterministic hub route regardless of prior simulator state (e.g.
+    ///   after `testScreenshots_FirstRun` clears the flags in the same xcodebuild run).
     ///
-    /// This function is a no-op in non-DEBUG builds and when the relevant launch
-    /// arguments are absent.
+    /// This function is a no-op in non-DEBUG builds and when `-uiTesting` is absent.
     ///
     /// - Concurrency: Called synchronously on `@main` during `init`. Safe because
     ///   `UserDefaultsStorageComponent` is not yet initialised at this point, so
@@ -59,6 +63,14 @@ struct RA11y_iOSApp: App {
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsDismissed
             )
             RA11yLogger.startup.debug("Screenshot: onboarding flags cleared for first-run screen")
+        }
+
+        if args.contains("-screenshotMarkOnboardingComplete") {
+            UserDefaults.standard.set(
+                true,
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
+            )
+            RA11yLogger.startup.debug("Screenshot: basicsCompleted set for hub route")
         }
         #endif
     }
