@@ -138,6 +138,16 @@ struct iOSQuestCardView: View {
 /// Handling press state via `configuration.isPressed` here rather than in the
 /// card body keeps the visual treatment decoupled from the content layout.
 ///
+/// ## Color Scheme Forcing
+/// The card surface uses a fixed dark background regardless of the system's
+/// light/dark mode setting. `.environment(\.colorScheme, .dark)` is applied to
+/// the entire card so ALL semantic adaptive colors — `.primary`, `.secondary`,
+/// and any future additions — resolve to their dark-mode values (white, dimmed
+/// white, etc.) without requiring explicit color overrides on every `Text` view.
+///
+/// This also respects "Increase Contrast": in dark mode + high contrast, system
+/// primary = bright white, giving an even higher contrast ratio on the dark surface.
+///
 /// ## Reduce Motion
 /// When `accessibilityReduceMotion` is `true`, scale and opacity transitions are
 /// suppressed. Only the `.opacity` feedback remains so the press is still
@@ -161,6 +171,11 @@ private struct QuestCardButtonStyle: ButtonStyle {
                     )
                     .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 3)
             )
+            // Force dark environment so all semantic colors (`.primary`, `.secondary`,
+            // etc.) resolve to white-based values on the fixed-dark card surface.
+            // This is the correct idiom for a non-adaptive dark surface in SwiftUI —
+            // it handles light mode, dark mode, and Increase Contrast in one place.
+            .environment(\.colorScheme, .dark)
             .opacity(configuration.isPressed ? 0.85 : 1.0)
             // Scale feedback is motion-based; suppress it when Reduce Motion is ON.
             .scaleEffect((!reduceMotion && configuration.isPressed) ? 0.98 : 1.0)

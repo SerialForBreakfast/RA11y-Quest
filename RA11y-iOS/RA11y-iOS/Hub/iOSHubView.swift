@@ -102,6 +102,19 @@ struct iOSHubView: View {
                 onEnableVoiceOver: { showHelpSheet = true }
             )
         }
+        // The hub always renders on a fixed dark background (dungeon scene image +
+        // dark gradient overlay). Force dark color scheme here so ALL semantic
+        // adaptive colors in the hub's content tree — `.primary`, `.secondary`,
+        // nav bar title, footer material, DM greeting — resolve to white-based values
+        // in both light mode and dark mode.
+        //
+        // Scope: This modifier applies only to this view's subtree. It does NOT
+        // affect pushed NavigationStack destinations (VORequired, FirstRun) because
+        // those are siblings managed by the NavigationStack, not children of this view.
+        //
+        // "Increase Contrast" is respected automatically — the system overlays higher
+        // contrast values on top of the forced dark scheme.
+        .environment(\.colorScheme, .dark)
     }
 
     // MARK: - Quest Cards
