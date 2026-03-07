@@ -133,7 +133,6 @@ struct iOSBasicsSequenceView: View {
             currentIndex += 1
         } else {
             Task {
-                guard !Task.isCancelled else { return }
                 await storage.markBasicsCompleted()
                 router.popToRoot()
             }

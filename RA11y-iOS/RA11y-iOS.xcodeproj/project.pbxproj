@@ -28,7 +28,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		446CAB7C2F4BD4EF00CF28C9 /* RA11y-tvOS.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "RA11y-tvOS.xcodeproj"; path = "../RA11y-tvOS/RA11y-tvOS.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		44C85C932F4787A5000C982C /* RA11y-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RA11y-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		44C85CA02F4787A7000C982C /* RA11y-iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "RA11y-iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		44C85CAA2F4787A7000C982C /* RA11y-iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "RA11y-iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,17 +77,9 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		446CAB7F2F4BD4F000CF28C9 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		44C85C8A2F4787A5000C982C = {
 			isa = PBXGroup;
 			children = (
-				446CAB7C2F4BD4EF00CF28C9 /* RA11y-tvOS.xcodeproj */,
 				44C85C952F4787A5000C982C /* RA11y-iOS */,
 				44C85CA32F4787A7000C982C /* RA11y-iOSTests */,
 				44C85CAD2F4787A7000C982C /* RA11y-iOSUITests */,
@@ -216,12 +207,6 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 44C85C942F4787A5000C982C /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 446CAB7F2F4BD4F000CF28C9 /* Products */;
-					ProjectRef = 446CAB7C2F4BD4EF00CF28C9 /* RA11y-tvOS.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				44C85C922F4787A5000C982C /* RA11y-iOS */,

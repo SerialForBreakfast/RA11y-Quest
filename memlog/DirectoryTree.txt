@@ -23,20 +23,13 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
 │   │   ├── Assets.xcassets
 │   │   │   ├── AccentColor.colorset
 │   │   │   ├── AppIcon.appiconset
-│   │   │   ├── dungeon_room_entrance.imageset
-│   │   │   ├── enchanter_relic_target.imageset
-│   │   │   ├── hub_quest_board_bg.imageset
-│   │   │   ├── RA11y Colors
-│   │   │   │   └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
-│   │   │   ├── rogue_seal_target.imageset
-│   │   │   └── simon_room_bg.imageset
+│   │   │   └── RA11y Colors
+│   │   │       └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
 │   │   ├── Design
 │   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
 │   │   ├── FirstRun
 │   │   │   ├── iOSBasicsSequenceView.swift  Basics sequence placeholder + completion flag
 │   │   │   └── iOSFirstRunView.swift        First-run entry screen + sequence container
-│   │   ├── Games
-│   │   │   └── iOSEnchantersTrialView.swift  Game 1 (Find & Focus) — L1 minimal playable
 │   │   ├── Hub
 │   │   │   ├── iOSHubView.swift              Root hub; uses .background{} pattern for bg image
 │   │   │   ├── iOSHubBackgroundView.swift    Full-bleed bg: fallback color + image + gradient
@@ -117,7 +110,6 @@ Current structure (as of 2026-02-22) — M3 Hub UI complete; screenshots via xcr
     │   │   │   ├── mock_v3_dungeon_descent_play.png    (NEW — M7)
     │   │   │   └── mock_v3_results_legendary.png       (NEW — shared results screen)
     │   │   ├── Assets/                     Raw generated sprite + background assets
-    │   │   ├── DesignTicket-FirstRunEntry.txt
     │   │   ├── DesignTicket-AssetListDefinition.txt
     │   │   ├── DesignTicket-PromptSheet.txt
     │   │   ├── DesignTicket-AssetReviewChecklist.txt

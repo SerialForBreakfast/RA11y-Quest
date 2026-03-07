@@ -24,7 +24,7 @@ end
 # Limit to screenshot test only
 test_target_name("RA11y-iOSUITests")
 only_testing([
-  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots"
+  "RA11y-iOSUITests/RA11y_iOSScreenshots"
 ])
 
 output_directory("fastlane/screenshots")

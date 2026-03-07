@@ -18,6 +18,11 @@ import RA11yCore
 /// - iPhone (.compact): full-width content minus 16pt horizontal padding
 /// - iPad (.regular): content max width 600pt, centered
 ///
+/// ## VoiceOver State
+/// VoiceOver state is read from `@Environment(\.accessibilityVoiceOverEnabled)`.
+/// SwiftUI propagates changes automatically — no custom observer or stream needed.
+/// The affordance footer and game-start gating both read this environment value.
+///
 /// ## VoiceOver Reading Order
 /// 1. Navigation title "RA11y"
 /// 2. "Choose Your Trial, Adventurer" (.isHeader)
@@ -31,22 +36,16 @@ struct iOSHubView: View {
 
     // MARK: - State
 
-    @Bindable private var viewModel: HubViewModel
+    @State private var viewModel = HubViewModel(storage: UserDefaultsStorageComponent())
     @State private var showHelpSheet = false
 
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
     @Environment(\.horizontalSizeClass) private var sizeClass
-
-    // MARK: - Init
-
-    /// Creates the hub view with an injected view model.
-    ///
-    /// - Parameter viewModel: Observable hub view model owned by the caller.
-    init(viewModel: HubViewModel) {
-        self._viewModel = Bindable(wrappedValue: viewModel)
-    }
+    /// VoiceOver state sourced directly from the SwiftUI environment.
+    /// SwiftUI propagates updates on every toggle — no custom observation needed.
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
 
     // MARK: - Computed
 
@@ -71,13 +70,16 @@ struct iOSHubView: View {
             // background image's intrinsic size (1920pt wide for landscape assets)
             // from widening the ZStack and overflowing the content layout.
             .background {
-                iOSHubBackgroundView(assetName: "hub_quest_board_bg")
+                iOSHubBackgroundView(assetName: "simon_room_bg")
             }
             .navigationTitle(String(localized: "hub.navigationTitle"))
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showHelpSheet) {
-            iOSVoiceOverHelpSheet()
-        }
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showHelpSheet) {
+                iOSVoiceOverHelpSheet()
+            }
+            .task {
+                await viewModel.refreshBestResults()
+            }
     }
 
     // MARK: - Content Layer
@@ -95,7 +97,7 @@ struct iOSHubView: View {
         }
         .safeAreaInset(edge: .bottom) {
             iOSHubFooterView(
-                showHelpAffordance: viewModel.showHelpAffordance,
+                showHelpAffordance: !voiceOverEnabled,
                 onVoiceOverBasics: navigateToBasics,
                 onEnableVoiceOver: { showHelpSheet = true }
             )
@@ -123,24 +125,14 @@ struct iOSHubView: View {
 
     /// Initiates the VoiceOver gating check before starting a game.
     ///
-    /// If VoiceOver is running: route directly to the game (M5+).
-    /// If VoiceOver is off: push the interstitial so the user can enable it.
+    /// Reads `voiceOverEnabled` from the SwiftUI environment — always current at
+    /// the moment the user taps. If VoiceOver is off, routes to the interstitial.
     private func startGame(_ game: GameDefinition) {
-        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
-            router.push(.game(kind: game.kind))
-            return
-        }
-        if viewModel.showHelpAffordance {
-            // VoiceOver is OFF — route to interstitial
+        if !voiceOverEnabled {
             router.push(.voiceOverInterstitial(kind: game.kind))
         } else {
             // VoiceOver is ON — proceed to game (M5+: push game route)
-            switch game.kind {
-            case .findAndFocus:
-                router.push(.game(kind: game.kind))
-            case .activateDoubleTap, .scrollHunt:
-                RA11yLogger.navigation.debug("Game start gating passed for \(game.id) (not yet implemented)")
-            }
+            RA11yLogger.navigation.debug("Game start gating passed for \(game.id)")
         }
     }
 
@@ -153,12 +145,7 @@ struct iOSHubView: View {
 
 #Preview("VO OFF — help affordance visible") {
     NavigationStack {
-        iOSHubView(
-            viewModel: HubViewModel(
-                voiceOverProvider: StubVoiceOverStateProvider(isVoiceOverRunning: false),
-                storage: UserDefaultsStorageComponent()
-            )
-        )
+        iOSHubView()
             .environment(iOSAppRouter())
     }
 }

@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "dungeon_room_ritual_chamber.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

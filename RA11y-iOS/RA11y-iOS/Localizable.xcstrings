@@ -1,326 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "app.loading" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading..."
-          }
-        }
-      }
-    },
-    "basicsSequence.continue" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
-          }
-        }
-      }
-    },
-    "basicsSequence.continue.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Moves to the next Basics step."
-          }
-        }
-      }
-    },
-    "basicsSequence.continue.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue Basics"
-          }
-        }
-      }
-    },
-    "basicsSequence.finish" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finish"
-          }
-        }
-      }
-    },
-    "basicsSequence.finish.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completes Basics and returns to the hub."
-          }
-        }
-      }
-    },
-    "basicsSequence.finish.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finish Basics"
-          }
-        }
-      }
-    },
-    "basicsSequence.stepFormat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Step %d of %d"
-          }
-        }
-      }
-    },
-    "basicsSequence.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Basics"
-          }
-        }
-      }
-    },
-    "enchanter.completeError" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The trial could not complete. Please try again."
-          }
-        }
-      }
-    },
-    "enchanter.hint.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speaks the target relic name again without penalty."
-          }
-        }
-      }
-    },
-    "enchanter.hint.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hear a hint"
-          }
-        }
-      }
-    },
-    "enchanter.hint.button" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hint"
-          }
-        }
-      }
-    },
-    "enchanter.hint.format" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter whispers: the target is %@."
-          }
-        }
-      }
-    },
-    "enchanter.mistake.format" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That was %@. The Enchanter waits."
-          }
-        }
-      }
-    },
-    "enchanter.mistakeError" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That selection could not be recorded. Try again."
-          }
-        }
-      }
-    },
-    "enchanter.prompt.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Find the relic in the list below and double-tap to invoke it."
-          }
-        }
-      }
-    },
-    "enchanter.prompt.format" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Enchanter calls: %@"
-          }
-        }
-      }
-    },
-    "enchanter.prompt.instructions" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navigate to it and double-tap to invoke it."
-          }
-        }
-      }
-    },
-    "enchanter.relic.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double-tap to invoke this relic."
-          }
-        }
-      }
-    },
-    "enchanter.relics.header" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relics"
-          }
-        }
-      }
-    },
-    "enchanter.startError" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The trial could not begin. Please try again."
-          }
-        }
-      }
-    },
-    "enchanter.success.format" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ invoked in time. The Enchanter is satisfied."
-          }
-        }
-      }
-    },
-    "firstRun.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Learn the three core VoiceOver skills in a guided sequence, or explore the hub on your own."
-          }
-        }
-      }
-    },
-    "firstRun.goToHub" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Hub"
-          }
-        }
-      }
-    },
-    "firstRun.goToHub.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skips the Basics sequence and opens the game hub."
-          }
-        }
-      }
-    },
-    "firstRun.goToHub.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to Hub"
-          }
-        }
-      }
-    },
-    "firstRun.navigationTitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VoiceOver Basics"
-          }
-        }
-      }
-    },
-    "firstRun.startBasics" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Basics"
-          }
-        }
-      }
-    },
-    "firstRun.startBasics.a11yHint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starts the guided VoiceOver Basics sequence."
-          }
-        }
-      }
-    },
-    "firstRun.startBasics.a11yLabel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start VoiceOver Basics"
-          }
-        }
-      }
-    },
-    "firstRun.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start with VoiceOver Basics"
-          }
-        }
-      }
-    },
     "game.activateDoubleTap.goal" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -343,16 +23,6 @@
         }
       }
     },
-    "game.comingSoon" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coming soon"
-          }
-        }
-      }
-    },
     "game.findAndFocus.goal" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -365,6 +35,7 @@
       }
     },
     "game.findAndFocus.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -496,6 +167,186 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "app.loading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading..."
+          }
+        }
+      }
+    },
+    "basicsSequence.continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "basicsSequence.continue.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves to the next Basics step."
+          }
+        }
+      }
+    },
+    "basicsSequence.continue.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue Basics"
+          }
+        }
+      }
+    },
+    "basicsSequence.finish" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish"
+          }
+        }
+      }
+    },
+    "basicsSequence.finish.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completes Basics and returns to the hub."
+          }
+        }
+      }
+    },
+    "basicsSequence.finish.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish Basics"
+          }
+        }
+      }
+    },
+    "basicsSequence.stepFormat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step %d of %d"
+          }
+        }
+      }
+    },
+    "basicsSequence.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "firstRun.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn the three core VoiceOver skills in a guided sequence, or explore the hub on your own."
+          }
+        }
+      }
+    },
+    "firstRun.goToHub" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Hub"
+          }
+        }
+      }
+    },
+    "firstRun.goToHub.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skips the Basics sequence and opens the game hub."
+          }
+        }
+      }
+    },
+    "firstRun.goToHub.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to Hub"
+          }
+        }
+      }
+    },
+    "firstRun.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "firstRun.startBasics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Basics"
+          }
+        }
+      }
+    },
+    "firstRun.startBasics.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts the guided VoiceOver Basics sequence."
+          }
+        }
+      }
+    },
+    "firstRun.startBasics.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start VoiceOver Basics"
+          }
+        }
+      }
+    },
+    "firstRun.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with VoiceOver Basics"
           }
         }
       }

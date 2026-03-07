@@ -100,7 +100,7 @@ public enum GameCatalog {
             goalKey: "game.scrollHunt.goal",
             estimatedDuration: "~7 min",
             kind: .scrollHunt,
-            thumbnailAssetName: "dungeon_room_entrance"
+            thumbnailAssetName: "dungeon_room_entry_hall"
         ),
     ]
 

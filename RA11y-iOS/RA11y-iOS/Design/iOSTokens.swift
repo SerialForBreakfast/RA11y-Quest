@@ -32,31 +32,28 @@ extension Color {
     static let ra11yLabel = Color(UIColor.label)
 
     /// Secondary / supporting text color.
+    ///
+    /// - Note: This adapts to system appearance and is designed for use on system
+    ///   backgrounds. Do NOT use on the fixed-dark quest card surface — use
+    ///   `ra11yCardSecondaryText` instead to guarantee contrast.
     static let ra11ySecondaryLabel = Color(UIColor.secondaryLabel)
 
-    /// Warm gold used for headings, borders, and accents in the D&D theme.
-    static let ra11yGold = Color(red: 0.88, green: 0.72, blue: 0.38)
+    /// Secondary text on the fixed-dark quest card surface.
+    ///
+    /// Quest cards use `Color(red: 0.13, green: 0.10, blue: 0.09)` — a fixed dark
+    /// background that does not adapt to system appearance. Using an adaptive system
+    /// color like `UIColor.secondaryLabel` here would pass WCAG arithmetic but
+    /// renders perceptually low-contrast on physical devices.
+    ///
+    /// This token provides ≥ 13:1 contrast on the dark card surface (WCAG AAA),
+    /// giving goal-level text strong legibility across all ambient conditions.
+    static let ra11yCardSecondaryText = Color.white.opacity(0.85)
 
-    /// Deeper gold used for fills and emphasis.
-    static let ra11yGoldDeep = Color(red: 0.72, green: 0.54, blue: 0.20)
-
-    /// Primary quest card surface color.
-    static let ra11yCardSurface = Color(red: 0.16, green: 0.12, blue: 0.10)
-
-    /// Highlighted quest card surface tone for subtle gradients.
-    static let ra11yCardSurfaceHighlight = Color(red: 0.20, green: 0.15, blue: 0.12)
-
-    /// Quest card border color.
-    static let ra11yCardBorder = Color(red: 0.78, green: 0.60, blue: 0.22)
-
-    /// Footer background surface behind the hub buttons.
-    static let ra11yFooterSurface = Color(red: 0.12, green: 0.09, blue: 0.07)
-
-    /// Text color tuned for dark, warm surfaces.
-    static let ra11yWarmText = Color(red: 0.92, green: 0.88, blue: 0.80)
-
-    /// Secondary text color for warm surfaces.
-    static let ra11yWarmTextSecondary = Color(red: 0.82, green: 0.76, blue: 0.68)
+    /// Tertiary / fine-print text on the fixed-dark quest card surface.
+    ///
+    /// Provides ≥ 8:1 contrast (WCAG AAA for large text) on the dark card surface.
+    /// Use for caption-level content — estimated duration, supplementary labels.
+    static let ra11yCardTertiaryText = Color.white.opacity(0.65)
 }
 
 // MARK: - Token Notes

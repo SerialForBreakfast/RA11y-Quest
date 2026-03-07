@@ -54,7 +54,16 @@ public final class GameSessionCoordinator {
     private let voiceOverProvider: any VoiceOverStateProvider
 
     /// Task that observes VoiceOver state changes during an active session.
-    private var monitorTask: Task<Void, Never>?
+    ///
+    /// Marked `nonisolated(unsafe)` so `deinit` (which is always nonisolated in
+    /// Swift 6) can call `cancel()`. `Task.cancel()` is itself nonisolated and
+    /// thread-safe — no actor-isolated state is accessed from `deinit`.
+    ///
+    /// - Note: The compiler warns that `nonisolated(unsafe)` has no effect here;
+    ///   this is a known Swift 6 macro-expansion quirk with `@Observable` classes.
+    ///   The annotation is retained for intent documentation. Plain `nonisolated`
+    ///   cannot be applied to mutable stored properties (Swift 6 restriction).
+    nonisolated(unsafe) private var monitorTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -77,10 +86,7 @@ public final class GameSessionCoordinator {
     }
 
     deinit {
-        Task { @MainActor [weak self] in
-            self?.monitorTask?.cancel()
-            self?.monitorTask = nil
-        }
+        monitorTask?.cancel()
     }
 
     // MARK: - Monitoring Lifecycle

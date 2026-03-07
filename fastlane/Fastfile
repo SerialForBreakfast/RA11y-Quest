@@ -7,7 +7,10 @@ default_platform(:ios)
 # Paths are relative to the fastlane/ directory; `../` escapes to repo root.
 WORKSPACE      = "../RA11y.xcworkspace".freeze
 SCHEME         = "RA11y-iOS".freeze
-UI_TEST_ID     = "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots".freeze
+# Target the entire RA11y_iOSScreenshots class so both test methods run:
+# - testScreenshots_Hub_VORequired  → 01_Hub, 02_VORequired
+# - testScreenshots_FirstRun        → 03_FirstRun
+UI_TEST_ID     = "RA11y-iOSUITests/RA11y_iOSScreenshots".freeze
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
 DOCS_BASE      = "../docs/screenshots/en-US".freeze
 EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze

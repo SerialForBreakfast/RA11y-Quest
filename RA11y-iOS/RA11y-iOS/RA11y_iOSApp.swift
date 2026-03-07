@@ -12,13 +12,19 @@ import RA11yCore
 /// the process. Subsequent milestones are logged in `iOSRootView` and
 /// `HubViewModel`. Filter Console.app by:
 ///   subsystem = com.showblender.RA11y, category = startup
+///
+/// ## Screenshot Testing
+/// The fastlane `screenshots` lane launches the app with specific arguments:
+/// - `-screenshotResetOnboarding`: clears first-run flags so the app routes to
+///   the First Run entry screen. Used by the screenshot test to capture that screen.
+/// - Omitting the flag: preserves any stored state; typically the hub is shown
+///   (first-run flags are set by an earlier test pass).
 @main
 struct RA11y_iOSApp: App {
 
-    /// Creates the app and applies UI-testing defaults when requested.
     init() {
         RA11yLogger.startup.debug("Cold start — RA11y_iOSApp.init")
-        applyUITestingOverridesIfNeeded()
+        applyScreenshotTestingOverridesIfNeeded()
     }
 
     var body: some Scene {
@@ -27,10 +33,33 @@ struct RA11y_iOSApp: App {
         }
     }
 
-    private func applyUITestingOverridesIfNeeded() {
-        guard ProcessInfo.processInfo.arguments.contains("-uiTesting") else { return }
-        Task {
-            await UserDefaultsStorageComponent().markBasicsDismissed()
+    // MARK: - Screenshot Testing
+
+    /// Applies `UserDefaults` overrides requested by the fastlane screenshot lane.
+    ///
+    /// - `-screenshotResetOnboarding`: erases the "basics completed / dismissed"
+    ///   flags so `iOSRootView` routes to the First Run entry screen on next launch.
+    ///
+    /// This function is a no-op in non-DEBUG builds and when the relevant launch
+    /// arguments are absent.
+    ///
+    /// - Concurrency: Called synchronously on `@main` during `init`. Safe because
+    ///   `UserDefaultsStorageComponent` is not yet initialised at this point, so
+    ///   there is no actor isolation conflict.
+    private func applyScreenshotTestingOverridesIfNeeded() {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        guard args.contains("-uiTesting") else { return }
+
+        if args.contains("-screenshotResetOnboarding") {
+            UserDefaults.standard.removeObject(
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
+            )
+            UserDefaults.standard.removeObject(
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsDismissed
+            )
+            RA11yLogger.startup.debug("Screenshot: onboarding flags cleared for first-run screen")
         }
+        #endif
     }
 }

@@ -181,21 +181,6 @@ A passing Core build is not sufficient if the iOS build fails, and vice versa.
 
 ---
 
-## Fastlane Screenshot Coverage (Required When Views Change)
-
-When any user-visible view is added, renamed, or significantly restructured, update the
-screenshot flow to keep fastlane coverage current. This avoids silent UI regressions.
-
-Requirements:
-- Add a stable accessibility identifier to the screen root or primary container.
-- Update `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift` to navigate to the view
-  and wait on that identifier before capturing the next screenshot.
-- If a view is gated (VoiceOver, onboarding, etc.), add a `-uiTesting` bypass so the
-  screenshot flow can reach it deterministically.
-- Keep screenshot names sequential and explicit (e.g., `01_Hub`, `02_EnchantersTrial`).
-
----
-
 ## Before Writing Any Code
 
 1. **Search first.** Before creating a protocol, class, enum, struct, or file,
@@ -278,8 +263,6 @@ These rules are additive to the rest of this document.
 - Keep actor-isolated critical sections minimal; move heavy work to nonisolated helpers.
 - Always handle cancellation in long-running tasks and loops (`Task.isCancelled`).
 - Never block in async contexts; move blocking I/O off the main actor.
-- When the app target uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, still keep
-  heavy or blocking work off the main actor via a dedicated actor or helper.
 
 ### Documentation & Review
 - Document isolation requirements in doc comments for any public/internal async API.

@@ -86,3 +86,21 @@ public actor UserDefaultsStorageComponent: StorageComponent {
         "\(Self.keyPrefix)\(gameID).bestResult"
     }
 }
+
+// MARK: - Screenshot Testing Support
+
+#if DEBUG
+public extension UserDefaultsStorageComponent {
+
+    /// Keys exposed for the screenshot automation reset handler in `RA11y_iOSApp`.
+    ///
+    /// - Warning: Use only from the `-screenshotResetOnboarding` launch argument
+    ///   handler. Never call from production paths.
+    enum ScreenshotTestingKeys {
+        /// Key for the "basics completed" flag. Mirrors `UserDefaultsStorageComponent.basicsKey`.
+        public static let basicsCompleted = UserDefaultsStorageComponent.basicsKey
+        /// Key for the "basics dismissed" flag. Mirrors `UserDefaultsStorageComponent.dismissedKey`.
+        public static let basicsDismissed = UserDefaultsStorageComponent.dismissedKey
+    }
+}
+#endif

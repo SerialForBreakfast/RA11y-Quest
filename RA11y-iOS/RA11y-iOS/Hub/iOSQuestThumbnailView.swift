@@ -59,15 +59,11 @@ struct iOSQuestThumbnailView: View {
     private var placeholder: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.ra11yCardSurfaceHighlight)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.ra11yCardBorder.opacity(0.6), lineWidth: 1)
-                )
+                .fill(Color(white: 0.25))
 
             Image(systemName: "scroll")
                 .font(.system(size: thumbnailSize * 0.4))
-                .foregroundStyle(Color.ra11yGold.opacity(0.7))
+                .foregroundStyle(Color.ra11yAccent.opacity(0.6))
         }
     }
 }
@@ -75,7 +71,7 @@ struct iOSQuestThumbnailView: View {
 // MARK: - Previews
 
 #Preview("With asset") {
-    iOSQuestThumbnailView(assetName: "hub_quest_board_bg")
+    iOSQuestThumbnailView(assetName: "simon_room_bg")
         .padding()
         .background(Color(white: 0.15))
 }

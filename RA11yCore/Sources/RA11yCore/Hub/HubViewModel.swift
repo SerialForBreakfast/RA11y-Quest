@@ -4,85 +4,46 @@ import Observation
 
 /// Observable view model driving the game hub screen.
 ///
-/// Exposes:
-/// - `showHelpAffordance` — whether the "Enable VoiceOver" banner is visible.
-///   Derived from live VoiceOver state via `VoiceOverStateProvider`.
-/// - `bestResults` — a map of game ID → best `GameRank` for each played game.
-///   Loaded asynchronously from `StorageComponent` on init; refreshable after a
-///   game session completes via `refreshBestResults()`.
+/// Owns best-result data for all catalog games. VoiceOver state is intentionally
+/// not observed here — the hub view reads `@Environment(\.accessibilityVoiceOverEnabled)`
+/// directly, letting SwiftUI propagate state changes automatically without any custom
+/// `AsyncStream` or `NotificationCenter` subscription.
 ///
-/// The hub view uses `if viewModel.showHelpAffordance { ... }` (not `.hidden()`)
-/// to ensure the affordance is fully removed from the view hierarchy — and
-/// therefore not focusable by VoiceOver — when VoiceOver is active.
+/// `bestResults` is loaded via `refreshBestResults()`, which the hub view calls
+/// from its `.task` modifier on every appearance (initial load and return from a game).
 ///
 /// ## Concurrency
-/// `@MainActor` isolation ensures all property mutations are serialized on the
-/// main thread, keeping the `@Observable` observation graph consistent with SwiftUI.
-/// The VoiceOver observation task and the initial results-loading task are both
-/// confined to `@MainActor`.
+/// `@MainActor` isolation ensures all property mutations are serialized on the main
+/// thread, consistent with SwiftUI's `@Observable` observation graph.
 @Observable
 @MainActor
 public final class HubViewModel {
 
     // MARK: - Public State
 
-    /// Whether the "How to enable VoiceOver" help affordance should be shown.
-    ///
-    /// `true` when VoiceOver is OFF — the user may need guidance to enable it.
-    /// `false` when VoiceOver is ON — the affordance is removed from the hierarchy.
-    public private(set) var showHelpAffordance: Bool
-
     /// Best rank achieved per game ID, keyed by `GameDefinition.id`.
     ///
     /// An absent key means the game has not been played (displays "Quest Awaits").
-    /// Populated asynchronously on init; updated by calling `refreshBestResults()`.
+    /// Populated by `refreshBestResults()`, which the hub view drives via `.task`.
     public private(set) var bestResults: [String: GameRank] = [:]
 
     // MARK: - Private
 
     private let storage: any StorageComponent
 
-    /// Task that observes VoiceOver state changes for this view model.
-    private var stateObservationTask: Task<Void, Never>?
-
     // MARK: - Init
 
-    /// Creates a view model subscribed to the given VoiceOver provider and storage.
+    /// Creates a view model backed by the given storage component.
     ///
-    /// - `showHelpAffordance` is set synchronously from `provider.isVoiceOverRunning`.
-    /// - Subsequent VoiceOver changes are delivered via `provider.stateChanges`.
-    /// - `bestResults` is populated asynchronously from `storage` on init.
+    /// `bestResults` starts empty; call `refreshBestResults()` (or let the hub
+    /// view's `.task` do so) to populate from storage.
     ///
-    /// - Parameters:
-    ///   - voiceOverProvider: Source of VoiceOver state. Inject
-    ///     `iOSLiveVoiceOverStateProvider()` in production and
-    ///     `StubVoiceOverStateProvider` in tests.
-    ///   - storage: Persistence layer for best results. Inject
-    ///     `UserDefaultsStorageComponent()` in production and
-    ///     `InMemoryStorageComponent` in tests.
-    public init(voiceOverProvider: some VoiceOverStateProvider, storage: any StorageComponent) {
+    /// - Parameter storage: Persistence layer for best results. Inject
+    ///   `UserDefaultsStorageComponent()` in production and
+    ///   `InMemoryStorageComponent` in tests.
+    public init(storage: any StorageComponent) {
         self.storage = storage
-        self.showHelpAffordance = !voiceOverProvider.isVoiceOverRunning
-
-        RA11yLogger.startup.debug("HubViewModel.init — voiceOverRunning: \(voiceOverProvider.isVoiceOverRunning)")
-
-        stateObservationTask = Task { @MainActor [weak self] in
-            for await isRunning in voiceOverProvider.stateChanges {
-                guard !Task.isCancelled else { break }
-                self?.showHelpAffordance = !isRunning
-            }
-        }
-
-        Task { @MainActor [weak self] in
-            await self?.loadBestResults()
-        }
-    }
-
-    deinit {
-        Task { @MainActor [weak self] in
-            self?.stateObservationTask?.cancel()
-            self?.stateObservationTask = nil
-        }
+        RA11yLogger.startup.debug("HubViewModel.init")
     }
 
     // MARK: - Public API

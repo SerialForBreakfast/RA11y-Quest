@@ -71,6 +71,7 @@ struct iOSFirstRunView: View {
                     .font(.ra11yTitle)
                     .bold()
                     .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("firstRun.title")
 
                 Text(String(localized: "firstRun.body"))
                     .font(.ra11yBody)

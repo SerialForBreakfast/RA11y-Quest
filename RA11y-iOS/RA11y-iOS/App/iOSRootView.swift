@@ -4,14 +4,21 @@ import RA11yCore
 
 /// Root view of the RA11y iOS app.
 ///
-/// Owns `iOSAppRouter` and provides it to the view hierarchy via the SwiftUI
-/// environment. All navigation is driven through the router's `NavigationPath`.
+/// Owns `iOSAppRouter` and `UserDefaultsStorageComponent`, providing both to the
+/// view hierarchy via the SwiftUI environment. All navigation is driven through
+/// the router's `NavigationPath`.
+///
+/// ## View Identity
+/// `iOSHubView` is always the NavigationStack root — never conditionally swapped
+/// for a `ProgressView`. Keeping the root structurally stable prevents SwiftUI from
+/// losing `iOSHubView`'s `@State` (including `HubViewModel`) when the navigation
+/// path changes. A translucent loading overlay is shown instead while the initial
+/// route is being resolved (typically < one frame on device).
 ///
 /// ## Startup Logging
-/// Logs two milestones:
-/// - `rootView.body` — first render, scene is visible to the user (ProgressView shown).
-/// - `routeResolution` — signpost interval covering the async storage reads that
-///   determine whether to show the hub or the first-run flow.
+/// - `rootView.body` — first render, scene visible to the user.
+/// - `routeResolution` — signpost interval covering the two async storage reads
+///   that determine whether to show the first-run flow.
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -20,42 +27,32 @@ struct iOSRootView: View {
     // MARK: - State
 
     @State private var router = iOSAppRouter()
-    @State private var storage: UserDefaultsStorageComponent
-    @State private var hubViewModel: HubViewModel
+    @State private var storage = UserDefaultsStorageComponent()
     @State private var hasResolvedInitialRoute = false
-
-    // MARK: - Init
-
-    init() {
-        let storage = UserDefaultsStorageComponent()
-        _storage = State(initialValue: storage)
-        _hubViewModel = State(
-            initialValue: HubViewModel(
-                voiceOverProvider: iOSLiveVoiceOverStateProvider(),
-                storage: storage
-            )
-        )
-    }
 
     // MARK: - Body
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            Group {
-                if hasResolvedInitialRoute {
-                    iOSHubView(viewModel: hubViewModel)
-                } else {
-                    ProgressView(String(localized: "app.loading"))
-                        .onAppear {
-                            RA11yLogger.startup.debug("rootView.body — first render; awaiting route resolution")
-                        }
+            iOSHubView()
+                .navigationDestination(for: AppRoute.self) { route in
+                    routeDestination(for: route)
                 }
-            }
-            .navigationDestination(for: AppRoute.self) { route in
-                routeDestination(for: route)
-            }
         }
         .environment(router)
+        // Overlay a loading screen until route resolution completes.
+        // Using an overlay (not a structural if/else) keeps iOSHubView's @State
+        // stable across navigation changes, preventing spurious HubViewModel inits.
+        .overlay {
+            if !hasResolvedInitialRoute {
+                ProgressView(String(localized: "app.loading"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.background)
+                    .onAppear {
+                        RA11yLogger.startup.debug("rootView.body — first render; awaiting route resolution")
+                    }
+            }
+        }
         .task {
             await resolveInitialRouteIfNeeded()
         }
@@ -67,11 +64,9 @@ struct iOSRootView: View {
     private func routeDestination(for route: AppRoute) -> some View {
         switch route {
         case .hub:
-            iOSHubView(viewModel: hubViewModel)
+            iOSHubView()
         case .firstRun(let mode):
             iOSFirstRunView(mode: mode, storage: storage)
-        case .game(let kind):
-            gameDestination(for: kind)
         case .gameResult(let result):
             iOSGameResultView(
                 presenter: GameResultPresenter(result: result),
@@ -80,18 +75,6 @@ struct iOSRootView: View {
             )
         case .voiceOverInterstitial(let kind):
             iOSVORequiredView(kind: kind)
-        }
-    }
-
-    @ViewBuilder
-    private func gameDestination(for kind: GameKind) -> some View {
-        switch kind {
-        case .findAndFocus:
-            iOSEnchantersTrialView(storage: storage)
-        case .activateDoubleTap, .scrollHunt:
-            Text(String(localized: "game.comingSoon"))
-                .font(.ra11yTitle)
-                .foregroundStyle(.secondary)
         }
     }
 
