@@ -793,9 +793,9 @@ TICKET-M5-Game-EnchantersTrial-FindAndFocus
 ===============================
 Ticket: M5 - Game 1 (The Enchanter's Trial) - Find & Focus
 [RENAMED from M5-Game-SimonSays-FindAndFocus to align with GameRules-MVP.txt theme]
-Status: Partially Unblocked — screen composition mockup delivered (mock_v3_enchanter_trial_play.png);
-        sprite assets (enchanter_relic_*) and background (enchanter_tower_shelf_bg) still needed
-        before full implementation. UI structure and layout are unblocked.
+Status: Done — implemented in iOSEnchantersTrialView.swift with full L0-L3 flow,
+        EnchanterTrialViewModel, timer announcements, and GameSession for L3. All assets
+        were present at implementation time. 106 RA11yCore tests pass.
 
 User Story
 ----------
@@ -1107,9 +1107,10 @@ TICKET-M7-Game-DungeonDescent-ScrollHunt
 ===============================
 Ticket: M7 - Game 3 (The Dungeon Descent) - Scroll Hunt
 [RENAMED from M7-Game-DungeonCrawl-ScrollHunt to align with GameRules-MVP.txt theme]
-Status: Ready — M7 requirements are implementation-ready. Design assets and hub thumbnail are now
-        present in the iOS asset catalog (dungeon_descent_bg, dungeon_room_*, dungeon_hub_icon).
-        Remaining gate is an on-device verification at implementation start.
+Status: Done — full L0-L3 implementation in iOSDungeonDescentView.swift using
+        DungeonDescentViewModel (@Observable @MainActor). L3 uses GameSession (scroll-hunt,
+        15 s buckets). Scroll observability via onScrollGeometryChange + TargetRoomFrameKey
+        preference key. 106 RA11yCore tests pass; BUILD SUCCEEDED for iOS Simulator.
 
 User Story
 ----------

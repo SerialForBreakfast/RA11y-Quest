@@ -20,13 +20,44 @@ import RA11yCore
 /// - `routeResolution` — signpost interval covering the two async storage reads
 ///   that determine whether to show the first-run flow.
 ///
+/// ## Screenshot Testing
+/// The fastlane `screenshots` lane launches the app with specific arguments:
+/// - `-screenshotResetOnboarding`: clears first-run flags → routes to First Run.
+/// - `-screenshotMarkOnboardingComplete`: sets `basicsCompleted = true` → routes to hub.
+/// - `-screenshotDirectTo{Game}`: pre-populates `router.path` via the `@State` initializer
+///   closure so the game view is on the NavigationStack from the very first render.
+///   `RA11y_iOSApp.init()` also sets `basicsCompleted = true` for these args so the
+///   loading overlay resolves to hub (not first-run) and is removed promptly.
+///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSRootView: View {
 
     // MARK: - State
 
-    @State private var router = iOSAppRouter()
+    /// Navigation router pre-populated with a direct game route when the fastlane screenshot
+    /// lane launches with a `-screenshotDirectTo*` argument. Pre-populating the path in the
+    /// `@State` initializer ensures the game destination is present on the NavigationStack's
+    /// first render — avoiding a race between the async `resolveInitialRouteIfNeeded()` task
+    /// and SwiftUI's layout pass.
+    ///
+    /// In all non-screenshot launches the router is created with an empty path (normal flow).
+    @State private var router: iOSAppRouter = {
+        let router = iOSAppRouter()
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-uiTesting") {
+            if args.contains("-screenshotDirectToEnchanter") {
+                router.push(.enchantersTrial)
+            } else if args.contains("-screenshotDirectToRogue") {
+                router.push(.roguesGauntlet)
+            } else if args.contains("-screenshotDirectToDungeon") {
+                router.push(.dungeonDescent)
+            }
+        }
+        #endif
+        return router
+    }()
     @State private var storage = UserDefaultsStorageComponent()
     @State private var hasResolvedInitialRoute = false
 
@@ -114,11 +145,10 @@ struct iOSRootView: View {
     /// long (> ~50 ms) the storage actor or UserDefaults is the bottleneck.
     ///
     /// ## Screenshot Testing — Direct Route Override
-    /// When launched with `-screenshotDirectToEnchanter`, the app pushes `.enchantersTrial`
-    /// on top of the hub immediately after resolution. This allows the fastlane screenshot
-    /// lane to capture the Enchanter's Trial L0 Prologue without requiring VoiceOver to be
-    /// enabled in the simulator. Requires `-screenshotMarkOnboardingComplete` to be present
-    /// so the hub (not first-run) is the initial route.
+    /// When launched with `-screenshotDirectToEnchanter` (or `-screenshotDirectToRogue` /
+    /// `-screenshotDirectToDungeon`), the router's `path` is pre-populated by the `@State`
+    /// initializer before this task even runs. This function does not touch the path for
+    /// those scenarios — it only removes the loading overlay by setting `hasResolvedInitialRoute`.
     private func resolveInitialRouteIfNeeded() async {
         guard !hasResolvedInitialRoute else { return }
 
@@ -133,36 +163,7 @@ struct iOSRootView: View {
         hasResolvedInitialRoute = true
 
         RA11yLogger.startup.debug("routeResolution complete — initial route: \(String(describing: initial))")
-
-        // Screenshot testing: push a specific game screen directly on top of the hub
-        // so the fastlane lane can capture game UI without needing VoiceOver enabled.
-        // Only active when both -uiTesting and the specific direct-route flag are present.
-        #if DEBUG
-        applyScreenshotDirectRouteIfNeeded()
-        #endif
     }
-
-    /// Pushes a direct game route when the appropriate screenshot testing launch args are present.
-    ///
-    /// Each `if`-branch corresponds to one fastlane screenshot pass. As new games
-    /// become screenshot-ready, add a new `else if` here and a matching test method
-    /// in `RA11y_iOSScreenshots.swift`.
-    ///
-    /// - Concurrency: Must be called on `@MainActor`; mutates `router` which is `@MainActor`.
-    #if DEBUG
-    private func applyScreenshotDirectRouteIfNeeded() {
-        let args = ProcessInfo.processInfo.arguments
-        guard args.contains("-uiTesting") else { return }
-
-        if args.contains("-screenshotDirectToEnchanter") {
-            router.push(.enchantersTrial)
-        } else if args.contains("-screenshotDirectToRogue") {
-            router.push(.roguesGauntlet)
-        } else if args.contains("-screenshotDirectToDungeon") {
-            router.push(.dungeonDescent)
-        }
-    }
-    #endif
 }
 
 #Preview {

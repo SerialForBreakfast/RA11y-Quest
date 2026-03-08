@@ -36,6 +36,14 @@ Screenshots land in fastlane/screenshots/en-US/<label>/
 Fails loudly (UI.user_error!) if zero devices succeed.
 
 
+### ios screenshots_quick
+
+```sh
+[bundle exec] fastlane ios screenshots_quick
+```
+
+Fast screenshot pass for iteration: one preferred iPhone device
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

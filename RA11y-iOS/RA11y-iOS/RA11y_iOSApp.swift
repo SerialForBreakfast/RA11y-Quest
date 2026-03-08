@@ -15,10 +15,12 @@ import RA11yCore
 ///
 /// ## Screenshot Testing
 /// The fastlane `screenshots` lane launches the app with specific arguments:
-/// - `-screenshotResetOnboarding`: clears first-run flags so the app routes to
-///   the First Run entry screen.
-/// - `-screenshotMarkOnboardingComplete`: sets `basicsCompleted = true` so the
-///   app routes directly to the hub, regardless of prior simulator state.
+/// - `-screenshotResetOnboarding`: clears first-run flags → routes to First Run.
+/// - `-screenshotMarkOnboardingComplete`: sets `basicsCompleted = true` → routes to hub.
+/// - `-screenshotDirectTo{Game}`: pre-populates the navigation router's path in
+///   `iOSRootView`'s `@State` initializer closure so the game view is present on the
+///   first render. This file also sets `basicsCompleted = true` for those args so the
+///   loading overlay resolves to hub promptly.
 @main
 struct RA11y_iOSApp: App {
 
@@ -74,7 +76,9 @@ struct RA11y_iOSApp: App {
         }
 
         // Direct-to-game screenshot args: ensure the hub is the base route so
-        // iOSRootView.applyScreenshotDirectRouteIfNeeded() can push the game on top.
+        // the loading overlay resolves to hub (not first-run) while `iOSRootView`'s
+        // `@State router` — which has the game destination pre-populated in its path
+        // via its initializer closure — is unblocked quickly.
         // Any new game-direct arg should be listed here alongside -screenshotMarkOnboardingComplete.
         let directGameArgs = ["-screenshotDirectToEnchanter", "-screenshotDirectToRogue", "-screenshotDirectToDungeon"]
         if directGameArgs.contains(where: { args.contains($0) }) {

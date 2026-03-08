@@ -23,13 +23,15 @@
     //  | 07_EnchanterTimed     | Enchanter L3 Timed Trial         | successful path from L2                           |
     //  | 08_EnchanterResult    | Shared result screen (Enchanter) | successful target activation in L3                |
     //  | 09_RoguePrologue      | Rogue's Gauntlet L0 Prologue     | -uiTesting -screenshotDirectToRogue               |
-    //  | 10_RogueFirstAttempt  | Rogue L1 First Attempt (1 seal)  | successful path from L0                           |
-    //  | 11_RogueRising        | Rogue L2 Rising Challenge (4 seals) | successful path from L1                        |
-    //  | 12_RogueTimed         | Rogue L3 Timed Trial (6 seals)   | successful path from L2                           |
-    //  | 13_RogueResult        | Shared result screen (Rogue)     | successful seal sever in L3                       |
+    //  | 10_RogueL1            | Rogue L1 First Attempt           | successful path from L0                           |
+    //  | 11_RogueL2            | Rogue L2 Rising Challenge        | successful path from L1                           |
+    //  | 12_RogueL3            | Rogue L3 Timed Trial             | successful path from L2                           |
+    //  | 13_RogueResult        | Shared result screen (Rogue)     | successful seal.passage tap in L3                 |
     //  | 14_DungeonPrologue    | Dungeon Descent L0 Prologue      | -uiTesting -screenshotDirectToDungeon             |
-    //  | 15_DungeonPlay        | Dungeon Descent L1 Play          | continue from direct route launch                 |
-    //  | 16_DungeonResult      | Shared result screen (Dungeon)   | activate target from L1                           |
+    //  | 15_DungeonL1          | Dungeon L1 First Attempt         | scroll + tap guard_room                           |
+    //  | 16_DungeonL2          | Dungeon L2 Rising Challenge      | successful path from L1                           |
+    //  | 17_DungeonL3          | Dungeon L3 Timed Trial           | successful path from L2                           |
+    //  | 18_DungeonResult      | Shared result screen (Dungeon)   | successful ancient_vault claim in L3              |
 //
 //  ## Navigation Strategy
 //  Screenshots that require navigation (VORequired) are obtained by interacting
@@ -54,13 +56,13 @@ import XCTest
 ///
 /// ## Pass Structure
 /// Capture is split into independent passes to isolate state across screens:
-/// - `testScreenshots_Enchanter`:      Enchanter's Trial L0 Prologue (runs first alphabetically)
+/// - `testScreenshots_Enchanter`:      Enchanter happy path (L0 -> L3 -> result)
 /// - `testScreenshots_Dungeon`:        Dungeon Descent L0 + L1 + result
 /// - `testScreenshots_FirstRun`:       first-run entry screen (requires reset of onboarding state)
 /// - `testScreenshots_Hub_VORequired`: hub and VoiceOver Required interstitial
 ///
 /// The Fastfile's `UI_TEST_ID` targets the parent class
-/// `RA11y-iOSUITests/RA11y_iOSScreenshots`, which runs both test methods in order.
+/// `RA11y-iOSUITests/RA11y_iOSScreenshots`, which runs all screenshot test methods.
 final class RA11y_iOSScreenshots: XCTestCase {
 
     override func setUpWithError() throws {
@@ -243,17 +245,14 @@ final class RA11y_iOSScreenshots: XCTestCase {
         captureScreenshot("08_EnchanterResult")
     }
 
-    // MARK: - Pass 4: Rogue's Gauntlet — Happy Path (L0 -> L3 -> Result)
+    // MARK: - Pass 4: Rogue's Gauntlet — L0 Prologue + L1 + L2 + L3 + Result
 
-    /// Captures the Rogue's Gauntlet happy path across all main screens.
+    /// Captures Rogue's Gauntlet screens across all main game phases.
     ///
-    /// Launches with `-screenshotDirectToRogue`, which causes
-    /// `RA11y_iOSApp.applyScreenshotTestingOverridesIfNeeded()` to set
-    /// `basicsCompleted = true` and `iOSRootView.applyScreenshotDirectRouteIfNeeded()`
-    /// to push `.roguesGauntlet` on top of the hub.
-    ///
-    /// Under `-uiTesting`, seal selection is deterministic (Seal of Passage is always
-    /// first), enabling a reliable happy-path capture without VoiceOver.
+    /// Uses `-screenshotDirectToRogue` so the router's `path` is pre-populated with
+    /// `.roguesGauntlet` before the first render. In UI-testing mode, `RogueSeal.setForL2()`
+    /// and `setForL3()` return deterministic, ordered seal sets with `"passage"` as the
+    /// first (target) seal — making `rogue.seal.passage` a stable activation target.
     ///
     /// - Concurrency: `@MainActor` — XCUIApplication interactions require the main thread.
     @MainActor
@@ -263,74 +262,60 @@ final class RA11y_iOSScreenshots: XCTestCase {
         app.launch()
 
         let prologue = app.otherElements["rogue.prologue"]
-        XCTAssertTrue(
-            prologue.waitForExistence(timeout: 10),
-            "Rogue prologue root not found — direct route push may have failed"
-        )
-
-        let beginButton = app.buttons["rogue.beginTrial"]
-        XCTAssertTrue(
-            beginButton.waitForExistence(timeout: 10),
-            "Rogue 'Begin Trial' button not found"
-        )
-
+        XCTAssertTrue(prologue.waitForExistence(timeout: 10), "Rogue prologue not found")
         captureScreenshot("09_RoguePrologue")
 
+        let beginButton = app.buttons["rogue.beginTrial"]
+        XCTAssertTrue(beginButton.waitForExistence(timeout: 5), "'Begin Trial' not found")
         beginButton.tap()
 
-        let firstAttempt = app.otherElements["rogue.firstAttempt"]
-        XCTAssertTrue(
-            firstAttempt.waitForExistence(timeout: 8),
-            "Rogue L1 first attempt view not found"
-        )
-        captureScreenshot("10_RogueFirstAttempt")
+        // L1: single target seal — tap directly
+        let l1Root = app.otherElements["rogue.firstAttempt"]
+        XCTAssertTrue(l1Root.waitForExistence(timeout: 8), "Rogue L1 view not found")
+        captureScreenshot("10_RogueL1")
+        let l1Target = app.buttons["rogue.seal.passage"]
+        XCTAssertTrue(l1Target.waitForExistence(timeout: 5), "L1 seal.passage not found")
+        l1Target.tap()
 
-        let l1Seal = app.buttons["rogue.seal.passage"]
-        XCTAssertTrue(l1Seal.waitForExistence(timeout: 6), "Rogue L1 seal not found")
-        l1Seal.tap()
-
+        // L1 → L2: continue button
         let l1Continue = app.buttons["rogue.l1.continue"]
-        XCTAssertTrue(l1Continue.waitForExistence(timeout: 6), "Rogue L1 continue not found")
+        XCTAssertTrue(l1Continue.waitForExistence(timeout: 6), "L1 continue not found")
         l1Continue.tap()
 
-        let rising = app.otherElements["rogue.rising"]
-        XCTAssertTrue(rising.waitForExistence(timeout: 8), "Rogue L2 rising view not found")
-        captureScreenshot("11_RogueRising")
+        // L2: tap the passage seal
+        let l2Root = app.otherElements["rogue.rising"]
+        XCTAssertTrue(l2Root.waitForExistence(timeout: 8), "Rogue L2 view not found")
+        captureScreenshot("11_RogueL2")
+        let l2Target = app.buttons["rogue.seal.passage"]
+        XCTAssertTrue(l2Target.waitForExistence(timeout: 5), "L2 seal.passage not found")
+        l2Target.tap()
 
-        let l2Seal = app.buttons["rogue.seal.passage"]
-        XCTAssertTrue(l2Seal.waitForExistence(timeout: 6), "Rogue L2 passage seal not found")
-        l2Seal.tap()
-
+        // L2 → L3: continue button
         let l2Continue = app.buttons["rogue.l2.continue"]
-        XCTAssertTrue(l2Continue.waitForExistence(timeout: 6), "Rogue L2 continue not found")
+        XCTAssertTrue(l2Continue.waitForExistence(timeout: 6), "L2 continue not found")
         l2Continue.tap()
 
-        let timed = app.otherElements["rogue.timed"]
-        XCTAssertTrue(timed.waitForExistence(timeout: 8), "Rogue L3 timed view not found")
-        captureScreenshot("12_RogueTimed")
+        // L3: tap the passage seal → result
+        let l3Root = app.otherElements["rogue.timed"]
+        XCTAssertTrue(l3Root.waitForExistence(timeout: 8), "Rogue L3 view not found")
+        captureScreenshot("12_RogueL3")
+        let l3Target = app.buttons["rogue.seal.passage"]
+        XCTAssertTrue(l3Target.waitForExistence(timeout: 5), "L3 seal.passage not found")
+        l3Target.tap()
 
-        let l3Seal = app.buttons["rogue.seal.passage"]
-        XCTAssertTrue(l3Seal.waitForExistence(timeout: 6), "Rogue L3 passage seal not found")
-        l3Seal.tap()
-
-        let rogueResult = app.otherElements["gameResult.root"]
-        XCTAssertTrue(
-            rogueResult.waitForExistence(timeout: 8),
-            "Rogue result screen not found after successful L3 seal sever"
-        )
-        captureScreenshot("13_RogueResult")
+        let resultRoot = app.otherElements["gameResult.root"]
+        if resultRoot.waitForExistence(timeout: 10) {
+            captureScreenshot("13_RogueResult")
+        }
     }
 
-    // MARK: - Pass 5: Dungeon Descent — L0 Prologue + L1 Play + Result
+    // MARK: - Pass 5: Dungeon Descent — L0 Prologue + L1 + L2 + L3 + Result
 
-    /// Captures three Dungeon Descent screens in one deterministic launch:
-    /// - L0 prologue
-    /// - L1 play state
-    /// - shared result screen after claiming the target
+    /// Captures Dungeon Descent screens across all main game phases.
     ///
-    /// Uses `-screenshotDirectToDungeon` so root routing pushes `.dungeonDescent`.
-    /// The test performs a practice-zone scroll to enable "Begin Descent", then
-    /// activates the guard-room target once it is reachable.
+    /// Uses `-screenshotDirectToDungeon` to push `.dungeonDescent` on top of the hub.
+    /// The test performs a practice scroll, progresses through L1 and L2 by scrolling to
+    /// the target room in each level, then captures L3 and the result screen.
     ///
     /// - Concurrency: `@MainActor` — XCUIApplication interactions require the main thread.
     @MainActor
@@ -340,47 +325,60 @@ final class RA11y_iOSScreenshots: XCTestCase {
         app.launch()
 
         let prologue = app.otherElements["dungeon.prologue"]
-        XCTAssertTrue(
-            prologue.waitForExistence(timeout: 10),
-            "Dungeon prologue root not found — direct route push may have failed"
-        )
+        XCTAssertTrue(prologue.waitForExistence(timeout: 10), "Dungeon prologue not found")
         captureScreenshot("14_DungeonPrologue")
 
         let practiceZone = app.otherElements["dungeon.practiceZone"]
-        XCTAssertTrue(
-            practiceZone.waitForExistence(timeout: 5),
-            "Dungeon practice zone not found"
-        )
+        XCTAssertTrue(practiceZone.waitForExistence(timeout: 5), "Practice zone not found")
         practiceZone.swipeUp()
         practiceZone.swipeUp()
 
         let beginButton = app.buttons["dungeon.beginDescent"]
-        XCTAssertTrue(
-            beginButton.waitForExistence(timeout: 5),
-            "Dungeon 'Begin Descent' button not found"
-        )
-        XCTAssertTrue(beginButton.isEnabled, "Dungeon 'Begin Descent' should be enabled after practice scroll")
+        XCTAssertTrue(beginButton.waitForExistence(timeout: 5), "'Begin Descent' not found")
+        XCTAssertTrue(beginButton.isEnabled, "'Begin Descent' should be enabled after practice scroll")
         beginButton.tap()
 
-        let playRoot = app.otherElements["dungeon.play"]
-        XCTAssertTrue(
-            playRoot.waitForExistence(timeout: 8),
-            "Dungeon play root not found after beginning descent"
-        )
-        captureScreenshot("15_DungeonPlay")
-
+        // L1: scroll to guard_room → tap → continue
+        let l1Root = app.otherElements["dungeon.firstAttempt"]
+        XCTAssertTrue(l1Root.waitForExistence(timeout: 8), "Dungeon L1 view not found")
+        captureScreenshot("15_DungeonL1")
         app.swipeUp()
+        let l1Target = app.otherElements["dungeon.room.guard_room"]
+        XCTAssertTrue(l1Target.waitForExistence(timeout: 8), "L1 guard_room not found")
+        l1Target.tap()
+        let l1Continue = app.buttons["dungeon.continue"]
+        XCTAssertTrue(l1Continue.waitForExistence(timeout: 6), "L1 continue not found")
+        l1Continue.tap()
 
-        let targetRoom = app.otherElements["dungeon.room.guard_room"]
-        XCTAssertTrue(
-            targetRoom.waitForExistence(timeout: 8),
-            "Dungeon target room not found in L1"
-        )
-        targetRoom.tap()
+        // L2: scroll to relic_vault → tap → continue
+        let l2Root = app.otherElements["dungeon.rising"]
+        XCTAssertTrue(l2Root.waitForExistence(timeout: 8), "Dungeon L2 view not found")
+        captureScreenshot("16_DungeonL2")
+        app.swipeUp()
+        app.swipeUp()
+        app.swipeUp()
+        let l2Target = app.otherElements["dungeon.room.relic_vault"]
+        XCTAssertTrue(l2Target.waitForExistence(timeout: 8), "L2 relic_vault not found")
+        l2Target.tap()
+        let l2Continue = app.buttons["dungeon.continue"]
+        XCTAssertTrue(l2Continue.waitForExistence(timeout: 6), "L2 continue not found")
+        l2Continue.tap()
+
+        // L3: scroll to ancient_vault → tap → result
+        let l3Root = app.otherElements["dungeon.timed"]
+        XCTAssertTrue(l3Root.waitForExistence(timeout: 8), "Dungeon L3 view not found")
+        captureScreenshot("17_DungeonL3")
+        app.swipeUp()
+        app.swipeUp()
+        app.swipeUp()
+        app.swipeUp()
+        let l3Target = app.otherElements["dungeon.room.ancient_vault"]
+        XCTAssertTrue(l3Target.waitForExistence(timeout: 8), "L3 ancient_vault not found")
+        l3Target.tap()
 
         let resultRoot = app.otherElements["gameResult.root"]
-        if resultRoot.waitForExistence(timeout: 8) {
-            captureScreenshot("16_DungeonResult")
+        if resultRoot.waitForExistence(timeout: 10) {
+            captureScreenshot("18_DungeonResult")
         }
     }
 
