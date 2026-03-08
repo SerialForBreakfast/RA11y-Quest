@@ -57,6 +57,33 @@ public final class HubViewModel {
         bestResults[gameID]
     }
 
+    /// Whether the given game is unlocked and available to start.
+    ///
+    /// A game with no `prerequisiteID` is always unlocked. A game with a prerequisite
+    /// is unlocked as soon as the prerequisite has been completed at any rank.
+    ///
+    /// The hub uses this to render locked cards for games the player has not yet
+    /// earned access to, enforcing the pedagogical sequence.
+    ///
+    /// - Parameter game: The `GameDefinition` to evaluate.
+    /// - Returns: `true` if the game can be started.
+    public func isUnlocked(_ game: GameDefinition) -> Bool {
+        guard let prerequisiteID = game.prerequisiteID else { return true }
+        return bestResults[prerequisiteID] != nil
+    }
+
+    /// The `GameDefinition` whose completion would unlock `game`, or `nil` if `game`
+    /// is already unlocked or has no prerequisite.
+    ///
+    /// Used by the hub to display "Complete [prerequisite title] to unlock" messaging.
+    ///
+    /// - Parameter game: The locked game.
+    /// - Returns: The predecessor `GameDefinition`, or `nil`.
+    public func prerequisite(for game: GameDefinition) -> GameDefinition? {
+        guard let prerequisiteID = game.prerequisiteID, !isUnlocked(game) else { return nil }
+        return GameCatalog.definition(for: prerequisiteID)
+    }
+
     /// Reloads best results from storage.
     ///
     /// Call this after a game session completes and the user returns to the hub,

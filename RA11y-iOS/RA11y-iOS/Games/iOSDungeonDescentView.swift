@@ -35,8 +35,15 @@ struct iOSDungeonDescentView: View {
 
     // MARK: - Init
 
-    init(storage: any StorageComponent) {
-        _viewModel = State(initialValue: DungeonDescentViewModel(storage: storage))
+    /// Creates the Dungeon game container.
+    ///
+    /// - Parameters:
+    ///   - storage: Persistence used for L3 session results during normal gameplay.
+    ///   - screenshotScene: Optional deterministic screenshot scene override.
+    init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
+        _viewModel = State(
+            initialValue: DungeonDescentViewModel(storage: storage, screenshotScene: screenshotScene)
+        )
     }
 
     // MARK: - Body
@@ -51,13 +58,14 @@ struct iOSDungeonDescentView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: viewModel.completedResult) { _, result in
             guard let result else { return }
-            router.push(.gameResult(result, gameSpecificAnnouncement: gameSpecificAnnouncement(for: result)))
+            router.push(.gameResult(result, gameKind: .scrollHunt, gameSpecificAnnouncement: gameSpecificAnnouncement(for: result)))
         }
         .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
             if disabled {
                 router.push(.voiceOverInterstitial(kind: .scrollHunt))
             }
         }
+        .onDisappear { viewModel.handleViewDisappear() }
     }
 
     // MARK: - Level Routing
@@ -207,6 +215,7 @@ final class DungeonDescentViewModel {
     // MARK: - Private
 
     private let storage: any StorageComponent
+    private let screenshotScene: iOSScreenshotScene?
 
     /// L3 session — created fresh each time L3 starts (including retries).
     private var session: GameSession?
@@ -219,8 +228,17 @@ final class DungeonDescentViewModel {
 
     // MARK: - Init
 
-    init(storage: any StorageComponent) {
+    /// Creates the Dungeon view model.
+    ///
+    /// - Parameters:
+    ///   - storage: Persistence used for normal gameplay session storage.
+    ///   - screenshotScene: Optional deterministic screenshot scene override.
+    init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
         self.storage = storage
+        self.screenshotScene = screenshotScene
+        if let screenshotScene {
+            applyScreenshotScene(screenshotScene)
+        }
     }
 
     // MARK: - Phase Transitions
@@ -418,6 +436,7 @@ final class DungeonDescentViewModel {
         let targetName = rooms.first(where: \.isTarget)?.displayName ?? "the target"
         let message = String(format: String(localized: "dungeon.hint.format"), targetName)
         statusMessage = message
+        guard screenshotScene == nil else { return }
         announce(message)
     }
 
@@ -426,12 +445,13 @@ final class DungeonDescentViewModel {
     /// A 500 ms delay prevents the announcement from being swallowed by the navigation
     /// transition focus announcement.
     func announceObjectivePrompt() {
+        guard screenshotScene == nil else { return }
         let message: String
         switch phase {
         case .firstAttempt:
             message = String(localized: "dungeon.a11y.l1.objective")
         case .rising:
-            message = String(localized: "dungeon.a11y.l1.objective")  // L2 shares the scroll paradigm reminder
+            message = String(localized: "dungeon.a11y.l2.objective")
         case .timed:
             message = String(format: String(localized: "dungeon.a11y.l3.timer"), Int(timeRemaining))
         case .prologue:
@@ -509,6 +529,21 @@ final class DungeonDescentViewModel {
         timerTask = nil
     }
 
+    /// Handles the view disappearing from the navigation stack (e.g., user taps back).
+    ///
+    /// Stops any active timer and abandons the L3 `GameSession` if it is still running,
+    /// ensuring no result is written for an incomplete play-through.
+    ///
+    /// ## Concurrency
+    /// Called from `@MainActor` context via `.onDisappear`. The inner `Task` inherits
+    /// `@MainActor` isolation and safely `await`s the actor-isolated `abandon()`.
+    func handleViewDisappear() {
+        stopTimer()
+        coordinator?.stopMonitoring()
+        guard let session else { return }
+        Task { await session.abandon() }
+    }
+
     private func handleL2Timeout() async {
         l2TimedOut = true
         announce(String(localized: "dungeon.timeout"))
@@ -533,6 +568,37 @@ final class DungeonDescentViewModel {
 
     private func announce(_ message: String) {
         UIAccessibility.post(notification: .announcement, argument: message)
+    }
+
+    /// Applies a deterministic static state for screenshot capture.
+    ///
+    /// Screenshot scenes intentionally avoid timers, coordinators, and persistence writes.
+    /// They only shape the visible UI state needed for fastlane capture.
+    private func applyScreenshotScene(_ scene: iOSScreenshotScene) {
+        stopTimer()
+        practiceScrollObserved = false
+        rooms = []
+        targetIsReachable = false
+        statusMessage = nil
+        mistakes = 0
+        levelComplete = false
+        timeRemaining = 0
+        l2TimedOut = false
+        l3TimedOut = false
+        completedResult = nil
+        voiceOverDisabledMidGame = false
+
+        switch scene {
+        case .dungeonPrologue:
+            phase = .prologue
+            practiceScrollObserved = true
+        case .dungeonFirstAttempt:
+            phase = .firstAttempt
+            rooms = DungeonRoom.l1Rooms
+            targetIsReachable = true
+        default:
+            break
+        }
     }
 
     /// Posts the game-specific timer threshold announcement for the given phase and percent elapsed.
@@ -662,7 +728,7 @@ private struct DungeonPrologueView: View {
         .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
+                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
         )
     }
 
@@ -705,7 +771,7 @@ private struct DungeonPrologueView: View {
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
                     ForEach(0..<14, id: \.self) { index in
-                        Text("Step \(index + 1): keep descending.")
+                        Text(String(format: String(localized: "dungeon.explain.practice.step"), index + 1))
                             .font(.ra11yBody)
                             .foregroundStyle(Color.ra11yCardSecondaryText)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -714,7 +780,7 @@ private struct DungeonPrologueView: View {
                 }
                 .padding(RA11ySpacing.sm)
             }
-            .frame(height: 200)
+            .frame(minHeight: 200, maxHeight: 280)
             .background(Color.black.opacity(0.35), in: .rect(cornerRadius: RA11yRadius.card))
             .overlay(
                 RoundedRectangle(cornerRadius: RA11yRadius.card)
@@ -787,6 +853,8 @@ private struct DungeonPlayView: View {
     @State private var targetFrame: CGRect = .null
     @State private var visibleRect: CGRect = .zero
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.base) {
@@ -813,8 +881,10 @@ private struct DungeonPlayView: View {
                     }
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .coordinateSpace(name: DungeonCoordinateSpace.name)
         .accessibilityLabel(String(localized: "dungeon.a11y.scroll.container"))
@@ -848,7 +918,7 @@ private struct DungeonPlayView: View {
         .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
+                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(objectiveA11yLabel)
@@ -920,13 +990,19 @@ private struct DungeonPlayView: View {
     // MARK: - Helpers
 
     private var objectiveText: String {
-        guard let target = rooms.first(where: \.isTarget) else { return "" }
-        return "Descend to: \(target.displayName)"
+        switch rooms.count {
+        case DungeonRoom.l1Rooms.count: return String(localized: "dungeon.l1.objective")
+        case DungeonRoom.l2Rooms.count: return String(localized: "dungeon.l2.objective")
+        default:                        return String(localized: "dungeon.l3.objective")
+        }
     }
 
     private var objectiveA11yLabel: String {
-        guard let target = rooms.first(where: \.isTarget) else { return "" }
-        return "Objective: Descend to \(target.displayName). Use three fingers to scroll."
+        switch rooms.count {
+        case DungeonRoom.l1Rooms.count: return String(localized: "dungeon.a11y.l1.objective")
+        case DungeonRoom.l2Rooms.count: return String(localized: "dungeon.a11y.l2.objective")
+        default:                        return String(localized: "dungeon.a11y.l3.objective")
+        }
     }
 
     private var timerA11yLabel: String {
@@ -950,12 +1026,24 @@ private struct DungeonPlayView: View {
 /// Target rooms are rendered as a `Button` (with `.isButton` trait) so VoiceOver
 /// announces the "double-tap to activate" affordance. Non-target rooms are static
 /// accessibility elements with no button trait, suppressing activation affordance.
+///
+/// ## Adaptive Layout
+/// - Standard (`dynamicTypeSize < .accessibility2`): `HStack` — icon | title/subtitle | status
+/// - Large accessibility sizes: icon + status in a leading `HStack`, title/subtitle below
+///
+/// The room-name text has no hard `lineLimit` so it can expand to as many lines as
+/// needed; both `DungeonRoomIcon` and the status symbol use `@ScaledMetric`-driven
+/// sizes so they remain proportional to the surrounding text.
 private struct DungeonRoomRow: View {
 
     let room: DungeonRoom
     let isTargetReachable: Bool
     let onActivateTarget: () -> Void
     let onActivateNonTarget: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var isLargeAccessibilitySize: Bool { dynamicTypeSize >= .accessibility2 }
 
     var body: some View {
         if room.isTarget {
@@ -972,31 +1060,17 @@ private struct DungeonRoomRow: View {
                 .accessibilityIdentifier("dungeon.room.\(room.id)")
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(room.displayName). \(room.subtitle)")
-                .accessibilityHint("Double-tap to inspect this room.")
+                .accessibilityHint(String(localized: "dungeon.room.nonTarget.hint"))
                 .onTapGesture { onActivateNonTarget() }
         }
     }
 
     private var baseRow: some View {
-        HStack(spacing: RA11ySpacing.base) {
-            DungeonRoomIcon(assetName: room.assetName)
-
-            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-                Text(room.displayName)
-                    .font(.ra11yHeadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
-                    .lineLimit(2)
-                Text(room.subtitle)
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardTertiaryText)
-                    .lineLimit(2)
-            }
-
-            Spacer()
-
-            if room.isTarget {
-                Image(systemName: isTargetReachable ? "checkmark.seal" : "lock.fill")
-                    .foregroundStyle(isTargetReachable ? Color.green : Color.ra11yAccent)
+        Group {
+            if isLargeAccessibilitySize {
+                largeTypeLayout
+            } else {
+                standardLayout
             }
         }
         .padding(RA11ySpacing.md)
@@ -1008,26 +1082,89 @@ private struct DungeonRoomRow: View {
         )
         .contentShape(Rectangle())
     }
+
+    /// Standard HStack layout for default through `.accessibility1` Dynamic Type.
+    private var standardLayout: some View {
+        HStack(spacing: RA11ySpacing.base) {
+            DungeonRoomIcon(assetName: room.assetName)
+
+            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+                Text(room.displayName)
+                    .font(.ra11yHeadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(room.subtitle)
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardTertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            statusIcon
+        }
+    }
+
+    /// VStack layout for `.accessibility2` and above — prevents horizontal crowding.
+    private var largeTypeLayout: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
+            HStack(spacing: RA11ySpacing.base) {
+                DungeonRoomIcon(assetName: room.assetName)
+                Spacer()
+                statusIcon
+            }
+
+            Text(room.displayName)
+                .font(.ra11yHeadline)
+                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(room.subtitle)
+                .font(.ra11ySubheadline)
+                .foregroundStyle(Color.ra11yCardTertiaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private var statusIcon: some View {
+        if room.isTarget {
+            Image(systemName: isTargetReachable ? "checkmark.seal" : "lock.fill")
+                .foregroundStyle(isTargetReachable ? Color.ra11yTargetReachable : Color.ra11yAccent)
+        }
+    }
 }
 
 // MARK: - DungeonRoomIcon
 
 /// Asset-backed room icon with SF Symbol fallback.
+///
+/// ## Dynamic Type
+/// Icon dimensions scale with the `.title` text style (base 72 pt, max 120 pt) using
+/// `@ScaledMetric` so the icon remains proportional to the adjacent room-name text.
 private struct DungeonRoomIcon: View {
     let assetName: String
+
+    /// Scales with `.title` style; capped at 120 pt to prevent outsized icons.
+    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 72
+
+    private var clampedSize: CGFloat { min(iconSize, 120) }
 
     var body: some View {
         if let image = UIImage(named: assetName) {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 72, height: 72)
+                .frame(width: clampedSize, height: clampedSize)
                 .accessibilityHidden(true)
         } else {
             Image(systemName: "shield.lefthalf.filled")
-                .font(.system(size: 32, weight: .semibold))
+                .font(.ra11yTitle)
+                .fontWeight(.semibold)
                 .foregroundStyle(Color.ra11yAccent)
-                .frame(width: 72, height: 72)
+                .frame(width: clampedSize, height: clampedSize)
                 .accessibilityHidden(true)
         }
     }
@@ -1039,11 +1176,18 @@ private struct DungeonRoomIcon: View {
 ///
 /// `accessibilityHidden` — the containing play view sets a combined `accessibilityLabel`
 /// on the whole HUD group. The bar height decreases at 50% and 25% remaining.
+///
+/// ## Dynamic Type
+/// Bar height scales with `.subheadline` via `@ScaledMetric`.
+/// At `.accessibility4`+ the label row switches to `VStack` so the timer and mistake
+/// count don't crowd each other in the ~200 pt available width.
 private struct DungeonTimerHUD: View {
 
     let timeRemaining: Double
     let total: Double
     let mistakes: Int
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var fraction: Double { max(0, min(1, timeRemaining / total)) }
     private var barHeightMultiplier: Double {
@@ -1057,39 +1201,62 @@ private struct DungeonTimerHUD: View {
         return .red
     }
 
+    /// Scales with `.subheadline` style (base 12 pt).
+    @ScaledMetric(relativeTo: .subheadline) private var baseBarHeight: CGFloat = 12
+
     var body: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            HStack {
-                Label(
-                    String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))),
-                    systemImage: "clock"
-                )
-                .font(.ra11ySubheadline)
-
-                Spacer()
-
-                Text(String(format: String(localized: "dungeon.hud.mistakes.format"), mistakes))
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(.secondary)
-            }
+            hudLabels
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(.white.opacity(0.1))
-                        .frame(height: 12)
+                        .frame(height: baseBarHeight)
                     RoundedRectangle(cornerRadius: 4)
                         .fill(barColor)
                         .frame(
                             width: geo.size.width * fraction,
-                            height: 12 * barHeightMultiplier
+                            height: baseBarHeight * barHeightMultiplier
                         )
                         .animation(.linear(duration: 0.2), value: fraction)
                 }
             }
-            .frame(height: 12)
+            .frame(height: baseBarHeight)
         }
         .accessibilityHidden(true)
+    }
+
+    /// Timer + mistakes labels. Switches to `VStack` at `.accessibility4`+ to prevent
+    /// horizontal crowding at large Dynamic Type sizes.
+    @ViewBuilder
+    private var hudLabels: some View {
+        if dynamicTypeSize >= .accessibility4 {
+            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+                timerLabel
+                mistakesLabel
+            }
+        } else {
+            HStack {
+                timerLabel
+                Spacer()
+                mistakesLabel
+            }
+        }
+    }
+
+    private var timerLabel: some View {
+        Label(
+            String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))),
+            systemImage: "clock"
+        )
+        .font(.ra11ySubheadline)
+    }
+
+    private var mistakesLabel: some View {
+        Text(String(format: String(localized: "dungeon.hud.mistakes.format"), mistakes))
+            .font(.ra11ySubheadline)
+            .foregroundStyle(.secondary)
     }
 }
 
@@ -1126,7 +1293,7 @@ private struct DungeonGestureRow: View {
         HStack(spacing: RA11ySpacing.md) {
             Image(systemName: symbol)
                 .font(.ra11yHeadline)
-                .frame(width: 32)
+                .frame(minWidth: 32, alignment: .leading)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
                 .font(.ra11yBody)

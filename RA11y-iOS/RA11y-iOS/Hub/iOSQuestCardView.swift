@@ -10,8 +10,14 @@ import RA11yCore
 /// marked `.accessibilityHidden(true)` and are covered by the button's combined label.
 ///
 /// ## Combined VoiceOver Label
-/// Format: "{title}. {goal}. {estimatedDuration}. Rank: {rankLabel}."
-/// Hint: "Double-tap to begin this trial."
+/// - Unlocked: "{title}. {goal}. {estimatedDuration}. Rank: {rankLabel}."
+/// - Locked: "{title}. {lockedMessage}."
+///
+/// ## Locked State
+/// When `prerequisiteTitle` is non-nil the card is rendered in a dimmed, non-interactive
+/// locked state with a lock icon overlay. The button is disabled so VoiceOver does not
+/// offer an activation hint. A "Complete [prerequisiteTitle] to unlock" message replaces
+/// the goal/duration/rank row in the combined label.
 ///
 /// ## Adaptive Layout
 /// - Standard (`dynamicTypeSize < .accessibility2`): `HStack` — thumbnail | info | badge
@@ -29,6 +35,8 @@ struct iOSQuestCardView: View {
 
     let game: GameDefinition
     let rank: GameRank?
+    /// Display title of the prerequisite game, or `nil` when unlocked.
+    let prerequisiteTitle: String?
     let onTap: () -> Void
 
     // MARK: - Environment
@@ -37,6 +45,8 @@ struct iOSQuestCardView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     // MARK: - Computed
+
+    private var isLocked: Bool { prerequisiteTitle != nil }
 
     private var isLargeAccessibilitySize: Bool {
         dynamicTypeSize >= .accessibility2
@@ -56,25 +66,38 @@ struct iOSQuestCardView: View {
     }
 
     private var combinedAccessibilityLabel: String {
-        let title    = String(localized: String.LocalizationValue(game.titleKey))
+        let title = String(localized: String.LocalizationValue(game.titleKey))
+        if let prerequisiteTitle {
+            let lockMsg = String(
+                format: String(localized: "hub.card.locked.a11yLabel"),
+                prerequisiteTitle
+            )
+            return "\(title). \(lockMsg)."
+        }
         let goal     = String(localized: String.LocalizationValue(game.goalKey))
         let duration = game.estimatedDuration
         return "\(title). \(goal). \(duration). Rank: \(rankLabel)."
     }
 
     private var thumbnailSaturation: Double {
-        rank == nil ? 0.4 : 1.0
+        isLocked ? 0.0 : (rank == nil ? 0.4 : 1.0)
     }
 
     // MARK: - Body
 
     var body: some View {
         Button(action: onTap) {
-            cardContent
+            ZStack(alignment: .topTrailing) {
+                cardContent
+                if isLocked {
+                    lockOverlay
+                }
+            }
         }
         .buttonStyle(QuestCardButtonStyle())
+        .disabled(isLocked)
         .accessibilityLabel(combinedAccessibilityLabel)
-        .accessibilityHint(String(localized: "hub.card.accessibilityHint"))
+        .accessibilityHint(isLocked ? "" : String(localized: "hub.card.accessibilityHint"))
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("questCard.\(game.id)")
     }
@@ -96,19 +119,21 @@ struct iOSQuestCardView: View {
             iOSQuestThumbnailView(assetName: game.thumbnailAssetName)
                 .saturation(thumbnailSaturation)
 
-            iOSQuestCardInfoView(
-                title: String(localized: String.LocalizationValue(game.titleKey)),
-                goal: String(localized: String.LocalizationValue(game.goalKey)),
-                estimatedDuration: game.estimatedDuration
-            )
-            .layoutPriority(1)
-
-            iOSRankBadgeView(rank: rank, isAccessibilityHidden: true)
+            if isLocked {
+                lockedInfoColumn
+            } else {
+                iOSQuestCardInfoView(
+                    title: String(localized: String.LocalizationValue(game.titleKey)),
+                    goal: String(localized: String.LocalizationValue(game.goalKey)),
+                    estimatedDuration: game.estimatedDuration
+                )
+                .layoutPriority(1)
+                iOSRankBadgeView(rank: rank, isAccessibilityHidden: true)
+            }
         }
-        // Explicit maxWidth makes the card background stretch to the full available
-        // width rather than hugging its content in context-dependent sizing.
         .frame(maxWidth: .infinity)
         .padding(cardPadding)
+        .opacity(isLocked ? 0.55 : 1.0)
     }
 
     /// VStack layout for `.accessibility2` and above — prevents horizontal crowding.
@@ -118,16 +143,54 @@ struct iOSQuestCardView: View {
                 iOSQuestThumbnailView(assetName: game.thumbnailAssetName)
                     .saturation(thumbnailSaturation)
                 Spacer()
-                iOSRankBadgeView(rank: rank, isAccessibilityHidden: true)
+                if !isLocked {
+                    iOSRankBadgeView(rank: rank, isAccessibilityHidden: true)
+                }
             }
-            iOSQuestCardInfoView(
-                title: String(localized: String.LocalizationValue(game.titleKey)),
-                goal: String(localized: String.LocalizationValue(game.goalKey)),
-                estimatedDuration: game.estimatedDuration
-            )
+            if isLocked {
+                lockedInfoColumn
+            } else {
+                iOSQuestCardInfoView(
+                    title: String(localized: String.LocalizationValue(game.titleKey)),
+                    goal: String(localized: String.LocalizationValue(game.goalKey)),
+                    estimatedDuration: game.estimatedDuration
+                )
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(cardPadding)
+        .opacity(isLocked ? 0.55 : 1.0)
+    }
+
+    /// Info column shown when the game is locked — title + unlock message.
+    private var lockedInfoColumn: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+            Text(String(localized: String.LocalizationValue(game.titleKey)))
+                .font(.ra11yHeadline)
+                .foregroundStyle(Color.ra11yCardSecondaryText)
+            if let prerequisiteTitle {
+                Text(
+                    String(
+                        format: String(localized: "hub.card.locked.message"),
+                        prerequisiteTitle
+                    )
+                )
+                .font(.ra11ySubheadline)
+                .foregroundStyle(Color.ra11yCardTertiaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .layoutPriority(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Lock icon shown in the top-trailing corner for locked cards.
+    private var lockOverlay: some View {
+        Image(systemName: "lock.fill")
+            .font(.ra11ySubheadline)
+            .foregroundStyle(Color.ra11yAccent)
+            .padding(RA11ySpacing.sm)
+            .accessibilityHidden(true)
     }
 }
 
@@ -192,6 +255,7 @@ private struct QuestCardButtonStyle: ButtonStyle {
     iOSQuestCardView(
         game: GameCatalog.all[0],
         rank: .perfect,
+        prerequisiteTitle: nil,
         onTap: {}
     )
     .padding()
@@ -202,6 +266,18 @@ private struct QuestCardButtonStyle: ButtonStyle {
     iOSQuestCardView(
         game: GameCatalog.all[1],
         rank: nil,
+        prerequisiteTitle: nil,
+        onTap: {}
+    )
+    .padding()
+    .background(Color(white: 0.08))
+}
+
+#Preview("Locked — prerequisite not completed") {
+    iOSQuestCardView(
+        game: GameCatalog.all[1],
+        rank: nil,
+        prerequisiteTitle: "The Enchanter's Trial",
         onTap: {}
     )
     .padding()

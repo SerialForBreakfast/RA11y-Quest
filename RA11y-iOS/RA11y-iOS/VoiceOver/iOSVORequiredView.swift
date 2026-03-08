@@ -9,11 +9,20 @@ import RA11yCore
 ///
 /// ## Flow
 /// 1. Explains that VoiceOver is required.
-/// 2. Primary CTA: "Open Accessibility Settings" — deep-links to iOS Accessibility settings.
+/// 2. **Primary CTA: "Ask Siri"** — shows Siri instructions for enabling VoiceOver.
+///    This is the lowest-friction path for a user who has never used VoiceOver, since
+///    Siri can toggle it without requiring any accessibility gestures.
+/// 3. Secondary CTA: "Open Accessibility Settings" — deep-links to iOS Accessibility settings.
 ///    Falls back to the general Settings app if the deep link is unavailable.
 ///    If both fail, inline fallback instructions are revealed.
-/// 3. Secondary CTA: "How to Enable VoiceOver" — presents `iOSVoiceOverHelpSheet`.
-/// 4. Back navigation returns the user to the hub.
+/// 4. Tertiary CTA: "How to Enable VoiceOver" — presents `iOSVoiceOverHelpSheet` with
+///    step-by-step instructions and gesture guides.
+/// 5. Back navigation returns the user to the hub.
+///
+/// ## Bootstrapping Problem
+/// A user who has never used VoiceOver cannot navigate a VoiceOver-first interface to
+/// enable it. Siri is the lowest-friction solution: they can speak the command without
+/// any prior knowledge of gestures. The Siri CTA is therefore placed first.
 ///
 /// ## No Preview Mode
 /// There is no way to bypass this screen and enter a game without VoiceOver active.
@@ -88,18 +97,58 @@ struct iOSVORequiredView: View {
 
     private var ctaSection: some View {
         VStack(spacing: RA11ySpacing.sm) {
+            // Siri is the primary path: no gestures required, works before any AT knowledge.
+            siriCallout
+
             Button(String(localized: "voiceOverRequired.openSettings")) {
                 openAccessibilitySettings()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .frame(maxWidth: .infinity)
 
             Button(String(localized: "voiceOverRequired.howToEnable")) {
                 showHelpSheet = true
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
+            .frame(maxWidth: .infinity)
         }
+    }
+
+    /// Siri shortcut callout — the lowest-friction VoiceOver enablement path for new users.
+    ///
+    /// Displayed as an informational card (not a tappable button) since Siri is invoked by
+    /// the user speaking the phrase, not by the app. The card gives prominence to the phrase
+    /// so the user knows exactly what to say.
+    private var siriCallout: some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            HStack(spacing: RA11ySpacing.sm) {
+                Image(systemName: "waveform")
+                    .font(.ra11yHeadline)
+                    .foregroundStyle(.tint)
+                    .accessibilityHidden(true)
+                Text(String(localized: "voiceOverRequired.siri.heading"))
+                    .font(.ra11ySubheadline)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Text(String(localized: "voiceOverRequired.siri.phrase"))
+                .font(.ra11yBody)
+                .italic()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, RA11ySpacing.sm)
+                .padding(.vertical, RA11ySpacing.xs)
+                .frame(maxWidth: .infinity)
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: RA11yRadius.button))
+        }
+        .padding(RA11ySpacing.base)
+        .frame(maxWidth: .infinity)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(String(localized: "voiceOverRequired.siri.heading")). \(String(localized: "voiceOverRequired.siri.a11yLabel"))"
+        )
     }
 
     /// Shown only when both the Accessibility deep link and the Settings fallback fail.

@@ -51,13 +51,14 @@ struct iOSRogueGauntletView: View {
         .onChange(of: viewModel.completedResult) { _, result in
             guard let result else { return }
             let announcement = gameSpecificAnnouncement(for: result)
-            router.push(.gameResult(result, gameSpecificAnnouncement: announcement))
+            router.push(.gameResult(result, gameKind: .activateDoubleTap, gameSpecificAnnouncement: announcement))
         }
         .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
             if disabled {
                 router.push(.voiceOverInterstitial(kind: .activateDoubleTap))
             }
         }
+        .onDisappear { viewModel.handleViewDisappear() }
     }
 
     // MARK: - Level Routing
@@ -482,6 +483,21 @@ final class RogueGauntletViewModel {
         timerTask = nil
     }
 
+    /// Handles the view disappearing from the navigation stack (e.g., user taps back).
+    ///
+    /// Stops any active timer and abandons the L3 `GameSession` if it is still running,
+    /// ensuring no result is written for an incomplete play-through.
+    ///
+    /// ## Concurrency
+    /// Called from `@MainActor` context via `.onDisappear`. The inner `Task` inherits
+    /// `@MainActor` isolation and safely `await`s the actor-isolated `abandon()`.
+    func handleViewDisappear() {
+        stopTimer()
+        coordinator?.stopMonitoring()
+        guard let session else { return }
+        Task { await session.abandon() }
+    }
+
     private func handleL2Timeout() async {
         l2TimedOut = true
         announce(String(localized: "rogue.timeout"))
@@ -647,7 +663,7 @@ private struct RoguePrologueView: View {
         .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
+                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
         )
     }
 
@@ -708,6 +724,8 @@ private struct RogueFirstAttemptView: View {
     let onActivate: (RogueSeal) async -> Void
     let onContinue: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
@@ -734,8 +752,10 @@ private struct RogueFirstAttemptView: View {
                     continueButton
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .environment(\.colorScheme, .dark)
     }
@@ -798,6 +818,8 @@ private struct RogueRisingView: View {
     let onContinue: () -> Void
     let onRetry: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
@@ -828,8 +850,10 @@ private struct RogueRisingView: View {
                     }
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .environment(\.colorScheme, .dark)
     }
@@ -890,6 +914,8 @@ private struct RogueTimedView: View {
     let onHint: () -> Void
     let onRetry: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
@@ -916,8 +942,10 @@ private struct RogueTimedView: View {
                     hintButton
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .environment(\.colorScheme, .dark)
     }
@@ -951,7 +979,8 @@ private struct RogueTimedView: View {
 
 // MARK: - Shared: SealGrid
 
-/// 2-column `LazyVGrid` used in L2 (2×2) and L3 (2×3).
+/// Responsive grid of seal buttons: 2-column by default, collapses to 1-column at
+/// `.accessibility2`+ Dynamic Type sizes to prevent horizontal crowding.
 ///
 /// VoiceOver reads LazyVGrid in row-major order: left→right within each row,
 /// then the next row — deterministic and linear, matching the accessibility teaching goal.
@@ -961,8 +990,14 @@ private struct SealGrid: View {
     let columns: Int
     let onActivate: (RogueSeal) async -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var isLargeAccessibilitySize: Bool { dynamicTypeSize >= .accessibility2 }
+
+    private var activeColumns: Int { isLargeAccessibilitySize ? 1 : columns }
+
     private var gridColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: RA11ySpacing.sm), count: columns)
+        Array(repeating: GridItem(.flexible(), spacing: RA11ySpacing.sm), count: activeColumns)
     }
 
     var body: some View {
@@ -981,6 +1016,11 @@ private struct SealGrid: View {
 ///
 /// Each button announces its name and hint to VoiceOver, fulfilling the accessibility requirement
 /// "all seals: accessibilityLabel (seal name) + accessibilityHint (Double-tap to sever)."
+///
+/// ## Dynamic Type
+/// The seal name label has no `lineLimit` so it can expand to as many lines as needed at
+/// large DT sizes. `SealGrid` collapses to 1 column at `.accessibility2`+ which provides
+/// sufficient width for any reasonable label.
 private struct SealButton: View {
 
     let seal: RogueSeal
@@ -998,7 +1038,7 @@ private struct SealButton: View {
                 Text(seal.displayName)
                     .font(.ra11yCaption)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
             }
             .padding(RA11ySpacing.sm)
@@ -1053,11 +1093,18 @@ private struct SealImage: View {
 /// The HUD is `accessibilityHidden` — the containing level view sets a combined
 /// `accessibilityLabel` on the whole HUD group so VoiceOver reads time + mistakes together.
 /// The bar height decreases at 50% and 25% remaining to provide a non-color urgency cue.
+///
+/// ## Dynamic Type
+/// Bar height scales with `.subheadline` via `@ScaledMetric`.
+/// At `.accessibility4`+ the label row switches to `VStack` so the timer and mistake
+/// count don't crowd each other in the ~200 pt available width.
 private struct RogueTimerHUD: View {
 
     let timeRemaining: Double
     let total: Double
     let mistakes: Int
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var fraction: Double { max(0, min(1, timeRemaining / total)) }
 
@@ -1073,40 +1120,63 @@ private struct RogueTimerHUD: View {
         return .red
     }
 
+    /// Scales with `.subheadline` style (base 12 pt).
+    @ScaledMetric(relativeTo: .subheadline) private var baseBarHeight: CGFloat = 12
+
     var body: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            HStack {
-                Label(
-                    String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))),
-                    systemImage: "clock"
-                )
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.primary)
-
-                Spacer()
-
-                Text(String(format: String(localized: "rogue.hud.mistakes.format"), mistakes))
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(.secondary)
-            }
+            hudLabels
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(.white.opacity(0.1))
-                        .frame(height: 12)
+                        .frame(height: baseBarHeight)
                     RoundedRectangle(cornerRadius: 4)
                         .fill(barColor)
                         .frame(
                             width: geo.size.width * fraction,
-                            height: 12 * barHeightMultiplier
+                            height: baseBarHeight * barHeightMultiplier
                         )
                         .animation(.linear(duration: 0.2), value: fraction)
                 }
             }
-            .frame(height: 12)
+            .frame(height: baseBarHeight)
         }
         .accessibilityHidden(true)
+    }
+
+    /// Timer + mistakes labels. Switches to `VStack` at `.accessibility4`+ to prevent
+    /// horizontal crowding at large Dynamic Type sizes.
+    @ViewBuilder
+    private var hudLabels: some View {
+        if dynamicTypeSize >= .accessibility4 {
+            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+                timerLabel
+                mistakesLabel
+            }
+        } else {
+            HStack {
+                timerLabel
+                Spacer()
+                mistakesLabel
+            }
+        }
+    }
+
+    private var timerLabel: some View {
+        Label(
+            String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))),
+            systemImage: "clock"
+        )
+        .font(.ra11ySubheadline)
+        .foregroundStyle(.primary)
+    }
+
+    private var mistakesLabel: some View {
+        Text(String(format: String(localized: "rogue.hud.mistakes.format"), mistakes))
+            .font(.ra11ySubheadline)
+            .foregroundStyle(.secondary)
     }
 }
 
@@ -1124,7 +1194,7 @@ private struct RogueBackgroundView: View {
                 .scaledToFill()
                 .overlay(Color.black.opacity(0.45))
         } else {
-            Color(red: 0.08, green: 0.06, blue: 0.04)
+            Color.ra11yGameFallbackBackground
         }
     }
 }
@@ -1140,7 +1210,7 @@ private struct RogueGestureRow: View {
         HStack(spacing: RA11ySpacing.md) {
             Image(systemName: symbol)
                 .font(.ra11yHeadline)
-                .frame(width: 32)
+                .frame(minWidth: 32, alignment: .leading)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
                 .font(.ra11yBody)
@@ -1167,7 +1237,7 @@ private func roguePromptCard(title: String, a11yLabel: String, a11yHint: String?
     .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
     .overlay(
         RoundedRectangle(cornerRadius: RA11yRadius.card)
-            .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
+            .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
     )
     .accessibilityElement(children: .combine)
     .accessibilityLabel(a11yLabel)

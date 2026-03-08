@@ -7,14 +7,20 @@ default_platform(:ios)
 # Paths are relative to the fastlane/ directory; `../` escapes to repo root.
 WORKSPACE      = "../RA11y.xcworkspace".freeze
 SCHEME         = "RA11y-iOS".freeze
-# Target the entire RA11y_iOSScreenshots class so both test methods run:
-# - testScreenshots_Hub_VORequired  → 01_Hub, 02_VORequired
-# - testScreenshots_FirstRun        → 03_FirstRun
-UI_TEST_ID     = "RA11y-iOSUITests/RA11y_iOSScreenshots".freeze
+# Explicit allowlist of completed screenshot tests.
+# This prevents in-progress game flows from failing the capture lane.
+UI_TEST_IDS    = [
+  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Hub_VORequired",
+  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_FirstRun",
+  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Enchanter",
+  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Dungeon",
+].freeze
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
 DOCS_BASE      = "../docs/screenshots/en-US".freeze
 EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
 DERIVED_DATA   = "/tmp/RA11y_screenshots_DerivedData".freeze
+CONTRACT_CHECK = "../utility/validate_screenshot_contract.sh".freeze
+ROUTE_CATALOG  = "../RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md".freeze
 
 # ---------------------------------------------------------------------------
 # Simulator preferences
@@ -47,27 +53,6 @@ SIM_PREFS = {
   ].freeze,
 }.freeze
 
-# Form-factors to capture. Each entry has:
-#   label:     used as the output subdirectory name
-#   family:    "iPhone" or "iPad" — controls fallback hierarchy
-#   preferred: exact device name to try first (may be unavailable)
-#
-# Override the entire set via SNAPSHOT_DEVICES env var:
-#   SNAPSHOT_DEVICES="iPhone 16,iPad Pro (13-inch)" bundle exec fastlane screenshots
-SCREENSHOT_DEVICE_SPECS =
-  if ENV["SNAPSHOT_DEVICES"]
-    ENV["SNAPSHOT_DEVICES"].split(",").map(&:strip).reject(&:empty?).map do |name|
-      family = name.include?("iPad") ? "iPad" : "iPhone"
-      { label: name.gsub(/[^A-Za-z0-9]/, "_"), family: family, preferred: name }
-    end
-  else
-    [
-      { label: "iPhone_large", family: "iPhone", preferred: "iPhone 17" },
-      { label: "iPhone_small", family: "iPhone", preferred: "iPhone 16e" },
-      { label: "iPad",         family: "iPad",   preferred: "iPad" },
-    ]
-  end.freeze
-
 # ---------------------------------------------------------------------------
 # Lanes
 # ---------------------------------------------------------------------------
@@ -90,6 +75,11 @@ platform :ios do
   DESC
   lane :screenshots do
     require "json"
+    only_testing_flags = UI_TEST_IDS.map { |id| " -only-testing:'#{id}'" }.join
+    expected_files = expected_screenshot_files
+
+    # Contract guard: fail fast if test allowlist, route catalog, and UI test methods drift.
+    sh("bash '#{CONTRACT_CHECK}'")
 
     sh("rm -rf '#{OUTPUT_BASE}' && mkdir -p '#{OUTPUT_BASE}'")
     sh("rm -rf '#{DERIVED_DATA}'")
@@ -102,7 +92,7 @@ platform :ios do
       " -workspace '#{WORKSPACE}'" \
       " -scheme '#{SCHEME}'" \
       " -destination 'generic/platform=iOS Simulator'" \
-      " -only-testing:'#{UI_TEST_ID}'" \
+      "#{only_testing_flags}" \
       " -derivedDataPath '#{DERIVED_DATA}'"
     )
 
@@ -110,7 +100,7 @@ platform :ios do
     failed     = []
     seen_udids = []
 
-    SCREENSHOT_DEVICE_SPECS.each do |spec|
+    screenshot_device_specs.each do |spec|
       udid = resolve_simulator_udid(family: spec[:family], preferred: spec[:preferred])
 
       if seen_udids.include?(udid)
@@ -138,7 +128,7 @@ platform :ios do
           " -scheme '#{SCHEME}'" \
           " -derivedDataPath '#{DERIVED_DATA}'" \
           " -destination 'platform=iOS Simulator,id=#{udid}'" \
-          " -only-testing:'#{UI_TEST_ID}'" \
+          "#{only_testing_flags}" \
           " -resultBundlePath '#{result_path}'"
         )
       rescue => e
@@ -157,8 +147,12 @@ platform :ios do
         sh("bash '#{EXTRACT_SCRIPT}' '#{result_path}' '#{output_dir}'")
 
         png_files = Dir["#{output_dir}/*.png"]
+        missing_files = expected_files.reject { |name| File.exist?("#{output_dir}/#{name}.png") }
         if png_files.empty?
           UI.error("Extraction produced no PNGs for #{label}")
+          failed << label
+        elsif !missing_files.empty?
+          UI.error("Missing expected screenshots for #{label}: #{missing_files.join(', ')}")
           failed << label
         else
           # Publish to docs/screenshots/ so the README can reference committed PNGs.
@@ -273,4 +267,50 @@ def resolve_simulator_udid(family:, preferred: "")
   chosen = available.max_by { |d| d["name"] }
   UI.important("[simulator] WARNING: Using last-resort fallback: #{chosen['name']} (#{chosen['udid'][0..7]}...)")
   chosen["udid"]
+end
+
+# Reads the screenshot route catalog and returns the ordered list of required PNG basenames.
+#
+# The catalog is the human-maintained source of truth for committed screenshots.
+# Fastlane uses it to fail when a simulator run produces only a partial export.
+#
+# @return [Array<String>] ordered screenshot basenames without extension
+def expected_screenshot_files
+  File.readlines(ROUTE_CATALOG, chomp: true).map do |line|
+    next unless line.start_with?("| `")
+
+    columns = line.split("|").map(&:strip)
+    next if columns.length < 2
+
+    file_name = columns[1].delete("`")
+    next unless file_name.match?(/^\d+_/)
+
+    file_name
+  end.compact
+end
+
+# Resolves the form-factors to capture for the current lane invocation.
+#
+# Each entry includes:
+# - `label`: output subdirectory name
+# - `family`: `iPhone` or `iPad`
+# - `preferred`: exact preferred device name
+#
+# `screenshots_quick` works by setting `SNAPSHOT_DEVICES` before invoking the lane,
+# so this list must be computed at runtime rather than frozen at file load.
+#
+# @return [Array<Hash>] device specs used by the screenshots lane
+def screenshot_device_specs
+  if ENV["SNAPSHOT_DEVICES"].to_s.strip != ""
+    ENV["SNAPSHOT_DEVICES"].split(",").map(&:strip).reject(&:empty?).map do |name|
+      family = name.include?("iPad") ? "iPad" : "iPhone"
+      { label: name.gsub(/[^A-Za-z0-9]/, "_"), family: family, preferred: name }
+    end
+  else
+    [
+      { label: "iPhone_large", family: "iPhone", preferred: "iPhone 17" },
+      { label: "iPhone_small", family: "iPhone", preferred: "iPhone 16e" },
+      { label: "iPad",         family: "iPad",   preferred: "iPad" },
+    ]
+  end
 end

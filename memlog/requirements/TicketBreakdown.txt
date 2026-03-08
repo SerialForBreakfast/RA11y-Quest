@@ -1208,7 +1208,7 @@ TRACK: Polish
 TICKET-M8-Accessibility-Audit-Polish
 ===============================
 Ticket: M8 - Accessibility Audit + MVP Polish
-Status: Blocked — waiting on M3, M4, M5, M6, M7
+Status: Done
 
 User Story
 ----------

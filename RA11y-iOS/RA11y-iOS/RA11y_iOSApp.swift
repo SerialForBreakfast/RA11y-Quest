@@ -17,10 +17,10 @@ import RA11yCore
 /// The fastlane `screenshots` lane launches the app with specific arguments:
 /// - `-screenshotResetOnboarding`: clears first-run flags → routes to First Run.
 /// - `-screenshotMarkOnboardingComplete`: sets `basicsCompleted = true` → routes to hub.
-/// - `-screenshotDirectTo{Game}`: pre-populates the navigation router's path in
-///   `iOSRootView`'s `@State` initializer closure so the game view is present on the
-///   first render. This file also sets `basicsCompleted = true` for those args so the
-///   loading overlay resolves to hub promptly.
+/// - `-screenshotScene <sceneID>`: bypasses normal startup entirely and renders
+///   `iOSScreenshotRootView` for a deterministic capture scene.
+/// - `-screenshotDirectTo{Game}` remains supported for legacy paths, but the screenshot
+///   lane should prefer `-screenshotScene`.
 @main
 struct RA11y_iOSApp: App {
 
@@ -31,11 +31,28 @@ struct RA11y_iOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            iOSRootView()
+            screenshotEntryView
         }
     }
 
     // MARK: - Screenshot Testing
+
+    /// The root entry view for the current process.
+    ///
+    /// When a screenshot scene is requested the app bypasses `iOSRootView` and renders
+    /// a deterministic capture surface instead.
+    @ViewBuilder
+    private var screenshotEntryView: some View {
+        #if DEBUG
+        if let scene = iOSScreenshotScene.current() {
+            iOSScreenshotRootView(scene: scene)
+        } else {
+            iOSRootView()
+        }
+        #else
+        iOSRootView()
+        #endif
+    }
 
     /// Applies `UserDefaults` overrides requested by the fastlane screenshot lane.
     ///
@@ -56,6 +73,12 @@ struct RA11y_iOSApp: App {
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
         guard args.contains("-uiTesting") else { return }
+
+        // `-screenshotScene` bypasses the normal startup router, so no persistence
+        // overrides are required for those launches.
+        if iOSScreenshotScene.current(from: args) != nil {
+            return
+        }
 
         if args.contains("-screenshotResetOnboarding") {
             UserDefaults.standard.removeObject(

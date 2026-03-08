@@ -20,9 +20,9 @@ enum AppRoute: Hashable {
     /// Game 3 — The Dungeon Descent (Scroll Hunt). Implemented in M7.
     case dungeonDescent
     /// The shared result screen shown after any game completes.
-    /// Carries the `GameResult` so the view can display rank, time, and mistakes,
-    /// plus an optional game-specific announcement appended to the shared summary.
-    case gameResult(GameResult, gameSpecificAnnouncement: String?)
+    /// Carries the `GameResult`, the `GameKind` (used to render the skill-transfer card),
+    /// and an optional game-specific flavor announcement appended to the shared summary.
+    case gameResult(GameResult, gameKind: GameKind, gameSpecificAnnouncement: String?)
 
     /// "VoiceOver required" interstitial shown when a user attempts to start a game
     /// with VoiceOver disabled. Carries the intended `GameKind` so the interstitial

@@ -125,6 +125,7 @@ struct iOSHubView: View {
                 iOSQuestCardView(
                     game: game,
                     rank: viewModel.bestRank(for: game.id),
+                    prerequisiteTitle: prerequisiteTitle(for: game),
                     onTap: { startGame(game) }
                 )
                 .padding(.horizontal, cardHorizontalPadding)
@@ -134,14 +135,21 @@ struct iOSHubView: View {
         .padding(.bottom, RA11ySpacing.xl)
     }
 
+    /// The display title of the prerequisite game for a locked card, or `nil` when unlocked.
+    private func prerequisiteTitle(for game: GameDefinition) -> String? {
+        guard let prereq = viewModel.prerequisite(for: game) else { return nil }
+        return String(localized: String.LocalizationValue(prereq.titleKey))
+    }
+
     // MARK: - Actions
 
     /// Initiates the VoiceOver gating check before starting a game.
     ///
-    /// Reads `voiceOverEnabled` from the SwiftUI environment — always current at
-    /// the moment the user taps. If VoiceOver is off, routes to the interstitial.
-    /// If VoiceOver is on, routes to the game's entry route.
+    /// Guards against locked games (the card button is already disabled, but this
+    /// provides a safe second layer). Then checks VoiceOver state: if VoiceOver is
+    /// off, routes to the interstitial; if on, routes to the game entry route.
     private func startGame(_ game: GameDefinition) {
+        guard viewModel.isUnlocked(game) else { return }
         if !voiceOverEnabled {
             router.push(.voiceOverInterstitial(kind: game.kind))
         } else {

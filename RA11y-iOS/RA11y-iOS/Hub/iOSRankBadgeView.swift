@@ -23,6 +23,10 @@ import RA11yCore
 /// - `.failed`   → broken shield seal (Defeated)
 /// - `nil`       → open scroll seal (Quest Awaits)
 ///
+/// ## Dynamic Type
+/// Both the canvas size and the outer container width scale via `@ScaledMetric`
+/// (relative to `.caption`) so the badge remains proportional to its label at all DT sizes.
+///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSRankBadgeView: View {
@@ -36,9 +40,19 @@ struct iOSRankBadgeView: View {
     /// Set `true` when used inside a card button that provides a combined label.
     var isAccessibilityHidden: Bool = true
 
+    // MARK: - Scaled Metrics
+
+    /// Canvas size scales with `.caption` style (base 48 pt, max ~80 pt).
+    @ScaledMetric(relativeTo: .caption) private var shapeSize: CGFloat = 48
+
+    /// Outer container width scales proportionally (base 60 pt, max ~100 pt).
+    @ScaledMetric(relativeTo: .caption) private var containerWidth: CGFloat = 60
+
+    private var clampedShapeSize: CGFloat { min(shapeSize, 80) }
+    private var clampedContainerWidth: CGFloat { min(containerWidth, 100) }
+
     // MARK: - Constants
 
-    private let shapeSize: CGFloat = 48
     private let labelFont: Font = .ra11yCaption
 
     // MARK: - Body
@@ -48,17 +62,16 @@ struct iOSRankBadgeView: View {
             Canvas { context, size in
                 drawSeal(in: &context, size: size)
             }
-            .frame(width: shapeSize, height: shapeSize)
+            .frame(width: clampedShapeSize, height: clampedShapeSize)
 
             Text(rankLabel)
                 .font(labelFont)
                 .fontWeight(.semibold)
                 .foregroundStyle(labelColor)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(width: 60)
+        .frame(width: clampedContainerWidth)
         .accessibilityHidden(isAccessibilityHidden)
     }
 

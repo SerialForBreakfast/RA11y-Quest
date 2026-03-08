@@ -54,6 +54,23 @@ extension Color {
     /// Provides ≥ 8:1 contrast (WCAG AAA for large text) on the dark card surface.
     /// Use for caption-level content — estimated duration, supplementary labels.
     static let ra11yCardTertiaryText = Color.white.opacity(0.65)
+
+    /// DM narrative card border — warm gold tone used across all three games.
+    ///
+    /// Fixed (non-adaptive) because it appears on fixed-dark in-game surfaces.
+    static let ra11yDMBorder = Color(red: 0.75, green: 0.55, blue: 0.10)
+
+    /// Fallback solid background for game scenes when asset loading fails.
+    ///
+    /// A fixed near-black tone matching the expected dark stone/stone-dungeon atmosphere.
+    static let ra11yGameFallbackBackground = Color(red: 0.08, green: 0.06, blue: 0.04)
+
+    /// Semantic color for a reachable / confirmed target — used on the target room status icon.
+    ///
+    /// Uses a fixed success-green appropriate for fixed-dark game surfaces.
+    /// The icon shape (checkmark.seal vs lock.fill) conveys the same information
+    /// without relying on color alone, satisfying WCAG 1.4.1 (Use of Color).
+    static let ra11yTargetReachable = Color(red: 0.20, green: 0.78, blue: 0.35)
 }
 
 // MARK: - Token Notes

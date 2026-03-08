@@ -5,15 +5,20 @@ import RA11yCore
 
 /// Shared result screen displayed by all three training games on completion.
 ///
-/// Accepts a `GameResultPresenter`, an optional game-specific announcement string,
-/// and two action closures. Reused across all games — no per-game subclasses.
+/// Accepts a `GameResultPresenter`, the `GameKind` (used to render the skill-transfer
+/// card), an optional game-specific announcement string, and two action closures.
+/// Reused across all games — no per-game subclasses.
+///
+/// ## Skill Transfer Card
+/// Below the rank summary, a "What You Learned" card explicitly bridges the game's
+/// skill back to real-world VoiceOver usage. This is the critical step from game
+/// mechanic → transferable behaviour that is missing from most AT onboarding.
 ///
 /// ## VoiceOver
 /// The result summary (rank + metrics) is a single accessibility element using
-/// `GameResultPresenter.accessibilityAnnouncement`. Order: rank → time → mistakes,
-/// as required by TICKET-M1-SharedGameResultScreen.
+/// `GameResultPresenter.accessibilityAnnouncement`. Order: rank → time → mistakes.
 /// If `gameSpecificAnnouncement` is provided, it is appended after the shared summary
-/// on a separate line — announced after VoiceOver reads the shared element.
+/// on a separate line.
 ///
 /// ## Dynamic Type
 /// All text uses semantic font styles from `RA11yFont`; layout scrolls at largest sizes.
@@ -25,6 +30,9 @@ struct iOSGameResultView: View {
     // MARK: - Properties
 
     let presenter: GameResultPresenter
+
+    /// The kind of game just completed — drives the skill-transfer card content.
+    let gameKind: GameKind
 
     /// Optional game-specific flavor text shown below the rank summary.
     ///
@@ -51,6 +59,7 @@ struct iOSGameResultView: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, RA11ySpacing.base)
                 }
+                skillTransferCard
                 actionButtons
             }
             .padding(RA11ySpacing.base)
@@ -88,6 +97,63 @@ struct iOSGameResultView: View {
         .accessibilityLabel(presenter.accessibilityAnnouncement)
     }
 
+    /// Skill transfer card bridging the game mechanic to real-world VoiceOver use.
+    ///
+    /// Explicitly names the gesture or behaviour the player just practised and shows
+    /// where it applies in any iOS app. This is the critical pedagogical step from
+    /// "I passed the game" → "I know what to do in the App Store."
+    private var skillTransferCard: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
+            Label(String(localized: "result.skillTransfer.heading"), systemImage: "lightbulb.fill")
+                .font(.ra11ySubheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .accessibilityAddTraits(.isHeader)
+
+            Divider()
+
+            Text(skillTransferBody)
+                .font(.ra11yBody)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(skillTransferRealWorld)
+                .font(.ra11ySubheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(RA11ySpacing.base)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(String(localized: "result.skillTransfer.heading")). \(skillTransferBody) \(skillTransferRealWorld)"
+        )
+        .accessibilityIdentifier("result.skillTransferCard")
+    }
+
+    private var skillTransferBody: String {
+        switch gameKind {
+        case .findAndFocus:
+            return String(localized: "result.skillTransfer.findAndFocus.body")
+        case .activateDoubleTap:
+            return String(localized: "result.skillTransfer.activateDoubleTap.body")
+        case .scrollHunt:
+            return String(localized: "result.skillTransfer.scrollHunt.body")
+        }
+    }
+
+    private var skillTransferRealWorld: String {
+        switch gameKind {
+        case .findAndFocus:
+            return String(localized: "result.skillTransfer.findAndFocus.realWorld")
+        case .activateDoubleTap:
+            return String(localized: "result.skillTransfer.activateDoubleTap.realWorld")
+        case .scrollHunt:
+            return String(localized: "result.skillTransfer.scrollHunt.realWorld")
+        }
+    }
+
     /// "Try Again" and "Back to Tavern" action buttons.
     private var actionButtons: some View {
         VStack(spacing: RA11ySpacing.sm) {
@@ -96,24 +162,29 @@ struct iOSGameResultView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .accessibilityIdentifier("result.playAgain")
+            .accessibilityHint(String(localized: "result.a11y.playAgain.hint"))
 
             Button(String(localized: "result.returnToHub")) {
                 onReturnToHub()
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
+            .accessibilityIdentifier("result.returnToHub")
+            .accessibilityHint(String(localized: "result.a11y.returnToHub.hint"))
         }
     }
 }
 
 // MARK: - Preview
 
-#Preview("Legendary") {
+#Preview("Legendary — Enchanter") {
     NavigationStack {
         iOSGameResultView(
             presenter: GameResultPresenter(
                 result: GameResult(gameID: "find-and-focus", rank: .perfect, timeSeconds: 8.5, mistakes: 0)
             ),
+            gameKind: .findAndFocus,
             gameSpecificAnnouncement: "The Enchanter bows. A perfect invocation.",
             onPlayAgain: {},
             onReturnToHub: {}
@@ -121,13 +192,28 @@ struct iOSGameResultView: View {
     }
 }
 
-#Preview("Defeated") {
+#Preview("Defeated — Rogue") {
     NavigationStack {
         iOSGameResultView(
             presenter: GameResultPresenter(
-                result: GameResult(gameID: "find-and-focus", rank: .failed, timeSeconds: 46, mistakes: 3)
+                result: GameResult(gameID: "activate-double-tap", rank: .failed, timeSeconds: 40, mistakes: 3)
             ),
-            gameSpecificAnnouncement: "The relic vanished. Return when you are ready.",
+            gameKind: .activateDoubleTap,
+            gameSpecificAnnouncement: "The trap room claimed you. Study the seals and return.",
+            onPlayAgain: {},
+            onReturnToHub: {}
+        )
+    }
+}
+
+#Preview("Skilled — Dungeon") {
+    NavigationStack {
+        iOSGameResultView(
+            presenter: GameResultPresenter(
+                result: GameResult(gameID: "scroll-hunt", rank: .good, timeSeconds: 28, mistakes: 1)
+            ),
+            gameKind: .scrollHunt,
+            gameSpecificAnnouncement: "Skilled explorer. The vault yielded to you.",
             onPlayAgain: {},
             onReturnToHub: {}
         )

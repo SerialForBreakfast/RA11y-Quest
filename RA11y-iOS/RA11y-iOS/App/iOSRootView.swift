@@ -104,9 +104,10 @@ struct iOSRootView: View {
             iOSRogueGauntletView(storage: storage)
         case .dungeonDescent:
             iOSDungeonDescentView(storage: storage)
-        case .gameResult(let result, let gameSpecificAnnouncement):
+        case .gameResult(let result, let gameKind, let gameSpecificAnnouncement):
             iOSGameResultView(
                 presenter: GameResultPresenter(result: result),
+                gameKind: gameKind,
                 gameSpecificAnnouncement: gameSpecificAnnouncement,
                 onPlayAgain: { restartGame(for: result) },
                 onReturnToHub: { router.popToRoot() }

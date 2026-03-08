@@ -34,8 +34,15 @@ struct iOSEnchantersTrialView: View {
 
     // MARK: - Init
 
-    init(storage: any StorageComponent) {
-        _viewModel = State(initialValue: EnchanterTrialViewModel(storage: storage))
+    /// Creates the Enchanter game container.
+    ///
+    /// - Parameters:
+    ///   - storage: Persistence used for L3 session results during normal gameplay.
+    ///   - screenshotScene: Optional deterministic screenshot scene override.
+    init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
+        _viewModel = State(
+            initialValue: EnchanterTrialViewModel(storage: storage, screenshotScene: screenshotScene)
+        )
     }
 
     // MARK: - Body
@@ -51,13 +58,14 @@ struct iOSEnchantersTrialView: View {
         .onChange(of: viewModel.completedResult) { _, result in
             guard let result else { return }
             let announcement = gameSpecificAnnouncement(for: result)
-            router.push(.gameResult(result, gameSpecificAnnouncement: announcement))
+            router.push(.gameResult(result, gameKind: .findAndFocus, gameSpecificAnnouncement: announcement))
         }
         .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
             if disabled {
                 router.push(.voiceOverInterstitial(kind: .findAndFocus))
             }
         }
+        .onDisappear { viewModel.handleViewDisappear() }
     }
 
     // MARK: - Level Routing
@@ -187,6 +195,7 @@ final class EnchanterTrialViewModel {
     // MARK: - Private
 
     private let storage: any StorageComponent
+    private let screenshotScene: iOSScreenshotScene?
 
     /// L3 session — created fresh each time L3 starts (including retries).
     private var session: GameSession?
@@ -204,8 +213,17 @@ final class EnchanterTrialViewModel {
 
     // MARK: - Init
 
-    init(storage: any StorageComponent) {
+    /// Creates the Enchanter view model.
+    ///
+    /// - Parameters:
+    ///   - storage: Persistence used for normal gameplay session storage.
+    ///   - screenshotScene: Optional deterministic screenshot scene override.
+    init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
         self.storage = storage
+        self.screenshotScene = screenshotScene
+        if let screenshotScene {
+            applyScreenshotScene(screenshotScene)
+        }
     }
 
     // MARK: - Phase Transitions
@@ -332,6 +350,7 @@ final class EnchanterTrialViewModel {
     func requestHint() {
         let message = String(format: String(localized: "enchanter.hint.format"), targetRelic.displayName)
         statusMessage = message
+        guard screenshotScene == nil else { return }
         announce(message)
     }
 
@@ -346,6 +365,7 @@ final class EnchanterTrialViewModel {
     /// the announcement fires; without it the announcement can be swallowed by the
     /// navigation transition announcement.
     func announceTargetPrompt() {
+        guard screenshotScene == nil else { return }
         let message: String
         switch phase {
         case .attempt:
@@ -511,6 +531,21 @@ final class EnchanterTrialViewModel {
         timerTask = nil
     }
 
+    /// Handles the view disappearing from the navigation stack (e.g., user taps back).
+    ///
+    /// Stops any active timer and abandons the L3 `GameSession` if it is still running,
+    /// ensuring no result is written for an incomplete play-through.
+    ///
+    /// ## Concurrency
+    /// Called from `@MainActor` context via `.onDisappear`. The inner `Task` inherits
+    /// `@MainActor` isolation and safely `await`s the actor-isolated `abandon()`.
+    func handleViewDisappear() {
+        stopTimer()
+        coordinator?.stopMonitoring()
+        guard let session else { return }
+        Task { await session.abandon() }
+    }
+
     private func handleL2Timeout() async {
         l2TimedOut = true
         announce(String(localized: "simon.timeout"))
@@ -523,7 +558,7 @@ final class EnchanterTrialViewModel {
         await session.abandon()
         announce(String(localized: "simon.timeout"))
         // Synthesize a Defeated result for display (not stored — session was abandoned).
-        let elapsed = 45.0
+        let elapsed = 20.0 - timeRemaining
         completedResult = GameResult(
             gameID: "find-and-focus",
             rank: .failed,
@@ -536,6 +571,46 @@ final class EnchanterTrialViewModel {
 
     private func announce(_ message: String) {
         UIAccessibility.post(notification: .announcement, argument: message)
+    }
+
+    /// Applies a deterministic static state for screenshot capture.
+    ///
+    /// Screenshot scenes intentionally avoid timers, coordinators, and persistence writes.
+    /// They only shape the visible UI state needed for fastlane capture.
+    private func applyScreenshotScene(_ scene: iOSScreenshotScene) {
+        stopTimer()
+        mistakes = 0
+        statusMessage = nil
+        levelComplete = false
+        l2TimedOut = false
+        l3TimedOut = false
+        completedResult = nil
+        voiceOverDisabledMidGame = false
+        timeRemaining = 0
+
+        switch scene {
+        case .enchanterPrologue:
+            phase = .prologue
+            relics = []
+            targetRelic = .placeholder
+        case .enchanterAttempt:
+            phase = .attempt
+            relics = EnchanterRelic.setForL1()
+            targetRelic = EnchanterRelic.pickTarget(from: relics)
+        case .enchanterRising:
+            phase = .rising
+            relics = EnchanterRelic.setForL2()
+            targetRelic = EnchanterRelic.pickTarget(from: relics)
+            timeRemaining = 32
+        case .enchanterTimed:
+            phase = .timed
+            relics = EnchanterRelic.setForL3()
+            targetRelic = EnchanterRelic.pickTarget(from: relics)
+            mistakes = 1
+            timeRemaining = 12
+        default:
+            break
+        }
     }
 
     private func announceTimerThreshold(for phase: Phase, pct: Double) {
@@ -691,7 +766,7 @@ private struct EnchanterPrologueView: View {
         .background(Color.black.opacity(0.72), in: .rect(cornerRadius: RA11yRadius.card))
         .overlay(
             RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
+                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
         )
     }
 
@@ -756,6 +831,8 @@ private struct EnchanterAttemptView: View {
     let onHint: () -> Void
     let onContinue: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
@@ -779,8 +856,10 @@ private struct EnchanterAttemptView: View {
                     hintButton
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .environment(\.colorScheme, .dark)
     }
@@ -839,6 +918,8 @@ private struct EnchanterRisingView: View {
     let onContinue: () -> Void
     let onRetry: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
@@ -849,6 +930,11 @@ private struct EnchanterRisingView: View {
                 )
 
                 TimerHUD(timeRemaining: timeRemaining, total: 45)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(
+                        String(format: String(localized: "simon.a11y.l2.timer"), Int(ceil(timeRemaining)))
+                    )
+                    .accessibilityHint(String(localized: "a11y.timer.group.hint"))
 
                 if timedOut {
                     timeoutBanner
@@ -858,8 +944,10 @@ private struct EnchanterRisingView: View {
                     if levelComplete { continueButton } else { hintButton }
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .environment(\.colorScheme, .dark)
     }
@@ -928,6 +1016,8 @@ private struct EnchanterTimedView: View {
     let onHint: () -> Void
     let onRetry: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
@@ -938,6 +1028,7 @@ private struct EnchanterTimedView: View {
                 )
 
                 TimerHUD(timeRemaining: timeRemaining, total: 20)
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(
                         String(format: String(localized: "simon.a11y.l3.timer"), Int(ceil(timeRemaining)))
                     )
@@ -951,8 +1042,10 @@ private struct EnchanterTimedView: View {
                     hintButton
                 }
             }
-            .padding(.horizontal, RA11ySpacing.base)
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
         }
         .environment(\.colorScheme, .dark)
     }
@@ -1006,7 +1099,7 @@ private func promptCard(title: String, a11yLabel: String, a11yHint: String?) -> 
     .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
     .overlay(
         RoundedRectangle(cornerRadius: RA11yRadius.card)
-            .strokeBorder(Color(red: 0.75, green: 0.55, blue: 0.10).opacity(0.5), lineWidth: 1)
+            .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
     )
     .accessibilityElement(children: .combine)
     .accessibilityLabel(a11yLabel)
@@ -1032,35 +1125,71 @@ private func statusRow(_ message: String) -> some View {
 ///
 /// Displays the relic image (with SF Symbol fallback) and its display name.
 /// Configured as a linear-list item so VoiceOver swipe navigation is predictable.
+///
+/// ## Adaptive Layout
+/// - Standard (`dynamicTypeSize < .accessibility2`): `HStack` — icon | label
+/// - Large accessibility sizes: `VStack` — icon on top, label below (centered)
+///
+/// ## Dynamic Type
+/// Icon frame uses `@ScaledMetric` so it grows proportionally with text size,
+/// capped at 96 pt to prevent outsized icons on large display phones.
 private struct RelicButton: View {
 
     let relic: EnchanterRelic
     let onActivate: (EnchanterRelic) async -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Scales with the `.headline` text style (base 48 pt, max ~96 pt).
+    @ScaledMetric(relativeTo: .headline) private var iconSize: CGFloat = 48
+
+    private var isLargeAccessibilitySize: Bool { dynamicTypeSize >= .accessibility2 }
+
     var body: some View {
         Button {
             Task { await onActivate(relic) }
         } label: {
-            HStack(spacing: RA11ySpacing.md) {
-                RelicImage(assetName: relic.assetName)
-                    .frame(width: 48, height: 48)
-                    .accessibilityHidden(true)
-
-                Text(relic.displayName)
-                    .font(.ra11yHeadline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            if isLargeAccessibilitySize {
+                VStack(spacing: RA11ySpacing.sm) {
+                    relicIcon
+                    relicLabel
+                }
+                .padding(RA11ySpacing.md)
+                .frame(maxWidth: .infinity)
+                .background(Color.black.opacity(0.25), in: .rect(cornerRadius: RA11yRadius.card))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RA11yRadius.card)
+                        .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                )
+            } else {
+                HStack(spacing: RA11ySpacing.md) {
+                    relicIcon
+                    relicLabel
+                }
+                .padding(RA11ySpacing.md)
+                .frame(maxWidth: .infinity)
+                .background(Color.black.opacity(0.25), in: .rect(cornerRadius: RA11yRadius.card))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RA11yRadius.card)
+                        .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                )
             }
-            .padding(RA11ySpacing.md)
-            .frame(maxWidth: .infinity)
-            .background(Color.black.opacity(0.25), in: .rect(cornerRadius: RA11yRadius.card))
-            .overlay(
-                RoundedRectangle(cornerRadius: RA11yRadius.card)
-                    .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-            )
         }
         .accessibilityLabel(relic.displayName)
         .accessibilityHint(String(localized: "simon.token.hint"))
         .accessibilityIdentifier("enchanter.relic.\(relic.id)")
+    }
+
+    private var relicIcon: some View {
+        RelicImage(assetName: relic.assetName)
+            .frame(width: min(iconSize, 96), height: min(iconSize, 96))
+            .accessibilityHidden(true)
+    }
+
+    private var relicLabel: some View {
+        Text(relic.displayName)
+            .font(.ra11yHeadline)
+            .frame(maxWidth: .infinity, alignment: isLargeAccessibilitySize ? .center : .leading)
     }
 }
 
@@ -1070,6 +1199,10 @@ private struct RelicButton: View {
 /// to provide a non-color urgency cue, per `GameRules-MVP.txt` timer spec.
 /// The timer element is `accessibilityHidden` — the containing L3 view sets a
 /// formatted `accessibilityLabel` on the whole HUD.
+///
+/// ## Dynamic Type
+/// Bar height scales with `.caption` text style via `@ScaledMetric` so it remains
+/// visually proportional to the adjacent time label at all DT sizes.
 private struct TimerHUD: View {
 
     let timeRemaining: Double
@@ -1089,29 +1222,33 @@ private struct TimerHUD: View {
         return .red
     }
 
+    /// Scales with `.caption` style (base 12 pt), so the bar remains visible alongside
+    /// larger text at high DT sizes.
+    @ScaledMetric(relativeTo: .caption) private var baseBarHeight: CGFloat = 12
+
     var body: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(.white.opacity(0.1))
-                        .frame(height: 12)
+                        .frame(height: baseBarHeight)
                     RoundedRectangle(cornerRadius: 4)
                         .fill(barColor)
                         .frame(
                             width: geo.size.width * fraction,
-                            height: 12 * barHeightMultiplier
+                            height: baseBarHeight * barHeightMultiplier
                         )
                         .animation(.linear(duration: 0.2), value: fraction)
                 }
             }
-            .frame(height: 12)
+            .frame(height: baseBarHeight)
 
             Text(String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))))
                 .font(.ra11yCaption)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
         }
-        .accessibilityHidden(true)  // L3 view sets accessibilityLabel on this entire HUD
+        .accessibilityHidden(true)  // L3 view sets accessibilityLabel on this entire HUD via .accessibilityElement(children: .ignore) at the call site
     }
 }
 
@@ -1124,7 +1261,7 @@ private struct GestureRow: View {
         HStack(spacing: RA11ySpacing.md) {
             Image(systemName: symbol)
                 .font(.ra11yHeadline)
-                .frame(width: 32)
+                .frame(minWidth: 32, alignment: .leading)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
                 .font(.ra11yBody)
@@ -1149,7 +1286,8 @@ private struct RelicImage: View {
                     .padding(4)
             } else {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.ra11yTitle)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
             }
         }

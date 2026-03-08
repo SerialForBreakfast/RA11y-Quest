@@ -181,6 +181,27 @@ A passing Core build is not sufficient if the iOS build fails, and vice versa.
 
 ---
 
+## Screenshot Automation Contract
+
+Screenshot automation must remain deterministic and aligned across docs, tests, and fastlane.
+
+Authoritative files:
+- `RA11y-iOS/RA11y-iOS/App/iOSScreenshotScene.swift`
+- `RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md`
+- `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift`
+- `fastlane/Fastfile` (`UI_TEST_IDS` allowlist)
+
+Required rules:
+- Any change to screenshot-covered UI routes, accessibility identifiers, or launch args MUST update all four files in the same change.
+- New screenshot-covered screens MUST include:
+  - A stable root accessibility identifier.
+  - A deterministic `-screenshotScene <sceneID>` boot path declared in `iOSScreenshotScene.swift`.
+  - A route-catalog row with screenshot file name, scene ID, and root anchor identifier.
+- Before running `fastlane screenshots`, run:
+  - `utility/validate_screenshot_contract.sh`
+
+---
+
 ## Before Writing Any Code
 
 1. **Search first.** Before creating a protocol, class, enum, struct, or file,
