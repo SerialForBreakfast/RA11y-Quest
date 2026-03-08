@@ -48,28 +48,30 @@ struct iOSDungeonDescentView: View {
 
     // MARK: - Body
 
+    /// See `iOSEnchantersTrialView` for the rationale for using `.background {}` over ZStack.
     var body: some View {
-        ZStack {
-            DungeonBackgroundView()
-                .ignoresSafeArea()
-
-            levelContent
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: viewModel.completedResult) { _, result in
-            guard let result else { return }
-            router.push(.gameResult(result, gameKind: .scrollHunt, gameSpecificAnnouncement: gameSpecificAnnouncement(for: result)))
-        }
-        .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
-            if disabled {
-                router.push(.voiceOverInterstitial(kind: .scrollHunt))
+        levelContent
+            .background {
+                DungeonBackgroundView()
+                    .ignoresSafeArea()
             }
-        }
-        .onDisappear { viewModel.handleViewDisappear() }
+            .preferredColorScheme(.dark)
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: viewModel.completedResult) { _, result in
+                guard let result else { return }
+                router.push(.gameResult(result, gameKind: .scrollHunt, gameSpecificAnnouncement: gameSpecificAnnouncement(for: result)))
+            }
+            .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
+                if disabled {
+                    router.push(.voiceOverInterstitial(kind: .scrollHunt))
+                }
+            }
+            .onDisappear { viewModel.handleViewDisappear() }
     }
 
     // MARK: - Level Routing
 
+    /// See `iOSEnchantersTrialView` for the rationale for `.transition(.identity)` on each case.
     @ViewBuilder
     private var levelContent: some View {
         switch viewModel.phase {
@@ -81,6 +83,7 @@ struct iOSDungeonDescentView: View {
             )
             .navigationTitle(String(localized: "dungeon.explain.title"))
             .accessibilityIdentifier("dungeon.prologue")
+            .transition(.identity)
 
         case .firstAttempt:
             DungeonPlayView(
@@ -103,6 +106,7 @@ struct iOSDungeonDescentView: View {
             .navigationTitle(String(localized: "dungeon.l1.title"))
             .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("dungeon.firstAttempt")
+            .transition(.identity)
 
         case .rising:
             DungeonPlayView(
@@ -125,6 +129,7 @@ struct iOSDungeonDescentView: View {
             .navigationTitle(String(localized: "dungeon.l2.title"))
             .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("dungeon.rising")
+            .transition(.identity)
 
         case .timed:
             DungeonPlayView(
@@ -147,6 +152,7 @@ struct iOSDungeonDescentView: View {
             .navigationTitle(String(localized: "dungeon.l3.title"))
             .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("dungeon.timed")
+            .transition(.identity)
         }
     }
 

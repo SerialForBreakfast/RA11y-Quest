@@ -40,29 +40,31 @@ struct iOSRogueGauntletView: View {
 
     // MARK: - Body
 
+    /// See `iOSEnchantersTrialView` for the rationale for using `.background {}` over ZStack.
     var body: some View {
-        ZStack {
-            RogueBackgroundView()
-                .ignoresSafeArea()
-
-            levelContent
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: viewModel.completedResult) { _, result in
-            guard let result else { return }
-            let announcement = gameSpecificAnnouncement(for: result)
-            router.push(.gameResult(result, gameKind: .activateDoubleTap, gameSpecificAnnouncement: announcement))
-        }
-        .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
-            if disabled {
-                router.push(.voiceOverInterstitial(kind: .activateDoubleTap))
+        levelContent
+            .background {
+                RogueBackgroundView()
+                    .ignoresSafeArea()
             }
-        }
-        .onDisappear { viewModel.handleViewDisappear() }
+            .preferredColorScheme(.dark)
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: viewModel.completedResult) { _, result in
+                guard let result else { return }
+                let announcement = gameSpecificAnnouncement(for: result)
+                router.push(.gameResult(result, gameKind: .activateDoubleTap, gameSpecificAnnouncement: announcement))
+            }
+            .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
+                if disabled {
+                    router.push(.voiceOverInterstitial(kind: .activateDoubleTap))
+                }
+            }
+            .onDisappear { viewModel.handleViewDisappear() }
     }
 
     // MARK: - Level Routing
 
+    /// See `iOSEnchantersTrialView` for the rationale for `.transition(.identity)` on each case.
     @ViewBuilder
     private var levelContent: some View {
         switch viewModel.phase {
@@ -70,6 +72,7 @@ struct iOSRogueGauntletView: View {
             RoguePrologueView(onBeginTrial: { viewModel.beginTrial() })
                 .navigationTitle(String(localized: "rogue.explain.title"))
                 .accessibilityIdentifier("rogue.prologue")
+                .transition(.identity)
 
         case .firstAttempt:
             RogueFirstAttemptView(
@@ -82,6 +85,7 @@ struct iOSRogueGauntletView: View {
             .navigationTitle(String(localized: "rogue.l1.title"))
             .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("rogue.firstAttempt")
+            .transition(.identity)
 
         case .rising:
             RogueRisingView(
@@ -100,6 +104,7 @@ struct iOSRogueGauntletView: View {
             .navigationTitle(String(localized: "rogue.l2.title"))
             .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("rogue.rising")
+            .transition(.identity)
 
         case .timed:
             RogueTimedView(
@@ -116,6 +121,7 @@ struct iOSRogueGauntletView: View {
             .navigationTitle(String(localized: "rogue.l3.title"))
             .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("rogue.timed")
+            .transition(.identity)
         }
     }
 

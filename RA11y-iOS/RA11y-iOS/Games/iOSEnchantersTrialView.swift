@@ -47,29 +47,41 @@ struct iOSEnchantersTrialView: View {
 
     // MARK: - Body
 
+    /// The game view uses `.background {}` instead of a ZStack containing the background.
+    ///
+    /// A `scaledToFill` image inside a ZStack reports its natural scaled width (often wider
+    /// than the screen for landscape assets) as its preferred layout size. This inflates the
+    /// ZStack's layout, shifts siblings off-centre, and causes content to overflow the screen
+    /// horizontally. Using `.background {}` sizes the background to the foreground view,
+    /// preventing any layout bleed from the image.
     var body: some View {
-        ZStack {
-            EnchanterBackgroundView()
-                .ignoresSafeArea()
-
-            levelContent
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: viewModel.completedResult) { _, result in
-            guard let result else { return }
-            let announcement = gameSpecificAnnouncement(for: result)
-            router.push(.gameResult(result, gameKind: .findAndFocus, gameSpecificAnnouncement: announcement))
-        }
-        .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
-            if disabled {
-                router.push(.voiceOverInterstitial(kind: .findAndFocus))
+        levelContent
+            .background {
+                EnchanterBackgroundView()
+                    .ignoresSafeArea()
             }
-        }
-        .onDisappear { viewModel.handleViewDisappear() }
+            .preferredColorScheme(.dark)
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: viewModel.completedResult) { _, result in
+                guard let result else { return }
+                let announcement = gameSpecificAnnouncement(for: result)
+                router.push(.gameResult(result, gameKind: .findAndFocus, gameSpecificAnnouncement: announcement))
+            }
+            .onChange(of: viewModel.voiceOverDisabledMidGame) { _, disabled in
+                if disabled {
+                    router.push(.voiceOverInterstitial(kind: .findAndFocus))
+                }
+            }
+            .onDisappear { viewModel.handleViewDisappear() }
     }
 
     // MARK: - Level Routing
 
+    /// `.transition(.identity)` on each case suppresses the default opacity fade that
+    /// SwiftUI applies when a `@ViewBuilder` switch produces a different view type.
+    /// Without it, if the `@Observable` machinery delivers a phase mutation as a view
+    /// update (e.g. during screenshot bootstrapping), the incoming view fades in from
+    /// zero opacity and the screenshot captures it mid-transition.
     @ViewBuilder
     private var levelContent: some View {
         switch viewModel.phase {
@@ -77,6 +89,7 @@ struct iOSEnchantersTrialView: View {
             EnchanterPrologueView(onBeginTrial: { viewModel.beginTrial() })
                 .navigationTitle(String(localized: "simon.explain.title"))
                 .accessibilityIdentifier("enchanter.prologue")
+                .transition(.identity)
         case .attempt:
             EnchanterAttemptView(
                 relics: viewModel.relics,
@@ -92,6 +105,7 @@ struct iOSEnchantersTrialView: View {
             // Spec: "Enchanter's prompt card reads the target name aloud on screen load."
             .onAppear { viewModel.announceTargetPrompt() }
             .accessibilityIdentifier("enchanter.attempt")
+            .transition(.identity)
         case .rising:
             EnchanterRisingView(
                 relics: viewModel.relics,
@@ -109,6 +123,7 @@ struct iOSEnchantersTrialView: View {
             .navigationTitle(String(localized: "simon.l2.title"))
             .onAppear { viewModel.announceTargetPrompt() }
             .accessibilityIdentifier("enchanter.rising")
+            .transition(.identity)
         case .timed:
             EnchanterTimedView(
                 relics: viewModel.relics,
@@ -124,6 +139,7 @@ struct iOSEnchantersTrialView: View {
             .navigationTitle(String(localized: "simon.l3.title"))
             .onAppear { viewModel.announceTargetPrompt() }
             .accessibilityIdentifier("enchanter.timed")
+            .transition(.identity)
         }
     }
 
