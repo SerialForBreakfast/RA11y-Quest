@@ -1,7 +1,7 @@
 # ADR-0003: Dungeon Descent v2 as Resonance-Based Scroll Alignment
 
 Date: 2026-04-19
-Status: Proposed
+Status: Accepted (2026-04-19)
 
 ## Context
 

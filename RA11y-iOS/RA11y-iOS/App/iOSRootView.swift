@@ -9,9 +9,9 @@ import RA11yCore
 /// the router's `NavigationPath`.
 ///
 /// ## Startup Rendering
-/// A lightweight loading surface is rendered until initial route resolution completes.
-/// This avoids constructing the full hub, its background image, and storage-backed
-/// refresh work during cold start.
+/// `iOSLaunchLoadingView` (torchlit hall / crystal shaft art) is shown until initial route
+/// resolution completes. This avoids constructing the full hub, its background image, and
+/// storage-backed refresh work during cold start.
 ///
 /// ## Startup Logging
 /// - `rootView.body` — first render, scene visible to the user.
@@ -168,12 +168,9 @@ struct iOSRootView: View {
         RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) routeResolution complete — \(String(format: "%.1f", elapsedMs)) ms — initial route: \(String(describing: initial))")
     }
 
-    /// Lightweight startup view shown before the initial route is known.
+    /// Themed startup surface (guild hall / crystal shaft) shown before the initial route is known.
     private var loadingView: some View {
-        ProgressView(String(localized: "app.loading"))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(.background)
-            .accessibilityLabel(String(localized: "app.loading.a11yLabel"))
+        iOSLaunchLoadingView()
             .onAppear {
                 RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) rootView.body — first render; awaiting route resolution")
                 scheduleSlowLoadingAnnouncementIfStillPending()

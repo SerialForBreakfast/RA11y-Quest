@@ -88,6 +88,91 @@ CoreSimulatorService crashes, missing runtimes):
 
 ---
 
+## File System Boundaries
+
+All files created or modified by AI agents MUST stay inside the project
+directory. This rule applies to every agent, every sub-agent, and every
+tool call — without exception.
+
+### Rule: Never Write Outside the Project Root
+
+The project root is the directory containing this AGENTS.md file.
+
+NEVER create, write, or move files to any of the following:
+- `/tmp/` or any system temporary directory
+- `~/Desktop/`, `~/Downloads/`, `~/Documents/`, or any home directory path
+- `/var/`, `/usr/`, `/etc/`, or any system path
+- Any absolute path that is not inside the project root
+- Any relative path that escapes the project root via `../`
+
+### Approved Locations for Working Files
+
+When a task requires scratch space, intermediate output, or generated
+artefacts, use directories inside the project:
+
+| Purpose | Location |
+|---|---|
+| Design docs, specs, ADRs | `memlog/` |
+| Mockup HTML files | `memlog/requirements/Design/Mockups-v2/` |
+| Generated assets (pre-import) | `memlog/requirements/Design/Assets/` |
+| Build and test output | `build_results/` |
+| Utility scripts | `utility/` |
+
+### Enforcement
+
+If a task appears to require writing outside the project directory, STOP.
+Reframe the task so all output lands inside the project. If it genuinely
+cannot be done inside the project, ask the user before proceeding.
+
+This rule exists to ensure the repository is the single source of truth
+and that agent actions are fully auditable via git.
+
+---
+
+## Scripting Language Policy
+
+Prefer standard shell tools over interpreted scripting languages. This
+reduces interpreter version dependencies, limits arbitrary code execution
+surface, and keeps scripts auditable by anyone with basic shell knowledge.
+
+### Preferred Tools (use these first)
+
+- **Text processing:** `awk`, `sed`, `grep`, `ripgrep (rg)`, `cut`, `tr`, `sort`, `uniq`
+- **File operations:** `find`, `ls`, `cp`, `mv`, `mkdir`, `rm`, `xargs`
+- **Data / JSON:** `jq`
+- **Network:** `curl`
+- **Archives:** `tar`, `unzip`, `zip`
+- **Conditionals / loops:** `bash` built-ins (`if`, `while`, `for`, `case`)
+- **String / math:** `expr`, `printf`, parameter expansion, arithmetic expansion
+
+### When an Interpreted Language Is Acceptable
+
+Do not write Python, Perl, Ruby, Node.js, or any other interpreted language
+script unless ALL of the following are true:
+
+1. The task is genuinely impossible or severely impractical with shell tools
+2. An explicit interpreter version is already confirmed present on the host
+3. The user explicitly approves the use of that language for the task
+
+Existing project scripts that already use Python are grandfathered:
+- `utility/remove_white_background.py` — approved, do not rewrite
+- `utility/build_and_test.sh` — shell, already compliant
+
+### For New Automation
+
+Write new scripts as `bash`. If a one-liner requires a complex transform,
+reach for `awk` or `jq` before reaching for Python. A 10-line `awk` program
+is more auditable and portable than a 10-line Python script for the same task.
+
+### Rationale
+
+Interpreted language scripts can execute arbitrary code, introduce supply
+chain risk via imports, and behave differently across interpreter versions.
+Shell tools from POSIX and the standard macOS toolchain have a stable,
+well-understood security model and are always available on the host.
+
+---
+
 ## Simulator Detection — Required Pattern
 
 Hardcoded simulator names (e.g., `"iPhone 17"`, `"iPad (A16)"`) MUST NOT

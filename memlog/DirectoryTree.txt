@@ -4,172 +4,406 @@ Maintained snapshot of the repository file structure for context and onboarding.
 Update this file when adding/removing significant directories or moving modules.
 
 How to refresh (from repo root):
-  tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
+  tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-19) — screenshot automation uses deterministic scene boot + xcresulttool extraction
+Current structure (as of 2026-04-19)
 ---
 
 .
-├── .github
-│   └── workflows
-│       ├── ios-ci.yml
-│       └── ios-screenshots.yml
-├── RA11y-iOS
-│   ├── RA11y-iOS
-│   │   ├── App
-│   │   │   ├── iOSAppRouter.swift          AppRoute enum + iOSAppRouter (@Observable), including resonance prototype route
-│   │   │   ├── iOSRootView.swift           Root NavigationStack; owns router
-│   │   │   ├── iOSScreenshotRootView.swift Deterministic screenshot-only root entry
-│   │   │   ├── iOSScreenshotScene.swift    Screenshot scene contract + anchor metadata
-│   │   │   └── iOSLightsOffGameplayBlackout.swift  Lights Off overlay (a11y-inert blackout)
-│   │   ├── Assets.xcassets
-│   │   │   ├── dungeon_resonance_*.imageset (11)  v2 resonance masters: bg, orb, reticle, lane, decoys, flare, spotlight ref
-│   │   │   ├── AccentColor.colorset
-│   │   │   ├── AppIcon.appiconset
-│   │   │   └── RA11y Colors
-│   │   │       └── RA11yAccent.colorset    Brand accent (Light/Dark/HighContrast)
-│   │   ├── Design
-│   │   │   └── iOSTokens.swift             Color.ra11y* extensions (semantic colors)
-│   │   ├── FirstRun
-│   │   │   ├── iOSBasicsSequenceView.swift  Basics sequence placeholder + completion flag
-│   │   │   └── iOSFirstRunView.swift        First-run entry screen + sequence container
-│   │   ├── Feedback
-│   │   │   ├── iOSAudioFeedbackRenderer.swift      iOS generated tone renderer for semantic quest cues
-│   │   │   ├── iOSFeedbackSettings.swift           Shared iOS sound / haptics preferences object
-│   │   │   ├── iOSHapticFeedbackRenderer.swift     UIKit-backed haptic renderer
-│   │   │   └── iOSQuestFeedbackCoordinator.swift   Shared iOS coordinator for semantic feedback intents
-│   │   ├── Games
-│   │   │   ├── iOSEnchantersTrialView.swift  Game 1 (Find & Focus) — full M5 flow (L0-L3)
-│   │   │   ├── iOSDungeonDescentView.swift   Game 3 (Scroll Hunt) — current shipped room-list M7 flow
-│   │   │   ├── iOSDungeonResonanceMockupView.swift  ADR-0003 resonance prototype surface; routed + screenshot-capable
-│   │   │   └── iOSDungeonResonanceArt.swift         Asset name constants for resonance v2 catalog keys
-│   │   ├── Hub
-│   │   │   ├── iOSHubView.swift              Root hub; uses .background{} pattern for bg image
-│   │   │   ├── iOSHubBackgroundView.swift    Full-bleed bg: fallback color + image + gradient
-│   │   │   ├── iOSHubDMGreetingView.swift    "Choose Your Trial, Adventurer" header
-│   │   │   ├── iOSQuestCardView.swift        Tappable card; HStack/VStack adaptive layout
-│   │   │   ├── iOSQuestCardInfoView.swift    Title / goal / duration text block
-│   │   │   ├── iOSQuestThumbnailView.swift   Asset image + SF Symbol placeholder
-│   │   │   ├── iOSRankBadgeView.swift        SwiftUI Canvas rank shape + label
-│   │   │   └── iOSHubFooterView.swift        safeAreaInset footer; VO basics + enable buttons
-│   │   ├── Results
-│   │   │   └── iOSGameResultView.swift     Shared game result screen
-│   │   ├── VoiceOver
-│   │   │   ├── iOSLiveVoiceOverStateProvider.swift  UIAccessibility + NotificationCenter stream
-│   │   │   └── iOSVoiceOverHelpSheet.swift          VoiceOver enable guide sheet
-│   │   ├── VoiceOverRequired
-│   │   │   └── iOSVORequiredView.swift     VO off interstitial; Settings deep link + fallback
-│   │   ├── Localizable.xcstrings           String catalog (localization foundation)
-│   │   └── RA11y_iOSApp.swift              @main entry point -> iOSRootView
-│   ├── RA11y-iOS.xcodeproj
-│   │   ├── project.pbxproj                Links RA11yCore; Swift 6; iOS 18.0
-│   │   └── xcshareddata/xcschemes/RA11y-iOS.xcscheme
-│   ├── RA11y-iOSTests
-│   │   └── RA11y_iOSTests.swift            RouterTests + VoiceOverGatingTests
-│   └── RA11y-iOSUITests
-│       ├── RA11y_iOSUITests.swift
-│       ├── RA11y_iOSUITestsLaunchTests.swift
-│       ├── RA11y_iOSScreenshots.swift      XCTAttachment capture via deterministic scene boots
-│       └── ScreenshotRouteCatalog.md       Screenshot contract: files, scene IDs, anchors
-├── RA11y.xcworkspace
-│   └── contents.xcworkspacedata            Ties RA11y-iOS.xcodeproj + RA11yCore
-├── RA11yCore                               Shared Swift package (iOS 18+ / macOS 15+)
-│   ├── Sources/RA11yCore
-│   │   ├── Design
-│   │   │   ├── RA11yFont.swift             Font.ra11y* Dynamic Type extensions
-│   │   │   └── RA11yTokens.swift           RA11ySpacing + RA11yRadius enums
-│   │   ├── Feedback
-│   │   │   ├── QuestFeedbackProfile.swift  Shared cue profiles for reusable quest feedback
-│   │   │   ├── QuestFeedbackReducer.swift  Pure reducer: semantic gameplay input -> feedback intents
-│   │   │   └── QuestFeedbackTypes.swift    Feedback bands, intents, cues, and reducer state
-│   │   ├── GameCatalog
-│   │   │   └── GameDefinition.swift        GameKind + GameDefinition + GameCatalog
-│   │   ├── GameSession
-│   │   │   ├── GameSession.swift           Actor state machine (start/pause/resume/complete/abandon)
-│   │   │   ├── GameSessionCoordinator.swift  @Observable bridge: VO state → session lifecycle
-│   │   │   └── GameSessionState.swift      State enum + GameSessionError
-│   │   ├── Hub
-│   │   │   └── HubViewModel.swift          @Observable: showHelpAffordance driven by VO state
-│   │   ├── Logging
-│   │   │   └── RA11yLogger.swift           OSLog Logger namespace (startup, storage, navigation, scoring, voiceOver, feedback)
-│   │   ├── Results
-│   │   │   └── GameResultPresenter.swift   Pure formatting for result display + a11y announcement
-│   │   ├── Scoring
-│   │   │   ├── GameRank.swift              Rank enum (Comparable, Codable, CaseIterable)
-│   │   │   ├── GameResult.swift            Result struct (Codable, Hashable, Equatable)
-│   │   │   └── RankThresholds.swift        Rank evaluation logic + per-game presets
-│   │   ├── Storage
-│   │   │   ├── StorageComponent.swift      Persistence protocol (async)
-│   │   │   └── UserDefaultsStorageComponent.swift  Actor impl; JSON encode/decode
-│   │   └── VoiceOver
-│   │       ├── GameStartDecision.swift     .proceed / .requireVoiceOver routing enum
-│   │       └── VoiceOverStateProvider.swift  Protocol + StubVoiceOverStateProvider
-│   ├── Tests/RA11yCoreTests
-│   │   ├── GameCatalogTests.swift
-│   │   ├── GameResultPresenterTests.swift
-│   │   ├── GameSessionCoordinatorTests.swift  VO-off mid-game → abandon; 9 tests
-│   │   ├── GameSessionTests.swift
-│   │   ├── HubViewModelTests.swift
-│   │   ├── QuestFeedbackReducerTests.swift  Shared feedback transition semantics
-│   │   ├── RA11yCoreTests.swift            Index (comments only)
-│   │   ├── ScoringModelTests.swift
-│   │   ├── StorageTests.swift
-│   │   ├── TestHelpers.swift               InMemoryStorageComponent
-│   │   └── VoiceOverTests.swift
-│   └── Package.swift                       platforms: [.iOS(.v18), .macOS(.v15)]
-└── memlog
-    ├── DirectoryTree.txt
-    ├── requirements
-    │   ├── Design/                         Design track tickets + assets (D&D theme)
-    │   │   ├── Mockups-v2/                 Screen composition mockups (v3 current)
-    │   │   │   ├── mock_v3_hub_quest_board.png
-    │   │   │   ├── mock_v3_lesson_card_l0.png          (NEW — VoiceOver Basics L0)
-    │   │   │   ├── mock_v3_enchanter_trial_play.png    (NEW — M5)
-    │   │   │   ├── mock_v3_rogue_gauntlet_play_v2.png  (NEW — M6, rune-seal retheme)
-    │   │   │   ├── mock_v3_dungeon_descent_play.png    (NEW — M7)
-    │   │   │   └── mock_v3_results_legendary.png       (NEW — shared results screen)
-    │   │   ├── Assets/                     Raw generated sprite + background assets
-    │   │   ├── DesignTicket-AssetListDefinition.txt
-    │   │   ├── DesignTicket-DungeonResonancePromptSheet.txt  Single-asset prompts for Dungeon v2 orb/reticle/glyph art
-    │   │   ├── DungeonResonanceAssetPipeline.txt       Z-order, sizing, transparency / multi-device compositing
-    │   │   ├── DungeonResonanceScreenConcept.png      AI concept frame: center orb + lane (not app screenshot)
-    │   │   ├── DesignTicket-PromptSheet.txt
-    │   │   ├── DesignTicket-AssetReviewChecklist.txt
-    │   │   └── DesignTicket-AssetDeliveryNaming.txt
-    │   ├── GameRules-MVP.txt               Full D&D-themed string spec + pedagogy framework
-    │   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
-    │   ├── LightsOffMode-Recommendations.txt  Advanced blackout mode: a11y stability vs cross-run variation
-    │   ├── LightsOffMode-Decisions.txt        Locked hub toggle + dungeon randomization rules
-    │   ├── LightsOffMode-QAChecklist.txt      Manual VoiceOver acceptance checklist
-    │   ├── Phase1-*.txt                    Phase 1 requirements, decisions, user stories
-    │   ├── Phase2-Roadmap.txt
-    │   ├── Requirements-Index.txt
-    │   ├── Spike-ScrollObservability-SwiftUI.txt
-    │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
-    └── research/
-        ├── ADR-0001-Concurrency-Strategy.md
-        ├── ADR-0002-AI-Assisted-Screenshot-Validation.md  Proposed architecture for Vision + fastlane + optional Foundation Models UI QA
-        ├── ADR-0003-Dungeon-Resonance-Scroll-Interaction.md  Proposed Dungeon v2 reticle/orb redesign with haptics + resonance feedback
-        ├── InitialBrainstorming.txt
-        └── NativeAccessibility.txt
-├── scripts
-│   └── extract_screenshots.sh      xcresulttool-based PNG extraction (replaces fastlane snapshot)
-├── fastlane
-│   ├── Fastfile                    screenshots lane: xcodebuild test + extract_screenshots.sh
-│   └── Snapfile                    retained for device/language config reference
-├── Gemfile
+|-- RA11y-iOS
+|   |-- RA11y-iOS
+|   |   |-- App
+|   |   |   |-- iOSAppRouter.swift
+|   |   |   |-- iOSLaunchLoadingView.swift
+|   |   |   |-- iOSLightsOffGameplayBlackout.swift
+|   |   |   |-- iOSRootView.swift
+|   |   |   |-- iOSScreenshotRootView.swift
+|   |   |   `-- iOSScreenshotScene.swift
+|   |   |-- Design
+|   |   |   `-- iOSTokens.swift
+|   |   |-- Feedback
+|   |   |   |-- iOSAudioFeedbackRenderer.swift
+|   |   |   |-- iOSFeedbackSettings.swift
+|   |   |   |-- iOSHapticFeedbackRenderer.swift
+|   |   |   `-- iOSQuestFeedbackCoordinator.swift
+|   |   |-- FirstRun
+|   |   |   |-- iOSBasicsSequenceView.swift
+|   |   |   `-- iOSFirstRunView.swift
+|   |   |-- Games
+|   |   |   |-- iOSDungeonDescentView.swift
+|   |   |   |-- iOSDungeonResonanceArt.swift
+|   |   |   |-- iOSDungeonResonanceComponents.swift
+|   |   |   |-- iOSDungeonResonanceMockupView.swift
+|   |   |   |-- iOSDungeonResonancePlayView.swift
+|   |   |   |-- iOSEnchantersTrialView.swift
+|   |   |   `-- iOSRogueGauntletView.swift
+|   |   |-- Hub
+|   |   |   |-- iOSHubBackgroundView.swift
+|   |   |   |-- iOSHubDMGreetingView.swift
+|   |   |   |-- iOSHubFooterView.swift
+|   |   |   |-- iOSHubView.swift
+|   |   |   |-- iOSQuestCardInfoView.swift
+|   |   |   |-- iOSQuestCardView.swift
+|   |   |   |-- iOSQuestThumbnailView.swift
+|   |   |   `-- iOSRankBadgeView.swift
+|   |   |-- Results
+|   |   |   `-- iOSGameResultView.swift
+|   |   |-- VoiceOver
+|   |   |   |-- iOSLiveVoiceOverStateProvider.swift
+|   |   |   |-- iOSVORequiredView.swift
+|   |   |   `-- iOSVoiceOverHelpSheet.swift
+|   |   |-- Localizable.xcstrings
+|   |   `-- RA11y_iOSApp.swift
+|   |-- RA11y-iOS.xcodeproj
+|   |   |-- project.xcworkspace
+|   |   |   `-- xcshareddata
+|   |   |       `-- swiftpm
+|   |   |           `-- configuration
+|   |   |-- xcshareddata
+|   |   |   `-- xcschemes
+|   |   `-- project.pbxproj
+|   |-- RA11y-iOSTests
+|   |   `-- RA11y_iOSTests.swift
+|   `-- RA11y-iOSUITests
+|       |-- RA11y_iOSScreenshots.swift
+|       |-- RA11y_iOSUITests.swift
+|       |-- RA11y_iOSUITestsLaunchTests.swift
+|       `-- ScreenshotRouteCatalog.md
+|-- RA11y-tvOS
+|   |-- RA11y-tvOS
+|   |   |-- ContentView.swift
+|   |   `-- RA11y_tvOSApp.swift
+|   |-- RA11y-tvOS.xcodeproj
+|   |   `-- project.pbxproj
+|   |-- RA11y-tvOSTests
+|   |   `-- RA11y_tvOSTests.swift
+|   `-- RA11y-tvOSUITests
+|       |-- RA11y_tvOSUITests.swift
+|       `-- RA11y_tvOSUITestsLaunchTests.swift
+|-- RA11y.xcworkspace
+|   |-- xcshareddata
+|   |   `-- swiftpm
+|   |       `-- configuration
+|   `-- contents.xcworkspacedata
+|-- RA11yCore
+|   |-- Sources
+|   |   `-- RA11yCore
+|   |       |-- Design
+|   |       |   |-- RA11yFont.swift
+|   |       |   `-- RA11yTokens.swift
+|   |       |-- Feedback
+|   |       |   |-- QuestFeedbackProfile.swift
+|   |       |   |-- QuestFeedbackReducer.swift
+|   |       |   `-- QuestFeedbackTypes.swift
+|   |       |-- GameCatalog
+|   |       |   `-- GameDefinition.swift
+|   |       |-- GameSession
+|   |       |   |-- GameSession.swift
+|   |       |   |-- GameSessionCoordinator.swift
+|   |       |   `-- GameSessionState.swift
+|   |       |-- Hub
+|   |       |   `-- HubViewModel.swift
+|   |       |-- Logging
+|   |       |   `-- RA11yLogger.swift
+|   |       |-- Results
+|   |       |   `-- GameResultPresenter.swift
+|   |       |-- Scoring
+|   |       |   |-- GameRank.swift
+|   |       |   |-- GameResult.swift
+|   |       |   `-- RankThresholds.swift
+|   |       |-- Storage
+|   |       |   |-- StorageComponent.swift
+|   |       |   `-- UserDefaultsStorageComponent.swift
+|   |       |-- VoiceOver
+|   |       |   |-- GameStartDecision.swift
+|   |       |   `-- VoiceOverStateProvider.swift
+|   |       `-- RA11yCore.swift
+|   |-- Tests
+|   |   `-- RA11yCoreTests
+|   |       |-- GameCatalogTests.swift
+|   |       |-- GameResultPresenterTests.swift
+|   |       |-- GameSessionCoordinatorTests.swift
+|   |       |-- GameSessionTests.swift
+|   |       |-- HubViewModelTests.swift
+|   |       |-- QuestFeedbackReducerTests.swift
+|   |       |-- RA11yCoreTests.swift
+|   |       |-- ScoringModelTests.swift
+|   |       |-- StorageTests.swift
+|   |       |-- TestHelpers.swift
+|   |       `-- VoiceOverTests.swift
+|   `-- Package.swift
+|-- build_results
+|   |-- 2026-02-21_09-48-28
+|   |   `-- summary.md
+|   |-- 2026-02-21_09-48-35
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-02-21_09-49-56
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-02-21_10-01-40
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build_for_testing.log
+|   |   `-- summary.md
+|   |-- 2026-02-21_10-02-22
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build_for_testing.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-02-21_11-03-07
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_13-25-01
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_13-28-06
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_13-34-31
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_13-50-17
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_14-05-42
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_14-18-08
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_21-12-54
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-07_22-39-46
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-03-08_00-31-33
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_12-12-43
+|   |   |-- core_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_12-12-52
+|   |   |-- core_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_12-13-16
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_12-19-16
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_12-19-21
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_12-24-32
+|   |   |-- core_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_21-40-26
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_21-40-35
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_21-45-44
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-18_21-53-53
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_00-21-37
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_08-55-44
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_09-47-44
+|   |   |-- core_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_09-50-41
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_10-10-20
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_11-25-59
+|   |   `-- summary.md
+|   |-- 2026-04-19_11-26-02
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_11-28-16
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_11-53-06
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_12-04-59
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-09-10
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-10-11
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-26-37
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-27-53
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-35-37
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-48-32
+|   |   |-- ios_build.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-49-48
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_13-52-49
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_14-08-47
+|   |   |-- core_build.log
+|   |   |-- core_test.log
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   |-- 2026-04-19_14-16-48
+|   |   |-- ios_build.log
+|   |   |-- ios_test.log
+|   |   `-- summary.md
+|   `-- 2026-04-19_14-22-26
+|       |-- ios_build.log
+|       |-- ios_test.log
+|       `-- summary.md
+|-- docs
+|   `-- screenshots
+|       `-- en-US
+|           |-- iPad
+|           |-- iPhone_17
+|           |-- iPhone_large
+|           `-- iPhone_small
+|-- fastlane
+|   |-- screenshots
+|   |   |-- en-US
+|   |   |   |-- iPad
+|   |   |   `-- iPhone_large
+|   |   `-- screenshots.html
+|   |-- Fastfile
+|   |-- README.md
+|   |-- Snapfile
+|   `-- report.xml
+|-- memlog
+|   |-- archive
+|   |   `-- GameSpec-ActivateDoubleTap.txt
+|   |-- requirements
+|   |   |-- Design
+|   |   |   |-- Assets
+|   |   |   |   |-- bomb
+|   |   |   |   |-- dungeon
+|   |   |   |   |-- enchanter
+|   |   |   |   |-- hub
+|   |   |   |   |-- rogue
+|   |   |   |   `-- simon
+|   |   |   |-- Mockups-v2
+|   |   |   |   `-- dungeon_resonance_mockup.html
+|   |   |   |-- DesignProcess.md
+|   |   |   |-- DesignTicket-AssetDeliveryNaming.txt
+|   |   |   |-- DesignTicket-AssetListDefinition.txt
+|   |   |   |-- DesignTicket-AssetReviewChecklist.txt
+|   |   |   |-- DesignTicket-DungeonResonancePromptSheet.txt
+|   |   |   |-- DesignTicket-FirstRunEntry.txt
+|   |   |   |-- DesignTicket-PromptSheet.txt
+|   |   |   |-- DungeonResonanceAssetPipeline.txt
+|   |   |   `-- QuestConcept-Banishment.txt
+|   |   |-- GameRules-MVP.txt
+|   |   |-- GameSpec-FindAndFocus.txt
+|   |   |-- GameSpec-ScrollHunt.txt
+|   |   |-- LightsOffMode-Decisions.txt
+|   |   |-- LightsOffMode-QAChecklist.txt
+|   |   |-- LightsOffMode-Recommendations.txt
+|   |   |-- Phase1-Decisions.txt
+|   |   |-- Phase1-GameSpecs-Overview.txt
+|   |   |-- Phase1-Requirements.txt
+|   |   |-- Phase1-UserStories.txt
+|   |   |-- Phase2-Roadmap.txt
+|   |   |-- Requirements-Index.txt
+|   |   |-- Spike-ScrollObservability-SwiftUI.txt
+|   |   |-- SwiftUIAgenticRules.txt
+|   |   `-- TicketBreakdown.txt
+|   |-- research
+|   |   |-- ADR-0001-Concurrency-Strategy.md
+|   |   |-- ADR-0002-AI-Assisted-Screenshot-Validation.md
+|   |   |-- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+|   |   |-- AccessibilityFeatureGamification.md
+|   |   |-- InitialBrainstorming.txt
+|   |   `-- NativeAccessibility.txt
+|   `-- DirectoryTree.txt
+|-- scripts
+|   `-- extract_screenshots.sh
+|-- utility
+|   |-- __pycache__
+|   |   `-- remove_white_background.cpython-314.pyc
+|   |-- ExtractScreenshots.swift
+|   |-- ValidateScreenshotContract.swift
+|   |-- build_and_test.sh
+|   |-- remove_white_background.py
+|   |-- resolve_simulator_udid.jq
+|   `-- validate_screenshot_contract.sh
+|-- AGENTS.md
+|-- Gemfile
+|-- Gemfile.lock
+`-- README.md
 
----
-Notes
----
-- RA11y-iOS uses PBXFileSystemSynchronizedRootGroup — new files in subdirectories are
-  auto-included in the target without editing project.pbxproj.
-- RA11yCore is linked to the RA11y-iOS app target as a local SPM package.
-- SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor is set at the project level — all app code
-  is implicitly @MainActor unless annotated otherwise.
-- String Catalog (Localizable.xcstrings) is set up with English strings; localization
-  support requires only new catalog entries (no code changes) in future.
-- Screenshot automation now boots explicit scenes via `-screenshotScene <sceneID>` rather
-  than navigating from the hub. Fastlane validates exported PNGs against
-  `RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md`.
+119 directories, 276 files

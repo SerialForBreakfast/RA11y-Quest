@@ -1,3 +1,8 @@
+NOTE (2026-04-19): The M6 Rogue's Gauntlet tickets in this breakdown are
+RETIRED. The Rogue's Gauntlet has been removed from the curriculum. M6 is
+now Crystal Resonance (Dungeon Descent v2) per ADR-0003. M7 is The Banishment.
+Current milestone status: M0–M5 Done. M6–M7 In Design. M8 Pending.
+
 RA11y - MVP Ticket Breakdown
 Date: 2026-02-20
 

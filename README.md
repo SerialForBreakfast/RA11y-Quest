@@ -12,75 +12,175 @@ Most accessibility training is passive: read a doc, watch a video, move on.
 RA11y makes the VoiceOver interaction model the game mechanic itself.
 Players cannot succeed without using VoiceOver correctly — the game enforces it.
 
-The app uses a D&D fantasy theme as narrative scaffolding. Three games, each
-targeting a distinct VoiceOver behavior that trips up new users:
+The app uses a D&D fantasy theme as narrative scaffolding. Each quest targets
+one VoiceOver behaviour that trips up new users, taught through three stages:
+an untimed practice, a scored timed trial, and a Lights Off stage where haptics
+and audio replace visual cues entirely.
 
-| Game | VoiceOver Skill |
-|---|---|
-| The Enchanter's Trial | Navigate focus with swipe; activate the correct element |
-| The Rogue's Gauntlet | Single tap examines; double-tap activates — not the same |
-| The Dungeon Descent | One-finger swipe navigates elements; three fingers scroll the page |
+| Quest | VoiceOver Skill | One-line lesson |
+|---|---|---|
+| The Enchanter's Trial | Swipe to navigate focus; double-tap to activate | The screen is linear — walk through it one element at a time |
+| Crystal Resonance | Three-finger scroll | One finger navigates; three fingers move the world |
+| The Banishment *(in design)* | Two-finger scrub to dismiss | Any time VoiceOver traps you, the Mark of Z banishes it |
 
-Each game follows a four-level arc: guided explanation, untimed practice,
-rising complexity, then a timed trial with a progress bar.
+Each quest follows a three-stage arc: untimed guided practice, scored timed
+trial, then a Lights Off stage relying entirely on VoiceOver, haptics, and audio.
 
 ---
 
-## Current State — Hub Screen
+## Screenshots
 
-The Hub is the first screen a player sees. It presents the three game quests,
-detects VoiceOver state, and surfaces the help affordance for new users.
+Screenshots are captured automatically via `bundle exec fastlane screenshots`
+and committed to `docs/screenshots/`.
+
+---
+
+### Hub
+
+The Hub is the first screen a returning player sees after the first-run sequence.
+It presents each quest as a card on the quest board. With VoiceOver, the player
+swipes right to move focus from card to card, hears the quest name and objective
+announced, and double-taps to enter. A help affordance in the top-right opens a
+VoiceOver quick-reference sheet for players who need a reminder.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/en-US/iPhone_large/01_Hub.png" width="220" alt="Hub on iPhone 17"></td>
-    <td align="center"><img src="docs/screenshots/en-US/iPhone_small/01_Hub.png" width="190" alt="Hub on iPhone 16e"></td>
-    <td align="center"><img src="docs/screenshots/en-US/iPad/01_Hub.png" width="320" alt="Hub on iPad"></td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_17/01_Hub.png" width="200" alt="Hub on iPhone 17 — three quest cards on the board">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPad/01_Hub.png" width="300" alt="Hub on iPad — quest board with wider layout">
+    </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone (large)</sub></td>
-    <td align="center"><sub>iPhone (small)</sub></td>
+    <td align="center"><sub>iPhone 17</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
 
-Screenshots captured automatically via `bundle exec fastlane screenshots`.
+Each card shows the quest thumbnail, name, goal, and best-rank badge once a run
+has been completed. Cards are full accessibility elements: the label includes the
+quest name and objective; the hint says "Double-tap to begin."
 
 ---
 
-## Design Vision — Where We're Going
+### The Enchanter's Trial
 
-### Hub — Quest Board
+**Skill taught:** VoiceOver focus navigation — swipe right to move focus element
+by element; double-tap to activate the focused element.
 
-<img src="memlog/requirements/Design/Mockups-v2/mock_v3_hub_quest_board.png" width="320" alt="Hub quest board mockup">
+**The lesson:** The screen is now linear. You navigate one element at a time.
+Swipe to walk through the room. Double-tap when you find the named relic.
 
-### VoiceOver Basics — First-Run Lesson Card (M4)
+The quest follows a three-stage arc. Each stage removes a layer of scaffolding
+until the player is navigating entirely on their own under a hard time limit.
 
-<img src="memlog/requirements/Design/Mockups-v2/mock_v3_lesson_card_l0.png" width="280" alt="VoiceOver Basics lesson card">
+#### L0 — The Prologue
 
-### Game Screens (M5–M7)
+The Dungeon Master introduces the quest and explains the VoiceOver focus model
+before the player attempts anything. A lesson card names the gesture. The player
+cannot proceed until they have read (or listened to) the objective.
 
 <table>
   <tr>
-    <th align="center">The Enchanter's Trial</th>
-    <th align="center">The Rogue's Gauntlet</th>
-    <th align="center">The Dungeon Descent</th>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_17/04_EnchanterPrologue.png" width="200" alt="Enchanter's Trial — prologue lesson card">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPad/04_EnchanterPrologue.png" width="300" alt="Enchanter's Trial prologue on iPad">
+    </td>
   </tr>
   <tr>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v3_enchanter_trial_play.png" width="200" alt="Enchanter's Trial — in play"></td>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v3_rogue_gauntlet_play_v2.png" width="200" alt="Rogue's Gauntlet — in play"></td>
-    <td align="center"><img src="memlog/requirements/Design/Mockups-v2/mock_v3_dungeon_descent_play.png" width="200" alt="Dungeon Descent — in play"></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Find the named relic (VoiceOver focus + invoke)</sub></td>
-    <td align="center"><sub>Sever the correct seal (touch to examine, double-tap to act)</sub></td>
-    <td align="center"><sub>Scroll three fingers to reach the Ancient Vault</sub></td>
+    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
 
-### Shared Results Screen
+#### L1 — First Attempt (untimed)
 
-<img src="memlog/requirements/Design/Mockups-v2/mock_v3_results_legendary.png" width="280" alt="Results screen — Legendary rank">
+Three relics on the shelf. The Enchanter names the target. No timer, no pressure.
+The player swipes through the relics, hears each name announced by VoiceOver, and
+double-taps the correct one. A wrong activation is noted but does not end the
+attempt. Goal: build confidence — "I can do this."
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_17/05_EnchanterAttempt.png" width="200" alt="Enchanter's Trial — first attempt, three relics, no timer">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPad/05_EnchanterAttempt.png" width="300" alt="Enchanter's Trial first attempt on iPad">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPad</sub></td>
+  </tr>
+</table>
+
+#### L2 — Rising Challenge (soft timer)
+
+Six relics with deliberately similar-sounding names (Dragon Scale vs Dragon Claw,
+Shadow Stone vs Sunstone). A soft 45-second timer introduces gentle urgency.
+VoiceOver announces the timer at 50% and 25% elapsed. Mistakes count. The player
+must listen carefully — two items sound nearly identical.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_17/06_EnchanterRising.png" width="200" alt="Enchanter's Trial — rising challenge, six relics, soft timer">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPad/06_EnchanterRising.png" width="300" alt="Enchanter's Trial rising challenge on iPad">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPad</sub></td>
+  </tr>
+</table>
+
+#### L3 — Timed Trial (hard timer, scored)
+
+Eight relics. Twenty seconds. No hints. VoiceOver counts down at 10 seconds then
+5-4-3-2-1. The progress bar depletes in real time. A rank is awarded at the end:
+Legendary, Skilled, Novice, or Defeated. This is the only scored stage.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_17/07_EnchanterTimed.png" width="200" alt="Enchanter's Trial — timed trial, eight relics, hard 20-second timer">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPad/07_EnchanterTimed.png" width="300" alt="Enchanter's Trial timed trial on iPad">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPad</sub></td>
+  </tr>
+</table>
+
+#### Result Screen
+
+Rank, time, and mistake count are displayed with D&D-flavoured copy. The result
+is persisted as the player's best run for that quest. VoiceOver reads the full
+result as a single announcement on screen load.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_17/08_EnchanterResult.png" width="200" alt="Enchanter's Trial — result screen showing rank and score">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPad/08_EnchanterResult.png" width="300" alt="Enchanter's Trial result screen on iPad">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPad</sub></td>
+  </tr>
+</table>
 
 ---
 
@@ -227,8 +327,10 @@ higher bar than most apps:
 | M1 | Core models — scoring, session, storage | Done |
 | M2 | VoiceOver gating, interstitial, help affordance | Done |
 | M3 | Hub UI — quest board, D&D theming, all device sizes | Done |
-| M4 | First-run basics sequence | Ready |
-| M5–M7 | Game implementation (Enchanter, Rogue, Dungeon) | Pending |
+| M4 | First-run basics sequence | Done |
+| M5 | The Enchanter's Trial | Done |
+| M6 | Crystal Resonance (Dungeon Descent v2) | In Design |
+| M7 | The Banishment | In Design |
 | M8 | Full accessibility audit | Pending |
 
 See `memlog/requirements/TicketBreakdown.txt` for the full ticket breakdown.

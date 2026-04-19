@@ -10,6 +10,7 @@ import OSLog
 /// ## Usage
 /// ```swift
 /// RA11yLogger.navigation.debug("Pushing route: hub")
+/// RA11yLogger.scrollInteraction.debug("lane scroll offset …")
 /// RA11yLogger.storage.error("Failed to persist result: \(error)")
 /// ```
 ///
@@ -52,6 +53,12 @@ public enum RA11yLogger {
     /// Logs key moments from cold start through the hub becoming interactive.
     /// Visible in Console.app filtered by subsystem + category = "startup".
     public static let startup = Logger(subsystem: subsystem, category: "startup")
+
+    /// VoiceOver scroll routing, `ScrollView` focus moves, and resonance alignment telemetry.
+    ///
+    /// Filter in Console.app: `subsystem:com.showblender.RA11y category:scrollInteraction`
+    /// Use when diagnosing three-finger scroll and moonstone alignment issues on device or Simulator.
+    public static let scrollInteraction = Logger(subsystem: subsystem, category: "scrollInteraction")
 
     /// Timed interval signposter for startup phases.
     ///

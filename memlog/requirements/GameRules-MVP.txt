@@ -1,3 +1,9 @@
+NOTE (2026-04-19): The Rogue's Gauntlet sections in this file are RETIRED.
+That quest has been removed from the curriculum. The Enchanter's Trial and
+Crystal Resonance sections remain current. New quests (The Banishment and
+future intermediate quests) are specified in their own files under
+memlog/requirements/Design/QuestConcept-*.txt and GameSpec-*.txt.
+
 RA11y — MVP Game Rules
 Per-Screen Strings, Accessibility Labels, and Pedagogical Design
 

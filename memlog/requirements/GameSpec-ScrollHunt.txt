@@ -1,3 +1,9 @@
+NOTE (2026-04-19): This spec describes the original room-list Dungeon Descent
+mechanic. It is SUPERSEDED by the Crystal Resonance redesign documented in
+ADR-0003 (memlog/research/ADR-0003-Dungeon-Resonance-Scroll-Interaction.md).
+The room-list implementation remains the current shipped code until the v2
+migration is complete. Do not use this spec as the design target for new work.
+
 RA11y - Accessibility Training Gamification
 Game Spec - The Dungeon Descent (Scroll Hunt)
 

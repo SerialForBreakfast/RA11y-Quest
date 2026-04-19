@@ -13,14 +13,14 @@ import RA11yCore
 ///
 /// - **L0 Prologue**: Retained for deterministic `dungeonPrologue` screenshots (`-screenshotScene`);
 ///   optional narration, lesson, practice scroll, and begin trial — **not** shown on normal launch.
-/// - **L1 First Attempt (cold start)**: Normal entry begins here — 4 rooms, no timer; learning happens
-///   in the real shaft scroll list (see on-screen gesture tip + VoiceOver objective prompt).
+/// - **L1 First Attempt (cold start)**: Normal entry begins at the resonance shaft — fixed orb,
+///   scrolling moonstone lane (ADR-0003), no timer; gesture tip + VoiceOver objective in the HUD.
 /// - **L2 Rising Challenge**: 8 rooms, 60 s soft timer — Relic Vault as target
 /// - **L3 Timed Trial**: 12 rooms, 45 s hard timer; `GameSession` started here for scoring
 ///
-/// Only L3 creates a `GameSession`. Scroll observability uses `onScrollGeometryChange`
-/// (iOS 18+ native API, validated in S1 spike) to detect whether the target room is visible.
-/// Target activation is gated on `targetIsReachable` to enforce the scroll requirement.
+/// Only L3 creates a `GameSession`. Gameplay uses ADR-0003 resonance alignment: vertical
+/// distance from the moonstone to the screen aim line drives `targetIsReachable`, orb/reticle
+/// presentation, and `QuestFeedbackBand` multimodal feedback (`updateResonanceDelta`).
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -61,12 +61,11 @@ struct iOSDungeonDescentView: View {
     var body: some View {
         levelContent
             .background {
-                if isLightsOffFinalLevel {
-                    Color.black
-                        .ignoresSafeArea()
-                } else {
+                if viewModel.phase == .prologue {
                     DungeonBackgroundView()
                         .ignoresSafeArea()
+                } else {
+                    Color.clear
                 }
             }
             .preferredColorScheme(.dark)
@@ -100,7 +99,7 @@ struct iOSDungeonDescentView: View {
             .transition(.identity)
 
         case .firstAttempt:
-            DungeonPlayView(
+            iOSDungeonResonancePlayView(
                 rooms: viewModel.rooms,
                 targetIsReachable: viewModel.targetIsReachable,
                 statusMessage: viewModel.statusMessage,
@@ -111,11 +110,8 @@ struct iOSDungeonDescentView: View {
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: nil,
                 showsFirstLevelGestureTip: true,
-                onUpdateReachability: { visible, frame in
-                    viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
-                },
+                onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
-                onActivateNonTarget: { room in await viewModel.activateNonTarget(room) },
                 onHint: nil,
                 onContinue: { viewModel.advanceToRising() },
                 onRetry: nil
@@ -126,7 +122,7 @@ struct iOSDungeonDescentView: View {
             .transition(.identity)
 
         case .rising:
-            DungeonPlayView(
+            iOSDungeonResonancePlayView(
                 rooms: viewModel.rooms,
                 targetIsReachable: viewModel.targetIsReachable,
                 statusMessage: viewModel.statusMessage,
@@ -137,11 +133,8 @@ struct iOSDungeonDescentView: View {
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: nil,
                 showsFirstLevelGestureTip: false,
-                onUpdateReachability: { visible, frame in
-                    viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
-                },
+                onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
-                onActivateNonTarget: { room in await viewModel.activateNonTarget(room) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToTimed() },
                 onRetry: { viewModel.retryRising() }
@@ -152,7 +145,7 @@ struct iOSDungeonDescentView: View {
             .transition(.identity)
 
         case .timed:
-            DungeonPlayView(
+            iOSDungeonResonancePlayView(
                 rooms: viewModel.rooms,
                 targetIsReachable: viewModel.targetIsReachable,
                 statusMessage: viewModel.statusMessage,
@@ -163,11 +156,8 @@ struct iOSDungeonDescentView: View {
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: String(localized: "dungeon.lightsOff.flavor"),
                 showsFirstLevelGestureTip: false,
-                onUpdateReachability: { visible, frame in
-                    viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
-                },
+                onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
-                onActivateNonTarget: { room in await viewModel.activateNonTarget(room) },
                 onHint: { viewModel.requestHint() },
                 onContinue: nil,
                 onRetry: { viewModel.retryTimed() }
@@ -255,6 +245,12 @@ final class DungeonDescentViewModel {
     /// Countdown task running during L2 or L3. Cancelled on phase change via `stopTimer()`.
     private var timerTask: Task<Void, Never>?
 
+    /// Multimodal resonance feedback (audio/haptics) for alignment ladder transitions.
+    private let questFeedbackCoordinator: iOSQuestFeedbackCoordinator
+
+    /// Last band forwarded to `questFeedbackCoordinator` to avoid redundant cues.
+    private var lastResonanceFeedbackBand: QuestFeedbackBand?
+
     // MARK: - Init
 
     /// Creates the Crystal Resonance view model.
@@ -266,6 +262,10 @@ final class DungeonDescentViewModel {
     init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
         self.storage = storage
         self.screenshotScene = screenshotScene
+        self.questFeedbackCoordinator = iOSQuestFeedbackCoordinator(
+            profile: .dungeonResonance,
+            settings: iOSFeedbackSettings()
+        )
         if let screenshotScene {
             applyScreenshotScene(screenshotScene)
         } else {
@@ -300,6 +300,7 @@ final class DungeonDescentViewModel {
     /// Transitions L0 → L1: 4-room dungeon, no timer.
     func beginTrial() {
         stopTimer()
+        resetResonanceAlignmentState()
         mistakes = 0
         statusMessage = nil
         levelComplete = false
@@ -311,6 +312,7 @@ final class DungeonDescentViewModel {
     /// Transitions L1 → L2: 8-room dungeon with 60 s soft timer.
     func advanceToRising() {
         stopTimer()
+        resetResonanceAlignmentState()
         mistakes = 0
         statusMessage = nil
         levelComplete = false
@@ -334,6 +336,7 @@ final class DungeonDescentViewModel {
     /// `recordMistake()` / `complete()`. Both are sequenced inside a single `Task`.
     func advanceToTimed() {
         stopTimer()
+        resetResonanceAlignmentState()
         mistakes = 0
         statusMessage = nil
         levelComplete = false
@@ -404,18 +407,43 @@ final class DungeonDescentViewModel {
         advanceToTimed()
     }
 
-    // MARK: - Scroll Observability
+    // MARK: - Resonance alignment (ADR-0003)
 
-    /// Updates the `targetIsReachable` flag from the latest scroll geometry.
+    /// Updates scroll alignment from the vertical delta between the moonstone and the aim line.
     ///
-    /// Called from the level view whenever either the visible rect or the target frame changes.
-    /// A null `targetFrame` (pre-layout) is treated as not-yet-reachable.
-    func updateTargetReachability(visibleRect: CGRect, targetFrame: CGRect) {
-        guard !targetFrame.isNull else {
-            targetIsReachable = false
-            return
+    /// Called from `iOSDungeonResonancePlayView` on each preference-driven geometry change.
+    /// `screenshotScene` launches skip updates so deterministic captures keep VM-forced reachability.
+    ///
+    /// ## Concurrency
+    /// Must run on the main actor in lockstep with SwiftUI layout; the view calls this from
+    /// `onPreferenceChange` on the main thread.
+    func updateResonanceDelta(_ deltaPoints: CGFloat) {
+        guard screenshotScene == nil else { return }
+        if completedResult != nil { return }
+        switch phase {
+        case .firstAttempt, .rising:
+            if levelComplete { return }
+        default:
+            break
         }
-        targetIsReachable = visibleRect.intersects(targetFrame)
+        targetIsReachable = iOSResonanceAlignment.isReachable(deltaPoints: deltaPoints)
+        let band = iOSResonanceAlignment.questBand(deltaPoints: deltaPoints)
+        if band != lastResonanceFeedbackBand {
+            lastResonanceFeedbackBand = band
+            questFeedbackCoordinator.process(.alignmentBandChanged(band))
+            RA11yLogger.scrollInteraction.debug(
+                "ViewModel alignment band→\(String(describing: band)) reachable=\(self.targetIsReachable) vo=\(UIAccessibility.isVoiceOverRunning)"
+            )
+            #if DEBUG
+            print("[RA11yScroll] ViewModel band→\(band) reachable=\(self.targetIsReachable)")
+            #endif
+        }
+    }
+
+    /// Clears resonance feedback reducer state when room sets or phases change.
+    private func resetResonanceAlignmentState() {
+        lastResonanceFeedbackBand = nil
+        questFeedbackCoordinator.reset()
     }
 
     // MARK: - Room Activation
@@ -439,11 +467,13 @@ final class DungeonDescentViewModel {
             break
 
         case .firstAttempt:
+            questFeedbackCoordinator.process(.success)
             levelComplete = true
             announce(String(localized: "dungeon.l1.complete"))
 
         case .rising:
             stopTimer()
+            questFeedbackCoordinator.process(.success)
             levelComplete = true
             announce(String(localized: "dungeon.l2.complete"))
 
@@ -463,6 +493,7 @@ final class DungeonDescentViewModel {
             do {
                 try await session.complete()
                 coordinator?.stopMonitoring()
+                questFeedbackCoordinator.process(.success)
                 announce(String(localized: "dungeon.l3.success"))
                 if case .completed(let result) = await session.state {
                     completedResult = result
@@ -496,6 +527,7 @@ final class DungeonDescentViewModel {
         let message = String(format: String(localized: "dungeon.hint.format"), targetName)
         statusMessage = message
         guard screenshotScene == nil else { return }
+        questFeedbackCoordinator.process(.hintRequested)
         announce(message)
     }
 
@@ -635,6 +667,7 @@ final class DungeonDescentViewModel {
     /// They only shape the visible UI state needed for fastlane capture.
     private func applyScreenshotScene(_ scene: iOSScreenshotScene) {
         stopTimer()
+        resetResonanceAlignmentState()
         practiceScrollObserved = false
         rooms = []
         targetIsReachable = false
@@ -916,421 +949,6 @@ private struct DungeonPrologueView: View {
     }
 }
 
-// MARK: - DungeonPlayView (L1 / L2 / L3)
-
-/// Unified play view for L1, L2, and L3 of Crystal Resonance.
-///
-/// The scroll container is wrapped in a named coordinate space so that preference key
-/// updates from `DungeonRoomRow` cells are comparable to the scroll geometry's `visibleRect`.
-///
-/// Timer and hint affordances are conditionally shown based on whether a `timeRemaining`
-/// value is provided (L1 has none; L2/L3 have a timer). `onHint` and `onContinue` are
-/// optional — L3 uses neither (it routes via `completedResult`). When `showsFirstLevelGestureTip`
-/// is `true`, a short non-VO caption echoes the three-finger swipe directions (L1 cold start).
-///
-/// ## Scroll Observability
-/// `TargetRoomFramePreferenceKey` bubbles the target room's frame (in the named coordinate
-/// space) up to this view. `onScrollGeometryChange` provides the `visibleRect` in the same
-/// space. Both are forwarded to `onUpdateReachability` so the ViewModel can compute
-/// `targetIsReachable`.
-private struct DungeonPlayView: View {
-
-    let rooms: [DungeonRoom]
-    let targetIsReachable: Bool
-    let statusMessage: String?
-    let levelComplete: Bool
-    let timeRemaining: Double?      // nil = no timer (L1)
-    let timedOut: Bool
-    let mistakes: Int
-    /// When `true`, room icons are covered by an accessibility-inert blackout layer.
-    let lightsOffMode: Bool
-    /// Optional atmospheric copy for the final timed level (Lights Off); `nil` for L1–L2.
-    let lightsOffFlavorText: String?
-    /// Visible reminder of three-finger scroll directions; `true` only for L1 first attempt.
-    let showsFirstLevelGestureTip: Bool
-    let onUpdateReachability: (CGRect, CGRect) -> Void
-    let onActivateTarget: (DungeonRoom) async -> Void
-    let onActivateNonTarget: (DungeonRoom) async -> Void
-    let onHint: (() -> Void)?       // nil = no hint button (L1)
-    let onContinue: (() -> Void)?   // nil = no continue button (L3)
-    let onRetry: (() -> Void)?      // non-nil when level has a timer
-
-    @State private var targetFrame: CGRect = .null
-    @State private var visibleRect: CGRect = .zero
-
-    @Environment(\.horizontalSizeClass) private var sizeClass
-
-    var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.base) {
-                if let lightsOffFlavorText {
-                    Text(lightsOffFlavorText)
-                        .font(.ra11ySubheadline)
-                        .foregroundStyle(Color.ra11yCardSecondaryText)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(RA11ySpacing.base)
-                        .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-                        )
-                        .accessibilityAddTraits(.isStaticText)
-                }
-
-                objectiveCard
-
-                if showsFirstLevelGestureTip {
-                    firstLevelGestureTipCard
-                }
-
-                if let total = timeTotal, let remaining = timeRemaining {
-                    DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(timerA11yLabel)
-                        .accessibilityHint(String(localized: "a11y.timer.group.hint"))
-                }
-
-                if timedOut {
-                    timeoutBanner
-                } else {
-                    roomList
-
-                    if let statusMessage { dungeonStatusRow(statusMessage) }
-
-                    if levelComplete, let onContinue {
-                        continueButton(onContinue)
-                    } else if !levelComplete, let onHint {
-                        hintButton(onHint)
-                    }
-                }
-            }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
-            .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .coordinateSpace(name: DungeonCoordinateSpace.name)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onPreferenceChange(TargetRoomFrameKey.self) { frame in
-            targetFrame = frame
-            onUpdateReachability(visibleRect, frame)
-        }
-        .onScrollGeometryChange(for: CGRect.self, of: { $0.visibleRect }) { _, newVisible in
-            visibleRect = newVisible
-            onUpdateReachability(newVisible, targetFrame)
-        }
-        .environment(\.colorScheme, .dark)
-    }
-
-    // MARK: - Subviews
-
-    private var objectiveCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            Label(String(localized: "dm.label"), systemImage: "scroll.fill")
-                .font(.ra11yCaption)
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-
-            Text(objectiveText)
-                .font(.ra11yHeadline)
-                .bold()
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(objectiveA11yLabel)
-        .accessibilityHint(String(localized: "dungeon.a11y.l1.objective.hint"))
-    }
-
-    /// Sighted-user echo of the same gesture lines as the L0 prologue; hidden from VoiceOver
-    /// because `announceObjectivePrompt()` and the objective card hint cover spoken guidance.
-    private var firstLevelGestureTipCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            Text(String(localized: "dungeon.explain.gesture.swipe3"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
-            Text(String(localized: "dungeon.explain.gesture.swipe3u"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.45), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-        )
-        .accessibilityHidden(true)
-    }
-
-    private var roomList: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            ForEach(rooms) { room in
-                DungeonRoomRow(
-                    room: room,
-                    isTargetReachable: targetIsReachable,
-                    onActivateTarget:    { Task { await onActivateTarget(room) } },
-                    onActivateNonTarget: { Task { await onActivateNonTarget(room) } }
-                )
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: TargetRoomFrameKey.self,
-                            value: room.isTarget
-                                ? proxy.frame(in: .named(DungeonCoordinateSpace.name))
-                                : .null
-                        )
-                    }
-                )
-            }
-        }
-        .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
-    }
-
-    private var timeoutBanner: some View {
-        VStack(spacing: RA11ySpacing.md) {
-            Text(String(localized: "dungeon.timeout"))
-                .font(.ra11yHeadline)
-                .multilineTextAlignment(.center)
-            if let onRetry {
-                Button(action: onRetry) {
-                    Text(String(localized: "level.button.retry"))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(Color.ra11yAccent)
-                .accessibilityIdentifier("dungeon.retry")
-            }
-        }
-        .padding(RA11ySpacing.base)
-    }
-
-    private func hintButton(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(String(localized: "dungeon.hint.button"), systemImage: "ear.fill")
-        }
-        .buttonStyle(.bordered)
-        .accessibilityLabel(String(localized: "dungeon.hint.a11yLabel"))
-        .accessibilityHint(String(localized: "dungeon.hint.a11yHint"))
-    }
-
-    private func continueButton(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(String(localized: "level.button.next"))
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .tint(Color.ra11yAccent)
-        .accessibilityIdentifier("dungeon.continue")
-    }
-
-    // MARK: - Helpers
-
-    private var objectiveText: String {
-        guard let target = rooms.first(where: \.isTarget) else { return "" }
-        switch rooms.count {
-        case DungeonRoom.l1Rooms.count:
-            return String(format: String(localized: "dungeon.l1.objective.format"), target.displayName)
-        case DungeonRoom.l2Rooms.count:
-            return String(format: String(localized: "dungeon.l2.objective.format"), target.displayName)
-        default:
-            return String(format: String(localized: "dungeon.l3.objective.format"), target.displayName)
-        }
-    }
-
-    private var objectiveA11yLabel: String {
-        guard let target = rooms.first(where: \.isTarget) else { return "" }
-        switch rooms.count {
-        case DungeonRoom.l1Rooms.count:
-            return String(format: String(localized: "dungeon.a11y.l1.objective.format"), target.displayName)
-        case DungeonRoom.l2Rooms.count:
-            return String(format: String(localized: "dungeon.a11y.l2.objective.format"), target.displayName)
-        default:
-            return String(format: String(localized: "dungeon.a11y.l3.objective.format"), target.displayName)
-        }
-    }
-
-    private var timerA11yLabel: String {
-        guard let remaining = timeRemaining else { return "" }
-        return String(format: String(localized: "dungeon.a11y.l3.timer"), Int(ceil(remaining)))
-    }
-
-    private var timeTotal: Double? {
-        switch rooms.count {
-        case DungeonRoom.l2Rooms.count: return 60
-        case DungeonRoom.l3Rooms.count: return 45
-        default: return nil
-        }
-    }
-}
-
-// MARK: - DungeonRoomRow
-
-/// Row card representing one dungeon room.
-///
-/// Target rooms are rendered as a `Button` (with `.isButton` trait) so VoiceOver
-/// announces the "double-tap to activate" affordance. Non-target rooms are static
-/// accessibility elements with no button trait, suppressing activation affordance.
-///
-/// ## Adaptive Layout
-/// - Standard (`dynamicTypeSize < .accessibility2`): `HStack` — icon | title/subtitle | status
-/// - Large accessibility sizes: icon + status in a leading `HStack`, title/subtitle below
-///
-/// The room-name text has no hard `lineLimit` so it can expand to as many lines as
-/// needed; both `DungeonRoomIcon` and the status symbol use `@ScaledMetric`-driven
-/// sizes so they remain proportional to the surrounding text.
-private struct DungeonRoomRow: View {
-
-    let room: DungeonRoom
-    let isTargetReachable: Bool
-    let onActivateTarget: () -> Void
-    let onActivateNonTarget: () -> Void
-
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    private var isLargeAccessibilitySize: Bool { dynamicTypeSize >= .accessibility2 }
-
-    var body: some View {
-        if room.isTarget {
-            baseRow
-                .accessibilityIdentifier("dungeon.room.\(room.id)")
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(room.displayName). The objective.")
-                .accessibilityHint(String(localized: "dungeon.room.target.hint"))
-                .accessibilityAddTraits(.isButton)
-                .accessibilityAction { onActivateTarget() }
-                .onTapGesture { onActivateTarget() }
-        } else {
-            baseRow
-                .accessibilityIdentifier("dungeon.room.\(room.id)")
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(room.displayName). \(room.subtitle)")
-                .accessibilityHint(String(localized: "dungeon.room.nonTarget.hint"))
-                .accessibilityAddTraits(.isButton)
-                .accessibilityAction { onActivateNonTarget() }
-                .onTapGesture { onActivateNonTarget() }
-        }
-    }
-
-    private var baseRow: some View {
-        Group {
-            if isLargeAccessibilitySize {
-                largeTypeLayout
-            } else {
-                standardLayout
-            }
-        }
-        .padding(RA11ySpacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.3), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yAccent.opacity(room.isTarget ? 0.8 : 0.25), lineWidth: 1)
-        )
-        .contentShape(Rectangle())
-    }
-
-    /// Standard HStack layout for default through `.accessibility1` Dynamic Type.
-    private var standardLayout: some View {
-        HStack(spacing: RA11ySpacing.base) {
-            DungeonRoomIcon(assetName: room.assetName)
-
-            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-                Text(room.displayName)
-                    .font(.ra11yHeadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(room.subtitle)
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardTertiaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer()
-
-            statusIcon
-        }
-    }
-
-    /// VStack layout for `.accessibility2` and above — prevents horizontal crowding.
-    private var largeTypeLayout: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            HStack(spacing: RA11ySpacing.base) {
-                DungeonRoomIcon(assetName: room.assetName)
-                Spacer()
-                statusIcon
-            }
-
-            Text(room.displayName)
-                .font(.ra11yHeadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(room.subtitle)
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardTertiaryText)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    @ViewBuilder
-    private var statusIcon: some View {
-        if room.isTarget {
-            Image(systemName: isTargetReachable ? "checkmark.seal" : "lock.fill")
-                .foregroundStyle(isTargetReachable ? Color.ra11yTargetReachable : Color.ra11yAccent)
-        }
-    }
-}
-
-// MARK: - DungeonRoomIcon
-
-/// Asset-backed room icon with SF Symbol fallback.
-///
-/// Landscape room art is center-cropped into the square using `scaledToFill` so thumbnails
-/// are not letterboxed to one side on iPad.
-///
-/// ## Dynamic Type
-/// Icon dimensions scale with the `.title` text style (base 72 pt, max 120 pt) using
-/// `@ScaledMetric` so the icon remains proportional to the adjacent room-name text.
-private struct DungeonRoomIcon: View {
-    let assetName: String
-
-    /// Scales with `.title` style; capped at 120 pt to prevent outsized icons.
-    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 72
-
-    private var clampedSize: CGFloat { min(iconSize, 120) }
-
-    var body: some View {
-        if let image = UIImage(named: assetName) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: clampedSize, height: clampedSize)
-                .clipped()
-                .accessibilityHidden(true)
-        } else {
-            Image(systemName: "shield.lefthalf.filled")
-                .font(.ra11yTitle)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.ra11yAccent)
-                .frame(width: clampedSize, height: clampedSize)
-                .accessibilityHidden(true)
-        }
-    }
-}
-
 // MARK: - DungeonTimerHUD
 
 /// Combined timer progress bar + time + mistake count HUD used in L2 and L3.
@@ -1342,7 +960,7 @@ private struct DungeonRoomIcon: View {
 /// Bar height scales with `.subheadline` via `@ScaledMetric`.
 /// At `.accessibility4`+ the label row switches to `VStack` so the timer and mistake
 /// count don't crowd each other in the ~200 pt available width.
-private struct DungeonTimerHUD: View {
+struct DungeonTimerHUD: View {
 
     let timeRemaining: Double
     let total: Double
@@ -1470,32 +1088,6 @@ private struct DungeonGestureRow: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-}
-
-/// Status feedback row shown after a room activation event.
-private func dungeonStatusRow(_ message: String) -> some View {
-    Text(message)
-        .font(.ra11ySubheadline)
-        .foregroundStyle(Color.ra11yCardSecondaryText)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, RA11ySpacing.xs)
-}
-
-// MARK: - Scroll Geometry Support
-
-/// Preference key carrying the target room frame in the named scroll coordinate space.
-private struct TargetRoomFrameKey: PreferenceKey {
-    static var defaultValue: CGRect = .null
-
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        let next = nextValue()
-        if !next.isNull { value = next }
-    }
-}
-
-/// Names the coordinate space used to align `ScrollGeometry.visibleRect` and target frames.
-private enum DungeonCoordinateSpace {
-    static let name = "dungeonScroll"
 }
 
 // MARK: - Preview
