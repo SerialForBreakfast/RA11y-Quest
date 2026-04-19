@@ -785,22 +785,20 @@ private struct DungeonPrologueView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        GeometryReader { geo in
-            ScrollView(.vertical) {
-                VStack(spacing: RA11ySpacing.lg) {
-                    dmNarrationCard
-                    lessonCard
-                    gestureGuide
-                    practiceZone
-                    beginButton
-                }
-                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-                .padding(.vertical, RA11ySpacing.lg)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+        ScrollView(.vertical) {
+            VStack(spacing: RA11ySpacing.lg) {
+                dmNarrationCard
+                lessonCard
+                gestureGuide
+                practiceZone
+                beginButton
             }
-            .clipped()
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+            .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .frame(maxWidth: .infinity)
         }
+        .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
@@ -953,55 +951,53 @@ private struct DungeonPlayView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        GeometryReader { geo in
-            ScrollView(.vertical) {
-                VStack(spacing: RA11ySpacing.base) {
-                    if let lightsOffFlavorText {
-                        Text(lightsOffFlavorText)
-                            .font(.ra11ySubheadline)
-                            .foregroundStyle(Color.ra11yCardSecondaryText)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(RA11ySpacing.base)
-                            .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: RA11yRadius.card)
-                                    .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-                            )
-                            .accessibilityAddTraits(.isStaticText)
-                    }
+        ScrollView(.vertical) {
+            VStack(spacing: RA11ySpacing.base) {
+                if let lightsOffFlavorText {
+                    Text(lightsOffFlavorText)
+                        .font(.ra11ySubheadline)
+                        .foregroundStyle(Color.ra11yCardSecondaryText)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(RA11ySpacing.base)
+                        .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RA11yRadius.card)
+                                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
+                        )
+                        .accessibilityAddTraits(.isStaticText)
+                }
 
-                    objectiveCard
+                objectiveCard
 
-                    if let total = timeTotal, let remaining = timeRemaining {
-                        DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(timerA11yLabel)
-                            .accessibilityHint(String(localized: "a11y.timer.group.hint"))
-                    }
+                if let total = timeTotal, let remaining = timeRemaining {
+                    DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(timerA11yLabel)
+                        .accessibilityHint(String(localized: "a11y.timer.group.hint"))
+                }
 
-                    if timedOut {
-                        timeoutBanner
-                    } else {
-                        roomList
+                if timedOut {
+                    timeoutBanner
+                } else {
+                    roomList
 
-                        if let statusMessage { dungeonStatusRow(statusMessage) }
+                    if let statusMessage { dungeonStatusRow(statusMessage) }
 
-                        if levelComplete, let onContinue {
-                            continueButton(onContinue)
-                        } else if !levelComplete, let onHint {
-                            hintButton(onHint)
-                        }
+                    if levelComplete, let onContinue {
+                        continueButton(onContinue)
+                    } else if !levelComplete, let onHint {
+                        hintButton(onHint)
                     }
                 }
-                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-                .padding(.vertical, RA11ySpacing.lg)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
             }
-            .coordinateSpace(name: DungeonCoordinateSpace.name)
-            .clipped()
+            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+            .padding(.vertical, RA11ySpacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .frame(maxWidth: .infinity)
         }
+        .coordinateSpace(name: DungeonCoordinateSpace.name)
+        .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onPreferenceChange(TargetRoomFrameKey.self) { frame in
             targetFrame = frame
@@ -1266,6 +1262,9 @@ private struct DungeonRoomRow: View {
 
 /// Asset-backed room icon with SF Symbol fallback.
 ///
+/// Landscape room art is center-cropped into the square using `scaledToFill` so thumbnails
+/// are not letterboxed to one side on iPad.
+///
 /// ## Dynamic Type
 /// Icon dimensions scale with the `.title` text style (base 72 pt, max 120 pt) using
 /// `@ScaledMetric` so the icon remains proportional to the adjacent room-name text.
@@ -1281,8 +1280,9 @@ private struct DungeonRoomIcon: View {
         if let image = UIImage(named: assetName) {
             Image(uiImage: image)
                 .resizable()
-                .scaledToFit()
+                .scaledToFill()
                 .frame(width: clampedSize, height: clampedSize)
+                .clipped()
                 .accessibilityHidden(true)
         } else {
             Image(systemName: "shield.lefthalf.filled")
@@ -1388,21 +1388,29 @@ private struct DungeonTimerHUD: View {
 // MARK: - DungeonBackgroundView
 
 /// Full-bleed dungeon background with dark overlay for legibility.
+///
+/// Uses an explicit geometry size so `scaledToFill` crops from the center when the view
+/// is used as a navigation-stack background (unbounded proposals otherwise skew the image).
 private struct DungeonBackgroundView: View {
     var body: some View {
-        ZStack {
-            Color.black
-            if let image = UIImage(named: "dungeon_descent_bg") {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .overlay(Color.black.opacity(0.4))
+        GeometryReader { geo in
+            ZStack {
+                Color.black
+                if let image = UIImage(named: "dungeon_descent_bg") {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
+                        .overlay(Color.black.opacity(0.4))
+                }
+                LinearGradient(
+                    colors: [Color.black.opacity(0.55), Color.black.opacity(0.15), Color.black.opacity(0.55)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
             }
-            LinearGradient(
-                colors: [Color.black.opacity(0.55), Color.black.opacity(0.15), Color.black.opacity(0.55)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            .frame(width: geo.size.width, height: geo.size.height)
         }
     }
 }

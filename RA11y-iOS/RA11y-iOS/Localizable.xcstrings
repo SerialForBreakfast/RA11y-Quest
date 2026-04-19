@@ -162,12 +162,12 @@
       }
     },
     "app.loading.a11yLabel" : {
-      "comment" : "VoiceOver label for the loading overlay shown while the app resolves its initial route.",
+      "comment" : "VoiceOver label for the loading overlay shown while the app resolves its initial route. Speaks “Rally Quest” so the A11y branding is not spelled out.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RA11y is loading. Please wait."
+            "value" : "Rally Quest is loading. Please wait."
           }
         }
       }
@@ -1498,11 +1498,23 @@
       }
     },
     "hub.navigationTitle" : {
+      "comment" : "Visible navigation title on the hub. VoiceOver uses hub.navigationTitle.voiceOver.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RA11y"
+            "value" : "RA11y Quest"
+          }
+        }
+      }
+    },
+    "hub.navigationTitle.voiceOver" : {
+      "comment" : "VoiceOver label for the hub navigation title; spoken form of the product name.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rally Quest"
           }
         }
       }
@@ -1578,7 +1590,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RA11y"
+            "value" : "RA11y Quest"
           }
         }
       }

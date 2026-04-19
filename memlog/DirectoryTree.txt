@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-03-07) — screenshot automation uses deterministic scene boot + xcresulttool extraction
+Current structure (as of 2026-04-19) — screenshot automation uses deterministic scene boot + xcresulttool extraction
 ---
 
 .
@@ -133,6 +133,7 @@ Current structure (as of 2026-03-07) — screenshot automation uses deterministi
     │   └── TicketBreakdown.txt             Active Phase 3 ticket breakdown (all tracks)
     └── research/
         ├── ADR-0001-Concurrency-Strategy.md
+        ├── ADR-0002-AI-Assisted-Screenshot-Validation.md  Proposed architecture for Vision + fastlane + optional Foundation Models UI QA
         ├── InitialBrainstorming.txt
         └── NativeAccessibility.txt
 ├── scripts

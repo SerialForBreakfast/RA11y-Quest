@@ -32,7 +32,7 @@ import RA11yCore
 ///   appearance when VoiceOver is on, orienting the user to the screen.
 ///
 /// ## VoiceOver Reading Order
-/// 1. Navigation title "RA11y"
+/// 1. Navigation title — visible text "RA11y Quest"; VoiceOver label "Rally Quest"
 /// 2. Orientation strip — scroll gesture; with VoiceOver on, also tap / double-tap to open
 /// 3. "Choose Your Trial, Adventurer" (.isHeader)
 /// 4–6. Quest cards (combined label per card)
@@ -130,8 +130,16 @@ struct iOSHubView: View {
             .background {
                 iOSHubBackgroundView(assetName: "simon_room_bg")
             }
-            .navigationTitle(String(localized: "hub.navigationTitle"))
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(String(localized: "hub.navigationTitle"))
+                        .font(.headline)
+                        .accessibilityLabel(String(localized: "hub.navigationTitle.voiceOver"))
+                        .accessibilityIdentifier("hub.navigationTitle")
+                }
+            }
             .sheet(isPresented: $showHelpSheet) {
                 iOSVoiceOverHelpSheet()
             }
@@ -143,24 +151,21 @@ struct iOSHubView: View {
     // MARK: - Content Layer
 
     private var contentLayer: some View {
-        GeometryReader { geo in
-            ScrollView(.vertical) {
-                VStack(spacing: 0) {
-                    hubOrientationBanner
-                        .padding(.horizontal, cardHorizontalPadding)
-                        .padding(.top, RA11ySpacing.sm)
+        ScrollView(.vertical) {
+            VStack(spacing: 0) {
+                hubOrientationBanner
+                    .padding(.horizontal, cardHorizontalPadding)
+                    .padding(.top, RA11ySpacing.sm)
 
-                    iOSHubDMGreetingView()
-                        .padding(.top, RA11ySpacing.sm)
+                iOSHubDMGreetingView()
+                    .padding(.top, RA11ySpacing.sm)
 
-                    questCardList
-                }
-                .frame(width: geo.size.width)
-                .frame(maxWidth: contentMaxWidth)
-                .frame(maxWidth: .infinity)
+                questCardList
             }
-            .clipped()
+            .frame(maxWidth: contentMaxWidth)
+            .frame(maxWidth: .infinity)
         }
+        .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .safeAreaInset(edge: .bottom) {
             iOSHubFooterView(
