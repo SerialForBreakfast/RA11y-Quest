@@ -8,7 +8,7 @@ if ENV["SNAPSHOT_DEVICES"]
 else
   devices([
     "iPhone 17",
-    "iPhone 16e",
+    "iPhone SE (3rd generation)",
     "iPad (A16)"
   ])
 end

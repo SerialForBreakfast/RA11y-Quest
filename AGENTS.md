@@ -99,9 +99,10 @@ and break silently.
 
 Any code that selects a simulator MUST follow this pattern:
 1. Query what is actually available at runtime via `xcrun simctl list devices available --json`
-2. Match against a preference list (most to least preferred)
-3. Fall back to the best available match if no exact match is found
-4. Fail loudly — listing discovered devices — if no match exists at all
+2. If a **persisted last-working UDID** for that device family (see below) still appears in the listing, use it and skip the preference list for stable day-to-day runs.
+3. Match against a preference list (most to least preferred)
+4. Fall back to the best available match if no exact match is found
+5. Fail loudly — listing discovered devices — if no match exists at all
 
 A preference list of names may be hardcoded. The final resolved device must not be.
 
@@ -129,7 +130,22 @@ If no simulator of the required family exists, STOP and report:
 - What the user must do (open Simulator.app, check Xcode → Settings → Platforms)
 
 Do NOT attempt to create simulators, download runtimes, or modify simulator
-state without explicit user approval.
+state without explicit user approval. Repo scripts never call
+`xcodebuild -download*`, `simctl create`, or other commands that install
+runtimes or provision new devices. If macOS or Xcode shows a system dialog
+such as "Verifying … simruntime", that is host-level validation of an
+already-installed runtime — not something this repository triggers.
+
+### Persist Last-Working UDID (stable reuse)
+
+`utility/build_and_test.sh` and `fastlane/Fastfile` store the resolved UDID
+per family in `~/.ra11y/last_simulator_iPhone.udid` and
+`~/.ra11y/last_simulator_iPad.udid` (set `RA11Y_SIMULATOR_STATE_DIR` to use a
+different directory). The next invocation reuses that UDID if it is still
+listed as available, then falls back to the preference hierarchy above.
+
+If the first `simctl` query fails or returns empty output, scripts retry once
+after a one-second delay (transient CoreSimulator stalls).
 
 ### Files That Must Follow This Pattern
 

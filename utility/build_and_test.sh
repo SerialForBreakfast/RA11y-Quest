@@ -9,6 +9,11 @@
 # the preference hierarchy is resolved to a UDID. Pass --sim <name> to
 # express a preference; the script falls back gracefully if unavailable.
 #
+# The last successfully resolved UDID per device family is persisted under
+# ~/.ra11y/ (override with RA11Y_SIMULATOR_STATE_DIR) and reused on the next
+# run if that device is still available — avoiding churn across Xcode updates.
+# This script never creates simulators, erases devices, or downloads runtimes.
+#
 # See AGENTS.md — "Simulator Detection — Required Pattern" for the rule
 # that governs all simulator selection in this repo.
 
@@ -46,6 +51,7 @@ Usage: utility/build_and_test.sh [options]
 
 Options:
   --sim NAME             iOS Simulator preferred name (auto-detected if omitted)
+  Env: RA11Y_SIMULATOR_STATE_DIR  Optional dir for last-working UDID files (default: ~/.ra11y)
   --workspace PATH       Workspace path (default: "$WORKSPACE")
   --ios-scheme NAME      iOS scheme name (default: "$IOS_SCHEME")
   --core-path PATH       Swift package path (default: "$CORE_PACKAGE_PATH")
@@ -136,6 +142,9 @@ DERIVED_DATA_PATH="$RUN_DIR/$DERIVED_DATA_RELATIVE"
 # Resolves an available iOS simulator UDID via xcrun simctl at runtime.
 # Never relies on a hardcoded name as the sole destination selector.
 #
+# Reuses a persisted last-working UDID (per family) when still present in
+# simctl output — see RA11Y_SIMULATOR_STATE_DIR in the header comment.
+#
 # Args:
 #   preferred_name  Exact device name to try first. Pass "" to skip.
 #   family          "iPhone" or "iPad"
@@ -149,19 +158,42 @@ resolve_simulator_udid() {
     local preferred_name="$1"
     local family="$2"
 
-    local json
-    json=$(xcrun simctl list devices available --json 2>/dev/null) || {
-        echo "[simulator] ERROR: 'xcrun simctl list devices available' failed." >&2
+    local state_dir="${RA11Y_SIMULATOR_STATE_DIR:-$HOME/.ra11y}"
+    mkdir -p "$state_dir" 2>/dev/null || true
+    local state_file="${state_dir}/last_simulator_${family}.udid"
+
+    local json=""
+    local attempt
+    for attempt in 1 2; do
+        json=$(xcrun simctl list devices available --json 2>/dev/null) && [ -n "$json" ] && break
+        if [ "$attempt" -eq 1 ]; then
+            echo "[simulator] simctl list failed or returned empty; retrying once in 1 s..." >&2
+            sleep 1
+        fi
+    done
+    if [ -z "$json" ]; then
+        echo "[simulator] ERROR: 'xcrun simctl list devices available' failed after retry." >&2
         echo "[simulator] Ensure Xcode is installed and Simulator.app has been" >&2
         echo "[simulator] opened at least once since the last reboot." >&2
         return 1
-    }
+    fi
 
-    python3 - "$preferred_name" "$family" <<PYEOF
-import json, sys
+    # Write simctl JSON to a temp file so Python parses it with json.load (embedding
+    # in a """ string breaks on sequences like \/ that simctl emits — SyntaxWarning).
+    local simctl_json_tmp
+    simctl_json_tmp=$(mktemp "${TMPDIR:-/tmp}/ra11y_simctl.XXXXXX") || {
+        echo "[simulator] ERROR: mktemp failed." >&2
+        return 1
+    }
+    printf '%s' "$json" > "$simctl_json_tmp"
+
+    python3 - "$preferred_name" "$family" "$state_file" "$simctl_json_tmp" <<'PYEOF'
+import json, os, sys
 
 preferred = sys.argv[1]
-family    = sys.argv[2]
+family = sys.argv[2]
+state_file = sys.argv[3]
+json_path = sys.argv[4]
 
 # Preference hierarchy per device family (prefix-matched, newest first).
 PREFS = {
@@ -183,8 +215,17 @@ PREFS = {
     ],
 }
 
+def persist_udid(udid: str) -> None:
+    try:
+        os.makedirs(os.path.dirname(state_file) or ".", exist_ok=True)
+        with open(state_file, "w", encoding="utf-8") as out:
+            out.write(udid.strip())
+    except OSError as exc:
+        print(f"[simulator] (non-fatal) Could not persist UDID: {exc}", file=sys.stderr)
+
 try:
-    data = json.loads("""$json""")
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
 except Exception as exc:
     print(f"[simulator] Failed to parse simctl JSON: {exc}", file=sys.stderr)
     sys.exit(1)
@@ -208,11 +249,30 @@ if not available:
     print("[simulator] Try opening Simulator.app or Xcode -> Settings -> Platforms.", file=sys.stderr)
     sys.exit(1)
 
+# 0. Reuse last-working UDID if that device is still available (no new simulators created).
+if state_file and os.path.isfile(state_file):
+    try:
+        persisted = open(state_file, encoding="utf-8").read().strip()
+    except OSError:
+        persisted = ""
+    if persisted:
+        for d in available:
+            if d.get("udid") == persisted and family in d.get("name", ""):
+                print(
+                    f"[simulator] Reusing last-working UDID from {state_file}: {d['name']} ({d['udid'][:8]}...)",
+                    file=sys.stderr,
+                )
+                persist_udid(d["udid"])
+                print(d["udid"])
+                sys.exit(0)
+        print("[simulator] Last-working UDID is no longer available; re-resolving.", file=sys.stderr)
+
 # 1. Exact preferred name match.
 if preferred:
     for d in available:
         if d["name"] == preferred:
             print(f"[simulator] Resolved: {d['name']} ({d['udid'][:8]}...)", file=sys.stderr)
+            persist_udid(d["udid"])
             print(d["udid"])
             sys.exit(0)
     print(f"[simulator] WARNING: '{preferred}' not found; falling back to preference list.", file=sys.stderr)
@@ -223,14 +283,19 @@ for pref in PREFS.get(family, []):
     if candidates:
         chosen = sorted(candidates, key=lambda d: d["name"], reverse=True)[0]
         print(f"[simulator] Resolved via preference list: {chosen['name']} ({chosen['udid'][:8]}...)", file=sys.stderr)
+        persist_udid(chosen["udid"])
         print(chosen["udid"])
         sys.exit(0)
 
 # 3. Last-resort: any available simulator in the requested family.
 chosen = sorted(available, key=lambda d: d["name"], reverse=True)[0]
 print(f"[simulator] WARNING: Using last-resort fallback: {chosen['name']} ({chosen['udid'][:8]}...)", file=sys.stderr)
+persist_udid(chosen["udid"])
 print(chosen["udid"])
 PYEOF
+    local py_exit=$?
+    rm -f "$simctl_json_tmp"
+    return "$py_exit"
 }
 
 log() {

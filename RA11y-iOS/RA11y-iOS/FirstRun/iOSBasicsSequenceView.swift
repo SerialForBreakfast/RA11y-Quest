@@ -3,10 +3,24 @@ import RA11yCore
 
 // MARK: - iOSBasicsSequenceView
 
-/// Guided VoiceOver Basics sequence that runs the three MVP games in order.
+/// Guided VoiceOver Basics sequence that walks the player through all three MVP games in order.
 ///
-/// This view is a lightweight placeholder until the game screens land (M5–M7).
-/// It advances through the sequence and marks completion in storage.
+/// This view acts as the **conductor** for the M4 basics flow. It stays on the navigation
+/// stack throughout the sequence and orchestrates the push-and-return loop:
+///
+/// 1. Show a skill-intro card for the current game.
+/// 2. Player taps "Begin [Game Name]" → game route is pushed onto the stack.
+/// 3. Game plays; on L3 completion the game pushes `.gameResult`.
+/// 4. Result screen shows "Continue Basics" → `router.popForBasicsContinue()` removes
+///    both the result and the game view, returning here.
+/// 5. `.onAppear` detects the completed step (via `router.basicsStepCompleted`) and either
+///    advances to the next card or marks the sequence complete and pops to root.
+///
+/// If the player uses back-navigation from within a game (without completing it),
+/// `router.basicsStepCompleted` remains `false` so the index does **not** advance.
+///
+/// ## Concurrency
+/// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSBasicsSequenceView: View {
 
     // MARK: - Private Properties
@@ -17,6 +31,9 @@ struct iOSBasicsSequenceView: View {
     // MARK: - State
 
     @State private var currentIndex = 0
+    /// `true` after the player taps "Begin" to launch a game. Consumed by `.onAppear`
+    /// when the sequence view returns to the top of the nav stack.
+    @State private var hasLaunchedGame = false
 
     // MARK: - Environment
 
@@ -33,16 +50,25 @@ struct iOSBasicsSequenceView: View {
 
     // MARK: - Body
 
-    /// The primary view content for the Basics sequence.
     var body: some View {
-        VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-            headerSection
-            currentStepCard
-            continueButton
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                    headerSection
+                    currentStepCard
+                    beginButton
+                }
+                .padding(RA11ySpacing.base)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity)
+            }
+            .clipped()
         }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: 600)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            handleReappear()
+        }
     }
 
     // MARK: - Subviews
@@ -62,31 +88,57 @@ struct iOSBasicsSequenceView: View {
     }
 
     private var currentStepCard: some View {
-        let definition = currentDefinition
-        return VStack(spacing: RA11ySpacing.sm) {
-            Text(LocalizedStringKey(definition.titleKey))
-                .font(.ra11yHeadline)
-                .multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: RA11ySpacing.md) {
+            // Skill badge
+            Text(skillBadgeText)
+                .font(.ra11yCaption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.5)
+                .accessibilityHidden(true)
 
-            Text(LocalizedStringKey(definition.goalKey))
+            // Skill title
+            Text(skillTitle)
+                .font(.ra11yHeadline)
+                .bold()
+                .multilineTextAlignment(.leading)
+
+            // Skill intro body
+            Text(skillIntro)
                 .font(.ra11yBody)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+                .padding(.vertical, RA11ySpacing.xs)
+
+            // Game name
+            Label {
+                Text(LocalizedStringKey(currentDefinition.titleKey))
+                    .font(.ra11ySubheadline)
+            } icon: {
+                Image(systemName: "gamecontroller.fill")
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(RA11ySpacing.lg)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(.thinMaterial)
         .clipShape(.rect(cornerRadius: RA11yRadius.card))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(cardAccessibilityLabel)
     }
 
-    private var continueButton: some View {
-        Button(continueButtonTitle) {
-            advance()
+    private var beginButton: some View {
+        Button(beginButtonTitle) {
+            launchCurrentGame()
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
-        .accessibilityLabel(continueAccessibilityLabel)
-        .accessibilityHint(continueAccessibilityHint)
+        .accessibilityLabel(beginAccessibilityLabel)
+        .accessibilityHint(beginAccessibilityHint)
     }
 
     // MARK: - Computed
@@ -101,37 +153,88 @@ struct iOSBasicsSequenceView: View {
         return String(format: format, currentIndex + 1, steps.count)
     }
 
-    private var continueButtonTitle: String {
-        if isLastStep {
-            return String(localized: "basicsSequence.finish")
-        }
-        return String(localized: "basicsSequence.continue")
+    private var skillBadgeText: String {
+        let format = String(localized: "basicsSequence.skillBadgeFormat")
+        return String(format: format, currentIndex + 1, steps.count)
     }
 
-    private var continueAccessibilityLabel: String {
-        if isLastStep {
-            return String(localized: "basicsSequence.finish.a11yLabel")
+    private var skillTitle: String {
+        switch steps[currentIndex] {
+        case .findAndFocus:
+            return String(localized: "basicsSequence.skill.findAndFocus.title")
+        case .activateDoubleTap:
+            return String(localized: "basicsSequence.skill.activateDoubleTap.title")
+        case .scrollHunt:
+            return String(localized: "basicsSequence.skill.scrollHunt.title")
         }
-        return String(localized: "basicsSequence.continue.a11yLabel")
     }
 
-    private var continueAccessibilityHint: String {
-        if isLastStep {
-            return String(localized: "basicsSequence.finish.a11yHint")
+    private var skillIntro: String {
+        switch steps[currentIndex] {
+        case .findAndFocus:
+            return String(localized: "basicsSequence.skill.findAndFocus.intro")
+        case .activateDoubleTap:
+            return String(localized: "basicsSequence.skill.activateDoubleTap.intro")
+        case .scrollHunt:
+            return String(localized: "basicsSequence.skill.scrollHunt.intro")
         }
-        return String(localized: "basicsSequence.continue.a11yHint")
     }
 
-    private var isLastStep: Bool {
-        currentIndex == steps.count - 1
+    /// Localized game title resolved from the definition key at runtime.
+    private var localizedGameTitle: String {
+        NSLocalizedString(currentDefinition.titleKey, comment: "")
+    }
+
+    private var cardAccessibilityLabel: String {
+        "\(skillBadgeText). \(skillTitle). \(skillIntro). \(localizedGameTitle)."
+    }
+
+    private var beginButtonTitle: String {
+        let format = String(localized: "basicsSequence.beginGame")
+        return String(format: format, localizedGameTitle)
+    }
+
+    private var beginAccessibilityLabel: String {
+        let format = String(localized: "basicsSequence.beginGame.a11yLabel")
+        return String(format: format, localizedGameTitle)
+    }
+
+    private var beginAccessibilityHint: String {
+        String(localized: "basicsSequence.beginGame.a11yHint")
+    }
+
+    private func gameRoute(for kind: GameKind) -> AppRoute {
+        switch kind {
+        case .findAndFocus:      return .enchantersTrial
+        case .activateDoubleTap: return .roguesGauntlet
+        case .scrollHunt:        return .dungeonDescent
+        }
     }
 
     // MARK: - Actions
 
-    private func advance() {
-        if !isLastStep {
-            currentIndex += 1
+    private func launchCurrentGame() {
+        hasLaunchedGame = true
+        router.isInBasicsSequence = true
+        router.push(gameRoute(for: steps[currentIndex]))
+    }
+
+    /// Called on every `.onAppear`. Advances the sequence when returning from a completed
+    /// game step; no-ops on initial appearance or after back-navigation mid-game.
+    private func handleReappear() {
+        guard hasLaunchedGame else { return }
+        hasLaunchedGame = false
+
+        // Only advance if "Continue Basics" was explicitly tapped (not a back swipe).
+        guard router.basicsStepCompleted else { return }
+        router.basicsStepCompleted = false
+
+        let nextIndex = currentIndex + 1
+        if nextIndex < steps.count {
+            currentIndex = nextIndex
         } else {
+            // All three games completed — mark done and return to hub.
+            router.isInBasicsSequence = false
             Task {
                 await storage.markBasicsCompleted()
                 router.popToRoot()
@@ -140,7 +243,7 @@ struct iOSBasicsSequenceView: View {
     }
 }
 
-#Preview("Basics Sequence") {
+#Preview("Basics Sequence — Step 1") {
     NavigationStack {
         iOSBasicsSequenceView(storage: UserDefaultsStorageComponent())
             .environment(iOSAppRouter())

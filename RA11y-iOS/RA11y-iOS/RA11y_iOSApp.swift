@@ -25,7 +25,7 @@ import RA11yCore
 struct RA11y_iOSApp: App {
 
     init() {
-        RA11yLogger.startup.debug("Cold start — RA11y_iOSApp.init")
+        RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) Cold start — RA11y_iOSApp.init")
         applyScreenshotTestingOverridesIfNeeded()
     }
 
@@ -59,10 +59,12 @@ struct RA11y_iOSApp: App {
     /// Recognised launch arguments (all require `-uiTesting`):
     /// - `-screenshotResetOnboarding`: erases both first-run flags so the app routes
     ///   to the First Run entry screen. Used by `testScreenshots_FirstRun`.
+    ///   Also clears Lights Off mode so the hub matches baseline screenshots.
     /// - `-screenshotMarkOnboardingComplete`: writes `basicsCompleted = true` so the
     ///   app routes directly to the hub. Used by `testScreenshots_Hub_VORequired` to
     ///   ensure a deterministic hub route regardless of prior simulator state (e.g.
     ///   after `testScreenshots_FirstRun` clears the flags in the same xcodebuild run).
+    ///   Also clears Lights Off mode for deterministic hub layout.
     ///
     /// This function is a no-op in non-DEBUG builds and when `-uiTesting` is absent.
     ///
@@ -87,6 +89,9 @@ struct RA11y_iOSApp: App {
             UserDefaults.standard.removeObject(
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsDismissed
             )
+            UserDefaults.standard.removeObject(
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.lightsOffModeEnabled
+            )
             RA11yLogger.startup.debug("Screenshot: onboarding flags cleared for first-run screen")
         }
 
@@ -94,6 +99,9 @@ struct RA11y_iOSApp: App {
             UserDefaults.standard.set(
                 true,
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
+            )
+            UserDefaults.standard.removeObject(
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.lightsOffModeEnabled
             )
             RA11yLogger.startup.debug("Screenshot: basicsCompleted set for hub route")
         }
@@ -108,6 +116,9 @@ struct RA11y_iOSApp: App {
             UserDefaults.standard.set(
                 true,
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
+            )
+            UserDefaults.standard.removeObject(
+                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.lightsOffModeEnabled
             )
             RA11yLogger.startup.debug("Screenshot: basicsCompleted set for direct-game route")
         }

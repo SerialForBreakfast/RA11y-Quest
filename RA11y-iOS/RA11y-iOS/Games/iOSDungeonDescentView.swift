@@ -28,10 +28,15 @@ struct iOSDungeonDescentView: View {
     // MARK: - State
 
     @State private var viewModel: DungeonDescentViewModel
+    @State private var lightsOffModeEnabled = false
 
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
+
+    // MARK: - Private
+
+    private let storage: any StorageComponent
 
     // MARK: - Init
 
@@ -41,6 +46,7 @@ struct iOSDungeonDescentView: View {
     ///   - storage: Persistence used for L3 session results during normal gameplay.
     ///   - screenshotScene: Optional deterministic screenshot scene override.
     init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
+        self.storage = storage
         _viewModel = State(
             initialValue: DungeonDescentViewModel(storage: storage, screenshotScene: screenshotScene)
         )
@@ -52,11 +58,21 @@ struct iOSDungeonDescentView: View {
     var body: some View {
         levelContent
             .background {
-                DungeonBackgroundView()
-                    .ignoresSafeArea()
+                if lightsOffModeEnabled && viewModel.phase != .prologue {
+                    Color.black
+                        .ignoresSafeArea()
+                } else {
+                    DungeonBackgroundView()
+                        .ignoresSafeArea()
+                }
             }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                let enabled = await storage.isLightsOffModeEnabled()
+                lightsOffModeEnabled = enabled
+                viewModel.configureLightsOffMode(enabled)
+            }
             .onChange(of: viewModel.completedResult) { _, result in
                 guard let result else { return }
                 router.push(.gameResult(result, gameKind: .scrollHunt, gameSpecificAnnouncement: gameSpecificAnnouncement(for: result)))
@@ -94,6 +110,7 @@ struct iOSDungeonDescentView: View {
                 timeRemaining: nil,
                 timedOut: false,
                 mistakes: viewModel.mistakes,
+                lightsOffMode: lightsOffModeEnabled,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -117,6 +134,7 @@ struct iOSDungeonDescentView: View {
                 timeRemaining: viewModel.timeRemaining,
                 timedOut: viewModel.l2TimedOut,
                 mistakes: viewModel.mistakes,
+                lightsOffMode: lightsOffModeEnabled,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -140,6 +158,7 @@ struct iOSDungeonDescentView: View {
                 timeRemaining: viewModel.timeRemaining,
                 timedOut: viewModel.l3TimedOut,
                 mistakes: viewModel.mistakes,
+                lightsOffMode: lightsOffModeEnabled,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -223,6 +242,9 @@ final class DungeonDescentViewModel {
     private let storage: any StorageComponent
     private let screenshotScene: iOSScreenshotScene?
 
+    /// When `true`, each new level uses a shuffled room order with a random target (Lights Off).
+    private var lightsOffModeEnabled = false
+
     /// L3 session — created fresh each time L3 starts (including retries).
     private var session: GameSession?
 
@@ -247,6 +269,30 @@ final class DungeonDescentViewModel {
         }
     }
 
+    /// Stores the Lights Off preference from storage before the player begins a level.
+    ///
+    /// Called from the container view's `.task` after `await storage.isLightsOffModeEnabled()`.
+    func configureLightsOffMode(_ enabled: Bool) {
+        lightsOffModeEnabled = enabled
+    }
+
+    /// Returns whether dungeon layout should vary target placement between sessions.
+    ///
+    /// Screenshot and UI-test launches keep fixed layouts for determinism.
+    private func shouldRandomizeDungeonLayout() -> Bool {
+        if screenshotScene != nil { return false }
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") { return false }
+        return lightsOffModeEnabled
+    }
+
+    /// Builds the room list for the current level, optionally randomizing target placement for Lights Off.
+    private func roomsForLevel(_ base: [DungeonRoom]) -> [DungeonRoom] {
+        if shouldRandomizeDungeonLayout() {
+            return DungeonRoom.randomizedRoomsPreservingPool(base)
+        }
+        return base
+    }
+
     // MARK: - Phase Transitions
 
     /// Records that the player has scrolled in the L0 practice zone.
@@ -261,7 +307,7 @@ final class DungeonDescentViewModel {
         statusMessage = nil
         levelComplete = false
         targetIsReachable = false
-        rooms = DungeonRoom.l1Rooms
+        rooms = roomsForLevel(DungeonRoom.l1Rooms)
         phase = .firstAttempt
     }
 
@@ -273,7 +319,7 @@ final class DungeonDescentViewModel {
         levelComplete = false
         l2TimedOut = false
         targetIsReachable = false
-        rooms = DungeonRoom.l2Rooms
+        rooms = roomsForLevel(DungeonRoom.l2Rooms)
         timeRemaining = 60
         phase = .rising
         startTimer(total: 60) { [weak self] in await self?.handleL2Timeout() }
@@ -297,7 +343,7 @@ final class DungeonDescentViewModel {
         completedResult = nil
         voiceOverDisabledMidGame = false
         targetIsReachable = false
-        rooms = DungeonRoom.l3Rooms
+        rooms = roomsForLevel(DungeonRoom.l3Rooms)
         timeRemaining = 45
         phase = .timed
 
@@ -323,6 +369,15 @@ final class DungeonDescentViewModel {
                 return
             }
             newCoordinator.startMonitoring()
+            // Grace period for VoiceOver users: the navigation transition announcement
+            // and target prompt together take ~4–6 s to read aloud. Without a delay the
+            // 45 s window is already draining while VoiceOver is still speaking, making
+            // the trial nearly impossible. The grace period lets the user hear the prompt
+            // and orient before the countdown begins.
+            if UIAccessibility.isVoiceOverRunning {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+            }
             self.startTimer(total: 45) { [weak self] in await self?.handleL3Timeout() }
             self.observeCoordinatorVOState(coordinator: newCoordinator)
         }
@@ -685,6 +740,43 @@ struct DungeonRoom: Identifiable {
         DungeonRoom(id: "ancient_vault",   displayName: "Ancient Vault",   subtitle: "The relic glows.",               assetName: "dungeon_room_ancient_vault",   isTarget: true),
         DungeonRoom(id: "collapsed_wall",  displayName: "Collapsed Wall",  subtitle: "A gap you can pass.",            assetName: "dungeon_room_collapsed_wall",  isTarget: false),
     ]
+
+    // MARK: - Lights Off (random target position)
+
+    /// Returns a copy of `base` with exactly one random target, shuffled order, for Lights Off mode.
+    ///
+    /// Preserves stable semantics within a run: the player must scroll to the target and activate it.
+    /// Across runs, which room is correct and its vertical position vary so positional memory alone is insufficient.
+    static func randomizedRoomsPreservingPool(_ base: [DungeonRoom]) -> [DungeonRoom] {
+        let targetIndex = Int.random(in: base.indices)
+        let objectiveSubtitle = String(localized: "dungeon.room.objective.subtitle")
+        let mapped = base.enumerated().map { i, room -> DungeonRoom in
+            let isTarget = i == targetIndex
+            let subtitle: String
+            if isTarget {
+                subtitle = objectiveSubtitle
+            } else {
+                switch room.id {
+                case "guard_room":
+                    subtitle = String(localized: "dungeon.l1.guardRoom.decoySubtitle")
+                case "relic_vault":
+                    subtitle = String(localized: "dungeon.room.relicVault.decoySubtitle")
+                case "ancient_vault":
+                    subtitle = String(localized: "dungeon.room.ancientVault.decoySubtitle")
+                default:
+                    subtitle = room.subtitle
+                }
+            }
+            return DungeonRoom(
+                id: room.id,
+                displayName: room.displayName,
+                subtitle: subtitle,
+                assetName: room.assetName,
+                isTarget: isTarget
+            )
+        }
+        return mapped.shuffled()
+    }
 }
 
 // MARK: - L0: DungeonPrologueView
@@ -702,19 +794,23 @@ private struct DungeonPrologueView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
-                dmNarrationCard
-                lessonCard
-                gestureGuide
-                practiceZone
-                beginButton
+        GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    dmNarrationCard
+                    lessonCard
+                    gestureGuide
+                    practiceZone
+                    beginButton
+                }
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
-            .frame(maxWidth: .infinity)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
 
@@ -849,6 +945,8 @@ private struct DungeonPlayView: View {
     let timeRemaining: Double?      // nil = no timer (L1)
     let timedOut: Bool
     let mistakes: Int
+    /// When `true`, room icons are covered by an accessibility-inert blackout layer.
+    let lightsOffMode: Bool
     let onUpdateReachability: (CGRect, CGRect) -> Void
     let onActivateTarget: (DungeonRoom) async -> Void
     let onActivateNonTarget: (DungeonRoom) async -> Void
@@ -862,39 +960,41 @@ private struct DungeonPlayView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.base) {
-                objectiveCard
+        GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.base) {
+                    objectiveCard
 
-                if let total = timeTotal, let remaining = timeRemaining {
-                    DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(timerA11yLabel)
-                        .accessibilityHint(String(localized: "a11y.timer.group.hint"))
-                }
+                    if let total = timeTotal, let remaining = timeRemaining {
+                        DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(timerA11yLabel)
+                            .accessibilityHint(String(localized: "a11y.timer.group.hint"))
+                    }
 
-                if timedOut {
-                    timeoutBanner
-                } else {
-                    roomList
+                    if timedOut {
+                        timeoutBanner
+                    } else {
+                        roomList
 
-                    if let statusMessage { dungeonStatusRow(statusMessage) }
+                        if let statusMessage { dungeonStatusRow(statusMessage) }
 
-                    if levelComplete, let onContinue {
-                        continueButton(onContinue)
-                    } else if !levelComplete, let onHint {
-                        hintButton(onHint)
+                        if levelComplete, let onContinue {
+                            continueButton(onContinue)
+                        } else if !levelComplete, let onHint {
+                            hintButton(onHint)
+                        }
                     }
                 }
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
-            .frame(maxWidth: .infinity)
+            .coordinateSpace(name: DungeonCoordinateSpace.name)
+            .clipped()
         }
-        .coordinateSpace(name: DungeonCoordinateSpace.name)
-        .accessibilityLabel(String(localized: "dungeon.a11y.scroll.container"))
-        .accessibilityHint(String(localized: "dungeon.a11y.scroll.container.hint"))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onPreferenceChange(TargetRoomFrameKey.self) { frame in
             targetFrame = frame
             onUpdateReachability(visibleRect, frame)
@@ -952,6 +1052,7 @@ private struct DungeonPlayView: View {
                 )
             }
         }
+        .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
     }
 
     private var timeoutBanner: some View {
@@ -996,18 +1097,26 @@ private struct DungeonPlayView: View {
     // MARK: - Helpers
 
     private var objectiveText: String {
+        guard let target = rooms.first(where: \.isTarget) else { return "" }
         switch rooms.count {
-        case DungeonRoom.l1Rooms.count: return String(localized: "dungeon.l1.objective")
-        case DungeonRoom.l2Rooms.count: return String(localized: "dungeon.l2.objective")
-        default:                        return String(localized: "dungeon.l3.objective")
+        case DungeonRoom.l1Rooms.count:
+            return String(format: String(localized: "dungeon.l1.objective.format"), target.displayName)
+        case DungeonRoom.l2Rooms.count:
+            return String(format: String(localized: "dungeon.l2.objective.format"), target.displayName)
+        default:
+            return String(format: String(localized: "dungeon.l3.objective.format"), target.displayName)
         }
     }
 
     private var objectiveA11yLabel: String {
+        guard let target = rooms.first(where: \.isTarget) else { return "" }
         switch rooms.count {
-        case DungeonRoom.l1Rooms.count: return String(localized: "dungeon.a11y.l1.objective")
-        case DungeonRoom.l2Rooms.count: return String(localized: "dungeon.a11y.l2.objective")
-        default:                        return String(localized: "dungeon.a11y.l3.objective")
+        case DungeonRoom.l1Rooms.count:
+            return String(format: String(localized: "dungeon.a11y.l1.objective.format"), target.displayName)
+        case DungeonRoom.l2Rooms.count:
+            return String(format: String(localized: "dungeon.a11y.l2.objective.format"), target.displayName)
+        default:
+            return String(format: String(localized: "dungeon.a11y.l3.objective.format"), target.displayName)
         }
     }
 
@@ -1067,6 +1176,8 @@ private struct DungeonRoomRow: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(room.displayName). \(room.subtitle)")
                 .accessibilityHint(String(localized: "dungeon.room.nonTarget.hint"))
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { onActivateNonTarget() }
                 .onTapGesture { onActivateNonTarget() }
         }
     }

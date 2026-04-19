@@ -63,6 +63,21 @@ final class iOSAppRouter {
     /// An empty path displays the root destination (Hub).
     var path = NavigationPath()
 
+    /// `true` while the player is progressing through the M4 guided Basics sequence.
+    ///
+    /// Set by `iOSBasicsSequenceView` before pushing each game route.
+    /// Read by `iOSGameResultView` to show the "Continue Basics" CTA instead of
+    /// the normal "Try Again" / "Return to Hub" buttons.
+    /// Cleared when the sequence completes or is exited.
+    var isInBasicsSequence: Bool = false
+
+    /// Signals that the player tapped "Continue Basics" on the result screen.
+    ///
+    /// Set inside `popForBasicsContinue()` and consumed (cleared) by
+    /// `iOSBasicsSequenceView.onAppear`. Distinguishes a successful step completion
+    /// from back-navigation mid-game, preventing premature index advancement.
+    var basicsStepCompleted: Bool = false
+
     // MARK: - Computed
 
     /// The destination shown at app launch.
@@ -93,6 +108,18 @@ final class iOSAppRouter {
     func popToRoot() {
         path = NavigationPath()
         RA11yLogger.navigation.debug("Navigation reset to root")
+    }
+
+    /// Pops the result screen and the completed game back to `iOSBasicsSequenceView`.
+    ///
+    /// Called by the "Continue Basics" button on `iOSGameResultView`.
+    /// Sets `basicsStepCompleted = true` before removing two levels so that the
+    /// sequence view's `.onAppear` can distinguish this return from back-navigation.
+    func popForBasicsContinue() {
+        guard path.count >= 2 else { return }
+        basicsStepCompleted = true
+        path.removeLast(2)
+        RA11yLogger.navigation.debug("Basics step complete. Stack depth: \(self.path.count)")
     }
 
     // MARK: - First-Run Routing

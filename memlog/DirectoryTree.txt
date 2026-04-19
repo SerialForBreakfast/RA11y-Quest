@@ -21,7 +21,8 @@ Current structure (as of 2026-03-07) — screenshot automation uses deterministi
 │   │   │   ├── iOSAppRouter.swift          AppRoute enum + iOSAppRouter (@Observable)
 │   │   │   ├── iOSRootView.swift           Root NavigationStack; owns router
 │   │   │   ├── iOSScreenshotRootView.swift Deterministic screenshot-only root entry
-│   │   │   └── iOSScreenshotScene.swift    Screenshot scene contract + anchor metadata
+│   │   │   ├── iOSScreenshotScene.swift    Screenshot scene contract + anchor metadata
+│   │   │   └── iOSLightsOffGameplayBlackout.swift  Lights Off overlay (a11y-inert blackout)
 │   │   ├── Assets.xcassets
 │   │   │   ├── AccentColor.colorset
 │   │   │   ├── AppIcon.appiconset
@@ -122,6 +123,9 @@ Current structure (as of 2026-03-07) — screenshot automation uses deterministi
     │   │   └── DesignTicket-AssetDeliveryNaming.txt
     │   ├── GameRules-MVP.txt               Full D&D-themed string spec + pedagogy framework
     │   ├── GameSpec-*.txt                  Per-game specs (FindAndFocus, Activate, ScrollHunt)
+    │   ├── LightsOffMode-Recommendations.txt  Advanced blackout mode: a11y stability vs cross-run variation
+    │   ├── LightsOffMode-Decisions.txt        Locked hub toggle + dungeon randomization rules
+    │   ├── LightsOffMode-QAChecklist.txt      Manual VoiceOver acceptance checklist
     │   ├── Phase1-*.txt                    Phase 1 requirements, decisions, user stories
     │   ├── Phase2-Roadmap.txt
     │   ├── Requirements-Index.txt

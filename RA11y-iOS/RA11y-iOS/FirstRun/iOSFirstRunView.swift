@@ -65,40 +65,47 @@ struct iOSFirstRunView: View {
     // MARK: - Entry Content
 
     private var entryContent: some View {
-        VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-            VStack(spacing: RA11ySpacing.md) {
-                Text(String(localized: "firstRun.title"))
-                    .font(.ra11yTitle)
-                    .bold()
-                    .multilineTextAlignment(.center)
-                    .accessibilityIdentifier("firstRun.title")
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                    VStack(spacing: RA11ySpacing.md) {
+                        Text(String(localized: "firstRun.title"))
+                            .font(.ra11yTitle)
+                            .bold()
+                            .multilineTextAlignment(.center)
+                            .accessibilityIdentifier("firstRun.title")
 
-                Text(String(localized: "firstRun.body"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
+                        Text(String(localized: "firstRun.body"))
+                            .font(.ra11yBody)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
 
-            VStack(spacing: RA11ySpacing.sm) {
-                Button(String(localized: "firstRun.startBasics")) {
-                    attemptStartBasics()
+                    VStack(spacing: RA11ySpacing.sm) {
+                        Button(String(localized: "firstRun.startBasics")) {
+                            attemptStartBasics()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .accessibilityLabel(String(localized: "firstRun.startBasics.a11yLabel"))
+                        .accessibilityHint(String(localized: "firstRun.startBasics.a11yHint"))
+
+                        Button(String(localized: "firstRun.goToHub")) {
+                            dismissToHub()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .accessibilityLabel(String(localized: "firstRun.goToHub.a11yLabel"))
+                        .accessibilityHint(String(localized: "firstRun.goToHub.a11yHint"))
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .accessibilityLabel(String(localized: "firstRun.startBasics.a11yLabel"))
-                .accessibilityHint(String(localized: "firstRun.startBasics.a11yHint"))
-
-                Button(String(localized: "firstRun.goToHub")) {
-                    dismissToHub()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .accessibilityLabel(String(localized: "firstRun.goToHub.a11yLabel"))
-                .accessibilityHint(String(localized: "firstRun.goToHub.a11yHint"))
+                .padding(RA11ySpacing.base)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
             }
+            .clipped()
         }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: 560)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 

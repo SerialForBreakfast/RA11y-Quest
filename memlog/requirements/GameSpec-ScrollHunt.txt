@@ -106,6 +106,21 @@ L3 Timed Trial
   - VoiceOver timer announcements: 75% elapsed, 50% elapsed, 25% elapsed, 10 seconds remaining,
     and countdown 5-4-3-2-1.
 
+Lights Off mode (advanced training)
+===================================
+When the global "Lights Off" hub toggle is ON (see `LightsOffMode-Decisions.txt`):
+
+  - Each new level session (L1, L2, or L3 start) picks one room from that level’s pool
+    as the target and shuffles vertical order. Room counts, timers, and scroll rules
+    match the locked configuration above.
+  - Objective prompts use the **current** target room name (not fixed Guard Room /
+    Relic Vault / Ancient Vault copy only).
+  - Decorative room visuals may be blacked out; VoiceOver traversal and semantics remain
+    the teaching surface (see `LightsOffMode-Recommendations.txt`).
+
+When Lights Off is OFF, behavior matches the fixed targets and depth indices in this spec
+for the default learning path and for screenshot automation.
+
 Dungeon Room List
 =================
 Rooms are presented in vertical order (top = shallowest, bottom = deepest).

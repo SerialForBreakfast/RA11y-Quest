@@ -17,19 +17,27 @@ struct iOSVoiceOverHelpSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: RA11ySpacing.lg) {
-                    headerSection
-                    enableStepsSection
-                    Divider()
-                    quickToggleSection
-                    Divider()
-                    scrollGesturesSection
-                    Divider()
-                    inAppUsageSection
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: RA11ySpacing.lg) {
+                        headerSection
+                        // Scroll gestures first: users often open this sheet to learn how to
+                        // move inside RA11y before reading full enable steps.
+                        scrollGesturesSection
+                        Divider()
+                        enableStepsSection
+                        Divider()
+                        quickToggleSection
+                        Divider()
+                        inAppUsageSection
+                    }
+                    .padding(RA11ySpacing.xl)
+                    .frame(width: geo.size.width)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(RA11ySpacing.xl)
+                .clipped()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle(String(localized: "voiceOverHelp.navigationTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

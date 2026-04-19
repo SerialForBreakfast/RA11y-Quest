@@ -1,0 +1,44 @@
+RA11y — Lights Off Mode (locked product decisions)
+==================================================
+Date: 2026-04-18
+
+Purpose
+-------
+Record implementation-time decisions for Lights Off Mode so engineering and QA
+share a single reference. Aligns with LightsOffMode-Recommendations.txt.
+
+Entry point
+-----------
+- **Hub toggle**: A single global "Lights Off mode" toggle on the hub screen
+  (near the quest list), persisted in app storage.
+- **Default**: OFF for all users (first launch and after install).
+
+Gating
+------
+- **None for v1**: Any user may enable Lights Off from the hub without completing
+  games first. Pedagogical gating remains the existing quest unlock sequence only.
+
+Blackout UX
+-----------
+- **Gameplay layer**: Visual game content (relics, seals, dungeon rooms, decorative
+  backgrounds in the play area) is covered by an opaque black layer that does not
+  participate in accessibility or hit testing, so VoiceOver traverses underlying
+  controls unchanged.
+- **Chrome**: Navigation bar, instructional/prompt text, and timers that are part of
+  the training UI remain visible so the mode stays learnable (randomize position,
+  not meaning).
+
+Scroll Hunt (Dungeon) under Lights Off
+--------------------------------------
+- **Variable target placement**: When Lights Off is ON, each new session randomizes
+  which room is the objective and the scroll depth of the target within the level’s
+  rules (room list length and timer unchanged). When Lights Off is OFF, behavior
+  matches the existing fixed-target spec for screenshot and pedagogy stability.
+
+Screenshot / UI automation
+--------------------------
+- Existing screenshot launch arguments remain the default (Lights Off OFF) unless
+  a dedicated scene is added later. No change to public routes required for MVP.
+- `RA11y_iOSApp` clears the Lights Off UserDefaults key when `-uiTesting` is combined
+  with screenshot onboarding or direct-to-game args so hub and game captures stay
+  deterministic.

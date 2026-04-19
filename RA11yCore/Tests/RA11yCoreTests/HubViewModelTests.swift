@@ -104,4 +104,31 @@ struct HubViewModelTests {
         await viewModel.refreshBestResults()
         #expect(viewModel.bestRank(for: "nonexistent-game") == nil)
     }
+
+    // MARK: - Lights Off Mode
+
+    /// `refreshBestResults()` mirrors the Lights Off flag from storage.
+    @Test func refreshBestResultsLoadsLightsOffMode() async {
+        let storage = InMemoryStorageComponent()
+        await storage.setLightsOffModeEnabled(true)
+
+        let viewModel = makeViewModel(storage: storage)
+        #expect(viewModel.isLightsOffModeEnabled == false)
+
+        await viewModel.refreshBestResults()
+        #expect(viewModel.isLightsOffModeEnabled == true)
+    }
+
+    /// `setLightsOffModeEnabled` persists and updates the published flag.
+    @Test func setLightsOffModeEnabledUpdatesState() async {
+        let storage = InMemoryStorageComponent()
+        let viewModel = makeViewModel(storage: storage)
+
+        await viewModel.setLightsOffModeEnabled(true)
+        #expect(viewModel.isLightsOffModeEnabled == true)
+        #expect(await storage.isLightsOffModeEnabled() == true)
+
+        await viewModel.setLightsOffModeEnabled(false)
+        #expect(viewModel.isLightsOffModeEnabled == false)
+    }
 }

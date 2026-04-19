@@ -27,6 +27,10 @@ import RA11yCore
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSGameResultView: View {
 
+    // MARK: - Environment
+
+    @Environment(iOSAppRouter.self) private var router
+
     // MARK: - Properties
 
     let presenter: GameResultPresenter
@@ -49,21 +53,27 @@ struct iOSGameResultView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: RA11ySpacing.xl) {
-                resultSummary
-                if let gameSpecificAnnouncement {
-                    Text(gameSpecificAnnouncement)
-                        .font(.ra11yBody)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, RA11ySpacing.base)
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: RA11ySpacing.xl) {
+                    resultSummary
+                    if let gameSpecificAnnouncement {
+                        Text(gameSpecificAnnouncement)
+                            .font(.ra11yBody)
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, RA11ySpacing.base)
+                    }
+                    skillTransferCard
+                    actionButtons
                 }
-                skillTransferCard
-                actionButtons
+                .padding(RA11ySpacing.base)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: .infinity)
             }
-            .padding(RA11ySpacing.base)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(String(localized: "result.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
@@ -154,24 +164,39 @@ struct iOSGameResultView: View {
         }
     }
 
-    /// "Try Again" and "Back to Tavern" action buttons.
+    /// Action buttons — adapts to Basics sequence context.
+    ///
+    /// In the M4 guided Basics sequence, replaces the normal "Try Again" / "Back to
+    /// Tavern" pair with a single "Continue Basics" button that pops back to
+    /// `iOSBasicsSequenceView`. In standard play the original two buttons are shown.
+    @ViewBuilder
     private var actionButtons: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            Button(String(localized: "result.playAgain")) {
-                onPlayAgain()
+        if router.isInBasicsSequence {
+            Button(String(localized: "basicsSequence.continueBasics")) {
+                router.popForBasicsContinue()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .accessibilityIdentifier("result.playAgain")
-            .accessibilityHint(String(localized: "result.a11y.playAgain.hint"))
+            .accessibilityIdentifier("result.continueBasics")
+            .accessibilityHint(String(localized: "basicsSequence.continueBasics.a11yHint"))
+        } else {
+            VStack(spacing: RA11ySpacing.sm) {
+                Button(String(localized: "result.playAgain")) {
+                    onPlayAgain()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .accessibilityIdentifier("result.playAgain")
+                .accessibilityHint(String(localized: "result.a11y.playAgain.hint"))
 
-            Button(String(localized: "result.returnToHub")) {
-                onReturnToHub()
+                Button(String(localized: "result.returnToHub")) {
+                    onReturnToHub()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .accessibilityIdentifier("result.returnToHub")
+                .accessibilityHint(String(localized: "result.a11y.returnToHub.hint"))
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .accessibilityIdentifier("result.returnToHub")
-            .accessibilityHint(String(localized: "result.a11y.returnToHub.hint"))
         }
     }
 }

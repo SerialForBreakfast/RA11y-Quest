@@ -34,15 +34,18 @@ ROUTE_CATALOG  = "../RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md".freez
 # ---------------------------------------------------------------------------
 
 # Per-family fallback hierarchy (prefix-matched, newest first within each tier).
+# iPhone 16e added for iPhone_small; iPhone SE (3rd generation) is a stable small-form fallback.
 SIM_PREFS = {
   "iPhone" => [
     "iPhone 17",
     "iPhone 16 Pro",
     "iPhone 16",
+    "iPhone 16e",
     "iPhone 15 Pro",
     "iPhone 15",
     "iPhone 14 Pro",
     "iPhone 14",
+    "iPhone SE",
   ].freeze,
   "iPad" => [
     "iPad Pro (13-inch)",
@@ -203,6 +206,10 @@ end
 # first (exact match), then falls back through SIM_PREFS for the given
 # family, then picks any available device in that family as a last resort.
 #
+# Reuses a persisted last-working UDID (per family) when still listed by
+# simctl — same directory as utility/build_and_test.sh (`~/.ra11y` by default).
+# Never creates simulators, erases devices, or downloads runtimes.
+#
 # Calls UI.user_error! if no simulator of the requested family is found at all,
 # listing all available simulators to help the user diagnose the problem.
 #
@@ -211,12 +218,27 @@ end
 # @return          [String] UDID of the resolved simulator
 def resolve_simulator_udid(family:, preferred: "")
   require "json"
+  require "fileutils"
 
-  raw = `xcrun simctl list devices available --json 2>/dev/null`
+  state_dir = ENV["RA11Y_SIMULATOR_STATE_DIR"].to_s.strip
+  state_dir = File.join(Dir.home, ".ra11y") if state_dir.empty?
+  FileUtils.mkdir_p(state_dir)
+  state_file = File.join(state_dir, "last_simulator_#{family}.udid")
 
-  if raw.strip.empty?
+  raw = nil
+  2.times do |i|
+    raw = `xcrun simctl list devices available --json 2>/dev/null`
+    break if raw && !raw.strip.empty?
+
+    if i.zero?
+      UI.important("[simulator] simctl list failed or returned empty; retrying once in 1 s...")
+      sleep(1)
+    end
+  end
+
+  if raw.nil? || raw.strip.empty?
     UI.user_error!(
-      "xcrun simctl returned no output.\n" \
+      "xcrun simctl returned no output after retry.\n" \
       "Ensure Xcode is installed and Simulator.app has been opened at least\n" \
       "once since the last reboot. Check Xcode → Settings → Platforms."
     )
@@ -243,11 +265,26 @@ def resolve_simulator_udid(family:, preferred: "")
     )
   end
 
+  # 0. Reuse last-working UDID if that device is still available.
+  if File.file?(state_file)
+    persisted = File.read(state_file).strip
+    if !persisted.empty?
+      match = available.find { |d| d["udid"] == persisted && d["name"].include?(family) }
+      if match
+        UI.message("[simulator] Reusing last-working UDID from #{state_file}: #{match['name']} (#{match['udid'][0..7]}...)")
+        persist_simulator_udid_state(state_file, match["udid"])
+        return match["udid"]
+      end
+      UI.important("[simulator] Last-working UDID is no longer available; re-resolving.")
+    end
+  end
+
   # 1. Exact preferred name match.
   unless preferred.empty?
     exact = available.find { |d| d["name"] == preferred }
     if exact
       UI.message("[simulator] Resolved: #{exact['name']} (#{exact['udid'][0..7]}...)")
+      persist_simulator_udid_state(state_file, exact["udid"])
       return exact["udid"]
     end
     UI.important("[simulator] '#{preferred}' not found; falling back to preference list")
@@ -260,13 +297,22 @@ def resolve_simulator_udid(family:, preferred: "")
 
     chosen = candidates.max_by { |d| d["name"] }
     UI.message("[simulator] Resolved via preference list: #{chosen['name']} (#{chosen['udid'][0..7]}...)")
+    persist_simulator_udid_state(state_file, chosen["udid"])
     return chosen["udid"]
   end
 
   # 3. Last-resort: any available device in the requested family.
   chosen = available.max_by { |d| d["name"] }
   UI.important("[simulator] WARNING: Using last-resort fallback: #{chosen['name']} (#{chosen['udid'][0..7]}...)")
+  persist_simulator_udid_state(state_file, chosen["udid"])
   chosen["udid"]
+end
+
+# Writes the resolved UDID for reuse on the next fastlane or build script run.
+def persist_simulator_udid_state(state_file, udid)
+  File.write(state_file, udid)
+rescue StandardError => e
+  UI.important("[simulator] (non-fatal) Could not persist UDID: #{e.message}")
 end
 
 # Reads the screenshot route catalog and returns the ordered list of required PNG basenames.
@@ -309,7 +355,8 @@ def screenshot_device_specs
   else
     [
       { label: "iPhone_large", family: "iPhone", preferred: "iPhone 17" },
-      { label: "iPhone_small", family: "iPhone", preferred: "iPhone 16e" },
+      # iPhone SE (3rd generation) preferred for small form; 16e can fail xcresulttool export.
+      { label: "iPhone_small", family: "iPhone", preferred: "iPhone SE (3rd generation)" },
       { label: "iPad",         family: "iPad",   preferred: "iPad" },
     ]
   end

@@ -48,16 +48,22 @@ struct iOSVORequiredView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-                headerSection
-                ctaSection
-                if showManualFallback {
-                    manualFallbackSection
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                    headerSection
+                    ctaSection
+                    if showManualFallback {
+                        manualFallbackSection
+                    }
                 }
+                .padding(RA11ySpacing.base)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: .infinity)
             }
-            .padding(RA11ySpacing.base)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(String(localized: "voiceOverRequired.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)

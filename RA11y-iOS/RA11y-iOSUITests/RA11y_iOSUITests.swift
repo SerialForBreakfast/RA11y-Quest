@@ -7,28 +7,81 @@
 
 import XCTest
 
+/// Non-screenshot UI tests (integration checks against the live app shell).
+///
+/// Screenshot capture lives in `RA11y_iOSScreenshots.swift`. This suite holds
+/// behavioral tests that do not attach PNGs.
 final class RA11y_iOSUITests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
+    /// Verifies `RA11y_iOSApp.applyScreenshotTestingOverridesIfNeeded()` clears Lights Off
+    /// when `-uiTesting` is combined with `-screenshotMarkOnboardingComplete`, so hub
+    /// screenshots and automation stay deterministic.
+    ///
+    /// - Important: Requires the hub route (`hub.dmGreeting`, `hub.lightsOff.toggle`).
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testScreenshotLaunchArgsResetLightsOffToggle() throws {
         let app = XCUIApplication()
+
+        app.launchArguments = ["-uiTesting", "-screenshotMarkOnboardingComplete"]
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        let greeting = app.descendants(matching: .any)["hub.dmGreeting"]
+        XCTAssertTrue(
+            greeting.waitForExistence(timeout: 15),
+            "Hub greeting should appear when basics are marked complete"
+        )
+
+        let lightsOff = lightsOffToggleElement(in: app)
+        XCTAssertTrue(
+            lightsOff.waitForExistence(timeout: 5),
+            "Lights Off toggle should be on the hub"
+        )
+
+        if lightsOffToggleIsOn(lightsOff) == false {
+            lightsOff.tap()
+        }
+        XCTAssertTrue(
+            lightsOffToggleIsOn(lightsOff),
+            "Lights Off should be on after toggling"
+        )
+
+        app.terminate()
+
+        app.launchArguments = ["-uiTesting", "-screenshotMarkOnboardingComplete"]
+        app.launch()
+
+        XCTAssertTrue(app.descendants(matching: .any)["hub.dmGreeting"].waitForExistence(timeout: 15))
+
+        let lightsOffAfterRelaunch = lightsOffToggleElement(in: app)
+        XCTAssertTrue(lightsOffAfterRelaunch.waitForExistence(timeout: 5))
+        XCTAssertFalse(
+            lightsOffToggleIsOn(lightsOffAfterRelaunch),
+            "Screenshot-style launch should clear Lights Off (toggle off)"
+        )
+    }
+
+    /// Resolves the hub Lights Off control. SwiftUI usually maps `Toggle` to a `Switch` element.
+    private func lightsOffToggleElement(in app: XCUIApplication) -> XCUIElement {
+        let switches = app.switches.matching(identifier: "hub.lightsOff.toggle")
+        if switches.count > 0 {
+            return switches.firstMatch
+        }
+        return app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "hub.lightsOff.toggle"))
+            .firstMatch
+    }
+
+    /// Interprets a switch-like element’s value (`"0"` / `"1"`) as off/on.
+    private func lightsOffToggleIsOn(_ element: XCUIElement) -> Bool {
+        guard let raw = element.value as? String else { return false }
+        return raw == "1"
     }
 
     @MainActor

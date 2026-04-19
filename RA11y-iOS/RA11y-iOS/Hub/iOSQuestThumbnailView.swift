@@ -12,6 +12,12 @@ import SwiftUI
 /// in Dynamic Type scaling, but is capped to prevent it from dominating the
 /// card layout at large accessibility sizes.
 ///
+/// ## Blend Mode
+/// `.blendMode(.multiply)` removes white backgrounds from PNG assets by multiplying
+/// pixel values — white (1,1,1) × dark background = dark background, so white becomes
+/// transparent. Artwork with actual white content should ship as PNGs with a proper
+/// alpha channel to avoid needing this workaround.
+///
 /// Marked `.accessibilityHidden(true)` because the thumbnail is purely
 /// decorative within the quest card — the card's Button provides the full
 /// accessibility label including the game's name and goal.
@@ -44,6 +50,9 @@ struct iOSQuestThumbnailView: View {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(1, contentMode: .fill)
+                    // Removes white backgrounds from PNG assets that lack an alpha channel.
+                    // White pixels multiply to match the dark card surface beneath.
+                    .blendMode(.multiply)
             } else {
                 placeholder
             }

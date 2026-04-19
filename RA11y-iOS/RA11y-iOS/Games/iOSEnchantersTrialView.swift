@@ -27,10 +27,16 @@ struct iOSEnchantersTrialView: View {
     // MARK: - State
 
     @State private var viewModel: EnchanterTrialViewModel
+    @State private var lightsOffModeEnabled = false
 
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
+
+    // MARK: - Private
+
+    /// Storage reference for loading Lights Off preference (same backing store as the hub toggle).
+    private let storage: any StorageComponent
 
     // MARK: - Init
 
@@ -40,6 +46,7 @@ struct iOSEnchantersTrialView: View {
     ///   - storage: Persistence used for L3 session results during normal gameplay.
     ///   - screenshotScene: Optional deterministic screenshot scene override.
     init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
+        self.storage = storage
         _viewModel = State(
             initialValue: EnchanterTrialViewModel(storage: storage, screenshotScene: screenshotScene)
         )
@@ -57,11 +64,19 @@ struct iOSEnchantersTrialView: View {
     var body: some View {
         levelContent
             .background {
-                EnchanterBackgroundView()
-                    .ignoresSafeArea()
+                if lightsOffModeEnabled && viewModel.phase != .prologue {
+                    Color.black
+                        .ignoresSafeArea()
+                } else {
+                    EnchanterBackgroundView()
+                        .ignoresSafeArea()
+                }
             }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                lightsOffModeEnabled = await storage.isLightsOffModeEnabled()
+            }
             .onChange(of: viewModel.completedResult) { _, result in
                 guard let result else { return }
                 let announcement = gameSpecificAnnouncement(for: result)
@@ -97,6 +112,7 @@ struct iOSEnchantersTrialView: View {
                 mistakes: viewModel.mistakes,
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
+                lightsOffMode: lightsOffModeEnabled,
                 onActivate: { relic in await viewModel.activateRelic(relic) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToRising() }
@@ -115,6 +131,7 @@ struct iOSEnchantersTrialView: View {
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
                 timedOut: viewModel.l2TimedOut,
+                lightsOffMode: lightsOffModeEnabled,
                 onActivate: { relic in await viewModel.activateRelic(relic) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToTimed() },
@@ -132,6 +149,7 @@ struct iOSEnchantersTrialView: View {
                 timeRemaining: viewModel.timeRemaining,
                 statusMessage: viewModel.statusMessage,
                 timedOut: viewModel.l3TimedOut,
+                lightsOffMode: lightsOffModeEnabled,
                 onActivate: { relic in await viewModel.activateRelic(relic) },
                 onHint: { viewModel.requestHint() },
                 onRetry: { viewModel.retryTimed() }
@@ -318,6 +336,17 @@ final class EnchanterTrialViewModel {
                 return
             }
             newCoordinator.startMonitoring()
+
+            // Grace period for VoiceOver users: the navigation transition announcement
+            // and target prompt together take ~4–6 s to read aloud. Without a delay the
+            // 20 s window is already draining while VoiceOver is still speaking, making
+            // the trial nearly impossible. The grace period lets the user hear the prompt
+            // and orient before the countdown begins.
+            if UIAccessibility.isVoiceOverRunning {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+            }
+
             self.startTimer(total: 20) { [weak self] in await self?.handleL3Timeout() }
             self.observeCoordinatorVOState(coordinator: newCoordinator)
         }
@@ -694,6 +723,7 @@ struct EnchanterRelic: Identifiable, Hashable, Equatable {
     // MARK: - Set Builders
 
     /// Returns a deterministic 3-relic set for L1 (UI-testing friendly).
+    /// L1 relic selection: shuffled each attempt so index memory alone cannot win (see `LightsOffMode-Recommendations.txt`).
     static func setForL1() -> [EnchanterRelic] {
         if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
             return Array(l1Pool.prefix(3))
@@ -744,26 +774,56 @@ struct EnchanterRelic: Identifiable, Hashable, Equatable {
 /// L0 Prologue — DM narration, VoiceOver lesson card, gesture guide, and "Begin Trial" button.
 ///
 /// No game session. Player reads or listens to the lesson, then taps "Begin Trial" to start L1.
+///
+/// ## Responsive Layout (SwiftUI Best Practices)
+/// - `contentMargins` (iOS 17+) constrains scroll content to safe area without GeometryReader.
+/// - `HStack` + `Spacer` centers content on iPad when max width is 600pt.
+/// - `frame(minWidth: 0)` prevents content from expanding beyond the container.
 private struct EnchanterPrologueView: View {
 
     let onBeginTrial: () -> Void
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    private var horizontalPadding: CGFloat {
+        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
+    }
+
+    private var contentMaxWidth: CGFloat? {
+        sizeClass == .regular ? 600 : nil
+    }
+
     var body: some View {
         ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
+            enchanterContent {
                 dmNarrationCard
                 lessonCard
                 gestureGuide
                 beginButton
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
         }
+        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
+    }
+
+    @ViewBuilder
+    private func enchanterContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        let inner = VStack(spacing: RA11ySpacing.lg) {
+            content()
+        }
+        .padding(.vertical, RA11ySpacing.lg)
+        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
+        .frame(maxWidth: .infinity)
+
+        if sizeClass == .regular {
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                inner
+                Spacer(minLength: 0)
+            }
+        } else {
+            inner
+        }
     }
 
     private var dmNarrationCard: some View {
@@ -843,15 +903,25 @@ private struct EnchanterAttemptView: View {
     let mistakes: Int
     let statusMessage: String?
     let levelComplete: Bool
+    /// When `true`, relic artwork is covered by an accessibility-inert blackout layer.
+    let lightsOffMode: Bool
     let onActivate: (EnchanterRelic) async -> Void
     let onHint: () -> Void
     let onContinue: () -> Void
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    private var horizontalPadding: CGFloat {
+        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
+    }
+
+    private var contentMaxWidth: CGFloat? {
+        sizeClass == .regular ? 600 : nil
+    }
+
     var body: some View {
         ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
+            enchanterLevelContent {
                 promptCard(
                     title: String(format: String(localized: "simon.l1.target.format"), targetRelic.displayName),
                     a11yLabel: String(format: String(localized: "simon.a11y.l1.target"), targetRelic.displayName),
@@ -872,12 +942,29 @@ private struct EnchanterAttemptView: View {
                     hintButton
                 }
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
         }
+        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
+    }
+
+    @ViewBuilder
+    private func enchanterLevelContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        let inner = VStack(spacing: RA11ySpacing.lg) {
+            content()
+        }
+        .padding(.vertical, RA11ySpacing.lg)
+        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
+        .frame(maxWidth: .infinity)
+
+        if sizeClass == .regular {
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                inner
+                Spacer(minLength: 0)
+            }
+        } else {
+            inner
+        }
     }
 
     private var mistakeHUD: some View {
@@ -894,6 +981,7 @@ private struct EnchanterAttemptView: View {
                 RelicButton(relic: relic, onActivate: onActivate)
             }
         }
+        .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
     }
 
     private var hintButton: some View {
@@ -929,6 +1017,7 @@ private struct EnchanterRisingView: View {
     let statusMessage: String?
     let levelComplete: Bool
     let timedOut: Bool
+    let lightsOffMode: Bool
     let onActivate: (EnchanterRelic) async -> Void
     let onHint: () -> Void
     let onContinue: () -> Void
@@ -936,9 +1025,17 @@ private struct EnchanterRisingView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    private var horizontalPadding: CGFloat {
+        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
+    }
+
+    private var contentMaxWidth: CGFloat? {
+        sizeClass == .regular ? 600 : nil
+    }
+
     var body: some View {
         ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
+            enchanterLevelContent {
                 promptCard(
                     title: String(format: String(localized: "simon.l2.target.format"), targetRelic.displayName),
                     a11yLabel: String(format: String(localized: "simon.a11y.l2.target"), targetRelic.displayName),
@@ -960,12 +1057,29 @@ private struct EnchanterRisingView: View {
                     if levelComplete { continueButton } else { hintButton }
                 }
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
         }
+        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
+    }
+
+    @ViewBuilder
+    private func enchanterLevelContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        let inner = VStack(spacing: RA11ySpacing.lg) {
+            content()
+        }
+        .padding(.vertical, RA11ySpacing.lg)
+        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
+        .frame(maxWidth: .infinity)
+
+        if sizeClass == .regular {
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                inner
+                Spacer(minLength: 0)
+            }
+        } else {
+            inner
+        }
     }
 
     private var relicStack: some View {
@@ -974,6 +1088,7 @@ private struct EnchanterRisingView: View {
                 RelicButton(relic: relic, onActivate: onActivate)
             }
         }
+        .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
     }
 
     private var timeoutBanner: some View {
@@ -1028,15 +1143,24 @@ private struct EnchanterTimedView: View {
     let timeRemaining: Double
     let statusMessage: String?
     let timedOut: Bool
+    let lightsOffMode: Bool
     let onActivate: (EnchanterRelic) async -> Void
     let onHint: () -> Void
     let onRetry: () -> Void
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    private var horizontalPadding: CGFloat {
+        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
+    }
+
+    private var contentMaxWidth: CGFloat? {
+        sizeClass == .regular ? 600 : nil
+    }
+
     var body: some View {
         ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
+            enchanterLevelContent {
                 promptCard(
                     title: String(format: String(localized: "simon.l3.target.format"), targetRelic.displayName),
                     a11yLabel: String(format: String(localized: "simon.a11y.l3.target"), targetRelic.displayName),
@@ -1058,12 +1182,29 @@ private struct EnchanterTimedView: View {
                     hintButton
                 }
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
         }
+        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
+    }
+
+    @ViewBuilder
+    private func enchanterLevelContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        let inner = VStack(spacing: RA11ySpacing.lg) {
+            content()
+        }
+        .padding(.vertical, RA11ySpacing.lg)
+        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
+        .frame(maxWidth: .infinity)
+
+        if sizeClass == .regular {
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                inner
+                Spacer(minLength: 0)
+            }
+        } else {
+            inner
+        }
     }
 
     private var relicStack: some View {
@@ -1072,6 +1213,7 @@ private struct EnchanterTimedView: View {
                 RelicButton(relic: relic, onActivate: onActivate)
             }
         }
+        .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
     }
 
     private var timeoutBanner: some View {
@@ -1172,10 +1314,10 @@ private struct RelicButton: View {
                 }
                 .padding(RA11ySpacing.md)
                 .frame(maxWidth: .infinity)
-                .background(Color.black.opacity(0.25), in: .rect(cornerRadius: RA11yRadius.card))
+                .background(Color.black.opacity(0.4), in: .rect(cornerRadius: RA11yRadius.card))
                 .overlay(
                     RoundedRectangle(cornerRadius: RA11yRadius.card)
-                        .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                        .strokeBorder(.white.opacity(0.2), lineWidth: 1)
                 )
             } else {
                 HStack(spacing: RA11ySpacing.md) {
@@ -1184,10 +1326,10 @@ private struct RelicButton: View {
                 }
                 .padding(RA11ySpacing.md)
                 .frame(maxWidth: .infinity)
-                .background(Color.black.opacity(0.25), in: .rect(cornerRadius: RA11yRadius.card))
+                .background(Color.black.opacity(0.4), in: .rect(cornerRadius: RA11yRadius.card))
                 .overlay(
                     RoundedRectangle(cornerRadius: RA11yRadius.card)
-                        .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                        .strokeBorder(.white.opacity(0.2), lineWidth: 1)
                 )
             }
         }

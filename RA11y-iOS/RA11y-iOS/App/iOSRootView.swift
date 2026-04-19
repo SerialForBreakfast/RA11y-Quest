@@ -79,8 +79,11 @@ struct iOSRootView: View {
                 ProgressView(String(localized: "app.loading"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(.background)
+                    // Gives VoiceOver a clear label while the app resolves its initial route.
+                    .accessibilityLabel(String(localized: "app.loading.a11yLabel"))
                     .onAppear {
-                        RA11yLogger.startup.debug("rootView.body — first render; awaiting route resolution")
+                        RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) rootView.body — first render; awaiting route resolution")
+                        scheduleSlowLoadingAnnouncementIfStillPending()
                     }
             }
         }
@@ -156,14 +159,41 @@ struct iOSRootView: View {
         let state = RA11yLogger.startupSignposter.beginInterval("routeResolution")
         defer { RA11yLogger.startupSignposter.endInterval("routeResolution", state) }
 
+        let beginTag = RA11yLogger.startupTimestampTag()
+        RA11yLogger.startup.debug("\(beginTag) routeResolution — async entry (before storage reads)")
+
+        let wallStart = CFAbsoluteTimeGetCurrent()
         let initial = await router.resolveInitialRoute(using: storage)
+        let elapsedMs = (CFAbsoluteTimeGetCurrent() - wallStart) * 1000
 
         if case .firstRun = initial {
             router.path = NavigationPath([initial])
         }
         hasResolvedInitialRoute = true
 
-        RA11yLogger.startup.debug("routeResolution complete — initial route: \(String(describing: initial))")
+        // Announce to VoiceOver that the app has finished loading and is ready.
+        // Passing `nil` lets VoiceOver focus the first element naturally (nav title).
+        UIAccessibility.post(notification: .screenChanged, argument: nil)
+
+        RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) routeResolution complete — \(String(format: "%.1f", elapsedMs)) ms — initial route: \(String(describing: initial))")
+    }
+
+    /// If route resolution takes longer than expected under the debugger, posts a
+    /// VoiceOver announcement so the user knows the app is still working (not frozen).
+    ///
+    /// ## Concurrency
+    /// Called from the loading overlay's `onAppear`. Spawns an unstructured `Task`
+    /// that sleeps on the main actor; safe alongside `resolveInitialRouteIfNeeded`.
+    private func scheduleSlowLoadingAnnouncementIfStillPending() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            guard !hasResolvedInitialRoute else { return }
+            UIAccessibility.post(
+                notification: .announcement,
+                argument: String(localized: "app.loading.still.a11yAnnouncement")
+            )
+            RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) routeResolution still pending after 2 s — posted slow-loading announcement")
+        }
     }
 }
 

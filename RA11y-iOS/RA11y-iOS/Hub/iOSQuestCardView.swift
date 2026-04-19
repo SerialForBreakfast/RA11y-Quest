@@ -6,8 +6,8 @@ import RA11yCore
 /// A tappable quest card representing one training game on the hub screen.
 ///
 /// The entire card is a single `Button` — one VoiceOver focus element. Sub-views
-/// (`iOSQuestThumbnailView`, `iOSQuestCardInfoView`, `iOSRankBadgeView`) are all
-/// marked `.accessibilityHidden(true)` and are covered by the button's combined label.
+/// (`iOSQuestThumbnailView`, `iOSQuestCardInfoView`) are all marked
+/// `.accessibilityHidden(true)` and are covered by the button's combined label.
 ///
 /// ## Combined VoiceOver Label
 /// - Unlocked: "{title}. {goal}. {estimatedDuration}. Rank: {rankLabel}."
@@ -19,13 +19,18 @@ import RA11yCore
 /// offer an activation hint. A "Complete [prerequisiteTitle] to unlock" message replaces
 /// the goal/duration/rank row in the combined label.
 ///
+/// ## Layout
+/// Thumbnail on the left; info column (title, goal, duration + compact rank chip) fills
+/// the remaining width. The large `iOSRankBadgeView` column has been removed from the
+/// HStack — its information lives in the inline rank chip inside `iOSQuestCardInfoView`.
+///
 /// ## Adaptive Layout
-/// - Standard (`dynamicTypeSize < .accessibility2`): `HStack` — thumbnail | info | badge
-/// - Large accessibility sizes: `VStack` — thumbnail + badge row on top, info below
+/// - Standard (`dynamicTypeSize < .accessibility2`): `HStack` — thumbnail | info
+/// - Large accessibility sizes: `VStack` — thumbnail on top, info below
 ///
 /// ## Visual Design
-/// Dark warm card surface with an amber/gold border. Slight elevation shadow.
-/// Unplayed cards use a slightly desaturated thumbnail (via `.saturation`).
+/// Dark warm card surface (15% transparent so the dungeon background shows through)
+/// with an amber/gold border. Slight elevation shadow.
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -63,6 +68,17 @@ struct iOSQuestCardView: View {
             return rank.displayText
         }
         return String(localized: "hub.questAwaits")
+    }
+
+    /// Thematic color for the inline rank chip. Mirrors the seal colors in `iOSRankBadgeView`.
+    private var rankChipColor: Color {
+        guard let rank else { return Color.ra11yCardTertiaryText }
+        switch rank {
+        case .perfect: return Color(red: 1.0,  green: 0.84, blue: 0.0)
+        case .good:    return Color(red: 0.53, green: 0.81, blue: 0.98)
+        case .ok:      return Color(red: 0.75, green: 0.65, blue: 0.50)
+        case .failed:  return Color(red: 0.55, green: 0.55, blue: 0.55)
+        }
     }
 
     private var combinedAccessibilityLabel: String {
@@ -114,6 +130,10 @@ struct iOSQuestCardView: View {
     }
 
     /// Standard HStack layout for default through `.accessibility1` type sizes.
+    ///
+    /// Thumbnail on the left; info column (with inline rank chip) fills remaining space.
+    /// The separate rank badge column has been removed — the chip in the info view
+    /// gives the title and goal text the full available width.
     private var standardLayout: some View {
         HStack(alignment: .top, spacing: cardSpacing) {
             iOSQuestThumbnailView(assetName: game.thumbnailAssetName)
@@ -125,10 +145,11 @@ struct iOSQuestCardView: View {
                 iOSQuestCardInfoView(
                     title: String(localized: String.LocalizationValue(game.titleKey)),
                     goal: String(localized: String.LocalizationValue(game.goalKey)),
-                    estimatedDuration: game.estimatedDuration
+                    estimatedDuration: game.estimatedDuration,
+                    rankLabel: rankLabel,
+                    rankColor: rankChipColor
                 )
                 .layoutPriority(1)
-                iOSRankBadgeView(rank: rank, isAccessibilityHidden: true)
             }
         }
         .frame(maxWidth: .infinity)
@@ -139,21 +160,18 @@ struct iOSQuestCardView: View {
     /// VStack layout for `.accessibility2` and above — prevents horizontal crowding.
     private var largeTypeLayout: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            HStack {
-                iOSQuestThumbnailView(assetName: game.thumbnailAssetName)
-                    .saturation(thumbnailSaturation)
-                Spacer()
-                if !isLocked {
-                    iOSRankBadgeView(rank: rank, isAccessibilityHidden: true)
-                }
-            }
+            iOSQuestThumbnailView(assetName: game.thumbnailAssetName)
+                .saturation(thumbnailSaturation)
+
             if isLocked {
                 lockedInfoColumn
             } else {
                 iOSQuestCardInfoView(
                     title: String(localized: String.LocalizationValue(game.titleKey)),
                     goal: String(localized: String.LocalizationValue(game.goalKey)),
-                    estimatedDuration: game.estimatedDuration
+                    estimatedDuration: game.estimatedDuration,
+                    rankLabel: rankLabel,
+                    rankColor: rankChipColor
                 )
             }
         }
@@ -198,8 +216,8 @@ struct iOSQuestCardView: View {
 
 /// Custom button style that renders the quest card's visual chrome.
 ///
-/// Handling press state via `configuration.isPressed` here rather than in the
-/// card body keeps the visual treatment decoupled from the content layout.
+/// The card fill uses 85% opacity (15% transparent) so the dungeon background
+/// shows through subtly, grounding the cards in the scene.
 ///
 /// ## Color Scheme Forcing
 /// The card surface uses a fixed dark background regardless of the system's
@@ -214,8 +232,7 @@ struct iOSQuestCardView: View {
 /// ## Reduce Motion
 /// When `accessibilityReduceMotion` is `true`, scale and opacity transitions are
 /// suppressed. Only the `.opacity` feedback remains so the press is still
-/// perceptible without motion. This satisfies the M3 and M8 Reduce Motion
-/// acceptance criteria.
+/// perceptible without motion.
 private struct QuestCardButtonStyle: ButtonStyle {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -224,7 +241,7 @@ private struct QuestCardButtonStyle: ButtonStyle {
         configuration.label
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(red: 0.13, green: 0.10, blue: 0.09))
+                    .fill(Color(red: 0.13, green: 0.10, blue: 0.09, opacity: 0.85))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .strokeBorder(
@@ -234,13 +251,8 @@ private struct QuestCardButtonStyle: ButtonStyle {
                     )
                     .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 3)
             )
-            // Force dark environment so all semantic colors (`.primary`, `.secondary`,
-            // etc.) resolve to white-based values on the fixed-dark card surface.
-            // This is the correct idiom for a non-adaptive dark surface in SwiftUI —
-            // it handles light mode, dark mode, and Increase Contrast in one place.
             .environment(\.colorScheme, .dark)
             .opacity(configuration.isPressed ? 0.85 : 1.0)
-            // Scale feedback is motion-based; suppress it when Reduce Motion is ON.
             .scaleEffect((!reduceMotion && configuration.isPressed) ? 0.98 : 1.0)
             .animation(
                 reduceMotion ? nil : .easeInOut(duration: 0.12),

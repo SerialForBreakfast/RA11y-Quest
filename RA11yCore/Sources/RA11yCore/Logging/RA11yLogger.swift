@@ -1,3 +1,4 @@
+import Foundation
 import OSLog
 
 /// Provides named OSLog loggers for each RA11y subsystem.
@@ -59,4 +60,19 @@ public enum RA11yLogger {
     /// `OSSignposter` is safe to use across actor boundaries; `beginInterval`
     /// and `endInterval` may be called from any isolation context.
     public static let startupSignposter = OSSignposter(subsystem: subsystem, category: "startup")
+
+    /// Bracketed wall-clock time plus monotonic system uptime for correlating startup
+    /// log lines in Console.app when diagnosing hangs (attach timestamps to each milestone).
+    ///
+    /// Uptime restarts on device reboot and is unaffected by user date changes.
+    ///
+    /// - Note: Allocates a fresh `ISO8601DateFormatter` per call so the package stays
+    ///   free of non-`Sendable` static formatter state under Swift 6.
+    public static func startupTimestampTag() -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let wall = formatter.string(from: Date())
+        let uptime = ProcessInfo.processInfo.systemUptime
+        return "[\(wall) uptime=\(String(format: "%.3f", uptime))s]"
+    }
 }

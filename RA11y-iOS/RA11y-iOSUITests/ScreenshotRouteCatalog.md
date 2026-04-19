@@ -26,6 +26,16 @@ This file is the single source of truth for screenshot coverage in the iOS UI te
 ## Deferred Screens
 - Rogue screenshots remain deferred until the Rogue flow is stable enough for deterministic automation.
 
+## UI integration tests (non-screenshot)
+
+These tests live in `RA11y_iOSUITests.swift`. They do **not** attach PNGs and are **not** listed in the Fastfile screenshot allowlist. Run with `utility/build_and_test.sh --only-ios --include-ui-tests` (or `-only-testing` a single method).
+
+| Purpose | Test method | Launch arguments | Anchor identifier |
+|---|---|---|---|
+| Screenshot-style launch clears Lights Off so hub stays deterministic | `testScreenshotLaunchArgsResetLightsOffToggle` | `-uiTesting` and `-screenshotMarkOnboardingComplete` | `hub.dmGreeting`, `hub.lightsOff.toggle` |
+
+`RA11y_iOSApp` removes the Lights Off UserDefaults key when those arguments are present; this test enables the toggle, terminates, relaunches with the same args, and asserts the toggle is off.
+
 ## Identifier Rules
 - Every captured screen MUST have a stable root accessibility identifier.
 - Screenshot tests MUST wait on the documented root anchor before attaching a PNG.

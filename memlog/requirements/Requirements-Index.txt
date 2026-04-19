@@ -29,3 +29,9 @@ Phase 3 — Tickets
 -----------------
 - TicketBreakdown.txt        All MVP tickets in dependency order (tracks: Infrastructure, UX/Gating, Games, Polish).
 - Design/                    Design track tickets (AssetListDefinition, PromptSheet, AssetReviewChecklist, AssetDeliveryNaming).
+
+Advanced modes (design guidance)
+--------------------------------
+- LightsOffMode-Recommendations.txt   Visual blackout training: stable a11y within a run; varied layout across runs; semantic win condition.
+- LightsOffMode-Decisions.txt         Locked product decisions: hub toggle, default OFF, dungeon randomization when Lights Off is on.
+- LightsOffMode-QAChecklist.txt       Manual VoiceOver checklist for Lights Off acceptance criteria.

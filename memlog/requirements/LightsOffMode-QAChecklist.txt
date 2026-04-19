@@ -1,0 +1,17 @@
+RA11y — Lights Off Mode manual QA checklist
+===========================================
+Derived from acceptance criteria in LightsOffMode-Recommendations.txt.
+
+Device: iPhone or iPad with VoiceOver on. Toggle Lights Off on the hub before starting a trial.
+
+- [ ] Cannot complete a trial using memorized screen position alone (repeat runs; vary target).
+- [ ] Repeated runs require listening to labels / prompts, not a fixed index path.
+- [ ] Focus order stays stable during one attempt (no surprise reorder mid-level).
+- [ ] Every interactive control is reachable; no missing accessibility elements.
+- [ ] Blackout layer does not steal VoiceOver focus or block activation (double-tap works).
+- [ ] Difficulty feels like skill with VoiceOver, not broken focus or stale announcements.
+
+Per game (Lights Off on):
+- [ ] Enchanter: relic row blacked out; prompt, timer, hints still readable or spoken.
+- [ ] Rogue: seal grid blacked out; prompts and timer still usable.
+- [ ] Dungeon: room list blacked out; objective names correct for randomized target; scroll + activate works.

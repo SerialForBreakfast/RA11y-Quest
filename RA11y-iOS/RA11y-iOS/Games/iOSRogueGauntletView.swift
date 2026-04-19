@@ -27,14 +27,20 @@ struct iOSRogueGauntletView: View {
     // MARK: - State
 
     @State private var viewModel: RogueGauntletViewModel
+    @State private var lightsOffModeEnabled = false
 
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
 
+    // MARK: - Private
+
+    private let storage: any StorageComponent
+
     // MARK: - Init
 
     init(storage: any StorageComponent) {
+        self.storage = storage
         _viewModel = State(initialValue: RogueGauntletViewModel(storage: storage))
     }
 
@@ -44,11 +50,19 @@ struct iOSRogueGauntletView: View {
     var body: some View {
         levelContent
             .background {
-                RogueBackgroundView()
-                    .ignoresSafeArea()
+                if lightsOffModeEnabled && viewModel.phase != .prologue {
+                    Color.black
+                        .ignoresSafeArea()
+                } else {
+                    RogueBackgroundView()
+                        .ignoresSafeArea()
+                }
             }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                lightsOffModeEnabled = await storage.isLightsOffModeEnabled()
+            }
             .onChange(of: viewModel.completedResult) { _, result in
                 guard let result else { return }
                 let announcement = gameSpecificAnnouncement(for: result)
@@ -79,6 +93,7 @@ struct iOSRogueGauntletView: View {
                 seal: viewModel.targetSeal ?? .placeholder,
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
+                lightsOffMode: lightsOffModeEnabled,
                 onActivate: { seal in await viewModel.activateSeal(seal) },
                 onContinue: { viewModel.advanceToRising() }
             )
@@ -96,6 +111,7 @@ struct iOSRogueGauntletView: View {
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
                 timedOut: viewModel.l2TimedOut,
+                lightsOffMode: lightsOffModeEnabled,
                 onActivate: { seal in await viewModel.activateSeal(seal) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToTimed() },
@@ -114,6 +130,7 @@ struct iOSRogueGauntletView: View {
                 timeRemaining: viewModel.timeRemaining,
                 statusMessage: viewModel.statusMessage,
                 timedOut: viewModel.l3TimedOut,
+                lightsOffMode: lightsOffModeEnabled,
                 onActivate: { seal in await viewModel.activateSeal(seal) },
                 onHint: { viewModel.requestHint() },
                 onRetry: { viewModel.retryTimed() }
@@ -289,6 +306,15 @@ final class RogueGauntletViewModel {
                 return
             }
             newCoordinator.startMonitoring()
+            // Grace period for VoiceOver users: the navigation transition announcement
+            // and target prompt together take ~4–6 s to read aloud. Without a delay the
+            // 20 s window is already draining while VoiceOver is still speaking, making
+            // the trial nearly impossible. The grace period lets the user hear the prompt
+            // and orient before the countdown begins.
+            if UIAccessibility.isVoiceOverRunning {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+            }
             self.startTimer(total: 20) { [weak self] in await self?.handleL3Timeout() }
             self.observeCoordinatorVOState(coordinator: newCoordinator)
         }
@@ -638,18 +664,22 @@ private struct RoguePrologueView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
-                dmNarrationCard
-                lessonCard
-                gestureGuide
-                beginButton
+        GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    dmNarrationCard
+                    lessonCard
+                    gestureGuide
+                    beginButton
+                }
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
 
@@ -727,42 +757,47 @@ private struct RogueFirstAttemptView: View {
     let seal: RogueSeal
     let statusMessage: String?
     let levelComplete: Bool
+    let lightsOffMode: Bool
     let onActivate: (RogueSeal) async -> Void
     let onContinue: () -> Void
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
-                roguePromptCard(
-                    title: String(format: String(localized: "rogue.l1.objective.format"), seal.displayName),
-                    a11yLabel: String(format: String(localized: "rogue.a11y.l1.objective"), seal.displayName),
-                    a11yHint: String(localized: "rogue.a11y.l1.objective.hint")
-                )
+        GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    roguePromptCard(
+                        title: String(format: String(localized: "rogue.l1.objective.format"), seal.displayName),
+                        a11yLabel: String(format: String(localized: "rogue.a11y.l1.objective"), seal.displayName),
+                        a11yHint: String(localized: "rogue.a11y.l1.objective.hint")
+                    )
 
-                Text(String(localized: "rogue.l1.dm_prompt"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .accessibilityHidden(true)
+                    Text(String(localized: "rogue.l1.dm_prompt"))
+                        .font(.ra11yBody)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .accessibilityHidden(true)
 
-                // Large centered seal — the only interactive element on this screen.
-                largeSealButton
+                    // Large centered seal — the only interactive element on this screen.
+                    largeSealButton
 
-                if let statusMessage {
-                    rogueStatusRow(statusMessage)
+                    if let statusMessage {
+                        rogueStatusRow(statusMessage)
+                    }
+
+                    if levelComplete {
+                        continueButton
+                    }
                 }
-
-                if levelComplete {
-                    continueButton
-                }
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
 
@@ -790,6 +825,7 @@ private struct RogueFirstAttemptView: View {
         .accessibilityLabel(seal.displayName)
         .accessibilityHint(String(localized: "rogue.seal.hint"))
         .accessibilityIdentifier("rogue.seal.\(seal.id)")
+        .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
     }
 
     private var continueButton: some View {
@@ -819,6 +855,7 @@ private struct RogueRisingView: View {
     let statusMessage: String?
     let levelComplete: Bool
     let timedOut: Bool
+    let lightsOffMode: Bool
     let onActivate: (RogueSeal) async -> Void
     let onHint: () -> Void
     let onContinue: () -> Void
@@ -827,40 +864,45 @@ private struct RogueRisingView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
-                roguePromptCard(
-                    title: String(format: String(localized: "rogue.l2.objective.format"), targetSeal.displayName),
-                    a11yLabel: String(format: String(localized: "rogue.a11y.l2.objective"), targetSeal.displayName),
-                    a11yHint: String(localized: "rogue.a11y.l2.objective.hint")
-                )
-
-                RogueTimerHUD(timeRemaining: timeRemaining, total: 40, mistakes: mistakes)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(
-                        String(format: String(localized: "rogue.a11y.l2.timer"), Int(ceil(timeRemaining)))
+        GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    roguePromptCard(
+                        title: String(format: String(localized: "rogue.l2.objective.format"), targetSeal.displayName),
+                        a11yLabel: String(format: String(localized: "rogue.a11y.l2.objective"), targetSeal.displayName),
+                        a11yHint: String(localized: "rogue.a11y.l2.objective.hint")
                     )
-                    .accessibilityHint(String(localized: "a11y.timer.group.hint"))
 
-                if timedOut {
-                    timeoutBanner
-                } else {
-                    SealGrid(seals: seals, columns: 2, onActivate: onActivate)
+                    RogueTimerHUD(timeRemaining: timeRemaining, total: 40, mistakes: mistakes)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(
+                            String(format: String(localized: "rogue.a11y.l2.timer"), Int(ceil(timeRemaining)))
+                        )
+                        .accessibilityHint(String(localized: "a11y.timer.group.hint"))
 
-                    if let statusMessage { rogueStatusRow(statusMessage) }
-
-                    if levelComplete {
-                        continueButton
+                    if timedOut {
+                        timeoutBanner
                     } else {
-                        hintButton
+                        SealGrid(seals: seals, columns: 2, onActivate: onActivate)
+                            .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
+
+                        if let statusMessage { rogueStatusRow(statusMessage) }
+
+                        if levelComplete {
+                            continueButton
+                        } else {
+                            hintButton
+                        }
                     }
                 }
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
 
@@ -916,6 +958,7 @@ private struct RogueTimedView: View {
     let timeRemaining: Double
     let statusMessage: String?
     let timedOut: Bool
+    let lightsOffMode: Bool
     let onActivate: (RogueSeal) async -> Void
     let onHint: () -> Void
     let onRetry: () -> Void
@@ -923,36 +966,41 @@ private struct RogueTimedView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
-                roguePromptCard(
-                    title: String(format: String(localized: "rogue.l3.objective.format"), targetSeal.displayName),
-                    a11yLabel: String(format: String(localized: "rogue.a11y.l3.objective"), targetSeal.displayName),
-                    a11yHint: nil
-                )
-
-                RogueTimerHUD(timeRemaining: timeRemaining, total: 20, mistakes: mistakes)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(
-                        String(format: String(localized: "rogue.a11y.l3.timer"), Int(ceil(timeRemaining)))
+        GeometryReader { geo in
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    roguePromptCard(
+                        title: String(format: String(localized: "rogue.l3.objective.format"), targetSeal.displayName),
+                        a11yLabel: String(format: String(localized: "rogue.a11y.l3.objective"), targetSeal.displayName),
+                        a11yHint: nil
                     )
-                    .accessibilityHint(String(localized: "a11y.timer.group.hint"))
 
-                if timedOut {
-                    timeoutBanner
-                } else {
-                    SealGrid(seals: seals, columns: 2, onActivate: onActivate)
+                    RogueTimerHUD(timeRemaining: timeRemaining, total: 20, mistakes: mistakes)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(
+                            String(format: String(localized: "rogue.a11y.l3.timer"), Int(ceil(timeRemaining)))
+                        )
+                        .accessibilityHint(String(localized: "a11y.timer.group.hint"))
 
-                    if let statusMessage { rogueStatusRow(statusMessage) }
+                    if timedOut {
+                        timeoutBanner
+                    } else {
+                        SealGrid(seals: seals, columns: 2, onActivate: onActivate)
+                            .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
 
-                    hintButton
+                        if let statusMessage { rogueStatusRow(statusMessage) }
+
+                        hintButton
+                    }
                 }
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(width: geo.size.width)
+                .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
-            .frame(maxWidth: .infinity)
+            .clipped()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
 
