@@ -129,6 +129,9 @@ struct iOSDungeonResonanceMockupView: View {
                         .padding(.vertical, RA11ySpacing.xl)
                 }
                 .scrollIndicators(.visible)
+                /// Hides the system scroll surface so transparent glyph PNGs composite on the shaft
+                /// instead of picking up a grey default background (visible in screenshots as boxes).
+                .scrollContentBackground(.hidden)
                 .coordinateSpace(name: "mockupLane")
 
                 centerOrbOverlay
@@ -459,6 +462,7 @@ private struct MoonstoneTargetOrb: View {
             if let ui = UIImage(named: iOSDungeonResonanceArt.targetMoonstone) {
                 Image(uiImage: ui)
                     .resizable()
+                    .interpolation(.high)
                     .scaledToFit()
                     .frame(width: moonW, height: moonH)
                     .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.4), radius: 10)
@@ -484,6 +488,7 @@ private struct MoonstoneTargetOrb: View {
                 }
             }
         }
+        .compositingGroup()
         .accessibilityHidden(true)
     }
 }
@@ -514,6 +519,7 @@ private struct LaneDecoyChip: View {
             if let ui = UIImage(named: style.assetName) {
                 Image(uiImage: ui)
                     .resizable()
+                    .interpolation(.high)
                     .scaledToFit()
                     .frame(width: chip, height: chip)
             } else {
@@ -521,6 +527,7 @@ private struct LaneDecoyChip: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .compositingGroup()
         .opacity(0.9)
         .accessibilityHidden(accessibilityHidden)
     }
@@ -562,6 +569,7 @@ private struct LaneLaneMarkerNeutral: View {
             if let ui = UIImage(named: iOSDungeonResonanceArt.laneMarkerNeutral) {
                 Image(uiImage: ui)
                     .resizable()
+                    .interpolation(.high)
                     .scaledToFit()
                     .frame(height: 22)
                     .frame(maxWidth: .infinity)
