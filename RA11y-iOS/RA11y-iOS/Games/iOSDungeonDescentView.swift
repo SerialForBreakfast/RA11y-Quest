@@ -11,9 +11,10 @@ import RA11yCore
 /// Implements the full 4-level game arc defined in `GameSpec-ScrollHunt.txt`
 /// and `GameRules-MVP.txt`:
 ///
-/// - **L0 Prologue**: Guide narration + "Entering the Crystal Shaft" lesson + gesture guide +
-///   required practice scroll area + begin trial.
-/// - **L1 First Attempt**: 4 rooms, no timer — teaches 3-finger scroll via Guard Room
+/// - **L0 Prologue**: Retained for deterministic `dungeonPrologue` screenshots (`-screenshotScene`);
+///   optional narration, lesson, practice scroll, and begin trial — **not** shown on normal launch.
+/// - **L1 First Attempt (cold start)**: Normal entry begins here — 4 rooms, no timer; learning happens
+///   in the real shaft scroll list (see on-screen gesture tip + VoiceOver objective prompt).
 /// - **L2 Rising Challenge**: 8 rooms, 60 s soft timer — Relic Vault as target
 /// - **L3 Timed Trial**: 12 rooms, 45 s hard timer; `GameSession` started here for scoring
 ///
@@ -109,6 +110,7 @@ struct iOSDungeonDescentView: View {
                 mistakes: viewModel.mistakes,
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: nil,
+                showsFirstLevelGestureTip: true,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -134,6 +136,7 @@ struct iOSDungeonDescentView: View {
                 mistakes: viewModel.mistakes,
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: nil,
+                showsFirstLevelGestureTip: false,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -159,6 +162,7 @@ struct iOSDungeonDescentView: View {
                 mistakes: viewModel.mistakes,
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: String(localized: "dungeon.lightsOff.flavor"),
+                showsFirstLevelGestureTip: false,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -257,12 +261,15 @@ final class DungeonDescentViewModel {
     ///
     /// - Parameters:
     ///   - storage: Persistence used for normal gameplay session storage.
-    ///   - screenshotScene: Optional deterministic screenshot scene override.
+    ///   - screenshotScene: Optional deterministic screenshot scene override. When `nil`, the flow
+    ///     skips L0 and begins at L1 (`beginTrial()`) so play teaches scrolling in the real shaft.
     init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
         self.storage = storage
         self.screenshotScene = screenshotScene
         if let screenshotScene {
             applyScreenshotScene(screenshotScene)
+        } else {
+            beginTrial()
         }
     }
 
@@ -774,8 +781,9 @@ struct DungeonRoom: Identifiable {
 
 /// L0 Prologue — Guide narration, lesson card, gesture guide, practice scroll zone, begin trial.
 ///
-/// The begin trial button is disabled until the player has performed at least one
-/// non-zero scroll event in the practice zone, enforcing the paradigm-teaching gate.
+/// Used when the view model is launched with `-screenshotScene dungeonPrologue` or if L0 is
+/// reintroduced as an optional path. The begin trial button is disabled until the player has
+/// performed at least one non-zero scroll event in the practice zone.
 private struct DungeonPrologueView: View {
 
     let practiceScrollObserved: Bool
@@ -917,7 +925,8 @@ private struct DungeonPrologueView: View {
 ///
 /// Timer and hint affordances are conditionally shown based on whether a `timeRemaining`
 /// value is provided (L1 has none; L2/L3 have a timer). `onHint` and `onContinue` are
-/// optional — L3 uses neither (it routes via `completedResult`).
+/// optional — L3 uses neither (it routes via `completedResult`). When `showsFirstLevelGestureTip`
+/// is `true`, a short non-VO caption echoes the three-finger swipe directions (L1 cold start).
 ///
 /// ## Scroll Observability
 /// `TargetRoomFramePreferenceKey` bubbles the target room's frame (in the named coordinate
@@ -937,6 +946,8 @@ private struct DungeonPlayView: View {
     let lightsOffMode: Bool
     /// Optional atmospheric copy for the final timed level (Lights Off); `nil` for L1–L2.
     let lightsOffFlavorText: String?
+    /// Visible reminder of three-finger scroll directions; `true` only for L1 first attempt.
+    let showsFirstLevelGestureTip: Bool
     let onUpdateReachability: (CGRect, CGRect) -> Void
     let onActivateTarget: (DungeonRoom) async -> Void
     let onActivateNonTarget: (DungeonRoom) async -> Void
@@ -968,6 +979,10 @@ private struct DungeonPlayView: View {
                 }
 
                 objectiveCard
+
+                if showsFirstLevelGestureTip {
+                    firstLevelGestureTipCard
+                }
 
                 if let total = timeTotal, let remaining = timeRemaining {
                     DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
@@ -1031,6 +1046,29 @@ private struct DungeonPlayView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(objectiveA11yLabel)
         .accessibilityHint(String(localized: "dungeon.a11y.l1.objective.hint"))
+    }
+
+    /// Sighted-user echo of the same gesture lines as the L0 prologue; hidden from VoiceOver
+    /// because `announceObjectivePrompt()` and the objective card hint cover spoken guidance.
+    private var firstLevelGestureTipCard: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+            Text(String(localized: "dungeon.explain.gesture.swipe3"))
+                .font(.ra11ySubheadline)
+                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .multilineTextAlignment(.leading)
+            Text(String(localized: "dungeon.explain.gesture.swipe3u"))
+                .font(.ra11ySubheadline)
+                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .multilineTextAlignment(.leading)
+        }
+        .padding(RA11ySpacing.base)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.45), in: .rect(cornerRadius: RA11yRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: RA11yRadius.card)
+                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
+        )
+        .accessibilityHidden(true)
     }
 
     private var roomList: some View {
@@ -1462,7 +1500,7 @@ private enum DungeonCoordinateSpace {
 
 // MARK: - Preview
 
-#Preview("L0 Prologue") {
+#Preview("L1 First Attempt") {
     NavigationStack {
         iOSDungeonDescentView(storage: UserDefaultsStorageComponent())
             .environment(iOSAppRouter())
