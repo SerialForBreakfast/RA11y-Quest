@@ -6,13 +6,13 @@ import RA11yCore
 
 // MARK: - iOSDungeonDescentView
 
-/// Container for The Dungeon Descent (Scroll Hunt) — M7.
+/// Container for Crystal Resonance (Scroll Hunt) — M7.
 ///
 /// Implements the full 4-level game arc defined in `GameSpec-ScrollHunt.txt`
 /// and `GameRules-MVP.txt`:
 ///
-/// - **L0 Prologue**: DM narration + "Descending the Dungeon" lesson + gesture guide +
-///   required practice scroll area + "Begin Descent"
+/// - **L0 Prologue**: Guide narration + "Entering the Crystal Shaft" lesson + gesture guide +
+///   required practice scroll area + begin trial.
 /// - **L1 First Attempt**: 4 rooms, no timer — teaches 3-finger scroll via Guard Room
 /// - **L2 Rising Challenge**: 8 rooms, 60 s soft timer — Relic Vault as target
 /// - **L3 Timed Trial**: 12 rooms, 45 s hard timer; `GameSession` started here for scoring
@@ -42,7 +42,7 @@ struct iOSDungeonDescentView: View {
 
     // MARK: - Init
 
-    /// Creates the Dungeon game container.
+    /// Creates the Crystal Resonance game container.
     ///
     /// - Parameters:
     ///   - storage: Persistence used for L3 session results during normal gameplay.
@@ -189,7 +189,7 @@ struct iOSDungeonDescentView: View {
 
 // MARK: - DungeonDescentViewModel
 
-/// Observable view model managing the Dungeon Descent 4-level state machine.
+/// Observable view model managing the Crystal Resonance four-level state machine.
 ///
 /// Owns level phase transitions, room set composition, mistake tracking, timer logic,
 /// VoiceOver threshold announcements, and the L3 `GameSession`/`GameSessionCoordinator`.
@@ -253,7 +253,7 @@ final class DungeonDescentViewModel {
 
     // MARK: - Init
 
-    /// Creates the Dungeon view model.
+    /// Creates the Crystal Resonance view model.
     ///
     /// - Parameters:
     ///   - storage: Persistence used for normal gameplay session storage.
@@ -683,7 +683,7 @@ final class DungeonDescentViewModel {
 
 // MARK: - DungeonRoom
 
-/// A single room in the Dungeon Descent dungeon.
+/// A single chamber marker along the Crystal Resonance scroll shaft.
 ///
 /// Passage rooms (isTarget) are correct targets; all others are non-interactive decoys.
 /// Level-specific room sets are defined in `l1Rooms`, `l2Rooms`, `l3Rooms`.
@@ -772,9 +772,9 @@ struct DungeonRoom: Identifiable {
 
 // MARK: - L0: DungeonPrologueView
 
-/// L0 Prologue — DM narration, lesson card, gesture guide, practice scroll zone, Begin Descent.
+/// L0 Prologue — Guide narration, lesson card, gesture guide, practice scroll zone, begin trial.
 ///
-/// The "Begin Descent" button is disabled until the player has performed at least one
+/// The begin trial button is disabled until the player has performed at least one
 /// non-zero scroll event in the practice zone, enforcing the paradigm-teaching gate.
 private struct DungeonPrologueView: View {
 
@@ -910,7 +910,7 @@ private struct DungeonPrologueView: View {
 
 // MARK: - DungeonPlayView (L1 / L2 / L3)
 
-/// Unified play view for L1, L2, and L3 of the Dungeon Descent.
+/// Unified play view for L1, L2, and L3 of Crystal Resonance.
 ///
 /// The scroll container is wrapped in a named coordinate space so that preference key
 /// updates from `DungeonRoomRow` cells are comparable to the scroll geometry's `visibleRect`.

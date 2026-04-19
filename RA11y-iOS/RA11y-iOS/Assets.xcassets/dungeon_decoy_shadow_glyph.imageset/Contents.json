@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "dungeon_decoy_shadow_glyph.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

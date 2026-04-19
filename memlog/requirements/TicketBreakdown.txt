@@ -1199,6 +1199,373 @@ Dependencies
 - Design track: dungeon assets delivered in asset catalog; no blocking dependency remains.
 
 
+===============================
+FOLLOW-ON: Dungeon Descent v2 Redesign [NEW]
+===============================
+Purpose
+-------
+These tickets convert the proposed resonance-based Dungeon redesign into implementable work
+without rewriting history for the shipped M7 room-list version above.
+
+Source-of-truth inputs
+----------------------
+- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+- Design/DesignTicket-DungeonResonancePromptSheet.txt
+- GameSpec-ScrollHunt.txt (current shipped spec; must be explicitly superseded or partially replaced)
+
+
+===============================
+TICKET-M7V2-Dungeon-SpecMigration [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Spec Migration + Acceptance Model
+Status: Ready
+
+User Story
+----------
+As a designer and developer
+I want the Dungeon resonance redesign converted into implementation-facing requirements
+So that the repository has one clear plan for VoiceOver behavior, wrong-target behavior,
+level progression, and legacy-spec supersession.
+
+Requirements
+------------
+- Update Dungeon requirements to define the resonance mechanic as the preferred future direction.
+- Explicitly state how the new design relates to the existing room-list Scroll Hunt implementation:
+  - full replacement, or
+  - phased replacement (for example, L0-L1 first).
+- Define the accessibility model:
+  - which elements remain in the accessibility tree,
+  - which lane objects are decorative,
+  - how VoiceOver focus remains stable while scroll moves the lane.
+- Define wrong-target behavior:
+  - mistake rules,
+  - feedback rules,
+  - cooldown constraints.
+- Define level-progression levers for L0, L1, L2, and L3 / Lights Off.
+- Define what feedback is code-driven vs asset-driven:
+  - orb states,
+  - reticle,
+  - spotlight treatment,
+  - success flare.
+
+Acceptance Criteria
+-------------------
+- Dungeon requirements explicitly reference the resonance model and no longer leave the legacy
+  room-list interaction as the only detailed source of truth for future work.
+- Accessibility model and wrong-target behavior are specified in writing.
+- There is an explicit decision note describing how the current shipped M7 flow transitions to v2.
+
+Useful Unit Test
+----------------
+- No unit test required; verified by requirements review and source-of-truth alignment across
+  ADR, GameSpec, and TicketBreakdown.
+
+Dependencies
+------------
+- ADR-0003
+
+
+===============================
+TICKET-M7V2-Dungeon-AssetRegistry [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Asset Registry + Generation Pipeline
+Status: Ready
+
+User Story
+----------
+As a developer and designer
+I want a final asset registry for Dungeon v2 with stable filenames and generation ownership
+So that art can be generated one asset at a time and ingested without churn.
+
+Requirements
+------------
+- Convert the resonance prompt sheet into a final app-facing asset registry.
+- Mark each asset as one of:
+  - generated art,
+  - code-drawn effect,
+  - optional future asset.
+- Lock stable asset names for all adopted art.
+- Preserve the rule that each asset is generated independently.
+- Transparent-background rules must remain explicit for glyphs and focal objects.
+- Define ingest QA rules:
+  - no fringe / halo,
+  - centered subject,
+  - no multi-object sheets,
+  - safe padding for SwiftUI composition.
+- If any existing Dungeon assets are reused, note reuse explicitly rather than silently replacing names.
+
+Acceptance Criteria
+-------------------
+- A single authoritative registry exists for Dungeon v2 asset keys.
+- Every required asset maps to either a generation prompt or a code-drawn implementation note.
+- The registry is consistent with the resonance prompt sheet and does not require grouped generation.
+
+Useful Unit Test
+----------------
+- Process test: every asset key in the final registry has an implementation source
+  (generated file, reused file, or code-drawn effect).
+
+Dependencies
+------------
+- ADR-0003
+- DesignTicket-DungeonResonancePromptSheet.txt
+
+
+===============================
+TICKET-M7V2-Dungeon-PrototypeCoreLoop [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Core Loop Prototype
+Status: Blocked
+
+User Story
+----------
+As a user
+I want to scroll a moving dungeon lane under a fixed orb or reticle
+So that I can learn vertical scrolling as spatial alignment rather than list traversal.
+
+Requirements
+------------
+- Build a prototype gameplay loop with:
+  - fixed center orb / reticle,
+  - vertical lane moved by scroll,
+  - target alignment window,
+  - double-tap activation only when aligned.
+- Implement the state ladder:
+  - far,
+  - warm,
+  - near,
+  - locked,
+  - success.
+- Add initial haptic feedback:
+  - proximity cue,
+  - lock cue,
+  - error cue,
+  - success cue.
+- Add initial sound scaffolding using the resonance metaphor:
+  - rough / unstable when far,
+  - clearer / more stable when near,
+  - clean lock state when aligned.
+- Keep VoiceOver instructions sparse and rate-limited.
+- Respect Reduce Motion and avoid photosensitive or constant-alert behavior.
+
+Acceptance Criteria
+-------------------
+- A playable prototype exists that demonstrates the fixed-orb alignment loop.
+- Scroll changes the lane position and updates the alignment state deterministically.
+- Target activation is impossible outside the lock window.
+- Audio and haptics support the mechanic without overwhelming VoiceOver.
+
+Useful Unit Test
+----------------
+- Given a target position and reticle position, the alignment-state reducer returns the
+  expected band (far/warm/near/locked) at defined thresholds.
+
+Dependencies
+------------
+- TICKET-M7V2-Dungeon-SpecMigration
+- TICKET-M7V2-Dungeon-AssetRegistry
+
+
+===============================
+TICKET-M7V2-Dungeon-LightsOff-NonvisualPlay [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Lights Off + Nonvisual Guidance
+Status: Blocked
+
+User Story
+----------
+As a user training with VoiceOver
+I want the Dungeon mechanic to remain playable when the environment is visually reduced
+So that I can rely on sound, haptics, and a stable focal anchor.
+
+Requirements
+------------
+- Preserve the center orb and reticle in Lights Off mode.
+- Reduce the surrounding world to spotlight or near-black treatment.
+- Keep the same core scroll/alignment mechanic.
+- Promote sound and haptics to primary proximity guidance.
+- Ensure lane/world darkening does not remove the focal anchor.
+- Review VoiceOver behavior so the nonvisual mode remains coherent and not overly verbose.
+
+Acceptance Criteria
+-------------------
+- Lights Off prototype remains understandable with minimal environmental visibility.
+- Orb + reticle remain visible anchors.
+- The player can still locate and activate the target using haptics/sound-led guidance.
+
+Useful Unit Test
+----------------
+- Given Lights Off mode enabled, the focal-anchor visibility state remains true while
+  environmental visibility is reduced.
+
+Dependencies
+------------
+- TICKET-M7V2-Dungeon-PrototypeCoreLoop
+
+
+===============================
+TICKET-M7V2-Dungeon-ScreenshotContract [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Screenshot Contract + Automation Update
+Status: Blocked
+
+User Story
+----------
+As a developer
+I want screenshot automation updated for the resonance redesign
+So that repo screenshots continue documenting the real completed screens.
+
+Requirements
+------------
+- Update deterministic screenshot scene boots for Dungeon v2.
+- Define new scene IDs and accessibility anchors for:
+  - resonance tutorial / prologue,
+  - active alignment play state,
+  - result state,
+  - optional Lights Off capture if that screen becomes part of completed flow.
+- Update the screenshot route catalog, UITest capture flow, and fastlane allowlist together.
+- Ensure screenshot requirements remain aligned with the design and gameplay spec.
+
+Acceptance Criteria
+-------------------
+- Screenshot contract files reflect the new Dungeon v2 route names and anchors.
+- Fastlane captures the completed Dungeon v2 screens without relying on legacy room-list anchors.
+
+Useful Unit Test
+----------------
+- Contract validation passes with the new Dungeon v2 screenshot IDs and no stale Dungeon anchors remain.
+
+Dependencies
+------------
+- TICKET-M7V2-Dungeon-PrototypeCoreLoop
+
+
+===============================
+FOLLOW-ON: Shared Feedback System [NEW]
+===============================
+Purpose
+-------
+These tickets establish reusable audio and haptic infrastructure for multiple quests so
+feedback logic does not get reimplemented inside each game view.
+
+
+===============================
+TICKET-FX1-SharedFeedback-CoreModel [NEW]
+===============================
+Ticket: FX1 - Shared Feedback Semantics + Reducer (RA11yCore)
+Status: Ready
+
+User Story
+----------
+As a developer
+I want a shared, platform-agnostic feedback model
+So that quests can emit semantic guidance events without hardcoding iOS audio or haptics.
+
+Requirements
+------------
+- Define reusable semantic feedback concepts in `RA11yCore`, including:
+  - proximity bands,
+  - feedback intents,
+  - reducer inputs,
+  - feedback profiles.
+- The reducer must transform semantic gameplay state changes into renderable intents.
+- The model must remain quest-agnostic and reusable beyond Dungeon.
+- Add unit tests for transition behavior and default profile wiring.
+
+Acceptance Criteria
+-------------------
+- `RA11yCore` exposes feedback types that can be consumed by any platform target.
+- Reducer tests cover lock acquired, lock lost, proximity entry, wrong activation, success, and timeout.
+- No game view needs to emit concrete haptic/audio APIs directly in order to use the model.
+
+Useful Unit Test
+----------------
+- Given an alignment-band sequence `warm -> near -> locked -> near`, the reducer emits
+  the expected proximity / lock intents in order.
+
+Dependencies
+------------
+- None
+
+
+===============================
+TICKET-FX2-iOSFeedback-Renderers [NEW]
+===============================
+Ticket: FX2 - iOS Feedback Coordinator + Audio/Haptic Renderers
+Status: Ready
+
+User Story
+----------
+As an iOS developer
+I want one coordinator that maps shared feedback intents to iOS audio and haptics
+So that all quests can reuse the same rendering policy and user settings.
+
+Requirements
+------------
+- Add iOS-only feedback modules for:
+  - shared feedback settings,
+  - haptic rendering,
+  - audio rendering,
+  - coordinator / cooldown policy.
+- Support independent sound and haptics toggles.
+- Support calmer vs richer feedback policy.
+- Keep audio behavior compatible with VoiceOver coexistence.
+- Initial implementation may use placeholder audio rendering as long as the module boundary is stable.
+
+Acceptance Criteria
+-------------------
+- iOS code can process shared feedback inputs through one coordinator.
+- Haptics and audio are independently swappable behind protocols.
+- Cooldown / rate limiting prevents repeated cue spam from raw gameplay updates.
+
+Useful Unit Test
+----------------
+- No simulator test required for the initial scaffold; validated by type integration and code review.
+
+Dependencies
+------------
+- TICKET-FX1-SharedFeedback-CoreModel
+
+
+===============================
+TICKET-FX3-DungeonResonance-FeedbackIntegration [NEW]
+===============================
+Ticket: FX3 - Dungeon Resonance Integration with Shared Feedback System
+Status: In Progress
+
+User Story
+----------
+As a user
+I want the Dungeon resonance mechanic to respond consistently with sound and haptics
+So that proximity, lock, and success feel teachable and intentional.
+
+Requirements
+------------
+- Integrate the shared feedback reducer and iOS coordinator into Dungeon resonance gameplay.
+- Map Dungeon alignment bands to shared feedback inputs.
+- Use the Dungeon resonance profile for cue selection.
+- Respect global feedback settings and VoiceOver coexistence rules.
+- First integration pass may target the resonance mockup / prototype path before the final routed
+  gameplay screen exists.
+
+Acceptance Criteria
+-------------------
+- Dungeon resonance gameplay emits semantic feedback through the shared feedback system.
+- Direct calls to UIKit haptic generators or ad hoc audio playback are not required from the gameplay view.
+- The same architecture remains reusable for future Enchanter and Rogue enhancements.
+- A prototype or mockup resonance screen demonstrates band-change, hint, wrong-activation, and
+  success events flowing through the shared coordinator before final route adoption.
+
+Useful Unit Test
+----------------
+- Given Dungeon alignment state changes, the integration layer forwards the expected shared feedback inputs.
+
+Dependencies
+------------
+- TICKET-FX2-iOSFeedback-Renderers
+- TICKET-M7V2-Dungeon-PrototypeCoreLoop
+
+
 ================================================================================
 TRACK: Polish
 ================================================================================

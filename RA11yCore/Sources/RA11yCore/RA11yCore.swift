@@ -4,3 +4,4 @@
 /// - `RA11ySpacing` / `RA11yRadius` — layout token enums
 /// - `Font.ra11y*` extensions — semantic Dynamic Type font styles
 /// - `RA11yLogger` — categorized OSLog subsystem loggers
+/// - `QuestFeedback*` — reusable semantic feedback primitives for audio/haptics

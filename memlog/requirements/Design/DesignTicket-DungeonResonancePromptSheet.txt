@@ -78,6 +78,14 @@ Revision History
 ================
 - 2026-04-19: Initial prompt sheet for Dungeon resonance redesign.
 - 2026-04-19 (rev A): Added ADR linkage, composition rules, QC requirements, and explicit Lights Off anchor guidance.
+- 2026-04-19 (rev B): First-pass AI-generated masters ingested into `Assets.xcassets` (universal 1x) with compositing / sizing documented in `DungeonResonanceAssetPipeline.txt`; mockup wired via `iOSDungeonResonanceArt` + `iOSDungeonResonanceMockupView`.
+
+Implementation notes (UI)
+===========================
+- Raster keys match imageset names listed in the Asset Set section (`dungeon_resonance_bg`, etc.).
+- **Pipeline doc:** `memlog/requirements/Design/DungeonResonanceAssetPipeline.txt` — Z-order, pt targets, iPad width cap, Lights Off layering.
+- **Swift:** `iOSDungeonResonanceArt.swift` (string constants), `iOSDungeonResonanceMockupView.swift` (Preview; catalog-first with vector fallbacks).
+- Regenerated art may use opaque backdrops on “transparent” sprites; trim with `utility/remove_white_background.py` only when the subject sits on a flat white field (see QC checklist).
 
 Asset Set
 =========

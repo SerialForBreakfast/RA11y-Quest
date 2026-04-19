@@ -23,7 +23,7 @@ Accessibility Standards
 
 D&D Tone Guide
 --------------
-- The app speaks as the Dungeon Master (DM) — authoritative, brief, atmospheric.
+- Narration is authoritative, brief, atmospheric. The hub uses a neutral host; Enchanter/Rogue may use bardic/DM flavor; Crystal Resonance uses the **Resonance Guide** (`dm.label` for that flow).
 - Player is always addressed as "Adventurer" or "you" (second person).
 - Mistakes are not failures, they are "missteps" or "fumbles."
 - The DM never mocks. Failure is narrated with consequence, not shame.
@@ -51,13 +51,13 @@ NOT activate it. Double-tap (anywhere on screen) activates the focused element.
 This is the single most common source of confusion for new VoiceOver users.
 Teaching goal: Touch = examine (focus). Double-tap = invoke (activate).
 
-Game 3 — The Dungeon Descent (Scroll Hunt)
--------------------------------------------
+Game 3 — Crystal Resonance (Scroll Hunt)
+------------------------------------------
 Paradigm shift: Single-finger swipe no longer scrolls.
 VoiceOver "steals" the single-finger swipe for focus navigation. To scroll
 a page, the user must use three fingers. Users get stuck at the bottom of
 visible content with no knowledge of how to go deeper.
-Teaching goal: Three-finger swipe scrolls the page. Swipe to navigate, three-finger to descend.
+Teaching goal: Three-finger swipe scrolls the page. Swipe to navigate, three-finger to descend the crystal shaft.
 
 Level Progression (Shared Across All Games)
 --------------------------------------------
@@ -787,22 +787,22 @@ Game-specific results announcements:
 
 
 ======================================================================
-GAME 3: THE DUNGEON DESCENT
+GAME 3: CRYSTAL RESONANCE (SCROLL HUNT)
 ======================================================================
 
-Game ID: dungeon_scroll_hunt
+Game ID: scroll-hunt
 VoiceOver Skill: 3-finger scroll to reveal and reach offscreen content
 
 Narrative Context
 -----------------
-The dungeon's deepest chamber holds the relic. The dungeon is tall —
-deeper than any one screen. To descend, the adventurer uses three fingers
-to scroll. The dungeon rooms unfold one level at a time.
+The relic sings from deep in the crystal shaft—taller than any one screen.
+To descend, the adventurer uses three fingers to scroll. Chamber markers
+along the shaft unfold one ring at a time.
 
 Why this teaches the skill:
   With VoiceOver active, swiping with one finger navigates between elements.
   Scrolling the page requires THREE fingers. New users get stranded at the
-  last visible item with no idea how to go deeper. This dungeon makes
+  last visible item with no idea how to go deeper. Crystal Resonance makes
   "three-finger scroll" the only path forward — teaching the gesture by
   making it necessary.
 
@@ -813,23 +813,23 @@ Note on detection:
 
 
 ----------------------------------------------------------------------
-Screen 0: The Dungeon Descent — Prologue (L0)
+Screen 0: Crystal Resonance — Prologue (L0)
 ----------------------------------------------------------------------
 
 Navigation Title
 ----------------
 KEY: dungeon.explain.title
-VALUE: The Dungeon Descent
+VALUE: Crystal Resonance
 
 DM Narration
 ------------
 KEY: dungeon.explain.narration
-VALUE: The relic lies deep in the dungeon — below what the eye can see. You must descend. But in this world, your single touch navigates, not scrolls. To go deeper, use three fingers.
+VALUE: The relic sings from deep in the crystal shaft—below what glance alone can see. You must descend. Here, one finger navigates; it does not scroll. To go deeper, use three fingers and listen for the resonance.
 
 VoiceOver Lesson Card
 ---------------------
 KEY: dungeon.explain.lesson.heading
-VALUE: Descending the Dungeon
+VALUE: Entering the Crystal Shaft
 
 KEY: dungeon.explain.lesson.body
 VALUE: With VoiceOver on, swiping with one finger moves focus between items — it does NOT scroll the page. To scroll down and reveal deeper content, use three fingers and swipe up. To scroll back up, use three fingers and swipe down.
@@ -840,7 +840,7 @@ accessibilityLabel for lesson card group:
 
 Gesture Reference
 -----------------
-KEY: dungeon.explain.gesture.swipe1   VALUE: One-finger swipe — move between rooms (navigate)
+KEY: dungeon.explain.gesture.swipe1   VALUE: One-finger swipe — move between chamber markers (navigate)
 KEY: dungeon.explain.gesture.swipe3   VALUE: Three-finger swipe up — descend (scroll down)
 KEY: dungeon.explain.gesture.swipe3u  VALUE: Three-finger swipe down — ascend (scroll up)
 
@@ -856,14 +856,14 @@ accessibilityHint (scroll practice area):
 Start Button
 ------------
 KEY: level.button.start
-VALUE: Begin Descent
+VALUE: Begin Trial
 accessibilityHint:
   KEY: dungeon.explain.start.hint
   VALUE: Begins your first descent. No timer.
 
 
 ----------------------------------------------------------------------
-Screen 1: The Dungeon Descent — First Attempt (L1)
+Screen 1: Crystal Resonance — First Attempt (L1)
 ----------------------------------------------------------------------
 
 Navigation Title
@@ -874,7 +874,7 @@ VALUE: First Attempt
 DM Prompt (announced on screen load)
 -------------------------------------
 KEY: dungeon.l1.dm_prompt
-VALUE: The dungeon has two levels. Descend to the second room.
+VALUE: The shaft has two rings of chambers. Descend to the second marker.
 
 Objective Card
 --------------
@@ -887,7 +887,7 @@ accessibilityLabel:
 
 accessibilityHint:
   KEY: dungeon.a11y.l1.objective.hint
-  VALUE: Swipe with three fingers to scroll the dungeon deeper.
+  VALUE: Swipe with three fingers to scroll the shaft deeper.
 
 Depth HUD
 ---------
@@ -913,11 +913,11 @@ Scroll Container Accessibility
 ------------------------------
 accessibilityLabel:
   KEY: dungeon.a11y.scroll.container
-  VALUE: Dungeon scroll list. Scroll to descend.
+  VALUE: Crystal shaft scroll list. Scroll to descend.
 
 accessibilityHint:
   KEY: dungeon.a11y.scroll.container.hint
-  VALUE: Use three fingers to scroll and reveal deeper rooms.
+  VALUE: Use three fingers to scroll and reveal deeper chambers.
 
 Target Room Accessibility (button)
 ------------------------------------
@@ -934,11 +934,11 @@ KEY: dungeon.log.found     VALUE: You find it.
 Level Complete Announcement
 ---------------------------
 KEY: dungeon.l1.complete
-VALUE: First descent complete. The dungeon yields its first secret.
+VALUE: First descent complete. The crystal yields its first secret.
 
 
 ----------------------------------------------------------------------
-Screen 2: The Dungeon Descent — Rising Challenge (L2)
+Screen 2: Crystal Resonance — Rising Challenge (L2)
 ----------------------------------------------------------------------
 
 Navigation Title
@@ -949,7 +949,7 @@ VALUE: Rising Challenge
 DM Narration
 ------------
 KEY: dungeon.l2.dm_prompt
-VALUE: The dungeon deepens. Eight rooms. The Relic Vault waits at the bottom. Some rooms will call to you — ignore them. Descend.
+VALUE: The crystal deepens. Eight chambers. The Relic Vault waits at the bottom. Some markers will call to you—ignore them. Descend.
 
 Dungeon Rooms (L2 — 8 rooms, 3 visible, 5 below fold)
 ------------------------------------------------------
@@ -983,7 +983,7 @@ VALUE: Relic Vault reached. The vault glows faintly.
 
 
 ----------------------------------------------------------------------
-Screen 3: The Dungeon Descent — Timed Trial (L3)
+Screen 3: Crystal Resonance — Timed Trial (L3)
 ----------------------------------------------------------------------
 
 Navigation Title
@@ -994,7 +994,7 @@ VALUE: Timed Trial
 DM Narration
 ------------
 KEY: dungeon.l3.dm_prompt
-VALUE: The dungeon seals at midnight. Twelve rooms deep. The Ancient Vault holds the relic. Descend and claim it before the gate falls.
+VALUE: The shaft seals at midnight. Twelve chambers deep. The Ancient Vault holds the relic. Descend and claim it before the gate falls.
 
 Dungeon Rooms (L3 — 12 rooms, 3 visible, 9 below fold)
 -------------------------------------------------------
@@ -1036,16 +1036,16 @@ Scoring (reference GameSpec-ScrollHunt.txt)
 
 
 ----------------------------------------------------------------------
-Screen R: The Dungeon Descent — Results
+Screen R: Crystal Resonance — Results
 ----------------------------------------------------------------------
 
 (Uses shared Results screen strings.)
 
 Game-specific results announcements:
-  Legendary: KEY: dungeon.results.legendary  VALUE: Legendary descent. No misstep. The dungeon bows.
-  Skilled:   KEY: dungeon.results.skilled    VALUE: Skilled explorer. The vault yielded to you.
-  Novice:    KEY: dungeon.results.novice     VALUE: You found the vault. The dungeon was not kind.
-  Defeated:  KEY: dungeon.results.defeated   VALUE: The dungeon sealed. Rest. Then try again.
+  Legendary: KEY: dungeon.results.legendary  VALUE: Legendary resonance. Flawless descent. The crystal answers you.
+  Skilled:   KEY: dungeon.results.skilled    VALUE: Skilled alignment. The shaft yielded to you.
+  Novice:    KEY: dungeon.results.novice     VALUE: You reached the vault. The crystal tested you—and you endured.
+  Defeated:  KEY: dungeon.results.defeated   VALUE: The gate sealed. The crystal went quiet. Rest, then try again.
 
 
 

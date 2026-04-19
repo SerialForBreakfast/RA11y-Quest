@@ -3,7 +3,8 @@ import RA11yCore
 
 // MARK: - iOSBasicsSequenceView
 
-/// Guided VoiceOver Basics sequence that walks the player through all three MVP games in order.
+/// Guided VoiceOver Basics sequence that walks the player through all three MVP games
+/// in hub unlock order (Enchanter → Crystal Resonance → Rogue).
 ///
 /// This view acts as the **conductor** for the M4 basics flow. It stays on the navigation
 /// stack throughout the sequence and orchestrates the push-and-return loop:
@@ -26,7 +27,7 @@ struct iOSBasicsSequenceView: View {
     // MARK: - Private Properties
 
     private let storage: any StorageComponent
-    private let steps: [GameKind] = [.findAndFocus, .activateDoubleTap, .scrollHunt]
+    private let steps: [GameKind] = [.findAndFocus, .scrollHunt, .activateDoubleTap]
 
     // MARK: - State
 

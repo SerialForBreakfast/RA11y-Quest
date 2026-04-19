@@ -44,6 +44,9 @@ public enum RA11yLogger {
     /// Score evaluation and best-result comparisons.
     public static let scoring = Logger(subsystem: subsystem, category: "scoring")
 
+    /// Cross-quest haptic and audio feedback coordination.
+    public static let feedback = Logger(subsystem: subsystem, category: "feedback")
+
     /// App startup phase milestones and hangs.
     ///
     /// Logs key moments from cold start through the hub becoming interactive.

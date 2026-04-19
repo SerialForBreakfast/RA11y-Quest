@@ -10,7 +10,7 @@ public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     case findAndFocus
     /// Activate — Bomb Defusal drill training double-tap activation on the correct control.
     case activateDoubleTap
-    /// Scroll Hunt — Dungeon Crawl drill training scrolling to reveal hidden content.
+    /// Scroll Hunt — Crystal Resonance drill training three-finger scrolling to reveal hidden content.
     case scrollHunt
 }
 
@@ -88,9 +88,9 @@ public enum GameCatalog {
     /// All MVP games in display order.
     ///
     /// Games are sequentially gated: each game after the first has a `prerequisiteID`
-    /// pointing to the game that must be beaten before it is unlocked. This enforces
-    /// the pedagogical order (focus navigation → activation → scrolling), since each
-    /// skill builds on the previous one.
+    /// pointing to the game that must be beaten before it is unlocked. Display order
+    /// matches unlock order: **Enchanter (focus) → Crystal Resonance (scrolling) → Rogue (activation)** —
+    /// scrolling before the gauntlet matches the hub progression after the Enchanter's Trial.
     ///
     /// Thumbnails use dedicated square hub icons (`*_hub_icon`) designed for
     /// the dark quest card at ~72–96 pt. Background scene images and individual
@@ -107,22 +107,22 @@ public enum GameCatalog {
             prerequisiteID: nil
         ),
         GameDefinition(
-            id: "activate-double-tap",
-            titleKey: "game.activateDoubleTap.title",
-            goalKey: "game.activateDoubleTap.goal",
-            estimatedDuration: "~5 min",
-            kind: .activateDoubleTap,
-            thumbnailAssetName: "rogue_hub_icon",
-            prerequisiteID: "find-and-focus"
-        ),
-        GameDefinition(
             id: "scroll-hunt",
             titleKey: "game.scrollHunt.title",
             goalKey: "game.scrollHunt.goal",
             estimatedDuration: "~7 min",
             kind: .scrollHunt,
             thumbnailAssetName: "dungeon_hub_icon",
-            prerequisiteID: "activate-double-tap"
+            prerequisiteID: "find-and-focus"
+        ),
+        GameDefinition(
+            id: "activate-double-tap",
+            titleKey: "game.activateDoubleTap.title",
+            goalKey: "game.activateDoubleTap.goal",
+            estimatedDuration: "~5 min",
+            kind: .activateDoubleTap,
+            thumbnailAssetName: "rogue_hub_icon",
+            prerequisiteID: "scroll-hunt"
         ),
     ]
 

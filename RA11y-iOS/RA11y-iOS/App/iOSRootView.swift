@@ -95,6 +95,8 @@ struct iOSRootView: View {
             iOSRogueGauntletView(storage: storage)
         case .dungeonDescent:
             iOSDungeonDescentView(storage: storage)
+        case .dungeonResonancePrototype:
+            iOSDungeonResonanceMockupView()
         case .gameResult(let result, let gameKind, let gameSpecificAnnouncement):
             iOSGameResultView(
                 presenter: GameResultPresenter(result: result),

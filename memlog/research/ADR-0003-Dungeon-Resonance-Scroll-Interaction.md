@@ -286,6 +286,19 @@ Expected changes include new scene IDs, updated root anchors, and new screenshot
 coverage for the resonance tutorial, active alignment play state, and Lights Off or
 result states as appropriate.
 
+## Design prototype (SwiftUI mockup)
+
+An interactive **design-time** mockup ships in the iOS target (not routed in
+`AppRoute`; open from SwiftUI Previews):
+
+- `RA11y-iOS/RA11y-iOS/Games/iOSDungeonResonanceMockupView.swift`
+
+It demonstrates the fixed center orb + reticle, scrollable lane with moonstone and
+decoy stand-ins, geometry-driven distance-to-aim (live resonance band), manual band
+override for Far–Success reviews, and a Lights Off vignette preview. Use it to
+iterate on layout and thresholds before implementation and to refine the companion
+prompt sheet and requirements.
+
 ## Follow-on Requirements
 
 1. Update Dungeon requirements/spec docs if this direction is adopted for implementation.

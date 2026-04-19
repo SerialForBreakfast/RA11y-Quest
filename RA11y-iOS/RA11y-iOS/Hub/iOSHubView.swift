@@ -192,7 +192,7 @@ struct iOSHubView: View {
                 onEnableVoiceOver: { showHelpSheet = true }
             )
         }
-        // The hub always renders on a fixed dark background (dungeon scene image +
+        // The hub always renders on a fixed dark background (hub scene image +
         // dark gradient overlay). Force dark color scheme here so ALL semantic
         // adaptive colors in the hub's content tree — `.primary`, `.secondary`,
         // nav bar title, footer material, DM greeting — resolve to white-based values

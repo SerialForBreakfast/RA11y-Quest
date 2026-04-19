@@ -4,6 +4,18 @@ import SwiftUI
 import UIKit
 import RA11yCore
 
+// MARK: - Enchanter hint presentation
+
+/// Controls visibility of the in-level "Ask the Enchanter" button on L1–L3.
+///
+/// `EnchanterTrialViewModel.requestHint()` only repeats the target relic name—the same fact
+/// already on the prompt card and announced shortly after each level appears. Hide the control
+/// until hints add distinct value (for example VoiceOver rotor coaching, spatial cueing, or
+/// disambiguation between confusable relic names). Flip to `true` when that ships.
+private enum EnchanterHintPresentation {
+    static let showsHintButtonInGameplay = false
+}
+
 // MARK: - iOSEnchantersTrialView
 
 /// Container for The Enchanter's Trial (Find & Focus) — M5.
@@ -392,6 +404,9 @@ final class EnchanterTrialViewModel {
     }
 
     /// Announces the hint string to VoiceOver and as a visible status message.
+    ///
+    /// - Note: Gameplay does not show a hint button while `EnchanterHintPresentation.showsHintButtonInGameplay`
+    ///   is `false`, because the message duplicates the prompt. This method remains for tests and future UI.
     func requestHint() {
         let message = String(format: String(localized: "enchanter.hint.format"), targetRelic.displayName)
         statusMessage = message
@@ -938,7 +953,7 @@ private struct EnchanterAttemptView: View {
 
                 if levelComplete {
                     continueButton
-                } else {
+                } else if EnchanterHintPresentation.showsHintButtonInGameplay {
                     hintButton
                 }
             }
@@ -1054,7 +1069,11 @@ private struct EnchanterRisingView: View {
                 } else {
                     relicStack
                     if let statusMessage { statusRow(statusMessage) }
-                    if levelComplete { continueButton } else { hintButton }
+                    if levelComplete {
+                        continueButton
+                    } else if EnchanterHintPresentation.showsHintButtonInGameplay {
+                        hintButton
+                    }
                 }
             }
         }
@@ -1181,7 +1200,9 @@ private struct EnchanterTimedView: View {
                 } else {
                     relicStack
                     if let statusMessage { statusRow(statusMessage) }
-                    hintButton
+                    if EnchanterHintPresentation.showsHintButtonInGameplay {
+                        hintButton
+                    }
                 }
             }
         }

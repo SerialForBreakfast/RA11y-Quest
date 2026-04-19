@@ -29,7 +29,7 @@ import RA11yCore
 /// - Large accessibility sizes: `VStack` — thumbnail on top, info below
 ///
 /// ## Visual Design
-/// Dark warm card surface (15% transparent so the dungeon background shows through)
+/// Dark warm card surface (15% transparent so the hub background shows through)
 /// with an amber/gold border. Slight elevation shadow.
 ///
 /// ## Concurrency
@@ -216,7 +216,7 @@ struct iOSQuestCardView: View {
 
 /// Custom button style that renders the quest card's visual chrome.
 ///
-/// The card fill uses 85% opacity (15% transparent) so the dungeon background
+/// The card fill uses 85% opacity (15% transparent) so the hub background
 /// shows through subtly, grounding the cards in the scene.
 ///
 /// ## Color Scheme Forcing

@@ -18,12 +18,13 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
 ├── RA11y-iOS
 │   ├── RA11y-iOS
 │   │   ├── App
-│   │   │   ├── iOSAppRouter.swift          AppRoute enum + iOSAppRouter (@Observable)
+│   │   │   ├── iOSAppRouter.swift          AppRoute enum + iOSAppRouter (@Observable), including resonance prototype route
 │   │   │   ├── iOSRootView.swift           Root NavigationStack; owns router
 │   │   │   ├── iOSScreenshotRootView.swift Deterministic screenshot-only root entry
 │   │   │   ├── iOSScreenshotScene.swift    Screenshot scene contract + anchor metadata
 │   │   │   └── iOSLightsOffGameplayBlackout.swift  Lights Off overlay (a11y-inert blackout)
 │   │   ├── Assets.xcassets
+│   │   │   ├── dungeon_resonance_*.imageset (11)  v2 resonance masters: bg, orb, reticle, lane, decoys, flare, spotlight ref
 │   │   │   ├── AccentColor.colorset
 │   │   │   ├── AppIcon.appiconset
 │   │   │   └── RA11y Colors
@@ -33,9 +34,16 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
 │   │   ├── FirstRun
 │   │   │   ├── iOSBasicsSequenceView.swift  Basics sequence placeholder + completion flag
 │   │   │   └── iOSFirstRunView.swift        First-run entry screen + sequence container
+│   │   ├── Feedback
+│   │   │   ├── iOSAudioFeedbackRenderer.swift      iOS generated tone renderer for semantic quest cues
+│   │   │   ├── iOSFeedbackSettings.swift           Shared iOS sound / haptics preferences object
+│   │   │   ├── iOSHapticFeedbackRenderer.swift     UIKit-backed haptic renderer
+│   │   │   └── iOSQuestFeedbackCoordinator.swift   Shared iOS coordinator for semantic feedback intents
 │   │   ├── Games
 │   │   │   ├── iOSEnchantersTrialView.swift  Game 1 (Find & Focus) — full M5 flow (L0-L3)
-│   │   │   └── iOSDungeonDescentView.swift   Game 3 (Scroll Hunt) — M7 starter (L0 + L1 + scroll gate)
+│   │   │   ├── iOSDungeonDescentView.swift   Game 3 (Scroll Hunt) — current shipped room-list M7 flow
+│   │   │   ├── iOSDungeonResonanceMockupView.swift  ADR-0003 resonance prototype surface; routed + screenshot-capable
+│   │   │   └── iOSDungeonResonanceArt.swift         Asset name constants for resonance v2 catalog keys
 │   │   ├── Hub
 │   │   │   ├── iOSHubView.swift              Root hub; uses .background{} pattern for bg image
 │   │   │   ├── iOSHubBackgroundView.swift    Full-bleed bg: fallback color + image + gradient
@@ -71,6 +79,10 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
 │   │   ├── Design
 │   │   │   ├── RA11yFont.swift             Font.ra11y* Dynamic Type extensions
 │   │   │   └── RA11yTokens.swift           RA11ySpacing + RA11yRadius enums
+│   │   ├── Feedback
+│   │   │   ├── QuestFeedbackProfile.swift  Shared cue profiles for reusable quest feedback
+│   │   │   ├── QuestFeedbackReducer.swift  Pure reducer: semantic gameplay input -> feedback intents
+│   │   │   └── QuestFeedbackTypes.swift    Feedback bands, intents, cues, and reducer state
 │   │   ├── GameCatalog
 │   │   │   └── GameDefinition.swift        GameKind + GameDefinition + GameCatalog
 │   │   ├── GameSession
@@ -80,7 +92,7 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
 │   │   ├── Hub
 │   │   │   └── HubViewModel.swift          @Observable: showHelpAffordance driven by VO state
 │   │   ├── Logging
-│   │   │   └── RA11yLogger.swift           OSLog Logger namespace (5 categories)
+│   │   │   └── RA11yLogger.swift           OSLog Logger namespace (startup, storage, navigation, scoring, voiceOver, feedback)
 │   │   ├── Results
 │   │   │   └── GameResultPresenter.swift   Pure formatting for result display + a11y announcement
 │   │   ├── Scoring
@@ -99,6 +111,7 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
 │   │   ├── GameSessionCoordinatorTests.swift  VO-off mid-game → abandon; 9 tests
 │   │   ├── GameSessionTests.swift
 │   │   ├── HubViewModelTests.swift
+│   │   ├── QuestFeedbackReducerTests.swift  Shared feedback transition semantics
 │   │   ├── RA11yCoreTests.swift            Index (comments only)
 │   │   ├── ScoringModelTests.swift
 │   │   ├── StorageTests.swift
@@ -119,6 +132,8 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
     │   │   ├── Assets/                     Raw generated sprite + background assets
     │   │   ├── DesignTicket-AssetListDefinition.txt
     │   │   ├── DesignTicket-DungeonResonancePromptSheet.txt  Single-asset prompts for Dungeon v2 orb/reticle/glyph art
+    │   │   ├── DungeonResonanceAssetPipeline.txt       Z-order, sizing, transparency / multi-device compositing
+    │   │   ├── DungeonResonanceScreenConcept.png      AI concept frame: center orb + lane (not app screenshot)
     │   │   ├── DesignTicket-PromptSheet.txt
     │   │   ├── DesignTicket-AssetReviewChecklist.txt
     │   │   └── DesignTicket-AssetDeliveryNaming.txt

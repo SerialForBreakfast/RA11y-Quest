@@ -54,6 +54,8 @@ struct iOSScreenshotRootView: View {
                 onPlayAgain: {},
                 onReturnToHub: {}
             )
+        case .resonanceMockup:
+            iOSDungeonResonanceMockupView()
         }
     }
 
@@ -67,7 +69,7 @@ struct iOSScreenshotRootView: View {
         )
     }
 
-    /// Sample Dungeon result used for deterministic screenshot capture.
+    /// Sample Crystal Resonance (`scroll-hunt`) result used for deterministic screenshot capture.
     private var dungeonResult: GameResult {
         GameResult(
             gameID: "scroll-hunt",

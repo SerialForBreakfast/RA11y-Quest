@@ -6,4 +6,5 @@
 //   GameSessionCoordinatorTests.swift
 //   GameResultPresenterTests.swift
 //   HubViewModelTests.swift
+//   QuestFeedbackReducerTests.swift
 //   VoiceOverTests.swift

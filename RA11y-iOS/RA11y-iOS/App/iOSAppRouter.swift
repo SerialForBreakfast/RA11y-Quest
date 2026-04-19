@@ -17,8 +17,10 @@ enum AppRoute: Hashable {
     case enchantersTrial
     /// Game 2 — The Rogue's Gauntlet (Activate / Double-Tap). Implemented in M6.
     case roguesGauntlet
-    /// Game 3 — The Dungeon Descent (Scroll Hunt). Implemented in M7.
+    /// Game 3 — Crystal Resonance (Scroll Hunt). Implemented in M7.
     case dungeonDescent
+    /// Crystal Resonance v2 prototype route for iterative design and feedback integration.
+    case dungeonResonancePrototype
     /// The shared result screen shown after any game completes.
     /// Carries the `GameResult`, the `GameKind` (used to render the skill-transfer card),
     /// and an optional game-specific flavor announcement appended to the shared summary.

@@ -231,7 +231,7 @@ struct iOSGameResultView: View {
     }
 }
 
-#Preview("Skilled — Dungeon") {
+#Preview("Skilled — Crystal Resonance") {
     NavigationStack {
         iOSGameResultView(
             presenter: GameResultPresenter(

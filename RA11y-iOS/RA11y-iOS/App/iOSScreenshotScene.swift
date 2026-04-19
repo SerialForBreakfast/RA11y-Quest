@@ -30,14 +30,17 @@ enum iOSScreenshotScene: String, CaseIterable {
     /// Shared result screen using Enchanter sample data.
     case enchanterResult = "enchanterResult"
 
-    /// Dungeon L0 prologue.
+    /// Crystal Resonance L0 prologue (`dungeon*` identifiers retained for routing stability).
     case dungeonPrologue = "dungeonPrologue"
 
-    /// Dungeon L1 first attempt.
+    /// Crystal Resonance L1 first attempt.
     case dungeonFirstAttempt = "dungeonFirstAttempt"
 
-    /// Shared result screen using Dungeon sample data.
+    /// Shared result screen using Crystal Resonance sample data.
     case dungeonResult = "dungeonResult"
+
+    /// Crystal Resonance v2 design mockup (preview-only surface; deterministic capture).
+    case resonanceMockup = "resonanceMockup"
 
     /// Process argument name used to request a specific screenshot scene.
     static let launchArgument = "-screenshotScene"
@@ -67,6 +70,7 @@ enum iOSScreenshotScene: String, CaseIterable {
         case .dungeonPrologue: return "09_DungeonPrologue"
         case .dungeonFirstAttempt: return "10_DungeonL1"
         case .dungeonResult: return "11_DungeonResult"
+        case .resonanceMockup: return "12_ResonanceMockup"
         }
     }
 
@@ -93,6 +97,8 @@ enum iOSScreenshotScene: String, CaseIterable {
             return "dungeon.prologue"
         case .dungeonFirstAttempt:
             return "dungeon.firstAttempt"
+        case .resonanceMockup:
+            return "resonance.mockup.root"
         }
     }
 }
