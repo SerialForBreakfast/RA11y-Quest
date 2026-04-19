@@ -796,9 +796,8 @@ private struct DungeonPrologueView: View {
             .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
             .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
-        .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
     }
@@ -994,10 +993,9 @@ private struct DungeonPlayView: View {
             .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
             .padding(.vertical, RA11ySpacing.lg)
             .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .coordinateSpace(name: DungeonCoordinateSpace.name)
-        .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onPreferenceChange(TargetRoomFrameKey.self) { frame in
             targetFrame = frame

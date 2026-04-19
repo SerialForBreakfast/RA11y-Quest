@@ -118,6 +118,7 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
     │   │   │   └── mock_v3_results_legendary.png       (NEW — shared results screen)
     │   │   ├── Assets/                     Raw generated sprite + background assets
     │   │   ├── DesignTicket-AssetListDefinition.txt
+    │   │   ├── DesignTicket-DungeonResonancePromptSheet.txt  Single-asset prompts for Dungeon v2 orb/reticle/glyph art
     │   │   ├── DesignTicket-PromptSheet.txt
     │   │   ├── DesignTicket-AssetReviewChecklist.txt
     │   │   └── DesignTicket-AssetDeliveryNaming.txt
@@ -134,6 +135,7 @@ Current structure (as of 2026-04-19) — screenshot automation uses deterministi
     └── research/
         ├── ADR-0001-Concurrency-Strategy.md
         ├── ADR-0002-AI-Assisted-Screenshot-Validation.md  Proposed architecture for Vision + fastlane + optional Foundation Models UI QA
+        ├── ADR-0003-Dungeon-Resonance-Scroll-Interaction.md  Proposed Dungeon v2 reticle/orb redesign with haptics + resonance feedback
         ├── InitialBrainstorming.txt
         └── NativeAccessibility.txt
 ├── scripts

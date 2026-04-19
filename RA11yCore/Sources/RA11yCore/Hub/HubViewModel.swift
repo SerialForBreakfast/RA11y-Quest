@@ -91,8 +91,8 @@ public final class HubViewModel {
     ///
     /// ## Concurrency
     /// `@MainActor` — safe to call from SwiftUI `.task` or `.onAppear`.
-    /// Internally awaits `storage.bestResult(for:)` per game, hopping to the
-    /// storage actor and back for each call.
+    /// Internally uses `storage.bestResults(for:)` so the hub refresh pays one
+    /// storage hop for the whole catalog instead of one hop per game.
     public func refreshBestResults() async {
         await loadBestResults()
     }
@@ -101,9 +101,8 @@ public final class HubViewModel {
 
     /// Iterates all catalog games and loads their best result from storage.
     ///
-    /// Runs on `@MainActor`; awaits the storage actor for each game read.
-    /// Each `await` is a cross-actor hop to `UserDefaultsStorageComponent` and back.
-    /// Writes `bestResults` atomically after all reads complete.
+    /// Runs on `@MainActor`; awaits the storage actor once for the whole catalog and
+    /// writes `bestResults` atomically after the batch read completes.
     ///
     /// ## Startup Instrumentation
     /// Emits a `hubResultsLoad` signpost interval covering all storage reads.
@@ -115,11 +114,12 @@ public final class HubViewModel {
 
         RA11yLogger.startup.debug("hubResultsLoad started — \(GameCatalog.all.count) games")
 
+        let storedResults = await storage.bestResults(for: GameCatalog.all.map(\.id))
+
         var results: [String: GameRank] = [:]
-        for game in GameCatalog.all {
-            if let result = await storage.bestResult(for: game.id) {
-                results[game.id] = result.rank
-            }
+        results.reserveCapacity(storedResults.count)
+        for (gameID, result) in storedResults {
+            results[gameID] = result.rank
         }
         bestResults = results
 

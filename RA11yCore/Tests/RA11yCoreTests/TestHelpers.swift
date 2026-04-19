@@ -29,6 +29,11 @@ actor InMemoryStorageComponent: StorageComponent {
         _basicsCompleted
     }
 
+    /// Returns both Basics flags in one read for startup routing tests.
+    func basicsProgressSnapshot() async -> BasicsProgressSnapshot {
+        BasicsProgressSnapshot(isCompleted: _basicsCompleted, isDismissed: _basicsDismissed)
+    }
+
     /// Marks the Basics sequence as completed.
     func markBasicsCompleted() async {
         _basicsCompleted = true
@@ -37,6 +42,14 @@ actor InMemoryStorageComponent: StorageComponent {
     /// Returns whether the Basics sequence was dismissed.
     func isBasicsDismissed() async -> Bool {
         _basicsDismissed
+    }
+
+    /// Returns best stored results for the requested game IDs.
+    func bestResults(for gameIDs: [String]) async -> [String : GameResult] {
+        Dictionary(uniqueKeysWithValues: gameIDs.compactMap { id in
+            guard let result = results[id] else { return nil }
+            return (id, result)
+        })
     }
 
     /// Marks the Basics sequence as dismissed.

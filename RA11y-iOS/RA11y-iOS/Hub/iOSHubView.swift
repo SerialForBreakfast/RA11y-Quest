@@ -48,8 +48,9 @@ struct iOSHubView: View {
 
     // MARK: - State
 
-    @State private var viewModel = HubViewModel(storage: UserDefaultsStorageComponent())
+    @State private var viewModel: HubViewModel
     @State private var showHelpSheet = false
+    private let shouldRefreshOnAppear: Bool
 
     // MARK: - Environment
 
@@ -123,6 +124,23 @@ struct iOSHubView: View {
         sizeClass == .regular ? RA11ySpacing.lg : RA11ySpacing.md
     }
 
+    // MARK: - Init
+
+    /// Creates the hub view with an injected storage component and refresh policy.
+    ///
+    /// - Parameters:
+    ///   - storage: Persistence layer used to load and refresh best-result summaries.
+    ///   - shouldRefreshOnAppear: Whether the hub should immediately read stored results
+    ///     when it appears. `iOSRootView` disables this while initial route resolution is
+    ///     still pending so startup work does not compete with first-run gating.
+    init(
+        storage: any StorageComponent = UserDefaultsStorageComponent(),
+        shouldRefreshOnAppear: Bool = true
+    ) {
+        self.shouldRefreshOnAppear = shouldRefreshOnAppear
+        _viewModel = State(initialValue: HubViewModel(storage: storage))
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -143,7 +161,8 @@ struct iOSHubView: View {
             .sheet(isPresented: $showHelpSheet) {
                 iOSVoiceOverHelpSheet()
             }
-            .task {
+            .task(id: shouldRefreshOnAppear) {
+                guard shouldRefreshOnAppear else { return }
                 await viewModel.refreshBestResults()
             }
     }
@@ -163,9 +182,8 @@ struct iOSHubView: View {
                 questCardList
             }
             .frame(maxWidth: contentMaxWidth)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
-        .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .safeAreaInset(edge: .bottom) {
             iOSHubFooterView(

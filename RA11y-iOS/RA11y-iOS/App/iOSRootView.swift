@@ -8,17 +8,15 @@ import RA11yCore
 /// view hierarchy via the SwiftUI environment. All navigation is driven through
 /// the router's `NavigationPath`.
 ///
-/// ## View Identity
-/// `iOSHubView` is always the NavigationStack root — never conditionally swapped
-/// for a `ProgressView`. Keeping the root structurally stable prevents SwiftUI from
-/// losing `iOSHubView`'s `@State` (including `HubViewModel`) when the navigation
-/// path changes. A translucent loading overlay is shown instead while the initial
-/// route is being resolved (typically < one frame on device).
+/// ## Startup Rendering
+/// A lightweight loading surface is rendered until initial route resolution completes.
+/// This avoids constructing the full hub, its background image, and storage-backed
+/// refresh work during cold start.
 ///
 /// ## Startup Logging
 /// - `rootView.body` — first render, scene visible to the user.
-/// - `routeResolution` — signpost interval covering the two async storage reads
-///   that determine whether to show the first-run flow.
+/// - `routeResolution` — signpost interval covering the startup storage read
+///   that determines whether to show the first-run flow.
 ///
 /// ## Screenshot Testing
 /// The fastlane `screenshots` lane launches the app with specific arguments:
@@ -64,27 +62,17 @@ struct iOSRootView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            iOSHubView()
-                .navigationDestination(for: AppRoute.self) { route in
-                    routeDestination(for: route)
+        Group {
+            if hasResolvedInitialRoute {
+                NavigationStack(path: $router.path) {
+                    iOSHubView(storage: storage)
+                        .navigationDestination(for: AppRoute.self) { route in
+                            routeDestination(for: route)
+                        }
                 }
-        }
-        .environment(router)
-        // Overlay a loading screen until route resolution completes.
-        // Using an overlay (not a structural if/else) keeps iOSHubView's @State
-        // stable across navigation changes, preventing spurious HubViewModel inits.
-        .overlay {
-            if !hasResolvedInitialRoute {
-                ProgressView(String(localized: "app.loading"))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(.background)
-                    // Gives VoiceOver a clear label while the app resolves its initial route.
-                    .accessibilityLabel(String(localized: "app.loading.a11yLabel"))
-                    .onAppear {
-                        RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) rootView.body — first render; awaiting route resolution")
-                        scheduleSlowLoadingAnnouncementIfStillPending()
-                    }
+                .environment(router)
+            } else {
+                loadingView
             }
         }
         .task {
@@ -98,7 +86,7 @@ struct iOSRootView: View {
     private func routeDestination(for route: AppRoute) -> some View {
         switch route {
         case .hub:
-            iOSHubView()
+            iOSHubView(storage: storage)
         case .firstRun(let mode):
             iOSFirstRunView(mode: mode, storage: storage)
         case .enchantersTrial:
@@ -143,9 +131,9 @@ struct iOSRootView: View {
     /// Resolves the initial route once and updates navigation state.
     ///
     /// ## Startup Instrumentation
-    /// Emits a `routeResolution` signpost interval covering the two async storage
-    /// reads (`isBasicsCompleted` + `isBasicsDismissed`) that determine first-run
-    /// routing. Visible in Instruments → "Points of Interest". If this interval is
+    /// Emits a `routeResolution` signpost interval covering the startup storage
+    /// read that determines first-run routing. Visible in Instruments →
+    /// "Points of Interest". If this interval is
     /// long (> ~50 ms) the storage actor or UserDefaults is the bottleneck.
     ///
     /// ## Screenshot Testing — Direct Route Override
@@ -176,6 +164,18 @@ struct iOSRootView: View {
         UIAccessibility.post(notification: .screenChanged, argument: nil)
 
         RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) routeResolution complete — \(String(format: "%.1f", elapsedMs)) ms — initial route: \(String(describing: initial))")
+    }
+
+    /// Lightweight startup view shown before the initial route is known.
+    private var loadingView: some View {
+        ProgressView(String(localized: "app.loading"))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.background)
+            .accessibilityLabel(String(localized: "app.loading.a11yLabel"))
+            .onAppear {
+                RA11yLogger.startup.debug("\(RA11yLogger.startupTimestampTag()) rootView.body — first render; awaiting route resolution")
+                scheduleSlowLoadingAnnouncementIfStillPending()
+            }
     }
 
     /// If route resolution takes longer than expected under the debugger, posts a

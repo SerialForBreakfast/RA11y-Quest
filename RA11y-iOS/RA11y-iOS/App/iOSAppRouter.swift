@@ -129,8 +129,9 @@ final class iOSAppRouter {
     /// - Parameter storage: Persistence layer for first-run flags.
     /// - Returns: `.firstRun(mode: .entry)` when neither flag is set; otherwise `.hub`.
     func resolveInitialRoute(using storage: any StorageComponent) async -> AppRoute {
-        if await storage.isBasicsCompleted() { return .hub }
-        if await storage.isBasicsDismissed() { return .hub }
+        let snapshot = await storage.basicsProgressSnapshot()
+        if snapshot.isCompleted { return .hub }
+        if snapshot.isDismissed { return .hub }
         return .firstRun(mode: .entry)
     }
 }
