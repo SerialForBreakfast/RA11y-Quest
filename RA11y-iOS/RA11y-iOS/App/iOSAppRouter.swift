@@ -98,6 +98,56 @@ final class iOSAppRouter {
         path.append(route)
     }
 
+    /// Attempts to open a playable quest route for `kind`.
+    ///
+    /// **Users:** Quests require VoiceOver (see ``GameStartDecision``). If VoiceOver is not
+    /// running, pushes ``AppRoute/voiceOverInterstitial(kind:)`` instead of the game. Product
+    /// code should use this for entering games — never push playable routes directly except
+    /// from this method (or UI-test bypass below).
+    ///
+    /// **UI testing:** When the process was launched with the `-uiTesting` argument (standard
+    /// for ``XCTest`` / XCUITest and screenshot lanes), VoiceOver gating is skipped so tests
+    /// can navigate without enabling VoiceOver on the simulator.
+    ///
+    /// - Parameters:
+    ///   - kind: The training game to start.
+    ///   - provider: Defaults to the live UIAccessibility-backed provider; inject a stub in unit tests.
+    func pushGame(
+        kind: GameKind,
+        provider: some VoiceOverStateProvider = iOSLiveVoiceOverStateProvider()
+    ) {
+        if Self.isUITestingLaunch {
+            RA11yLogger.navigation.debug("UI test launch — bypassing VoiceOver gate for \(kind.rawValue)")
+            pushPlayableRoute(for: kind)
+            return
+        }
+        switch GameStartDecision.evaluate(kind: kind, provider: provider) {
+        case .proceed(kind: let proceedKind):
+            RA11yLogger.navigation.debug("Game start gating passed for \(proceedKind.rawValue)")
+            pushPlayableRoute(for: proceedKind)
+        case .requireVoiceOver(kind: let blockedKind):
+            RA11yLogger.navigation.debug("Blocked quest push — VoiceOver off; showing interstitial for \(blockedKind.rawValue)")
+            push(.voiceOverInterstitial(kind: blockedKind))
+        }
+    }
+
+    /// Pushes the ``AppRoute`` for a playable quest without VoiceOver checks (used by ``pushGame``).
+    private func pushPlayableRoute(for kind: GameKind) {
+        switch kind {
+        case .findAndFocus:
+            push(.enchantersTrial)
+        case .activateDoubleTap:
+            push(.roguesGauntlet)
+        case .scrollHunt:
+            push(.dungeonDescent)
+        }
+    }
+
+    /// Matches ``RA11y_iOSApp`` / UI tests: automation passes `-uiTesting` in launch arguments.
+    private static var isUITestingLaunch: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTesting")
+    }
+
     /// Pops the topmost destination from the navigation stack.
     /// No-op if the stack is already at its root.
     func pop() {

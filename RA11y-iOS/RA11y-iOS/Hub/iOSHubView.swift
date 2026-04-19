@@ -7,7 +7,8 @@ import RA11yCore
 /// The game hub — the player's home base and quest board.
 ///
 /// Implemented per `TICKET-M3-Hub-UI-Progress`. Renders three training games as
-/// D&D-themed quest cards, provides VoiceOver gating and help affordance, and
+/// D&D-themed quest cards. Quest starts call ``iOSAppRouter/pushGame(kind:provider:)`` so
+/// games are never entered without VoiceOver. Also provides help affordance and
 /// reflects best results from storage without requiring an app relaunch.
 ///
 /// ## Layout (ZStack)
@@ -260,26 +261,10 @@ struct iOSHubView: View {
 
     // MARK: - Actions
 
-    /// Initiates the VoiceOver gating check before starting a game.
-    ///
-    /// Guards against locked games (the card button is already disabled, but this
-    /// provides a safe second layer). Then checks VoiceOver state: if VoiceOver is
-    /// off, routes to the interstitial; if on, routes to the game entry route.
+    /// Starts a game when the card is unlocked. VoiceOver is required — see ``iOSAppRouter/pushGame(kind:provider:)``.
     private func startGame(_ game: GameDefinition) {
         guard viewModel.isUnlocked(game) else { return }
-        if !voiceOverEnabled {
-            router.push(.voiceOverInterstitial(kind: game.kind))
-        } else {
-            RA11yLogger.navigation.debug("Game start gating passed for \(game.id)")
-            switch game.kind {
-            case .findAndFocus:
-                router.push(.enchantersTrial)
-            case .activateDoubleTap:
-                router.push(.roguesGauntlet)
-            case .scrollHunt:
-                router.push(.dungeonDescent)
-            }
-        }
+        router.pushGame(kind: game.kind)
     }
 
     private func navigateToBasics() {

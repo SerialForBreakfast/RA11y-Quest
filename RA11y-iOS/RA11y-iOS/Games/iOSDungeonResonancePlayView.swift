@@ -14,18 +14,39 @@ private func logResonanceScroll(_ message: String) {
     #endif
 }
 
+// MARK: - Aim line (global Y)
+
+/// Supplies the screen-global Y of the resonance play area vertical midpoint (fixed orb / aim line).
+/// Measured from a hit-invisible `GeometryReader` overlay so the play surface does not wrap in a
+/// root-level `GeometryReader` (those often register an unnamed VoiceOver frame).
+private struct ResonanceAimLineGlobalMidYPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = -10_000
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > -1_000 { value = next }
+    }
+}
+
 // MARK: - iOSDungeonResonancePlayView
 
 /// Crystal Resonance gameplay surface (ADR-0003): fixed center orb, scrolling target lane,
 /// activation only when the moonstone aligns with the aim line.
 ///
-/// **VoiceOver:** The scroll lane uses a higher `accessibilitySortPriority` than chrome so it surfaces
-/// earlier in swipe order, then `UIAccessibility.post` with `.screenChanged` plus a short-delay
-/// `AccessibilityFocusState` assignment after navigation. SwiftUI’s `ScrollView` may still not
-/// deliver three-finger scroll reliably; `accessibilityAdjustableAction` remains a discrete nudge
-/// via `ScrollViewReader` when three-finger input does nothing.
-/// The lane column uses `accessibilityElement(children: .ignore)` so glyphs do not become separate
-/// VoiceOver stops.
+/// **VoiceOver:** The scroll lane is a UIKit ``iOSResonanceVoiceOverScrollProxyRepresentable`` (`UIScrollView`)
+/// with higher `accessibilitySortPriority` than chrome. Initial focus uses `UIAccessibility.post`
+/// (`.screenChanged`, then `.layoutChanged` with the scroll view, then announcement). The play surface
+/// avoids a **root** `GeometryReader` (measurement uses a hidden overlay `GeometryReader` + preference key).
+///
+/// **VoiceOver lane proxy:** The **visual** lane is a clipped, **non-scrolling** stack whose vertical
+/// offset mirrors the UIKit scroller’s content offset (same lane accessibility label on the scroll view).
+/// VoiceOver scrolls that proxy only; the glyph column stays `accessibilityHidden`. On iOS,
+/// three-finger scrolling affects the scroll view associated with the **current VoiceOver focus**—if
+/// focus is on objective/timer chrome, three-finger swipes will not move the lane; the player must
+/// navigate until VoiceOver announces the scroll proxy (localized `dungeon.a11y.scroll.container`; see
+/// hints and L1 tip copy). Quests
+/// cannot be entered without VoiceOver (see ``iOSAppRouter/pushGame(kind:provider:)``), so a
+/// separate non-VO `ScrollView` path is not maintained here.
 ///
 /// Lane glyphs are decorative; objectives, seal control, and timer affordances live in the fixed
 /// chrome. Multimodal alignment feedback is driven from `DungeonDescentViewModel.updateResonanceDelta`.
@@ -58,150 +79,116 @@ struct iOSDungeonResonancePlayView: View {
     /// Limits alignment telemetry spam while still capturing motion during scroll debugging.
     @State private var lastAlignmentLogTime: Date = .distantPast
 
-    /// Moves VoiceOver to the `ScrollView` so chrome does not retain initial focus.
-    @AccessibilityFocusState private var accessibilityFocusScrollLane: ScrollLaneFocusID?
+    /// Vertical scroll offset driven by the UIKit proxy ``iOSResonanceVoiceOverScrollProxyRepresentable``; applied to the visual lane below.
+    @State private var voiceOverProxyScrollOffsetY: CGFloat = 0
 
-    /// Last room index used by the scroll container's VoiceOver adjustable action (chamber-by-chamber nudges).
-    /// May drift if the user mixes three-finger scroll with those nudges.
-    @State private var voiceOverLaneRoomIndex: Int = 0
+    /// Vertical midpoint (global Y) of the resonance play area aim line (from ``ResonanceAimLineGlobalMidYPreferenceKey``).
+    @State private var aimLineGlobalMidY: CGFloat = -10_000
+
+    /// Last moonstone `midY` from ``iOSResonanceTargetMidYPreferenceKey`` (paired with `aimLineGlobalMidY`).
+    @State private var lastTargetGlobalMidY: CGFloat = -10_000
 
     @Environment(\.horizontalSizeClass) private var sizeClass
-
-    private enum ScrollLaneFocusID: Hashable {
-        case scrollLane
-    }
 
     private var aimBand: iOSResonanceAimBand {
         iOSResonanceAimBand.displayBand(deltaPoints: displayDeltaPoints, levelComplete: levelComplete)
     }
 
-    var body: some View {
-        ScrollViewReader { scrollViewProxy in
-            GeometryReader { screenGeo in
-                ZStack {
-                    iOSShaftResonanceBackground()
-
-                    ScrollView(.vertical) {
-                        resonanceLaneColumn
-                            .padding(.vertical, RA11ySpacing.xl)
-                    }
-                    .scrollIndicators(.visible)
-                    .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
-                    /// Surfaces the lane earlier in VoiceOver swipe order than `safeAreaInset` chrome (priority 0).
-                    .accessibilitySortPriority(10)
-                    .accessibilityIdentifier("dungeon.resonance.scrollLane")
-                    .accessibilityLabel(String(localized: "dungeon.a11y.scroll.container"))
-                    .accessibilityHint(String(localized: "dungeon.a11y.scroll.container.hint"))
-                    /// Ensures VoiceOver routes direct interaction to this scroll surface when the OS supports it.
-                    .accessibilityRespondsToUserInteraction(true)
-                    /// Reliable lane control for VoiceOver: one-finger swipe up/down while this element is focused.
-                    .accessibilityAdjustableAction { direction in
-                        guard !levelComplete, !timedOut else { return }
-                        switch direction {
-                        case .increment:
-                            nudgeCrystalShaftForVoiceOver(using: scrollViewProxy, towardDeeper: true)
-                        case .decrement:
-                            nudgeCrystalShaftForVoiceOver(using: scrollViewProxy, towardDeeper: false)
-                        @unknown default:
-                            break
-                        }
-                    }
-                    .accessibilityFocused($accessibilityFocusScrollLane, equals: .scrollLane)
-                    .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.y }) { oldY, newY in
-                        if abs(newY - oldY) > 0.5 {
-                            logResonanceScroll(
-                                "lane scroll contentOffset.y \(String(format: "%.1f", oldY)) → \(String(format: "%.1f", newY)) vo=\(UIAccessibility.isVoiceOverRunning)"
-                            )
-                        }
-                    }
-
-                    centerOrbStack
-                        .allowsHitTesting(false)
-                        /// Hides the decorative orb/reticle from the VoiceOver rotor.
-                        .accessibilityHidden(true)
-
-                    if lightsOffMode {
-                        iOSResonanceLightsOffVignette()
-                            .allowsHitTesting(false)
-                    }
-                }
-                .onPreferenceChange(iOSResonanceTargetMidYPreferenceKey.self) { targetY in
-                    guard targetY > -1_000 else { return }
-                    let aimMidY = screenGeo.frame(in: .global).midY
-                    let delta = iOSResonanceAlignment.deltaPoints(
-                        targetMidYGlobal: targetY,
-                        aimMidYGlobal: aimMidY
-                    )
-                    displayDeltaPoints = delta
-                    let now = Date()
-                    if now.timeIntervalSince(lastAlignmentLogTime) >= 0.28 {
-                        lastAlignmentLogTime = now
-                        logResonanceScroll(
-                            "alignment sample targetMidY=\(String(format: "%.1f", targetY)) aimMidY=\(String(format: "%.1f", aimMidY)) delta=\(String(format: "%.1f", delta)) reachable=\(iOSResonanceAlignment.isReachable(deltaPoints: delta)) vo=\(UIAccessibility.isVoiceOverRunning)"
-                        )
-                    }
-                    onResonanceDeltaChanged(delta)
-                }
-            }
-            .background(Color.ra11yGameFallbackBackground)
-            .safeAreaInset(edge: .top, spacing: 0) { topChrome }
-            .safeAreaInset(edge: .bottom, spacing: 0) { bottomChrome }
-            .environment(\.colorScheme, .dark)
-            .onChange(of: rooms.map(\.id)) { _, _ in
-                voiceOverLaneRoomIndex = rooms.firstIndex(where: \.isTarget) ?? 0
-            }
-            .onAppear {
-                voiceOverLaneRoomIndex = rooms.firstIndex(where: \.isTarget) ?? 0
-                logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
-                guard UIAccessibility.isVoiceOverRunning else {
-                    logResonanceScroll("skip programmatic VO focus — VoiceOver off")
-                    return
-                }
-                Task { @MainActor in
-                    // Aligns with `announceObjectivePrompt` (~500 ms); lets the navigation push settle.
-                    try? await Task.sleep(for: .milliseconds(500))
-                    UIAccessibility.post(notification: .screenChanged, argument: nil)
-                    logResonanceScroll("posted UIAccessibility.Notification.screenChanged to reset VO traversal")
-                    try? await Task.sleep(for: .milliseconds(300))
-                    accessibilityFocusScrollLane = .scrollLane
-                    logResonanceScroll("accessibilityFocus set to scrollLane (dungeon.resonance.scrollLane) backup binding")
-                    let focusLine = String(localized: "dungeon.a11y.scroll.vo.focusAnnouncement")
-                    UIAccessibility.post(notification: .announcement, argument: focusLine)
-                    logResonanceScroll("posted VO focus announcement (length=\(focusLine.count))")
-                }
-            }
-        }
+    /// Minimum height for the VoiceOver proxy scroll content so three-finger scroll has room (mirrors L0 practice).
+    private var voiceOverProxyScrollableContentHeight: CGFloat {
+        let rowCount = max(rooms.count * 2, 18)
+        return CGFloat(rowCount) * 44 + 2 * RA11ySpacing.xl
     }
 
-    // MARK: - VoiceOver lane scrolling
-
-    /// Moves the shaft one chamber toward deeper or shallower lists using ``ScrollViewReader``
-    /// so gameplay does not depend on three-finger scroll (often flaky with SwiftUI `ScrollView`).
-    ///
-    /// Must run on the main actor; invoked from `accessibilityAdjustableAction` on the scroll container.
-    private func nudgeCrystalShaftForVoiceOver(
-        using proxy: ScrollViewProxy,
-        towardDeeper: Bool
-    ) {
-        guard !rooms.isEmpty else { return }
-        let nextIndex: Int
-        if towardDeeper {
-            nextIndex = min(voiceOverLaneRoomIndex + 1, rooms.count - 1)
-        } else {
-            nextIndex = max(voiceOverLaneRoomIndex - 1, 0)
-        }
-        guard nextIndex != voiceOverLaneRoomIndex else {
-            logResonanceScroll("VO nudge blocked at boundary index=\(voiceOverLaneRoomIndex) deeper=\(towardDeeper)")
-            return
-        }
-        let room = rooms[nextIndex]
-        voiceOverLaneRoomIndex = nextIndex
-        withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
-            proxy.scrollTo(room.id, anchor: .center)
-        }
-        logResonanceScroll(
-            "programmatic VO shaft nudge → index \(nextIndex) id=\(room.id) towardDeeper=\(towardDeeper)"
+    /// Recomputes alignment when either the aim line or moonstone global position changes (preferences can arrive in either order).
+    private func applyResonanceAlignmentFromLastFrames() {
+        let targetY = lastTargetGlobalMidY
+        let aimMidY = aimLineGlobalMidY
+        guard targetY > -1_000, aimMidY > -1_000 else { return }
+        let delta = iOSResonanceAlignment.deltaPoints(
+            targetMidYGlobal: targetY,
+            aimMidYGlobal: aimMidY
         )
+        displayDeltaPoints = delta
+        let now = Date()
+        if now.timeIntervalSince(lastAlignmentLogTime) >= 0.28 {
+            lastAlignmentLogTime = now
+            logResonanceScroll(
+                "alignment sample targetMidY=\(String(format: "%.1f", targetY)) aimMidY=\(String(format: "%.1f", aimMidY)) delta=\(String(format: "%.1f", delta)) reachable=\(iOSResonanceAlignment.isReachable(deltaPoints: delta)) vo=\(UIAccessibility.isVoiceOverRunning)"
+            )
+        }
+        onResonanceDeltaChanged(delta)
+    }
+
+    var body: some View {
+        ZStack {
+            iOSShaftResonanceBackground()
+
+            /// Decorative lane: offset tracks the proxy scroller; hidden from VoiceOver.
+            resonanceLaneColumn
+                .padding(.vertical, RA11ySpacing.xl)
+                .offset(y: -voiceOverProxyScrollOffsetY)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .clipped()
+                .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            /// UIKit `UIScrollView` proxy (see ``iOSResonanceVoiceOverScrollProxyRepresentable``); visually clear, one AX element.
+            iOSResonanceVoiceOverScrollProxyRepresentable(
+                contentBlockHeight: voiceOverProxyScrollableContentHeight,
+                verticalPadding: RA11ySpacing.xl,
+                accessibilityLabelText: String(localized: "dungeon.a11y.scroll.container"),
+                accessibilityHintText: String(localized: "dungeon.a11y.scroll.container.hint"),
+                onContentOffsetYChanged: { newY in
+                    let oldY = voiceOverProxyScrollOffsetY
+                    voiceOverProxyScrollOffsetY = newY
+                    if abs(newY - oldY) > 0.5 {
+                        logResonanceScroll(
+                            "VO proxy scroll contentOffset.y \(String(format: "%.1f", oldY)) → \(String(format: "%.1f", newY))"
+                        )
+                    }
+                }
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilitySortPriority(10)
+
+            centerOrbStack
+                .allowsHitTesting(false)
+                /// Hides the decorative orb/reticle from the VoiceOver rotor.
+                .accessibilityHidden(true)
+
+            if lightsOffMode {
+                iOSResonanceLightsOffVignette()
+                    .allowsHitTesting(false)
+            }
+        }
+        .overlay {
+            GeometryReader { geo in
+                Color.clear
+                    .preference(
+                        key: ResonanceAimLineGlobalMidYPreferenceKey.self,
+                        value: geo.frame(in: .global).midY
+                    )
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+        .onPreferenceChange(ResonanceAimLineGlobalMidYPreferenceKey.self) { midY in
+            aimLineGlobalMidY = midY
+            applyResonanceAlignmentFromLastFrames()
+        }
+        .onPreferenceChange(iOSResonanceTargetMidYPreferenceKey.self) { targetY in
+            lastTargetGlobalMidY = targetY
+            applyResonanceAlignmentFromLastFrames()
+        }
+        .background(Color.ra11yGameFallbackBackground)
+        .safeAreaInset(edge: .top, spacing: 0) { topChrome }
+        .safeAreaInset(edge: .bottom, spacing: 0) { bottomChrome }
+        .environment(\.colorScheme, .dark)
+        .onAppear {
+            logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
+        }
     }
 
     // MARK: - Lane
@@ -209,14 +196,11 @@ struct iOSDungeonResonancePlayView: View {
     private var resonanceLaneColumn: some View {
         VStack(spacing: 56) {
             ForEach(Array(rooms.enumerated()), id: \.element.id) { index, room in
-                Group {
-                    if room.isTarget {
-                        moonstoneRow(room: room)
-                    } else {
-                        iOSLaneDecoyChip(style: .forRoomIndex(index))
-                    }
+                if room.isTarget {
+                    moonstoneRow(room: room)
+                } else {
+                    iOSLaneDecoyChip(style: .forRoomIndex(index))
                 }
-                .id(room.id)
             }
         }
         .frame(maxWidth: 520)
@@ -292,20 +276,35 @@ struct iOSDungeonResonancePlayView: View {
         .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
         .padding(.bottom, RA11ySpacing.sm)
         .background(.ultraThinMaterial.opacity(0.92))
+        /// After the playfield scroll proxy (`accessibilitySortPriority` 10); keeps objectives and HUD
+        /// from preempting swipe order when the platform merges inset and content accessibility trees.
+        .accessibilitySortPriority(-5)
+    }
+
+    /// `false` during most of L1 when the seal is unavailable and there is no hint — avoids an empty
+    /// `VStack` inset that VoiceOver can focus as an unnamed rectangle.
+    private var hasPlayfieldBottomControls: Bool {
+        if levelComplete, onContinue != nil { return true }
+        if targetIsReachable, rooms.contains(where: \.isTarget) { return true }
+        if onHint != nil { return true }
+        return false
     }
 
     @ViewBuilder
     private var bottomChrome: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            if timedOut {
-                timeoutBanner
-            } else {
-                sealOrProgressControls
-            }
+        if timedOut {
+            timeoutBanner
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.md)
+                .background(.ultraThinMaterial.opacity(0.95))
+                .accessibilitySortPriority(-5)
+        } else if hasPlayfieldBottomControls {
+            sealOrProgressControls
+                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+                .padding(.vertical, RA11ySpacing.md)
+                .background(.ultraThinMaterial.opacity(0.95))
+                .accessibilitySortPriority(-5)
         }
-        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-        .padding(.vertical, RA11ySpacing.md)
-        .background(.ultraThinMaterial.opacity(0.95))
     }
 
     @ViewBuilder
@@ -313,6 +312,7 @@ struct iOSDungeonResonancePlayView: View {
         if levelComplete, let onContinue {
             continueButton(onContinue)
         } else if !timedOut {
+            // At least one subview when `hasPlayfieldBottomControls` is true (see `bottomChrome`).
             VStack(spacing: RA11ySpacing.sm) {
                 if targetIsReachable, let targetRoom = rooms.first(where: \.isTarget) {
                     Button {
@@ -404,6 +404,10 @@ struct iOSDungeonResonancePlayView: View {
                 .foregroundStyle(Color.ra11yCardSecondaryText)
                 .multilineTextAlignment(.leading)
             Text(String(localized: "dungeon.explain.gesture.swipe3u"))
+                .font(.ra11ySubheadline)
+                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .multilineTextAlignment(.leading)
+            Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
                 .font(.ra11ySubheadline)
                 .foregroundStyle(Color.ra11yCardSecondaryText)
                 .multilineTextAlignment(.leading)

@@ -204,20 +204,12 @@ struct iOSBasicsSequenceView: View {
         String(localized: "basicsSequence.beginGame.a11yHint")
     }
 
-    private func gameRoute(for kind: GameKind) -> AppRoute {
-        switch kind {
-        case .findAndFocus:      return .enchantersTrial
-        case .activateDoubleTap: return .roguesGauntlet
-        case .scrollHunt:        return .dungeonDescent
-        }
-    }
-
     // MARK: - Actions
 
     private func launchCurrentGame() {
         hasLaunchedGame = true
         router.isInBasicsSequence = true
-        router.push(gameRoute(for: steps[currentIndex]))
+        router.pushGame(kind: steps[currentIndex])
     }
 
     /// Called on every `.onAppear`. Advances the sequence when returning from a completed

@@ -608,7 +608,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scroll lane for this chamber. Three-finger swipes move the lane only while VoiceOver is focused here. Scroll to align the Moonstone with the orb at the center of the screen."
+            "value" : "This is the invisible scroll layer behind the lane—not the objective row. Three-finger swipes scroll only while VoiceOver focus is on Moonstone alignment lane; if you hear the objective or timer, swipe until you hear this name, then scroll. Align the Moonstone with the orb at the center of the screen."
           }
         }
       }
@@ -1102,6 +1102,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Completes this chamber when the moonstone is aligned."
+          }
+        }
+      }
+    },
+    "dungeon.resonance.tip.voFocusOnLane" : {
+      "comment" : "L1 in-game tip: VoiceOver must be focused on the scroll proxy, not chrome, for three-finger scroll to move the Moonstone.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If nothing moves: you are not on the scroll lane. Move VoiceOver until it reads Moonstone alignment lane—the invisible scroll area over the chamber lane—then try three fingers again."
           }
         }
       }

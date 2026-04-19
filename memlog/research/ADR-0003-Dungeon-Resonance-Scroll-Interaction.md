@@ -333,3 +333,9 @@ Accepting roles:
 - Design
 - Engineering
 - Accessibility review
+
+## Related engineering notes
+
+VoiceOver focus and swipe order for the SwiftUI scroll proxy proved fragile in practice. A running log of symptoms, mitigations, and the planned **UIKit `UIScrollView`** path is maintained in:
+
+- `memlog/research/CrystalResonance-VoiceOverScrollProxy-Investigation.md`

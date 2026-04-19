@@ -46,11 +46,11 @@ struct iOSRootView: View {
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-uiTesting") {
             if args.contains("-screenshotDirectToEnchanter") {
-                router.push(.enchantersTrial)
+                router.pushGame(kind: .findAndFocus)
             } else if args.contains("-screenshotDirectToRogue") {
-                router.push(.roguesGauntlet)
+                router.pushGame(kind: .activateDoubleTap)
             } else if args.contains("-screenshotDirectToDungeon") {
-                router.push(.dungeonDescent)
+                router.pushGame(kind: .scrollHunt)
             }
         }
         #endif
@@ -116,15 +116,17 @@ struct iOSRootView: View {
     /// can retry without returning all the way to the hub.
     private func restartGame(for result: GameResult) {
         router.popToRoot()
-        switch result.gameID {
-        case "find-and-focus":
-            router.push(.enchantersTrial)
-        case "rogue-gauntlet":
-            router.push(.roguesGauntlet)
-        case "scroll-hunt":
-            router.push(.dungeonDescent)
-        default:
-            break
+        guard let kind = gameKind(forGameID: result.gameID) else { return }
+        router.pushGame(kind: kind)
+    }
+
+    /// Maps persisted ``GameResult/gameID`` strings to ``GameKind`` for replay routing.
+    private func gameKind(forGameID gameID: String) -> GameKind? {
+        switch gameID {
+        case "find-and-focus": return .findAndFocus
+        case "rogue-gauntlet": return .activateDoubleTap
+        case "scroll-hunt": return .scrollHunt
+        default: return nil
         }
     }
 
