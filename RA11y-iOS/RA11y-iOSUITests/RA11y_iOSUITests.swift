@@ -7,28 +7,35 @@
 
 import XCTest
 
+/// Non-screenshot UI tests (integration checks against the live app shell).
+///
+/// Screenshot capture lives in `RA11y_iOSScreenshots.swift`. This suite holds
+/// behavioral tests that do not attach PNGs.
 final class RA11y_iOSUITests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
+    /// Verifies `-uiTesting` with `-screenshotMarkOnboardingComplete` reaches the hub
+    /// with a deterministic greeting (screenshot automation contract).
+    ///
+    /// - Important: Requires the hub route (`hub.dmGreeting`).
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testScreenshotLaunchArgsReachHubWithBasicsComplete() throws {
         let app = XCUIApplication()
+
+        app.launchArguments = ["-uiTesting", "-screenshotMarkOnboardingComplete"]
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        let greeting = app.descendants(matching: .any)["hub.dmGreeting"]
+        XCTAssertTrue(
+            greeting.waitForExistence(timeout: 15),
+            "Hub greeting should appear when basics are marked complete"
+        )
     }
 
     @MainActor

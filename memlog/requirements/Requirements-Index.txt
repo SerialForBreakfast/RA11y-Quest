@@ -3,29 +3,64 @@ RA11y - Requirements Index
 memlog/requirements/
 
 Keep this index updated when adding or moving requirement documents.
+Last updated: 2026-04-19
 
-Phase 1 — Capture
+Phase 1 — Capture (Historical)
+-------------------------------
+- Phase1-Requirements.txt        Product, platform, VO gating, scoring, architecture.
+- Phase1-UserStories.txt         User stories with acceptance criteria and test hints.
+- Phase1-Decisions.txt           Locked decisions snapshot (scope, navigation, storage).
+- Phase1-GameSpecs-Overview.txt  Cross-cutting game spec rules and overview. (Updated 2026-04-19)
+
+Active Game Specs
 -----------------
-- Phase1-Requirements.txt   Product, platform, VO gating, scoring, architecture.
-- Phase1-UserStories.txt    User stories with acceptance criteria and test hints.
-- Phase1-Decisions.txt      Locked decisions snapshot (scope, navigation, storage).
-- Phase1-GameSpecs-Overview.txt  Cross-cutting game spec rules and overview.
+- GameSpec-FindAndFocus.txt      The Enchanter's Trial — swipe to navigate, double-tap to activate.
+- GameSpec-ScrollHunt.txt        Dungeon Descent room-list mechanic (SUPERSEDED by Crystal Resonance /
+                                 ADR-0003; retained as reference for current shipped implementation).
 
-Game Specs (MVP)
----------------
-- GameSpec-FindAndFocus.txt
-- GameSpec-ActivateDoubleTap.txt
-- GameSpec-ScrollHunt.txt
+Archived Game Specs
+-------------------
+- memlog/archive/GameSpec-ActivateDoubleTap.txt
+  The Rogue's Gauntlet — RETIRED 2026-04-19. Quest removed from curriculum.
+  Skill (tap ≠ activate) is taught implicitly by The Enchanter's Trial.
+
+New Quest Concepts
+------------------
+- Design/QuestConcept-Banishment.txt   The Banishment — two-finger scrub dismiss gesture.
 
 Spikes
 ------
-- Spike-ScrollObservability-SwiftUI.txt  Scroll progress observation for Scroll Hunt.
+- Spike-ScrollObservability-SwiftUI.txt  Scroll progress observation for Scroll Hunt (CLOSED).
 
 Phase 2 — Roadmap
 -----------------
-- Phase2-Roadmap.txt        MVP milestones (M0–M8), dependency order, post-MVP.
+- Phase2-Roadmap.txt        MVP milestones (M0–M8), dependency order, post-MVP. (Updated 2026-04-19)
 
 Phase 3 — Tickets
 -----------------
-- TicketBreakdown.txt        All MVP tickets in dependency order (tracks: Infrastructure, UX/Gating, Games, Polish).
-- Design/                    Design track tickets (AssetListDefinition, PromptSheet, AssetReviewChecklist, AssetDeliveryNaming).
+- TicketBreakdown.txt        All MVP tickets in dependency order. M6 Rogue's Gauntlet tickets
+                             RETIRED; see note at top of file. (Annotated 2026-04-19)
+
+Design Process
+--------------
+- Design/DesignProcess.md    Canonical repeatable workflow for every accessibility quest. (NEW 2026-04-19)
+
+Design Tickets (active)
+------------------------
+- Design/DesignTicket-AssetDeliveryNaming.txt    Asset naming and delivery format conventions.
+- Design/DesignTicket-AssetListDefinition.txt    Per-game asset lists (Enchanter, Dungeon).
+- Design/DesignTicket-AssetReviewChecklist.txt   QC checklist for generated assets.
+- Design/DesignTicket-PromptSheet.txt            Original image generation prompt sheet.
+- Design/DesignTicket-DungeonResonancePromptSheet.txt  Crystal Resonance v2 asset prompts.
+- Design/DungeonResonanceAssetPipeline.txt       Layer stack, sizing, and transparency rules for Crystal Resonance.
+- Design/DesignTicket-FirstRunEntry.txt          First-run entry UX ticket.
+
+Advanced modes (design guidance)
+--------------------------------
+- LightsOffMode-Recommendations.txt   Visual blackout training design guidance.
+- LightsOffMode-Decisions.txt         Locked product decisions for Lights Off mode.
+- LightsOffMode-QAChecklist.txt       Manual VoiceOver checklist for Lights Off acceptance.
+
+Superseded (retained for reference)
+-------------------------------------
+- SwiftUIAgenticRules.txt    Content migrated to AGENTS.md. Do not edit independently.

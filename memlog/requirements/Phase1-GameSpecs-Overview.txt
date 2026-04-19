@@ -1,7 +1,7 @@
 RA11y - Accessibility Training Gamification
 Phase 1 - MVP Game Specs Overview
 
-Date: 2026-02-20
+Date: 2026-02-20 (updated 2026-04-19 — curriculum revised)
 
 Purpose
 =======
@@ -26,10 +26,14 @@ Theme + Narrative (Locked)
 ==========================
 - Shared world theme: D&D fantasy dungeon training trials with a Dungeon Master (DM) voice.
 - Player is addressed as "Adventurer" or "you" (second person).
-- Each game maps to the D&D-named trials in GameRules-MVP.txt:
-  - The Enchanter's Trial (Find & Focus)
-  - The Rogue's Gauntlet (Activate / Double-Tap)
-  - The Dungeon Descent (Scroll Hunt)
+- Current quest roster (updated 2026-04-19):
+  - The Enchanter's Trial      Swipe to navigate focus; double-tap to activate  [Done]
+  - Crystal Resonance          Three-finger scroll; resonance alignment mechanic [In Design — ADR-0003]
+  - The Banishment             Two-finger scrub to dismiss any trapped state     [In Design — QuestConcept-Banishment.txt]
+- RETIRED: The Rogue's Gauntlet (Activate / Double-Tap) — removed 2026-04-19.
+  Rationale: skill is taught implicitly by The Enchanter's Trial; having two
+  quests teach the same paradigm shift diluted the curriculum. Spec archived at
+  memlog/archive/GameSpec-ActivateDoubleTap.txt.
 
 Art Direction (Locked)
 =====================

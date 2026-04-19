@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "dungeon_room_entry_hall.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

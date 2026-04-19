@@ -52,7 +52,7 @@ public struct RankThresholds: Sendable {
     ///
     /// - Parameters:
     ///   - timeSeconds: Elapsed active session time.
-    ///   - mistakes: Total mistakes recorded.
+    ///   - mistakes: Total mistakes recorded (include bucket mistakes via `bucketMistakes()`).
     /// - Returns: The highest rank the session qualifies for, or `.failed`.
     public func evaluate(timeSeconds: Double, mistakes: Int) -> GameRank {
         guard timeSeconds <= timeoutSeconds else { return .failed }
@@ -61,39 +61,75 @@ public struct RankThresholds: Sendable {
         if timeSeconds <= okMaxTime      && mistakes <= okMaxMistakes      { return .ok }
         return .failed
     }
+
+    // MARK: - Bucket Mistake Calculation
+
+    /// Computes time-based "bucket" mistake penalties per `GameSpec-FindAndFocus.txt`.
+    ///
+    /// The first bucket (0–`bucketSize` seconds) is free; each subsequent full bucket
+    /// beyond that adds one penalty mistake. Used by the Enchanter's Trial (and any
+    /// future game that uses bucket penalties) to add time-pressure mistakes to the session
+    /// before calling `GameSession.complete()`.
+    ///
+    /// ## Spec Reference
+    /// > "Bucket size: 10 seconds. Each full 10s bucket beyond the first adds +1 mistake.
+    /// > Example: 0–10s → +0; 10–20s → +1; 20–30s → +2."
+    ///
+    /// - Parameters:
+    ///   - timeSeconds: Elapsed time at completion.
+    ///   - bucketSize: Size of each bucket in seconds. Defaults to 10.
+    /// - Returns: Number of bucket-penalty mistakes to record (≥ 0).
+    public static func bucketMistakes(timeSeconds: Double, bucketSize: Double = 10) -> Int {
+        guard timeSeconds > 0, bucketSize > 0 else { return 0 }
+        // ceil(t / bucketSize) gives the number of buckets touched.
+        // Subtract 1 for the free first bucket.
+        return max(0, Int(ceil(timeSeconds / bucketSize)) - 1)
+    }
 }
 
 // MARK: - Per-Game Presets
 
 public extension RankThresholds {
 
-    /// Thresholds for Find & Focus (Game 1 — Simon Says).
+    /// Thresholds for Find & Focus — The Enchanter's Trial (Game 1).
     ///
-    /// Perfect: ≤15s, 0 mistakes. Timeout: 45s.
+    /// Per `GameSpec-FindAndFocus.txt` and `GameRules-MVP.txt`:
+    /// - Legendary (Perfect): 0 mistakes, ≤10s
+    /// - Skilled   (Good):    ≤1 mistake, ≤20s
+    /// - Novice    (Ok):      completed,  ≤45s (matches L3 timeout ceiling)
+    /// - Defeated  (Failed):  timed out OR ≥5 mistakes (okMaxMistakes = 4 captures the boundary)
     static let findAndFocus = RankThresholds(
         timeoutSeconds:     45,
-        perfectMaxTime:     15, perfectMaxMistakes: 0,
-        goodMaxTime:        25, goodMaxMistakes:    1,
-        okMaxTime:          45, okMaxMistakes:      2
+        perfectMaxTime:     10, perfectMaxMistakes: 0,
+        goodMaxTime:        20, goodMaxMistakes:    1,
+        okMaxTime:          45, okMaxMistakes:      4
     )
 
-    /// Thresholds for Activate (Game 2 — Bomb Defusal).
+    /// Thresholds for Activate — The Rogue's Gauntlet (Game 2).
     ///
-    /// Perfect: ≤20s, 0 mistakes. Timeout: 60s.
+    /// Per `GameSpec-ActivateDoubleTap.txt` and `GameRules-MVP.txt`:
+    /// - Legendary (Perfect): 0 mistakes, ≤8s
+    /// - Skilled   (Good):    ≤1 mistake, ≤16s
+    /// - Novice    (Ok):      completed,  ≤40s
+    /// - Defeated  (Failed):  timed out OR ≥5 mistakes
     static let activateDoubleTap = RankThresholds(
-        timeoutSeconds:     60,
-        perfectMaxTime:     20, perfectMaxMistakes: 0,
-        goodMaxTime:        35, goodMaxMistakes:    1,
-        okMaxTime:          60, okMaxMistakes:      2
+        timeoutSeconds:     40,
+        perfectMaxTime:      8, perfectMaxMistakes: 0,
+        goodMaxTime:        16, goodMaxMistakes:    1,
+        okMaxTime:          40, okMaxMistakes:      4
     )
 
-    /// Thresholds for Scroll Hunt (Game 3 — Dungeon Crawl).
+    /// Thresholds for Scroll Hunt — Crystal Resonance (Game 3).
     ///
-    /// Perfect: ≤15s, 0 mistakes. Timeout: 60s.
+    /// Per `GameSpec-ScrollHunt.txt` and `GameRules-MVP.txt`:
+    /// - Legendary (Perfect): 0 mistakes, ≤15s
+    /// - Skilled   (Good):    ≤1 mistake, ≤30s
+    /// - Novice    (Ok):      completed,  ≤60s
+    /// - Defeated  (Failed):  timed out OR ≥6 mistakes
     static let scrollHunt = RankThresholds(
         timeoutSeconds:     60,
         perfectMaxTime:     15, perfectMaxMistakes: 0,
         goodMaxTime:        30, goodMaxMistakes:    1,
-        okMaxTime:          60, okMaxMistakes:      2
+        okMaxTime:          60, okMaxMistakes:      5
     )
 }

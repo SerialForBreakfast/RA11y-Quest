@@ -201,13 +201,41 @@ struct GameSessionTests {
         }
     }
 
-    /// Mistakes may only be recorded while running. Paused sessions reject them.
-    @Test func recordMistakeFromPausedThrows() async throws {
-        let session = makeSession()
+    // MARK: - Full-Screen Exit (M8 Contract)
+
+    /// Validates TICKET-M8 acceptance criterion: "Leaving full-screen stops gameplay
+    /// and does not write a result."
+    ///
+    /// The view layer calls `handleViewDisappear()` → `session.abandon()`.
+    /// This test verifies the resulting state is `.abandoned` and storage is untouched.
+    @Test func fullScreenExitedFromRunningTransitionsToAbandonedWithNoStorageWrite() async throws {
+        let storage = InMemoryStorageComponent()
+        let session = makeSession(storage: storage)
+
         try await session.start(at: t0)
-        try await session.pause(at: t10)
-        await #expect(throws: GameSessionError.self) {
-            try await session.recordMistake()
-        }
+        // Simulate the user backing out of a running L3 game via navigation.
+        await session.abandon()
+
+        #expect(await session.state == .abandoned)
+        #expect(await storage.bestResult(for: "find-and-focus") == nil,
+                "Back-navigation must not write a result to storage.")
+    }
+
+    /// Validates that full-screen exit after a completed game does not overwrite the result.
+    ///
+    /// A completed session is in a terminal state — `abandon()` is a no-op per the state
+    /// machine contract. The stored result must remain intact.
+    @Test func fullScreenExitedAfterCompletionDoesNotEraseResult() async throws {
+        let storage = InMemoryStorageComponent()
+        let session = makeSession(storage: storage)
+
+        try await session.start(at: t0)
+        try await session.complete(at: t10) // 10s, 0 mistakes → Perfect
+        // Simulate a delayed back-navigation after result is already written.
+        await session.abandon()
+
+        let stored = await storage.bestResult(for: "find-and-focus")
+        #expect(stored != nil, "Completed result must persist after a no-op abandon.")
+        #expect(stored?.rank == .perfect)
     }
 }

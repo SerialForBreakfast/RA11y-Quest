@@ -1,7 +1,7 @@
 RA11y - Accessibility Training Gamification
 Phase 2 - Roadmap and MVP Slices
 
-Date: 2026-02-20
+Date: 2026-02-20 (updated 2026-04-19 — milestone statuses and quest names revised)
 Owner: Product (Requirements)
 
 Purpose
@@ -81,47 +81,48 @@ Exit Criteria:
 - Hub is fully functional and stable; no dead ends.
 - Rank updates immediately after completing a game.
 
-M4 - Basics Sequence (First Run) v1
+M4 - Basics Sequence (First Run) v1                              [DONE]
 ----------------------------------
 Goal: First-run guided entry without sacrificing sandbox.
 Includes:
 - First-launch screen: "Start Basics" vs "Go to Hub".
-- Basics flow runs: Focus -> Activate -> Scroll.
+- Basics flow runs through available quests in order.
 - Basics completed flag stored locally.
 Exit Criteria:
 - First-run logic works; returning users land on hub.
 - Basics is still accessible from hub.
 
-M5 - MVP Game 1: Find & Focus (SwiftUI)
+M5 - The Enchanter's Trial (SwiftUI)                             [DONE]
 --------------------------------------
 Goal: Teach focus navigation and target selection.
+Skill: Swipe to navigate focus element by element; double-tap to activate.
 Includes:
-- Simple target-finding interaction design suitable for VO.
-- Clear instructions and success feedback.
-- Result computed with rank + optional metric (time or mistakes).
+- L0 prologue, L1 untimed practice, L2 rising challenge, L3 timed trial.
+- Lights Off stage for audio/haptic-only play.
 Exit Criteria:
-- Game can be completed reliably with VoiceOver.
-- Result persists as best score.
+- Quest completable reliably with VoiceOver on.
+- Rank persists as best score.
 
-M6 - MVP Game 2: Activate (Double-Tap) (SwiftUI)
+M6 - Crystal Resonance / Dungeon Descent v2 (SwiftUI)           [IN DESIGN]
 -----------------------------------------------
-Goal: Teach focus then double-tap activation.
-Includes:
-- Interaction with decoys to prevent guessing.
-- Result computed with rank + optional metric.
+Goal: Teach three-finger scroll via resonance alignment mechanic.
+Skill: Three fingers move the page; one finger navigates within it.
+Note: Replaces the original Scroll Hunt room-list mechanic (see ADR-0003).
+      The Rogue's Gauntlet (originally M6) has been retired from the curriculum.
+Spec: ADR-0003, DesignTicket-DungeonResonancePromptSheet.txt
 Exit Criteria:
-- Correct activation required to pass; misfires penalize.
+- Player must scroll to align target with fixed orb to succeed.
+- Multimodal feedback (haptics, sound, VoiceOver) guides Lights Off stage.
 - Result persists.
 
-M7 - MVP Game 3: Scroll Hunt (SwiftUI)
+M7 - The Banishment (SwiftUI)                                    [IN DESIGN]
 -------------------------------------
-Goal: Teach 3-finger scroll to reveal targets.
-Includes:
-- Scrollable content with offscreen targets.
-- Clear cueing and success feedback.
-- Result computed with rank + optional metric.
+Goal: Teach two-finger scrub (Z-shape) to dismiss any trapped state.
+Skill: VoiceOver escape gesture — exits modals, alerts, sheets, and navigation.
+Spec: QuestConcept-Banishment.txt
 Exit Criteria:
-- Users must perform scroll gesture to reveal required target.
+- Player banishes creatures (modal presentations) using two-finger scrub.
+- Lights Off stage: creature approach communicated via haptics and audio only.
 - Result persists.
 
 M8 - MVP Polish + Release Readiness

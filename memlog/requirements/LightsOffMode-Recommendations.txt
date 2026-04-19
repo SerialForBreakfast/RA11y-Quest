@@ -1,0 +1,157 @@
+RA11y — Lights Off Mode Recommendations
+=======================================
+
+Purpose
+-------
+Lights Off Mode is an advanced accessibility-training mode where the visual UI is
+intentionally blacked out so the user must rely on native assistive technology
+rather than sight. The mode should train users to use accessibility semantics such
+as labels, values, hints, focus movement, announcements, and actions.
+
+Core recommendation
+--------------------
+The mode should not allow success through memorized positional order alone.
+
+A player who can win by remembering fixed index order or stable screen positions is
+no longer meaningfully relying on accessibility tools. To prevent that, the
+content identity and placement should vary enough that the user must inspect and
+understand elements through assistive technology.
+
+At the same time, the accessibility system itself must remain trustworthy during
+a single run.
+
+This creates an important distinction:
+  - Stable accessibility behavior within a run
+  - Non-predictable content and placement across runs
+
+Both are necessary.
+
+Best practices
+--------------
+
+1) Preserve reliable accessibility traversal within a single attempt
+
+Within any given run, accessibility navigation should remain logical,
+deterministic, and easy to learn in the moment.
+
+Recommendations:
+  - Keep focus traversal stable within the current attempt.
+  - Avoid unexpected focus jumps.
+  - Avoid duplicate or hidden accessible elements.
+  - Preserve clear grouping and reading order.
+  - Ensure activation behavior is consistent and predictable.
+  - Ensure announcements match the current state.
+
+This prevents the user from feeling that VoiceOver itself is unreliable.
+
+2) Randomize enough to prevent memorization across attempts
+
+Across repeated runs, the player should not be able to win by remembering fixed
+spatial or indexed ordering.
+
+Recommendations:
+  - Randomize target placement between attempts.
+  - Shuffle answer order where applicable.
+  - Vary distractor placement.
+  - Rotate which item is correct.
+  - Reuse known patterns carefully, but not in a fixed order.
+  - Prevent a repeated "always the third item" or "always top-left" solution path.
+
+The player should need to identify the correct target through accessibility
+semantics, not through rote memory.
+
+3) Randomize position, not meaning
+
+Randomization should increase dependence on accessibility tools without making the
+experience confusing.
+
+Recommendations:
+  - Keep control meaning consistent.
+  - Keep interaction patterns consistent.
+  - Keep vocabulary and labels concise and distinct.
+  - Randomize item placement or target selection, not the basic rules of interaction.
+  - Do not change the underlying meaning of common controls from run to run.
+
+Users should build transferable accessibility skill, not just adapt to arbitrary chaos.
+
+4) Make semantic inspection the winning strategy
+
+The user should need to listen to labels, values, hints, and state changes in order
+to succeed.
+
+Recommendations:
+  - Ensure each actionable element has a clear, distinguishable label.
+  - Use accessibility values to communicate changing state.
+  - Use hints only when they add real meaning.
+  - Use announcements for important transitions or outcomes.
+  - Make the correct target identifiable through semantics, not visual memory.
+
+A good test is: The player should not know what is correct until they inspect or hear it.
+
+5) Do not confuse broken focus with difficulty
+
+Difficulty should come from using accessibility tools correctly, not from poor
+accessibility behavior.
+
+Avoid:
+  - unpredictable traversal caused by implementation bugs
+  - missing elements in the accessibility tree
+  - inaccessible blackout overlays
+  - stale or misleading announcements
+  - focus loss after state updates
+  - ordering that changes mid-run without explanation
+
+These are defects, not meaningful challenge.
+
+Recommended design rule
+-----------------------
+Use this as the primary implementation guideline:
+
+Lights Off Mode should prevent success through memorized visual or positional order
+alone. Content order, target placement, and distractors should vary between
+attempts or levels where appropriate. However, within a given attempt,
+accessibility focus traversal, grouping, and activation behavior must remain
+logical, reliable, and semantically consistent.
+
+Practical implementation guidance
+----------------------------------
+
+Content behavior
+  - Randomize the placement of targets and distractors between attempts.
+  - Avoid repeating the same indexed solution path.
+  - Ensure reused content still requires semantic inspection.
+  - Keep enough variation that memory alone is insufficient.
+
+Accessibility behavior
+  - Maintain a deterministic reading order for the current run.
+  - Ensure every interactive element is reachable.
+  - Keep spoken labels short, specific, and unique.
+  - Ensure state changes are reflected semantically.
+  - Do not let blackout presentation interfere with focus.
+
+Learning behavior
+  - Reward accurate semantic navigation.
+  - Build repeatable skill in hearing, exploring, and activating elements.
+  - Avoid over-randomization that prevents users from learning the interface model.
+  - Keep the navigation model familiar even when the content arrangement changes.
+
+Acceptance criteria
+-------------------
+Lights Off Mode recommendations are satisfied when:
+  - the user cannot reliably win through memorized positional order alone
+  - repeated runs require semantic inspection rather than index memory
+  - focus order remains clear and stable during each attempt
+  - the accessibility tree remains complete and trustworthy
+  - blackout presentation does not interfere with assistive technology
+  - difficulty comes from accessibility interaction, not implementation defects
+
+Summary
+-------
+The correct balance is not "fixed order" versus "random chaos."
+
+The correct balance is:
+  - reliable accessibility behavior during the current run
+  - enough variation across runs to prevent memorized positional play
+
+That approach keeps the training honest while still making the accessibility tools
+feel dependable.

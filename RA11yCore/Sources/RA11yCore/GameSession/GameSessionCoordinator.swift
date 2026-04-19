@@ -54,6 +54,11 @@ public final class GameSessionCoordinator {
     private let voiceOverProvider: any VoiceOverStateProvider
 
     /// Task that observes VoiceOver state changes during an active session.
+    ///
+    /// Plain stored property — no isolation modifier required. The monitoring closure
+    /// captures `[weak self]` and re-checks `self` inside the `for await` loop so the
+    /// running Task does not retain the coordinator. `stopMonitoring()` provides eager
+    /// cancellation when the session completes normally.
     private var monitorTask: Task<Void, Never>?
 
     // MARK: - Init
@@ -76,40 +81,38 @@ public final class GameSessionCoordinator {
         self.voiceOverProvider = voiceOverProvider
     }
 
-    deinit {
-        Task { @MainActor [weak self] in
-            self?.monitorTask?.cancel()
-            self?.monitorTask = nil
-        }
-    }
-
     // MARK: - Monitoring Lifecycle
 
     /// Begins monitoring VoiceOver state changes for the active session.
     ///
-    /// Call this when gameplay starts (e.g., in a SwiftUI `.task` modifier).
-    /// The monitor is one-shot: once VoiceOver goes off mid-session, the task
+    /// Call this when gameplay starts (e.g., directly after `session.start()`).
+    /// The monitor is one-shot: once VoiceOver goes off mid-session the task
     /// abandons the session and exits. If the session completes normally,
-    /// `stopMonitoring()` or `deinit` cleans up the task.
+    /// `stopMonitoring()` cleans up the task.
+    ///
+    /// The closure captures `[weak self]` and re-evaluates `self` on each loop
+    /// iteration to avoid retaining the coordinator for the lifetime of the task.
+    /// `voiceOverProvider` is captured strongly by value so the sequence remains
+    /// live even if the coordinator is released between iterations.
     ///
     /// Idempotent — calling when already monitoring replaces the previous task.
     public func startMonitoring() {
         monitorTask?.cancel()
 
-        monitorTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            for await isRunning in voiceOverProvider.stateChanges {
-                guard !Task.isCancelled else { break }  // stopMonitoring() was called
+        monitorTask = Task { @MainActor [weak self, provider = voiceOverProvider] in
+            for await isRunning in provider.stateChanges {
+                // Re-acquire self and check cancellation on every event.
+                // If the coordinator was released or stopMonitoring() was called, exit.
+                guard let self, !Task.isCancelled else { return }
                 guard !isRunning else { continue }  // VO still on — keep watching
 
-                let currentState = await session.state
+                let currentState = await self.session.state
                 guard currentState == .running || currentState == .paused else {
                     break  // session already in a terminal state — nothing to do
                 }
 
-                await session.abandon()
-                voiceOverDisabledMidGame = true
+                await self.session.abandon()
+                self.voiceOverDisabledMidGame = true
                 RA11yLogger.voiceOver.info("VoiceOver disabled mid-session for \(self.gameKind.rawValue); session abandoned.")
                 break  // one-shot: exit after handling the event
             }

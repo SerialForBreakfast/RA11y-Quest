@@ -142,12 +142,25 @@ actor TestStorageComponent: StorageComponent {
         nil
     }
 
+    /// Returns no stored results; routing tests do not persist game progress.
+    func bestResults(for gameIDs: [String]) async -> [String : GameResult] {
+        [:]
+    }
+
     /// No-op; routing tests do not save results.
     func saveResultIfBetter(_ result: GameResult) async { }
 
     /// Returns whether basics has been completed.
     func isBasicsCompleted() async -> Bool {
         basicsCompleted
+    }
+
+    /// Returns both Basics flags in one read for route-resolution tests.
+    func basicsProgressSnapshot() async -> BasicsProgressSnapshot {
+        BasicsProgressSnapshot(
+            isCompleted: basicsCompleted,
+            isDismissed: basicsDismissed
+        )
     }
 
     /// Marks basics as completed.

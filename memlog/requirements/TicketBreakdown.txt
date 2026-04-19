@@ -1,3 +1,8 @@
+NOTE (2026-04-19): The M6 Rogue's Gauntlet tickets in this breakdown are
+RETIRED. The Rogue's Gauntlet has been removed from the curriculum. M6 is
+now Crystal Resonance (Dungeon Descent v2) per ADR-0003. M7 is The Banishment.
+Current milestone status: M0–M5 Done. M6–M7 In Design. M8 Pending.
+
 RA11y - MVP Ticket Breakdown
 Date: 2026-02-20
 
@@ -773,11 +778,6 @@ Acceptance Criteria
 - Subsequent launches go directly to Hub.
 - Basics is accessible from Hub at any time.
 
-Optional Polish
----------------
-- Replace the Basics placeholder screen with the L0 lesson card treatment (mock_v3_lesson_card_l0.png).
-- Use per-game L0 copy and styling once M5–M7 screens land.
-
 Useful Unit Test
 ----------------
 - When basicsCompleted is true in storage, the initial routing decision resolves to Hub,
@@ -786,7 +786,6 @@ Useful Unit Test
 Dependencies
 ------------
 - M0, M1 Storage, M3 Hub
-- Optional polish depends on M5–M7 L0 screens and design assets
 
 
 ================================================================================
@@ -799,9 +798,9 @@ TICKET-M5-Game-EnchantersTrial-FindAndFocus
 ===============================
 Ticket: M5 - Game 1 (The Enchanter's Trial) - Find & Focus
 [RENAMED from M5-Game-SimonSays-FindAndFocus to align with GameRules-MVP.txt theme]
-Status: Partially Unblocked — screen composition mockup delivered (mock_v3_enchanter_trial_play.png);
-        sprite assets (enchanter_relic_*) and background (enchanter_tower_shelf_bg) still needed
-        before full implementation. UI structure and layout are unblocked.
+Status: Done — implemented in iOSEnchantersTrialView.swift with full L0-L3 flow,
+        EnchanterTrialViewModel, timer announcements, and GameSession for L3. All assets
+        were present at implementation time. 106 RA11yCore tests pass.
 
 User Story
 ----------
@@ -883,10 +882,9 @@ TICKET-M6-Game-RoguesGauntlet-Activate
 ===============================
 Ticket: M6 - Game 2 (The Rogue's Gauntlet) - Activate / Double-Tap
 [RENAMED and REVISED from M6-Game-BombDefusal-Activate to align with GameRules-MVP.txt theme]
-Status: Partially Unblocked — screen composition mockup delivered (mock_v3_rogue_gauntlet_play_v2.png);
-        rune seal sprites (rogue_seal_*) and background (rogue_trap_door_bg) still needed before
-        full implementation. Note: game re-themed from bomb-wire to stone-door-with-rune-seals per
-        current GameSpec. Existing bomb_* assets are deprecated. UI structure is unblocked.
+Status: Done — implemented in iOSRogueGauntletView.swift; all 106 RA11yCore tests pass;
+        build verified for iOS Simulator. Game ID: rogue-gauntlet.
+        Game ID corrected to "rogue-gauntlet" (was stale "bomb_defusal_wires").
 
 User Story
 ----------
@@ -903,11 +901,13 @@ Theme / Narrative
 -----------------
 - The Trap Room. Magical seals on a locked door. One seal unlocks the door; others spring traps.
 - "Touch to sense. Double-tap to sever."
-- See GameSpec-ActivateDoubleTap.txt for full narrative and seal pool.
+- See GameSpec-ActivateDoubleTap.txt for full narrative, seal pool, and localization key list.
 
 Requirements
 ------------
-- SwiftUI-first implementation.
+- SwiftUI-first implementation. MVVM with @Observable RogueGauntletViewModel.
+- File: iOSRogueGauntletView.swift (iOS-prefix required per platform naming convention).
+- Game ID: "rogue-gauntlet"
 - 4-level structure (L0 Prologue, L1 First Attempt, L2 Rising Challenge, L3 Timed Trial).
 
   L0 — Prologue:
@@ -915,56 +915,143 @@ Requirements
   - VoiceOver Lesson Card with heading "The Rogue's Creed" and explicit explanation:
     "Tapping once reads the element — it does not activate it. Double-tap to activate."
     Contrast clearly: "This is different from normal iOS."
-  - Gesture reference: one tap (examine/focus only), double-tap (sever/activate).
-  - "Begin Trial" button.
+  - Three gesture rows: one tap (examine), double-tap (sever), wrong seal (springs trap).
+  - "Begin Trial" button (accessibilityHint: "Begins your first attempt. No timer.").
+  - No timer starts here.
 
   L1 — First Attempt (confidence builder):
-  - 1 seal only (Seal of Passage). No trap seals.
-  - Purpose: isolate the double-tap mechanic with no ambiguity about which seal to pick.
-  - "Touch it to hear it speak. Double-tap to sever it."
+  - LAYOUT: Single large centered seal. No list or grid — one element only.
+  - Seal is always "Seal of Passage" (never randomized for L1).
+  - Purpose: isolate the double-tap mechanic with zero ambiguity.
+  - Instructional text above seal: "Touch to hear it speak. Double-tap to sever it."
+  - Objective card with accessibilityLabel (rogue.a11y.l1.objective) announced on level load
+    (~500ms delay via UIAccessibility.post). See "Announce Objective on Level Load" below.
+  - No mistake HUD (no mistakes possible).
+  - No hint button (no decoys to be confused about).
+  - No timer.
+  - After correct activation: post rogue.l1.complete announcement → "Continue" button → L2.
 
   L2 — Rising Challenge:
-  - 4 seals: 1 passage seal + 3 trap seals with distinct descriptive names.
-  - Wrong activation = trap springs = misstep.
-  - Soft timer: 40s. VoiceOver announces at 50% and 25% elapsed.
+  - LAYOUT: 2×2 LazyVGrid (4 seals). VoiceOver reads row-major (left→right, top→bottom).
+  - 1 passage seal (random from pool) + 3 trap seals (random from trap pool).
+  - Passage seal selection rule: random from {Seal of Passage, Warding Seal, Binding Seal}.
+  - Wrong activation = trap springs = misstep (+1). Feedback: rogue.feedback.trap announced.
+  - Soft timer: 40s. Timer HUD visible. Mistake HUD visible.
+  - VoiceOver timer announcements at 50% and 25% elapsed (rogue.a11y.timer.*).
+  - Hint button available (no scoring penalty). Hint announces rogue.hint.format with seal name.
+  - Objective card announced on level load (~500ms delay).
+  - On timeout: session ends (no GameSession for L2); timeout banner + retry button.
+  - On success: post rogue.l2.complete → "Continue" → L3.
 
   L3 — Timed Trial:
-  - 6 seals: 1 passage seal + 5 trap seals.
-  - Hard timer: 20s. VoiceOver threshold announcements: 75%, 50%, 25%, 10s, 5s countdown.
-  - Thematic timeout: "The trap room sealed. You were caught."
-  - Thematic success: "Seal severed. The door opens just in time."
+  - LAYOUT: 2×3 LazyVGrid (6 seals). VoiceOver reads row-major (left→right, top→bottom).
+  - 1 passage seal (random from pool) + 5 trap seals (all 6 trap seals eligible).
+  - GameSession created for L3 ONLY (like M5). await session.start() BEFORE timer starts.
+  - Hard timer: 20s. Timer HUD visible. Mistake HUD visible.
+  - VoiceOver timer announcements: 75%, 50%, 25%, 10s, 5-4-3-2-1 countdown.
+  - Hint button available (no scoring penalty).
+  - Objective card announced on level load (~500ms delay).
+  - Thematic timeout: "The trap room sealed. You were caught." → retry button.
+  - Thematic success: "Seal severed. The door opens just in time." → GameResultScreen.
+  - GameSessionCoordinator monitors VO state; VO disabled mid-L3 → abandon session.
+  - On retry: fresh GameSession, new seal randomization, timer resets.
 
-- Seal names: see GameSpec-ActivateDoubleTap.txt for full seal pool (passage + trap seals).
-- Prompt format: "Sever the seal: {sealName}" (not "Disarm: cut the <wire>").
-- Elements are "seals" (not wires). Distinct descriptive labels; no color-only differentiation.
-- Session managed via GameSessionLifecycle (start, mistake, complete/abandon).
-- Mistakes: wrong seal activation (+1), time-based mistake buckets (bucket: 8s).
-- Optional hint: "The Enchanter reminds you: double-tap to sever." No scoring penalty.
-- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
-  Game-specific copy: "Flawless. No trap touched you." (Legendary), etc.
+Announce Objective on Level Load
+---------------------------------
+Each level view (L1, L2, L3) announces its objective via VoiceOver when it appears.
+Implementation mirrors M5 (Enchanter's Trial) announceTargetPrompt() pattern:
+  - Post UIAccessibility.post(notification: .announcement, argument: message)
+  - Add a Task { try? await Task.sleep(for: .milliseconds(500)) } delay
+  - Called from .onAppear on the level-specific subview
+  - Message: full a11y objective string with seal name substituted
+
+Seal Pool and Selection
+------------------------
+- See GameSpec-ActivateDoubleTap.txt for full pool and selection rules.
+- L1: always Seal of Passage. Never randomized.
+- L2: 1 random passage seal + 3 random trap seals.
+- L3: 1 random passage seal + 5 random trap seals.
+- UI Testing determinism: when -uiTesting arg present, use fixed selection (Seal of Passage,
+  first N traps alphabetically) for repeatability.
+
+Seal Layout
+------------
+All levels with multiple seals use a VERTICAL LIST (VStack), not a grid.
+Rationale: guarantees linear VoiceOver swipe-right navigation order.
+
+Scoring and Session
+--------------------
+- GameSession scope: L3 only. L1/L2 use local mistake counters.
+- Mistakes: wrong seal activation (+1), time-bucket penalty (bucket: 8s) applied at L3 completion.
+- Bucket formula: max(0, ceil(timeSeconds / 8.0) - 1)
+- Rank thresholds: Legendary ≤8s & 0 mistakes; Good ≤16s & ≤1 mistake; Ok ≤40s; Defeated otherwise.
 - Persist best result via StorageComponent.
-- GameSessionCoordinator monitors VoiceOver state; VO disabled mid-session → abandon.
+- On completion: route to SharedGameResultScreen with computed rank + game-specific result copy.
+
+Optional Hint
+--------------
+- Hint button: rogue.hint.button ("Ask the DM"). No scoring penalty.
+- Hint announcement via VoiceOver: rogue.hint.format with seal name (e.g., "The DM whispers:
+  the correct seal is Warding Seal. Double-tap to sever it.").
+- Distinct from Enchanter's Trail: character is the DM, not "The Enchanter."
+
+Retry Button Behavior
+----------------------
+- L1: No retry (no mistakes possible). Only "Continue" after success.
+- L2: Retry shown on timeout only. Success shows "Continue."
+- L3: Retry shown on timeout. Success routes to results (no in-place retry).
+
+Localization
+-------------
+All keys are defined in GameRules-MVP.txt. New keys added (2026-03-07):
+  rogue.l1.objective.format, rogue.a11y.l1.objective, rogue.a11y.l1.objective.hint
+  rogue.l2.objective.format, rogue.a11y.l2.objective, rogue.a11y.l2.objective.hint
+  rogue.l3.objective.format, rogue.a11y.l3.objective
+  rogue.a11y.l2.timer
+  rogue.a11y.timer.50pct, rogue.a11y.timer.25pct (for L2)
+  rogue.hud.mistakes.format, rogue.a11y.hud.l2, rogue.a11y.hud.l3
+  rogue.hint.button, rogue.hint.a11yLabel, rogue.hint.a11yHint, rogue.hint.format
+All strings must be added to Localizable.xcstrings before or during implementation.
 
 Acceptance Criteria
 -------------------
-- L0 lesson card explicitly teaches the touch ≠ activate paradigm.
-- L1 has exactly one seal; no wrong activation possible.
-- With VoiceOver ON, all levels are completable.
-- Trap seal activation increments mistakes; passage seal activation succeeds.
-- Timeout transitions to abandoned; no result written.
-- Timer announces at all required thresholds.
+- L0 lesson card explicitly teaches the touch ≠ activate paradigm with three gesture rows.
+- L1 displays exactly one seal (Seal of Passage), centered, with no mistake HUD or hint button.
+- L1 cannot produce a mistake — only one interactive element exists.
+- Objective card is announced via VoiceOver on level load for L1, L2, and L3 (~500ms delay).
+- With VoiceOver ON, all levels are completable by swiping to the correct seal and double-tapping.
+- Trap seal activation announces rogue.feedback.trap and increments mistake count.
+- Passage seal activation announces rogue.feedback.correct and advances/completes the level.
+- Soft timer (L2) announces at 50% and 25% elapsed; no announcement at 75% for L2.
+- Hard timer (L3) announces at 75%, 50%, 25%, 10s, and 5-4-3-2-1 countdown.
+- Timeout (L2/L3) transitions to abandoned state; no result written; retry button shown.
+- Timer announces at all required thresholds; timer HUD is a single accessibility element.
+- GameSession is created for L3 only; session.start() is awaited before timer begins.
 - Result persists; best score updates correctly.
+- Hint button available in L2 and L3; no scoring penalty; announces rogue.hint.format.
+- VoiceOver disabled mid-L3 → coordinator triggers session abandon → route to interstitial.
+- All multi-seal levels use a 2-column LazyVGrid; VoiceOver reading order is row-major and deterministic.
 
-Useful Unit Test
-----------------
-- Given (timeSeconds: 7, mistakes: 0), rank evaluates to Legendary for this game's thresholds.
+Useful Unit Tests
+-----------------
+- Given (timeSeconds: 7, mistakes: 0), rank evaluates to Legendary.
+- Given (timeSeconds: 15, mistakes: 1), rank evaluates to Good (Skilled).
+- Given (timeSeconds: 16, mistakes: 0), rank evaluates to Good (boundary).
+- Given (timeSeconds: 17, mistakes: 1), rank evaluates to Novice.
+- Given (timeSeconds: 40, mistakes: 0), rank evaluates to Novice (at boundary).
+- bucketMistakes(timeSeconds: 8, bucketSize: 8) returns 0 (exactly one bucket, free).
+- bucketMistakes(timeSeconds: 9, bucketSize: 8) returns 1 (second bucket entered).
+- sealSetForL2() always contains exactly 1 passage seal and 3 trap seals (no overlap).
+- sealSetForL3() always contains exactly 1 passage seal and 5 trap seals (no overlap).
+- L1 seal is always Seal of Passage.
 - Given two results with equal rank, the result with fewer mistakes is selected as best.
 
 Dependencies
 ------------
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
-- Can be built in parallel with M5 once shared infrastructure (M0/M1/M2) is complete.
-- Design track: rogue seal assets must land before this ticket opens.
+- M5 (Enchanter's Trial) complete — patterns (announceTargetPrompt, session scope, timer task,
+  coordinator monitoring) are established and should be followed here.
+- All rogue assets (rogue_seal_*, rogue_trap_door_bg, rogue_hub_icon) confirmed in Assets.xcassets.
 
 
 ===============================
@@ -1025,9 +1112,10 @@ TICKET-M7-Game-DungeonDescent-ScrollHunt
 ===============================
 Ticket: M7 - Game 3 (The Dungeon Descent) - Scroll Hunt
 [RENAMED from M7-Game-DungeonCrawl-ScrollHunt to align with GameRules-MVP.txt theme]
-Status: Partially Unblocked — screen composition mockup delivered (mock_v3_dungeon_descent_play.png);
-        dungeon room icons (dungeon_room_*) and background (dungeon_descent_bg) still needed before
-        full implementation. UI structure, ScrollView layout, and depth HUD are unblocked.
+Status: Done — full L0-L3 implementation in iOSDungeonDescentView.swift using
+        DungeonDescentViewModel (@Observable @MainActor). L3 uses GameSession (scroll-hunt,
+        15 s buckets). Scroll observability via onScrollGeometryChange + TargetRoomFrameKey
+        preference key. 106 RA11yCore tests pass; BUILD SUCCEEDED for iOS Simulator.
 
 User Story
 ----------
@@ -1092,9 +1180,9 @@ Requirements
 
 Acceptance Criteria
 -------------------
-- FIRST: Verify on device that `onScrollGeometryChange` fires correctly when
-  VoiceOver performs a 3-finger scroll (S1 spike's one remaining open question).
-  If this fails, pause and re-evaluate the scroll detection approach before proceeding.
+- FIRST (Execution Gate): Verify on device that `onScrollGeometryChange` fires correctly when
+  VoiceOver performs a 3-finger scroll and that `targetIsReachable` flips to true only when
+  the target row enters the visible region. If this fails, pause M7 and re-evaluate scroll detection.
 - L0 practice scroll area is present and usable before L1 begins.
 - L0 lesson card explicitly teaches the 3-finger scroll paradigm.
 - User must scroll to reach the target; target is not activatable until reachable.
@@ -1111,9 +1199,376 @@ Useful Unit Test
 
 Dependencies
 ------------
-- S1 Spike (must be closed before this ticket opens)
+- S1 Spike (closed)
 - M0, M1 (Scoring Model, Storage, GameSessionLifecycle, SharedGameResultScreen), M2 VO gating
-- Design track: dungeon room assets must land before this ticket opens.
+- Design track: dungeon assets delivered in asset catalog; no blocking dependency remains.
+
+
+===============================
+FOLLOW-ON: Dungeon Descent v2 Redesign [NEW]
+===============================
+Purpose
+-------
+These tickets convert the proposed resonance-based Dungeon redesign into implementable work
+without rewriting history for the shipped M7 room-list version above.
+
+Source-of-truth inputs
+----------------------
+- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+- Design/DesignTicket-DungeonResonancePromptSheet.txt
+- GameSpec-ScrollHunt.txt (current shipped spec; must be explicitly superseded or partially replaced)
+
+
+===============================
+TICKET-M7V2-Dungeon-SpecMigration [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Spec Migration + Acceptance Model
+Status: Ready
+
+User Story
+----------
+As a designer and developer
+I want the Dungeon resonance redesign converted into implementation-facing requirements
+So that the repository has one clear plan for VoiceOver behavior, wrong-target behavior,
+level progression, and legacy-spec supersession.
+
+Requirements
+------------
+- Update Dungeon requirements to define the resonance mechanic as the preferred future direction.
+- Explicitly state how the new design relates to the existing room-list Scroll Hunt implementation:
+  - full replacement, or
+  - phased replacement (for example, L0-L1 first).
+- Define the accessibility model:
+  - which elements remain in the accessibility tree,
+  - which lane objects are decorative,
+  - how VoiceOver focus remains stable while scroll moves the lane.
+- Define wrong-target behavior:
+  - mistake rules,
+  - feedback rules,
+  - cooldown constraints.
+- Define level-progression levers for L0, L1, L2, and L3 / Lights Off.
+- Define what feedback is code-driven vs asset-driven:
+  - orb states,
+  - reticle,
+  - spotlight treatment,
+  - success flare.
+
+Acceptance Criteria
+-------------------
+- Dungeon requirements explicitly reference the resonance model and no longer leave the legacy
+  room-list interaction as the only detailed source of truth for future work.
+- Accessibility model and wrong-target behavior are specified in writing.
+- There is an explicit decision note describing how the current shipped M7 flow transitions to v2.
+
+Useful Unit Test
+----------------
+- No unit test required; verified by requirements review and source-of-truth alignment across
+  ADR, GameSpec, and TicketBreakdown.
+
+Dependencies
+------------
+- ADR-0003
+
+
+===============================
+TICKET-M7V2-Dungeon-AssetRegistry [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Asset Registry + Generation Pipeline
+Status: Ready
+
+User Story
+----------
+As a developer and designer
+I want a final asset registry for Dungeon v2 with stable filenames and generation ownership
+So that art can be generated one asset at a time and ingested without churn.
+
+Requirements
+------------
+- Convert the resonance prompt sheet into a final app-facing asset registry.
+- Mark each asset as one of:
+  - generated art,
+  - code-drawn effect,
+  - optional future asset.
+- Lock stable asset names for all adopted art.
+- Preserve the rule that each asset is generated independently.
+- Transparent-background rules must remain explicit for glyphs and focal objects.
+- Define ingest QA rules:
+  - no fringe / halo,
+  - centered subject,
+  - no multi-object sheets,
+  - safe padding for SwiftUI composition.
+- If any existing Dungeon assets are reused, note reuse explicitly rather than silently replacing names.
+
+Acceptance Criteria
+-------------------
+- A single authoritative registry exists for Dungeon v2 asset keys.
+- Every required asset maps to either a generation prompt or a code-drawn implementation note.
+- The registry is consistent with the resonance prompt sheet and does not require grouped generation.
+
+Useful Unit Test
+----------------
+- Process test: every asset key in the final registry has an implementation source
+  (generated file, reused file, or code-drawn effect).
+
+Dependencies
+------------
+- ADR-0003
+- DesignTicket-DungeonResonancePromptSheet.txt
+
+
+===============================
+TICKET-M7V2-Dungeon-PrototypeCoreLoop [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Core Loop Prototype
+Status: Blocked
+
+User Story
+----------
+As a user
+I want to scroll a moving dungeon lane under a fixed orb or reticle
+So that I can learn vertical scrolling as spatial alignment rather than list traversal.
+
+Requirements
+------------
+- Build a prototype gameplay loop with:
+  - fixed center orb / reticle,
+  - vertical lane moved by scroll,
+  - target alignment window,
+  - double-tap activation only when aligned.
+- Implement the state ladder:
+  - far,
+  - warm,
+  - near,
+  - locked,
+  - success.
+- Add initial haptic feedback:
+  - proximity cue,
+  - lock cue,
+  - error cue,
+  - success cue.
+- Add initial sound scaffolding using the resonance metaphor:
+  - rough / unstable when far,
+  - clearer / more stable when near,
+  - clean lock state when aligned.
+- Keep VoiceOver instructions sparse and rate-limited.
+- Respect Reduce Motion and avoid photosensitive or constant-alert behavior.
+
+Acceptance Criteria
+-------------------
+- A playable prototype exists that demonstrates the fixed-orb alignment loop.
+- Scroll changes the lane position and updates the alignment state deterministically.
+- Target activation is impossible outside the lock window.
+- Audio and haptics support the mechanic without overwhelming VoiceOver.
+
+Useful Unit Test
+----------------
+- Given a target position and reticle position, the alignment-state reducer returns the
+  expected band (far/warm/near/locked) at defined thresholds.
+
+Dependencies
+------------
+- TICKET-M7V2-Dungeon-SpecMigration
+- TICKET-M7V2-Dungeon-AssetRegistry
+
+
+===============================
+TICKET-M7V2-Dungeon-LightsOff-NonvisualPlay [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Lights Off + Nonvisual Guidance
+Status: Blocked
+
+User Story
+----------
+As a user training with VoiceOver
+I want the Dungeon mechanic to remain playable when the environment is visually reduced
+So that I can rely on sound, haptics, and a stable focal anchor.
+
+Requirements
+------------
+- Preserve the center orb and reticle in Lights Off mode.
+- Reduce the surrounding world to spotlight or near-black treatment.
+- Keep the same core scroll/alignment mechanic.
+- Promote sound and haptics to primary proximity guidance.
+- Ensure lane/world darkening does not remove the focal anchor.
+- Review VoiceOver behavior so the nonvisual mode remains coherent and not overly verbose.
+
+Acceptance Criteria
+-------------------
+- Lights Off prototype remains understandable with minimal environmental visibility.
+- Orb + reticle remain visible anchors.
+- The player can still locate and activate the target using haptics/sound-led guidance.
+
+Useful Unit Test
+----------------
+- Given Lights Off mode enabled, the focal-anchor visibility state remains true while
+  environmental visibility is reduced.
+
+Dependencies
+------------
+- TICKET-M7V2-Dungeon-PrototypeCoreLoop
+
+
+===============================
+TICKET-M7V2-Dungeon-ScreenshotContract [NEW]
+===============================
+Ticket: M7v2 - Dungeon Resonance Screenshot Contract + Automation Update
+Status: Blocked
+
+User Story
+----------
+As a developer
+I want screenshot automation updated for the resonance redesign
+So that repo screenshots continue documenting the real completed screens.
+
+Requirements
+------------
+- Update deterministic screenshot scene boots for Dungeon v2.
+- Define new scene IDs and accessibility anchors for:
+  - resonance tutorial / prologue,
+  - active alignment play state,
+  - result state,
+  - optional Lights Off capture if that screen becomes part of completed flow.
+- Update the screenshot route catalog, UITest capture flow, and fastlane allowlist together.
+- Ensure screenshot requirements remain aligned with the design and gameplay spec.
+
+Acceptance Criteria
+-------------------
+- Screenshot contract files reflect the new Dungeon v2 route names and anchors.
+- Fastlane captures the completed Dungeon v2 screens without relying on legacy room-list anchors.
+
+Useful Unit Test
+----------------
+- Contract validation passes with the new Dungeon v2 screenshot IDs and no stale Dungeon anchors remain.
+
+Dependencies
+------------
+- TICKET-M7V2-Dungeon-PrototypeCoreLoop
+
+
+===============================
+FOLLOW-ON: Shared Feedback System [NEW]
+===============================
+Purpose
+-------
+These tickets establish reusable audio and haptic infrastructure for multiple quests so
+feedback logic does not get reimplemented inside each game view.
+
+
+===============================
+TICKET-FX1-SharedFeedback-CoreModel [NEW]
+===============================
+Ticket: FX1 - Shared Feedback Semantics + Reducer (RA11yCore)
+Status: Ready
+
+User Story
+----------
+As a developer
+I want a shared, platform-agnostic feedback model
+So that quests can emit semantic guidance events without hardcoding iOS audio or haptics.
+
+Requirements
+------------
+- Define reusable semantic feedback concepts in `RA11yCore`, including:
+  - proximity bands,
+  - feedback intents,
+  - reducer inputs,
+  - feedback profiles.
+- The reducer must transform semantic gameplay state changes into renderable intents.
+- The model must remain quest-agnostic and reusable beyond Dungeon.
+- Add unit tests for transition behavior and default profile wiring.
+
+Acceptance Criteria
+-------------------
+- `RA11yCore` exposes feedback types that can be consumed by any platform target.
+- Reducer tests cover lock acquired, lock lost, proximity entry, wrong activation, success, and timeout.
+- No game view needs to emit concrete haptic/audio APIs directly in order to use the model.
+
+Useful Unit Test
+----------------
+- Given an alignment-band sequence `warm -> near -> locked -> near`, the reducer emits
+  the expected proximity / lock intents in order.
+
+Dependencies
+------------
+- None
+
+
+===============================
+TICKET-FX2-iOSFeedback-Renderers [NEW]
+===============================
+Ticket: FX2 - iOS Feedback Coordinator + Audio/Haptic Renderers
+Status: Ready
+
+User Story
+----------
+As an iOS developer
+I want one coordinator that maps shared feedback intents to iOS audio and haptics
+So that all quests can reuse the same rendering policy and user settings.
+
+Requirements
+------------
+- Add iOS-only feedback modules for:
+  - shared feedback settings,
+  - haptic rendering,
+  - audio rendering,
+  - coordinator / cooldown policy.
+- Support independent sound and haptics toggles.
+- Support calmer vs richer feedback policy.
+- Keep audio behavior compatible with VoiceOver coexistence.
+- Initial implementation may use placeholder audio rendering as long as the module boundary is stable.
+
+Acceptance Criteria
+-------------------
+- iOS code can process shared feedback inputs through one coordinator.
+- Haptics and audio are independently swappable behind protocols.
+- Cooldown / rate limiting prevents repeated cue spam from raw gameplay updates.
+
+Useful Unit Test
+----------------
+- No simulator test required for the initial scaffold; validated by type integration and code review.
+
+Dependencies
+------------
+- TICKET-FX1-SharedFeedback-CoreModel
+
+
+===============================
+TICKET-FX3-DungeonResonance-FeedbackIntegration [NEW]
+===============================
+Ticket: FX3 - Dungeon Resonance Integration with Shared Feedback System
+Status: In Progress
+
+User Story
+----------
+As a user
+I want the Dungeon resonance mechanic to respond consistently with sound and haptics
+So that proximity, lock, and success feel teachable and intentional.
+
+Requirements
+------------
+- Integrate the shared feedback reducer and iOS coordinator into Dungeon resonance gameplay.
+- Map Dungeon alignment bands to shared feedback inputs.
+- Use the Dungeon resonance profile for cue selection.
+- Respect global feedback settings and VoiceOver coexistence rules.
+- First integration pass may target the resonance mockup / prototype path before the final routed
+  gameplay screen exists.
+
+Acceptance Criteria
+-------------------
+- Dungeon resonance gameplay emits semantic feedback through the shared feedback system.
+- Direct calls to UIKit haptic generators or ad hoc audio playback are not required from the gameplay view.
+- The same architecture remains reusable for future Enchanter and Rogue enhancements.
+- A prototype or mockup resonance screen demonstrates band-change, hint, wrong-activation, and
+  success events flowing through the shared coordinator before final route adoption.
+
+Useful Unit Test
+----------------
+- Given Dungeon alignment state changes, the integration layer forwards the expected shared feedback inputs.
+
+Dependencies
+------------
+- TICKET-FX2-iOSFeedback-Renderers
+- TICKET-M7V2-Dungeon-PrototypeCoreLoop
 
 
 ================================================================================
@@ -1125,7 +1580,7 @@ TRACK: Polish
 TICKET-M8-Accessibility-Audit-Polish
 ===============================
 Ticket: M8 - Accessibility Audit + MVP Polish
-Status: Blocked — waiting on M3, M4, M5, M6, M7
+Status: Done
 
 User Story
 ----------
@@ -1218,96 +1673,6 @@ Design Track Dependency Order
 4. DesignTicket-AssetDeliveryNaming    (requires: Asset list)
    -> Assets produced + reviewed using checklist -> delivered before M5 opens.
 
-================================================================================
-Design Track — Additional Asset Tickets (Hub Quest Board)
-================================================================================
-
-TICKET-DESIGN-HUB-001 — Hub Background (simon_room_bg)
-Status: Ready
-
-Goal
-----
-Deliver the final hub background artwork matching the Quest Board mockups.
-
-Requirements
-------------
-- Must match the lighting, palette, and painterly style of mock_v3_hub_quest_board.png.
-- Warm tavern/dungeon interior with stone, wood, lantern glow; no characters in frame.
-- Center-weighted composition with darker edges for legibility.
-- Leave visual “quiet” space behind quest cards (center vertical band).
-- 2x resolution master export (e.g., 2048×4096 or higher). Maintain portrait aspect ratio.
-- Provide PNG with transparent-safe edges (no hard borders).
-- Name: simon_room_bg
-
-Prompt (LLM / Image Gen)
-------------------------
-“A richly painted fantasy tavern/dungeon interior background, warm amber lantern light,
-stone arches and wooden beams, subtle torch glow, soft atmospheric haze, no characters.
-Center-weighted composition with a gently darker vignette at edges; keep a calm, less
-busy vertical band in the center for UI cards. Color palette: warm browns, deep umbers,
-golden highlights. Painterly semi-realistic style, high detail but soft focus in the
-background. Match the mood and style of mock_v3_hub_quest_board.png. Portrait orientation,
-no text, no logos, no UI elements.”
-
-
-TICKET-DESIGN-HUB-002 — Quest Thumbnails (Enchanter, Rogue, Dungeon)
-Status: Ready
-
-Goal
-----
-Deliver final quest thumbnail assets matching the mockups and catalog IDs.
-
-Requirements
-------------
-- Square 1:1 assets; target ~512×512 minimum.
-- Painterly semi-realistic style consistent with mock_v3_hub_quest_board.png.
-- Strong silhouette and contrast at 72×72 pt.
-- Subtle inner glow and border-ready edges; avoid harsh outer backgrounds.
-
-
-TICKET-DESIGN-FIRSTRUN-001 — First Run Entry Screen (VoiceOver Basics Intro)
-Status: Ready
-
-Goal
-----
-Deliver the visual design and background asset for the first-run entry screen
-so it matches the Hub quest board theme.
-
-Requirements
-------------
-- Match the lighting, palette, and painterly style of mock_v3_hub_quest_board.png.
-- Provide a calm, readable backdrop for the title/body text and CTA buttons.
-- No characters in frame; avoid busy patterns behind the text block.
-- Center-weighted composition with darker edges for legibility.
-- 2x resolution master export (e.g., 2048×4096 or higher). Portrait aspect ratio.
-- Provide PNG with transparent-safe edges (no hard borders).
-- Name: first_run_intro_bg
-- Provide transparent background PNGs.
-- Asset names must match catalog IDs:
-  - enchanter_relic_target
-  - rogue_seal_target
-  - dungeon_room_entrance
-
-Prompts (LLM / Image Gen)
--------------------------
-Enchanter relic (enchanter_relic_target):
-“A luminous magical relic crystal, faceted and star-like, glowing icy blue with
-soft golden rim light, floating or resting on a dark velvet/stone backdrop, no text.
-Painterly semi-realistic fantasy style, strong silhouette, subtle sparkles, centered
-composition, transparent background. Match the style of mock_v3_hub_quest_board.png.”
-
-Rogue seal (rogue_seal_target):
-“A carved rune seal medallion, dark metal with purple-green arcane glow, slightly
-weathered, high contrast, centered. Painterly semi-realistic fantasy style, strong
-silhouette, subtle inner glow, transparent background. Match the style of
-mock_v3_hub_quest_board.png.”
-
-Dungeon entrance (dungeon_room_entrance):
-“A dim stone corridor or arched dungeon doorway with warm torchlight, inviting depth,
-high contrast, centered composition. Painterly semi-realistic fantasy style, strong
-silhouette, subtle glow from a torch, transparent background. Match the style of
-mock_v3_hub_quest_board.png.”
-
 
 ================================================================================
 Backlog (Explicitly Not MVP)
@@ -1319,48 +1684,3 @@ Backlog (Explicitly Not MVP)
 - Advanced "broken accessibility" challenge levels
 - App Store submission readiness: support all iPad orientations or set UIRequiresFullScreen; resolve App Store warnings
 - tvOS / macOS targets
-
-
-================================================================================
-Concurrency Audit Track
-================================================================================
-
-TICKET-CONC-001 — Swift Concurrency Audit (RA11yCore)
-Status: Ready
-
-Goal
-----
-Apply the Swift Concurrency strategy (ADR-0001) across RA11yCore for safety and clarity.
-
-Scope
------
-- Remove any unsafe isolation escapes that are no longer needed.
-- Add explicit cancellation checks in long-lived tasks/loops.
-- Document isolation expectations on public/internal async APIs.
-
-Acceptance Criteria
--------------------
-- No `nonisolated(unsafe)` remains without a documented invariant.
-- Long-running async loops check `Task.isCancelled`.
-- Concurrency documentation is present on async APIs that cross actors.
-
-
-TICKET-CONC-002 — Swift Concurrency Audit (RA11y-iOS)
-Status: Ready
-
-Goal
-----
-Apply the Swift Concurrency strategy (ADR-0001) across the iOS target with a focus on
-MainActor usage and task lifecycles.
-
-Scope
------
-- Add cancellation guards for any async loops or long-lived tasks.
-- Ensure non-UI work does not execute on the main actor.
-- Document isolation expectations where views trigger async work.
-
-Acceptance Criteria
--------------------
-- Async loops and long-lived tasks handle cancellation.
-- Any heavy/background work is clearly isolated from the main actor.
-- Concurrency behavior is documented for async actions in views.

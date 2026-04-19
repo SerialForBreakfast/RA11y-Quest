@@ -23,6 +23,10 @@ import RA11yCore
 /// - `.failed`   → broken shield seal (Defeated)
 /// - `nil`       → open scroll seal (Quest Awaits)
 ///
+/// ## Dynamic Type
+/// Both the canvas size and the outer container width scale via `@ScaledMetric`
+/// (relative to `.caption`) so the badge remains proportional to its label at all DT sizes.
+///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSRankBadgeView: View {
@@ -36,9 +40,19 @@ struct iOSRankBadgeView: View {
     /// Set `true` when used inside a card button that provides a combined label.
     var isAccessibilityHidden: Bool = true
 
+    // MARK: - Scaled Metrics
+
+    /// Canvas size scales with `.caption` style (base 48 pt, max ~80 pt).
+    @ScaledMetric(relativeTo: .caption) private var shapeSize: CGFloat = 48
+
+    /// Outer container width scales proportionally (base 60 pt, max ~100 pt).
+    @ScaledMetric(relativeTo: .caption) private var containerWidth: CGFloat = 60
+
+    private var clampedShapeSize: CGFloat { min(shapeSize, 80) }
+    private var clampedContainerWidth: CGFloat { min(containerWidth, 100) }
+
     // MARK: - Constants
 
-    private let shapeSize: CGFloat = 56
     private let labelFont: Font = .ra11yCaption
 
     // MARK: - Body
@@ -48,17 +62,16 @@ struct iOSRankBadgeView: View {
             Canvas { context, size in
                 drawSeal(in: &context, size: size)
             }
-            .frame(width: shapeSize, height: shapeSize)
+            .frame(width: clampedShapeSize, height: clampedShapeSize)
 
             Text(rankLabel)
                 .font(labelFont)
                 .fontWeight(.semibold)
                 .foregroundStyle(labelColor)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(width: 72)
+        .frame(width: clampedContainerWidth)
         .accessibilityHidden(isAccessibilityHidden)
     }
 
@@ -69,7 +82,7 @@ struct iOSRankBadgeView: View {
     }
 
     private var labelColor: Color {
-        rank.map { sealColor(for: $0) } ?? Color.ra11yWarmTextSecondary
+        rank.map { sealColor(for: $0) } ?? Color.ra11yCardTertiaryText
     }
 
     // MARK: - Canvas Drawing
@@ -77,7 +90,7 @@ struct iOSRankBadgeView: View {
     /// Draws the appropriate seal shape for the given rank (or Quest Awaits scroll).
     private func drawSeal(in context: inout GraphicsContext, size: CGSize) {
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        let color = rank.map { sealColor(for: $0) } ?? Color.ra11yWarmTextSecondary
+        let color = rank.map { sealColor(for: $0) } ?? Color.secondary
 
         switch rank {
         case .perfect:
@@ -89,7 +102,7 @@ struct iOSRankBadgeView: View {
         case .failed:
             drawBrokenShieldSeal(in: &context, center: center, size: size, color: color)
         case nil:
-            drawScrollSeal(in: &context, center: center, size: size, color: color)
+            drawScrollSeal(in: &context, center: center, size: size)
         }
     }
 
@@ -203,8 +216,7 @@ struct iOSRankBadgeView: View {
     private func drawScrollSeal(
         in context: inout GraphicsContext,
         center: CGPoint,
-        size: CGSize,
-        color: Color
+        size: CGSize
     ) {
         let w = size.width * 0.65
         let h = size.height * 0.55
@@ -214,8 +226,12 @@ struct iOSRankBadgeView: View {
             width: w,
             height: h
         )
+        // Use ra11yCardTertiaryText (white @ 0.65 opacity) — adequate contrast on
+        // the fixed-dark card surface. .secondary would be too dim on dark backgrounds.
+        let scrollColor = Color.ra11yCardTertiaryText
+
         let scroll = Path(roundedRect: scrollRect, cornerRadius: 4)
-        context.stroke(scroll, with: .color(color), lineWidth: 1.5)
+        context.stroke(scroll, with: .color(scrollColor), lineWidth: 1.5)
 
         // Curled top and bottom edges
         let curlH: CGFloat = 6
@@ -233,12 +249,12 @@ struct iOSRankBadgeView: View {
         )
         context.stroke(
             Path(ellipseIn: topCurlRect),
-            with: .color(color),
+            with: .color(scrollColor),
             lineWidth: 1
         )
         context.stroke(
             Path(ellipseIn: botCurlRect),
-            with: .color(color),
+            with: .color(scrollColor),
             lineWidth: 1
         )
     }

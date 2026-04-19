@@ -4,85 +4,46 @@ import Observation
 
 /// Observable view model driving the game hub screen.
 ///
-/// Exposes:
-/// - `showHelpAffordance` — whether the "Enable VoiceOver" banner is visible.
-///   Derived from live VoiceOver state via `VoiceOverStateProvider`.
-/// - `bestResults` — a map of game ID → best `GameRank` for each played game.
-///   Loaded asynchronously from `StorageComponent` on init; refreshable after a
-///   game session completes via `refreshBestResults()`.
+/// Owns best-result data for all catalog games. VoiceOver state is intentionally
+/// not observed here — the hub view reads `@Environment(\.accessibilityVoiceOverEnabled)`
+/// directly, letting SwiftUI propagate state changes automatically without any custom
+/// `AsyncStream` or `NotificationCenter` subscription.
 ///
-/// The hub view uses `if viewModel.showHelpAffordance { ... }` (not `.hidden()`)
-/// to ensure the affordance is fully removed from the view hierarchy — and
-/// therefore not focusable by VoiceOver — when VoiceOver is active.
+/// `bestResults` is loaded via `refreshBestResults()`, which the hub view calls
+/// from its `.task` modifier on every appearance (initial load and return from a game).
 ///
 /// ## Concurrency
-/// `@MainActor` isolation ensures all property mutations are serialized on the
-/// main thread, keeping the `@Observable` observation graph consistent with SwiftUI.
-/// The VoiceOver observation task and the initial results-loading task are both
-/// confined to `@MainActor`.
+/// `@MainActor` isolation ensures all property mutations are serialized on the main
+/// thread, consistent with SwiftUI's `@Observable` observation graph.
 @Observable
 @MainActor
 public final class HubViewModel {
 
     // MARK: - Public State
 
-    /// Whether the "How to enable VoiceOver" help affordance should be shown.
-    ///
-    /// `true` when VoiceOver is OFF — the user may need guidance to enable it.
-    /// `false` when VoiceOver is ON — the affordance is removed from the hierarchy.
-    public private(set) var showHelpAffordance: Bool
-
     /// Best rank achieved per game ID, keyed by `GameDefinition.id`.
     ///
     /// An absent key means the game has not been played (displays "Quest Awaits").
-    /// Populated asynchronously on init; updated by calling `refreshBestResults()`.
+    /// Populated by `refreshBestResults()`, which the hub view drives via `.task`.
     public private(set) var bestResults: [String: GameRank] = [:]
 
     // MARK: - Private
 
     private let storage: any StorageComponent
 
-    /// Task that observes VoiceOver state changes for this view model.
-    private var stateObservationTask: Task<Void, Never>?
-
     // MARK: - Init
 
-    /// Creates a view model subscribed to the given VoiceOver provider and storage.
+    /// Creates a view model backed by the given storage component.
     ///
-    /// - `showHelpAffordance` is set synchronously from `provider.isVoiceOverRunning`.
-    /// - Subsequent VoiceOver changes are delivered via `provider.stateChanges`.
-    /// - `bestResults` is populated asynchronously from `storage` on init.
+    /// `bestResults` starts empty; call `refreshBestResults()` (or let the hub
+    /// view's `.task` do so) to populate from storage.
     ///
-    /// - Parameters:
-    ///   - voiceOverProvider: Source of VoiceOver state. Inject
-    ///     `iOSLiveVoiceOverStateProvider()` in production and
-    ///     `StubVoiceOverStateProvider` in tests.
-    ///   - storage: Persistence layer for best results. Inject
-    ///     `UserDefaultsStorageComponent()` in production and
-    ///     `InMemoryStorageComponent` in tests.
-    public init(voiceOverProvider: some VoiceOverStateProvider, storage: any StorageComponent) {
+    /// - Parameter storage: Persistence layer for best results. Inject
+    ///   `UserDefaultsStorageComponent()` in production and
+    ///   `InMemoryStorageComponent` in tests.
+    public init(storage: any StorageComponent) {
         self.storage = storage
-        self.showHelpAffordance = !voiceOverProvider.isVoiceOverRunning
-
-        RA11yLogger.startup.debug("HubViewModel.init — voiceOverRunning: \(voiceOverProvider.isVoiceOverRunning)")
-
-        stateObservationTask = Task { @MainActor [weak self] in
-            for await isRunning in voiceOverProvider.stateChanges {
-                guard !Task.isCancelled else { break }
-                self?.showHelpAffordance = !isRunning
-            }
-        }
-
-        Task { @MainActor [weak self] in
-            await self?.loadBestResults()
-        }
-    }
-
-    deinit {
-        Task { @MainActor [weak self] in
-            self?.stateObservationTask?.cancel()
-            self?.stateObservationTask = nil
-        }
+        RA11yLogger.startup.debug("HubViewModel.init")
     }
 
     // MARK: - Public API
@@ -96,6 +57,33 @@ public final class HubViewModel {
         bestResults[gameID]
     }
 
+    /// Whether the given game is unlocked and available to start.
+    ///
+    /// A game with no `prerequisiteID` is always unlocked. A game with a prerequisite
+    /// is unlocked as soon as the prerequisite has been completed at any rank.
+    ///
+    /// The hub uses this to render locked cards for games the player has not yet
+    /// earned access to, enforcing the pedagogical sequence.
+    ///
+    /// - Parameter game: The `GameDefinition` to evaluate.
+    /// - Returns: `true` if the game can be started.
+    public func isUnlocked(_ game: GameDefinition) -> Bool {
+        guard let prerequisiteID = game.prerequisiteID else { return true }
+        return bestResults[prerequisiteID] != nil
+    }
+
+    /// The `GameDefinition` whose completion would unlock `game`, or `nil` if `game`
+    /// is already unlocked or has no prerequisite.
+    ///
+    /// Used by the hub to display "Complete [prerequisite title] to unlock" messaging.
+    ///
+    /// - Parameter game: The locked game.
+    /// - Returns: The predecessor `GameDefinition`, or `nil`.
+    public func prerequisite(for game: GameDefinition) -> GameDefinition? {
+        guard let prerequisiteID = game.prerequisiteID, !isUnlocked(game) else { return nil }
+        return GameCatalog.definition(for: prerequisiteID)
+    }
+
     /// Reloads best results from storage.
     ///
     /// Call this after a game session completes and the user returns to the hub,
@@ -103,8 +91,8 @@ public final class HubViewModel {
     ///
     /// ## Concurrency
     /// `@MainActor` — safe to call from SwiftUI `.task` or `.onAppear`.
-    /// Internally awaits `storage.bestResult(for:)` per game, hopping to the
-    /// storage actor and back for each call.
+    /// Internally uses `storage.bestResults(for:)` so the hub refresh pays one
+    /// storage hop for the whole catalog instead of one hop per game.
     public func refreshBestResults() async {
         await loadBestResults()
     }
@@ -113,9 +101,8 @@ public final class HubViewModel {
 
     /// Iterates all catalog games and loads their best result from storage.
     ///
-    /// Runs on `@MainActor`; awaits the storage actor for each game read.
-    /// Each `await` is a cross-actor hop to `UserDefaultsStorageComponent` and back.
-    /// Writes `bestResults` atomically after all reads complete.
+    /// Runs on `@MainActor`; awaits the storage actor once for the whole catalog and
+    /// writes `bestResults` atomically after the batch read completes.
     ///
     /// ## Startup Instrumentation
     /// Emits a `hubResultsLoad` signpost interval covering all storage reads.
@@ -127,11 +114,12 @@ public final class HubViewModel {
 
         RA11yLogger.startup.debug("hubResultsLoad started — \(GameCatalog.all.count) games")
 
+        let storedResults = await storage.bestResults(for: GameCatalog.all.map(\.id))
+
         var results: [String: GameRank] = [:]
-        for game in GameCatalog.all {
-            if let result = await storage.bestResult(for: game.id) {
-                results[game.id] = result.rank
-            }
+        results.reserveCapacity(storedResults.count)
+        for (gameID, result) in storedResults {
+            results[gameID] = result.rank
         }
         bestResults = results
 

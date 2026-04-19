@@ -10,7 +10,7 @@ public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     case findAndFocus
     /// Activate — Bomb Defusal drill training double-tap activation on the correct control.
     case activateDoubleTap
-    /// Scroll Hunt — Dungeon Crawl drill training scrolling to reveal hidden content.
+    /// Scroll Hunt — Crystal Resonance drill training three-finger scrolling to reveal hidden content.
     case scrollHunt
 }
 
@@ -42,6 +42,12 @@ public struct GameDefinition: Sendable, Identifiable {
     /// Primary thumbnail asset name. Placeholder accepted at M1; replaced by M5.
     public let thumbnailAssetName: String
 
+    /// The stable `GameDefinition.id` that must be completed before this game is unlocked.
+    ///
+    /// `nil` means the game is always available (i.e. it is the first in the sequence).
+    /// The hub uses this to gate cards and communicate ordering to the player.
+    public let prerequisiteID: String?
+
     /// - Parameters:
     ///   - id: Stable storage key — must never change post-ship.
     ///   - titleKey: Localization key for display title.
@@ -49,13 +55,15 @@ public struct GameDefinition: Sendable, Identifiable {
     ///   - estimatedDuration: Human-readable duration string.
     ///   - kind: Game logic and routing kind.
     ///   - thumbnailAssetName: Asset catalog name for the hub thumbnail.
+    ///   - prerequisiteID: Stable ID of the game that must be completed first, or `nil`.
     public init(
         id: String,
         titleKey: String,
         goalKey: String,
         estimatedDuration: String,
         kind: GameKind,
-        thumbnailAssetName: String
+        thumbnailAssetName: String,
+        prerequisiteID: String? = nil
     ) {
         self.id = id
         self.titleKey = titleKey
@@ -63,6 +71,7 @@ public struct GameDefinition: Sendable, Identifiable {
         self.estimatedDuration = estimatedDuration
         self.kind = kind
         self.thumbnailAssetName = thumbnailAssetName
+        self.prerequisiteID = prerequisiteID
     }
 }
 
@@ -77,6 +86,16 @@ public struct GameDefinition: Sendable, Identifiable {
 public enum GameCatalog {
 
     /// All MVP games in display order.
+    ///
+    /// Games are sequentially gated: each game after the first has a `prerequisiteID`
+    /// pointing to the game that must be beaten before it is unlocked. Display order
+    /// matches unlock order: **Enchanter (focus) → Crystal Resonance (scrolling) → Rogue (activation)** —
+    /// scrolling before the gauntlet matches the hub progression after the Enchanter's Trial.
+    ///
+    /// Thumbnails use dedicated square hub icons (`*_hub_icon`) designed for
+    /// the dark quest card at ~72–96 pt. Background scene images and individual
+    /// sprite assets are not used here as they either crop poorly or have
+    /// white backgrounds that clash with the dark card surface.
     public static let all: [GameDefinition] = [
         GameDefinition(
             id: "find-and-focus",
@@ -84,15 +103,8 @@ public enum GameCatalog {
             goalKey: "game.findAndFocus.goal",
             estimatedDuration: "~5 min",
             kind: .findAndFocus,
-            thumbnailAssetName: "enchanter_relic_target"
-        ),
-        GameDefinition(
-            id: "activate-double-tap",
-            titleKey: "game.activateDoubleTap.title",
-            goalKey: "game.activateDoubleTap.goal",
-            estimatedDuration: "~5 min",
-            kind: .activateDoubleTap,
-            thumbnailAssetName: "rogue_seal_target"
+            thumbnailAssetName: "enchanter_hub_icon",
+            prerequisiteID: nil
         ),
         GameDefinition(
             id: "scroll-hunt",
@@ -100,7 +112,17 @@ public enum GameCatalog {
             goalKey: "game.scrollHunt.goal",
             estimatedDuration: "~7 min",
             kind: .scrollHunt,
-            thumbnailAssetName: "dungeon_room_entrance"
+            thumbnailAssetName: "dungeon_hub_icon",
+            prerequisiteID: "find-and-focus"
+        ),
+        GameDefinition(
+            id: "activate-double-tap",
+            titleKey: "game.activateDoubleTap.title",
+            goalKey: "game.activateDoubleTap.goal",
+            estimatedDuration: "~5 min",
+            kind: .activateDoubleTap,
+            thumbnailAssetName: "rogue_hub_icon",
+            prerequisiteID: "scroll-hunt"
         ),
     ]
 

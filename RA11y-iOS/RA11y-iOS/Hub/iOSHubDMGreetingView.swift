@@ -3,7 +3,7 @@ import RA11yCore
 
 // MARK: - iOSHubDMGreetingView
 
-/// Atmospheric "Dungeon Master" greeting header displayed below the navigation bar.
+/// Atmospheric greeting header (copy uses `hub.dmGreeting`; narrator label is `dm.label` / Resonance Guide).
 ///
 /// Non-interactive. Marked with `.isHeader` so VoiceOver announces it as a
 /// section heading and users can navigate to it directly via the rotor.
@@ -21,15 +21,15 @@ struct iOSHubDMGreetingView: View {
         Text(String(localized: "hub.dmGreeting"))
             .font(.ra11yTitle)
             .fontWeight(.semibold)
-            .foregroundStyle(Color.ra11yGold)
+            .foregroundStyle(Color.ra11yAccent)
             .multilineTextAlignment(.center)
             // Explicit maxWidth ensures the text view fills the parent's proposed
             // width so centering and wrapping behave consistently across device sizes.
             .frame(maxWidth: .infinity)
             .padding(.horizontal, RA11ySpacing.xl)
             .padding(.vertical, RA11ySpacing.md)
-            .shadow(color: Color.black.opacity(0.45), radius: 6, x: 0, y: 2)
             .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("hub.dmGreeting")
     }
 }
 

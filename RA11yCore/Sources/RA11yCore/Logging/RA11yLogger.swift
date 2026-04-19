@@ -1,3 +1,4 @@
+import Foundation
 import OSLog
 
 /// Provides named OSLog loggers for each RA11y subsystem.
@@ -9,6 +10,7 @@ import OSLog
 /// ## Usage
 /// ```swift
 /// RA11yLogger.navigation.debug("Pushing route: hub")
+/// RA11yLogger.scrollInteraction.debug("lane scroll offset …")
 /// RA11yLogger.storage.error("Failed to persist result: \(error)")
 /// ```
 ///
@@ -43,11 +45,20 @@ public enum RA11yLogger {
     /// Score evaluation and best-result comparisons.
     public static let scoring = Logger(subsystem: subsystem, category: "scoring")
 
+    /// Cross-quest haptic and audio feedback coordination.
+    public static let feedback = Logger(subsystem: subsystem, category: "feedback")
+
     /// App startup phase milestones and hangs.
     ///
     /// Logs key moments from cold start through the hub becoming interactive.
     /// Visible in Console.app filtered by subsystem + category = "startup".
     public static let startup = Logger(subsystem: subsystem, category: "startup")
+
+    /// VoiceOver scroll routing, `ScrollView` focus moves, and resonance alignment telemetry.
+    ///
+    /// Filter in Console.app: `subsystem:com.showblender.RA11y category:scrollInteraction`
+    /// Use when diagnosing three-finger scroll and moonstone alignment issues on device or Simulator.
+    public static let scrollInteraction = Logger(subsystem: subsystem, category: "scrollInteraction")
 
     /// Timed interval signposter for startup phases.
     ///
@@ -59,4 +70,19 @@ public enum RA11yLogger {
     /// `OSSignposter` is safe to use across actor boundaries; `beginInterval`
     /// and `endInterval` may be called from any isolation context.
     public static let startupSignposter = OSSignposter(subsystem: subsystem, category: "startup")
+
+    /// Bracketed wall-clock time plus monotonic system uptime for correlating startup
+    /// log lines in Console.app when diagnosing hangs (attach timestamps to each milestone).
+    ///
+    /// Uptime restarts on device reboot and is unaffected by user date changes.
+    ///
+    /// - Note: Allocates a fresh `ISO8601DateFormatter` per call so the package stays
+    ///   free of non-`Sendable` static formatter state under Swift 6.
+    public static func startupTimestampTag() -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let wall = formatter.string(from: Date())
+        let uptime = ProcessInfo.processInfo.systemUptime
+        return "[\(wall) uptime=\(String(format: "%.3f", uptime))s]"
+    }
 }

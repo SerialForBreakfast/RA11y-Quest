@@ -12,6 +12,9 @@ import SwiftUI
 /// in Dynamic Type scaling, but is capped to prevent it from dominating the
 /// card layout at large accessibility sizes.
 ///
+/// Hub icon PNGs ship with a proper alpha channel (background removed in asset prep),
+/// so the image can composite directly on the card without blend-mode hacks.
+///
 /// Marked `.accessibilityHidden(true)` because the thumbnail is purely
 /// decorative within the quest card — the card's Button provides the full
 /// accessibility label including the game's name and goal.
@@ -59,15 +62,11 @@ struct iOSQuestThumbnailView: View {
     private var placeholder: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.ra11yCardSurfaceHighlight)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.ra11yCardBorder.opacity(0.6), lineWidth: 1)
-                )
+                .fill(Color(white: 0.25))
 
             Image(systemName: "scroll")
                 .font(.system(size: thumbnailSize * 0.4))
-                .foregroundStyle(Color.ra11yGold.opacity(0.7))
+                .foregroundStyle(Color.ra11yAccent.opacity(0.6))
         }
     }
 }
@@ -75,7 +74,7 @@ struct iOSQuestThumbnailView: View {
 // MARK: - Previews
 
 #Preview("With asset") {
-    iOSQuestThumbnailView(assetName: "hub_quest_board_bg")
+    iOSQuestThumbnailView(assetName: "simon_room_bg")
         .padding()
         .background(Color(white: 0.15))
 }

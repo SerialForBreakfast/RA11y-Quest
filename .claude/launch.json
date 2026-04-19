@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mockup",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "7331", "--directory", "memlog/requirements/Design/Mockups-v2"],
+      "port": 7331
+    }
+  ]
+}

@@ -88,6 +88,91 @@ CoreSimulatorService crashes, missing runtimes):
 
 ---
 
+## File System Boundaries
+
+All files created or modified by AI agents MUST stay inside the project
+directory. This rule applies to every agent, every sub-agent, and every
+tool call — without exception.
+
+### Rule: Never Write Outside the Project Root
+
+The project root is the directory containing this AGENTS.md file.
+
+NEVER create, write, or move files to any of the following:
+- `/tmp/` or any system temporary directory
+- `~/Desktop/`, `~/Downloads/`, `~/Documents/`, or any home directory path
+- `/var/`, `/usr/`, `/etc/`, or any system path
+- Any absolute path that is not inside the project root
+- Any relative path that escapes the project root via `../`
+
+### Approved Locations for Working Files
+
+When a task requires scratch space, intermediate output, or generated
+artefacts, use directories inside the project:
+
+| Purpose | Location |
+|---|---|
+| Design docs, specs, ADRs | `memlog/` |
+| Mockup HTML files | `memlog/requirements/Design/Mockups-v2/` |
+| Generated assets (pre-import) | `memlog/requirements/Design/Assets/` |
+| Build and test output | `build_results/` |
+| Utility scripts | `utility/` |
+
+### Enforcement
+
+If a task appears to require writing outside the project directory, STOP.
+Reframe the task so all output lands inside the project. If it genuinely
+cannot be done inside the project, ask the user before proceeding.
+
+This rule exists to ensure the repository is the single source of truth
+and that agent actions are fully auditable via git.
+
+---
+
+## Scripting Language Policy
+
+Prefer standard shell tools over interpreted scripting languages. This
+reduces interpreter version dependencies, limits arbitrary code execution
+surface, and keeps scripts auditable by anyone with basic shell knowledge.
+
+### Preferred Tools (use these first)
+
+- **Text processing:** `awk`, `sed`, `grep`, `ripgrep (rg)`, `cut`, `tr`, `sort`, `uniq`
+- **File operations:** `find`, `ls`, `cp`, `mv`, `mkdir`, `rm`, `xargs`
+- **Data / JSON:** `jq`
+- **Network:** `curl`
+- **Archives:** `tar`, `unzip`, `zip`
+- **Conditionals / loops:** `bash` built-ins (`if`, `while`, `for`, `case`)
+- **String / math:** `expr`, `printf`, parameter expansion, arithmetic expansion
+
+### When an Interpreted Language Is Acceptable
+
+Do not write Python, Perl, Ruby, Node.js, or any other interpreted language
+script unless ALL of the following are true:
+
+1. The task is genuinely impossible or severely impractical with shell tools
+2. An explicit interpreter version is already confirmed present on the host
+3. The user explicitly approves the use of that language for the task
+
+Existing project scripts that already use Python are grandfathered:
+- `utility/remove_white_background.py` — approved, do not rewrite
+- `utility/build_and_test.sh` — shell, already compliant
+
+### For New Automation
+
+Write new scripts as `bash`. If a one-liner requires a complex transform,
+reach for `awk` or `jq` before reaching for Python. A 10-line `awk` program
+is more auditable and portable than a 10-line Python script for the same task.
+
+### Rationale
+
+Interpreted language scripts can execute arbitrary code, introduce supply
+chain risk via imports, and behave differently across interpreter versions.
+Shell tools from POSIX and the standard macOS toolchain have a stable,
+well-understood security model and are always available on the host.
+
+---
+
 ## Simulator Detection — Required Pattern
 
 Hardcoded simulator names (e.g., `"iPhone 17"`, `"iPad (A16)"`) MUST NOT
@@ -99,9 +184,10 @@ and break silently.
 
 Any code that selects a simulator MUST follow this pattern:
 1. Query what is actually available at runtime via `xcrun simctl list devices available --json`
-2. Match against a preference list (most to least preferred)
-3. Fall back to the best available match if no exact match is found
-4. Fail loudly — listing discovered devices — if no match exists at all
+2. If a **persisted last-working UDID** for that device family (see below) still appears in the listing, use it and skip the preference list for stable day-to-day runs.
+3. Match against a preference list (most to least preferred)
+4. Fall back to the best available match if no exact match is found
+5. Fail loudly — listing discovered devices — if no match exists at all
 
 A preference list of names may be hardcoded. The final resolved device must not be.
 
@@ -129,7 +215,22 @@ If no simulator of the required family exists, STOP and report:
 - What the user must do (open Simulator.app, check Xcode → Settings → Platforms)
 
 Do NOT attempt to create simulators, download runtimes, or modify simulator
-state without explicit user approval.
+state without explicit user approval. Repo scripts never call
+`xcodebuild -download*`, `simctl create`, or other commands that install
+runtimes or provision new devices. If macOS or Xcode shows a system dialog
+such as "Verifying … simruntime", that is host-level validation of an
+already-installed runtime — not something this repository triggers.
+
+### Persist Last-Working UDID (stable reuse)
+
+`utility/build_and_test.sh` and `fastlane/Fastfile` store the resolved UDID
+per family in `~/.ra11y/last_simulator_iPhone.udid` and
+`~/.ra11y/last_simulator_iPad.udid` (set `RA11Y_SIMULATOR_STATE_DIR` to use a
+different directory). The next invocation reuses that UDID if it is still
+listed as available, then falls back to the preference hierarchy above.
+
+If the first `simctl` query fails or returns empty output, scripts retry once
+after a one-second delay (transient CoreSimulator stalls).
 
 ### Files That Must Follow This Pattern
 
@@ -181,18 +282,24 @@ A passing Core build is not sufficient if the iOS build fails, and vice versa.
 
 ---
 
-## Fastlane Screenshot Coverage (Required When Views Change)
+## Screenshot Automation Contract
 
-When any user-visible view is added, renamed, or significantly restructured, update the
-screenshot flow to keep fastlane coverage current. This avoids silent UI regressions.
+Screenshot automation must remain deterministic and aligned across docs, tests, and fastlane.
 
-Requirements:
-- Add a stable accessibility identifier to the screen root or primary container.
-- Update `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift` to navigate to the view
-  and wait on that identifier before capturing the next screenshot.
-- If a view is gated (VoiceOver, onboarding, etc.), add a `-uiTesting` bypass so the
-  screenshot flow can reach it deterministically.
-- Keep screenshot names sequential and explicit (e.g., `01_Hub`, `02_EnchantersTrial`).
+Authoritative files:
+- `RA11y-iOS/RA11y-iOS/App/iOSScreenshotScene.swift`
+- `RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md`
+- `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift`
+- `fastlane/Fastfile` (`UI_TEST_IDS` allowlist)
+
+Required rules:
+- Any change to screenshot-covered UI routes, accessibility identifiers, or launch args MUST update all four files in the same change.
+- New screenshot-covered screens MUST include:
+  - A stable root accessibility identifier.
+  - A deterministic `-screenshotScene <sceneID>` boot path declared in `iOSScreenshotScene.swift`.
+  - A route-catalog row with screenshot file name, scene ID, and root anchor identifier.
+- Before running `fastlane screenshots`, run:
+  - `utility/validate_screenshot_contract.sh`
 
 ---
 
@@ -278,8 +385,6 @@ These rules are additive to the rest of this document.
 - Keep actor-isolated critical sections minimal; move heavy work to nonisolated helpers.
 - Always handle cancellation in long-running tasks and loops (`Task.isCancelled`).
 - Never block in async contexts; move blocking I/O off the main actor.
-- When the app target uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, still keep
-  heavy or blocking work off the main actor via a dedicated actor or helper.
 
 ### Documentation & Review
 - Document isolation requirements in doc comments for any public/internal async API.

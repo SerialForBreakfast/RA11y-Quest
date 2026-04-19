@@ -1,0 +1,287 @@
+RA11y - Design Ticket
+Dungeon Descent v2 Resonance Prompt Sheet
+
+Date: 2026-04-19
+Owner: Product / Design (Requirements)
+Status: Draft
+Related: memlog/research/ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+
+User Story
+==========
+As a designer and developer
+I want single-asset prompts for the Dungeon Descent resonance redesign
+So that each generated asset is consistent with the existing RA11y fantasy theme,
+can be ingested cleanly, and does not require multi-object cropping.
+
+Design Intent
+=============
+Dungeon Descent v2 shifts from stacked room rows to a resonance-guided alignment
+mechanic. The screen centers a crystal orb / reticle while a vertical dungeon lane
+moves beneath it. The target becomes actionable only when aligned with the orb.
+
+Global Style Constraints (Include in EVERY prompt)
+==================================================
+- painterly flat fantasy illustration consistent with existing RA11y mockups
+- same world as the hub, Enchanter, and Rogue mockups: torchlit stone, warm amber light,
+  dark umbers, muted slate blues, golden magical highlights
+- high contrast, readable on phone and tablet
+- simple large shapes first; controlled detail second
+- no text, no letters, no numbers
+- no watermark, no logo, no UI chrome baked into the art
+- avoid collage layouts and avoid multiple objects in one canvas
+- one asset only per generation
+- preserve clean edges and clear silhouette at small sizes
+
+Implementation / Export Conventions
+===================================
+- Prefer one 1024x1024 transparent master per focal object or glyph, then downscale in the asset catalog.
+- Backgrounds are generated separately from glyphs and remain non-transparent.
+- Xcode imageset names should remain stable once adopted; prompt filenames should be used as the intended asset keys unless implementation explicitly renames them in the same change.
+- Unless otherwise specified, orb warm/near responsiveness should be implemented with code-driven overlays, glow, blur, scale, opacity, or ring treatment rather than requiring separate generated art states.
+
+Generation Rules
+================
+- Generate every asset separately. Never ask for multiple glyphs, relics, or states in one prompt.
+- Glyphs and floating objects MUST have transparent backgrounds.
+- Backgrounds MUST be generated separately and non-transparent.
+- Prefer square 1024x1024 exports for transparent glyphs and focal objects.
+- Prefer portrait master compositions for tall backgrounds when the asset is intended for vertical play.
+- If an asset is likely to be composited under SwiftUI effects, keep generous outer padding.
+- Do not allow sprite-sheet, contact-sheet, or multi-variation layouts in a single output.
+
+Composition Rules
+=================
+- The orb and reticle are separate assets unless implementation explicitly chooses to flatten them later.
+- Default stack order should be:
+  1. gameplay background
+  2. moving lane objects
+  3. reticle ring
+  4. orb
+  5. optional success flare
+- In Lights Off mode, the orb and reticle remain visible; darkness and spotlight treatment apply to the surrounding world/lane rather than removing the focal anchor.
+
+Gameplay Scope Assumptions
+==========================
+- The moonstone target and a subset of decoys may appear in any given run; prompts should optimize for distinct single-asset silhouettes rather than assuming all assets appear simultaneously.
+- Initial v1 scope assumes one moonstone target and three decoy families are sufficient to prototype the mechanic.
+- If replayability later demands more variety, additional variants should be added as separate prompts rather than overloading the initial prompts.
+
+Quality Control Checklist
+=========================
+- Transparent assets must not have white fringe, dark fringe, or semi-opaque halo around the silhouette.
+- Subject must be centered with generous padding and no cropping.
+- Visual center of mass should feel balanced enough for simple SwiftUI composition.
+- No embedded text, digits, logos, symbols meant as UI text, or multi-object sheets.
+- Success flare and other effects must remain soft and non-strobing; avoid photosensitive flash behavior.
+
+Revision History
+================
+- 2026-04-19: Initial prompt sheet for Dungeon resonance redesign.
+- 2026-04-19 (rev A): Added ADR linkage, composition rules, QC requirements, and explicit Lights Off anchor guidance.
+- 2026-04-19 (rev B): First-pass AI-generated masters ingested into `Assets.xcassets` (universal 1x) with compositing / sizing documented in `DungeonResonanceAssetPipeline.txt`; mockup wired via `iOSDungeonResonanceArt` + `iOSDungeonResonanceMockupView`.
+
+Implementation notes (UI)
+===========================
+- Raster keys match imageset names listed in the Asset Set section (`dungeon_resonance_bg`, etc.).
+- **Pipeline doc:** `memlog/requirements/Design/DungeonResonanceAssetPipeline.txt` — Z-order, pt targets, iPad width cap, Lights Off layering.
+- **Swift:** `iOSDungeonResonanceArt.swift` (string constants), `iOSDungeonResonanceMockupView.swift` (Preview; catalog-first with vector fallbacks).
+- Regenerated art may use opaque backdrops on “transparent” sprites; trim with `utility/remove_white_background.py` only when the subject sits on a flat white field (see QC checklist).
+
+Asset Set
+=========
+
+1) dungeon_resonance_bg
+-----------------------
+Role
+- Main gameplay background behind the fixed orb and moving target lane.
+
+Requirements
+- non-transparent background
+- portrait-first composition suitable for iPhone and iPad center-safe cropping
+- quieter center band for gameplay readability
+- no embedded orb, no embedded reticle, no floating target glyphs
+
+Prompt
+- Painterly flat fantasy background of an ancient vertical dungeon shaft, warm torchlight,
+  stone arches, recessed alcoves, subtle magical dust in the air, soft atmospheric depth,
+  darker edges and a calmer readable center channel for UI gameplay, same world and color
+  language as RA11y hub and Enchanter mockups, no characters, no text, no logos, no UI,
+  no floating symbols, portrait master composition, high contrast but not noisy, 2048x4096.
+
+2) dungeon_resonance_orb_idle
+-----------------------------
+Role
+- Fixed center orb used in the default and far states.
+
+Requirements
+- transparent background
+- centered orb with generous padding
+- readable at small and medium sizes
+- should feel magical, ancient, and luminous without being neon
+- warm and near states will be derived in code unless later prompt revisions add explicit variants
+
+Prompt
+- Single magical crystal orb, softly glowing, ancient fantasy artifact, pale moonlit core
+  with warm golden rim light, painterly flat illustration, strong silhouette, centered,
+  generous padding, transparent background, no text, no letters, no numbers, no extra
+  objects, same torchlit dungeon fantasy style as RA11y mockups, 1024x1024.
+
+3) dungeon_resonance_orb_locked
+-------------------------------
+Role
+- Fixed center orb when the target is aligned and actionable.
+
+Requirements
+- transparent background
+- must read as the same orb as idle state, but more energized
+- brighter resonance ring, not a different object
+- intended to layer with the separate reticle ring rather than replace it
+
+Prompt
+- Single magical crystal orb in locked resonance state, same orb design as an ancient
+  moonlit crystal, brighter inner glow, subtle radiant ring, clearer magical energy,
+  painterly flat fantasy illustration, centered, generous padding, transparent background,
+  no text, no symbols, no extra objects, same RA11y torchlit fantasy world, 1024x1024.
+
+4) dungeon_reticle_ring
+-----------------------
+Role
+- Fixed aiming ring or alignment frame around the orb.
+
+Requirements
+- transparent background
+- distinct shape that works over light and dark backgrounds
+- should not look sci-fi; must feel arcane and handcrafted
+- should compose cleanly behind or around the orb without visually swallowing it
+
+Prompt
+- Single arcane targeting ring, ancient carved metal and faint rune-light, circular frame
+  for a magical orb, fantasy not sci-fi, warm gold and aged bronze with subtle blue-white
+  magical accents, painterly flat illustration, centered, transparent background, no text,
+  no extra objects, generous padding, readable silhouette, 1024x1024.
+
+5) dungeon_target_moonstone
+---------------------------
+Role
+- The correct resonance target moving in the vertical lane.
+
+Requirements
+- transparent background
+- should be clearly distinct from all decoys by silhouette alone
+- must feel important and harmonically compatible with the orb
+
+Prompt
+- Single moonstone relic shard, smooth oval crystal with faint internal glow, ancient
+  magical fantasy artifact, elegant silhouette, luminous but restrained, painterly flat
+  illustration, centered, generous padding, transparent background, no text, no extra
+  objects, same RA11y fantasy style, 1024x1024.
+
+6) dungeon_decoy_ember_shard
+----------------------------
+Role
+- Wrong target / decoy for warm-colored crystal family.
+
+Requirements
+- transparent background
+- distinct from moonstone by silhouette, not color alone
+- should still feel plausible in the same dungeon world
+
+Prompt
+- Single ember shard relic, asymmetrical flame-like crystal fragment, warm inner ember glow,
+  fantasy dungeon artifact, painterly flat illustration, bold silhouette, centered,
+  transparent background, no text, no extra objects, generous padding, same RA11y torchlit
+  fantasy style, 1024x1024.
+
+7) dungeon_decoy_shadow_glyph
+-----------------------------
+Role
+- Wrong target / darker mystical decoy.
+
+Requirements
+- transparent background
+- should read as a separate object family from the moonstone
+- silhouette-first differentiation
+
+Prompt
+- Single shadow glyph stone, jagged rune-cut shard with dark smoky core, ancient fantasy
+  dungeon relic, painterly flat illustration, centered, generous padding, transparent
+  background, no text, no letters, no extra objects, strong silhouette, same RA11y world,
+  1024x1024.
+
+8) dungeon_decoy_sun_sigil
+--------------------------
+Role
+- Wrong target / brighter circular decoy.
+
+Requirements
+- transparent background
+- circular or radial silhouette to contrast with the moonstone target
+- must remain readable at small sizes
+
+Prompt
+- Single sun sigil relic, radiant circular medallion with carved fantasy rays, ancient
+  enchanted dungeon object, painterly flat illustration, centered, generous padding,
+  transparent background, no text, no extra objects, bold silhouette, same RA11y torchlit
+  fantasy style, 1024x1024.
+
+9) dungeon_lane_marker_neutral
+------------------------------
+Role
+- Decorative lane glyph used to imply vertical movement and dungeon scanning.
+
+Requirements
+- transparent background
+- neutral visual weight
+- should not compete with the real target
+
+Prompt
+- Single neutral dungeon lane marker, simple carved stone glyph fragment, decorative but
+  readable, fantasy dungeon style, painterly flat illustration, centered, transparent
+  background, no text, no extra objects, generous padding, subdued visual energy,
+  1024x1024.
+
+10) dungeon_spotlight_mask_reference
+------------------------------------
+Role
+- Visual reference art for a Lights Off spotlight treatment.
+
+Requirements
+- transparent background preferred if generator supports soft alpha edges cleanly
+- if alpha is poor, regenerate as a grayscale reference only and implement final mask in code
+- should frame the orb area without looking like a hard vignette sticker
+- spotlight treatment must preserve the orb and reticle as visible focal anchors
+
+Prompt
+- Single soft magical spotlight halo for a fantasy orb interface, narrow vertical emphasis,
+  feathered glow, subtle torchlit haze, painterly flat magical atmosphere, centered,
+  transparent background if clean alpha is supported, no text, no symbols, no extra objects,
+  1024x1024.
+
+11) dungeon_success_flare
+-------------------------
+Role
+- Optional overlay used at the moment of successful alignment or collection.
+
+Requirements
+- transparent background
+- lightweight magical flare, not an explosion
+- should compose over orb and target cleanly
+
+Prompt
+- Single crystalline magical flare, short radiant burst of arcane light, elegant and clean,
+  fantasy dungeon style, painterly flat illustration, centered, transparent background,
+  no text, no extra objects, generous padding, high contrast, 1024x1024.
+
+Optional Alternate Target Family
+================================
+If the game direction shifts from relic alignment to room-glyph alignment, generate the
+same set structure but replace the moving relics with single glyph assets. Keep the same
+one-asset-per-prompt rule and transparent backgrounds.
+
+Acceptance Criteria
+===================
+- Every listed asset has its own filename, role, and single-asset prompt.
+- No prompt asks for multiple sprites or a sheet of glyphs.
+- All glyph and focal-object prompts require transparent backgrounds.
+- Background generation is isolated from sprite generation.
+- The prompts explicitly anchor the look to the existing RA11y fantasy mockup language.

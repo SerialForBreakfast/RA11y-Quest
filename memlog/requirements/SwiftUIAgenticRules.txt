@@ -1,5 +1,10 @@
 
 
+NOTE (2026-04-19): SUPERSEDED. This file's content has been fully incorporated
+into AGENTS.md at the repository root. AGENTS.md is the canonical source for
+all agent and contributor rules. This file is retained for historical reference
+only and should not be edited independently.
+
 RA11y - SwiftUI Agentic Rules (Distilled)
 Date: 2026-02-21
 Source: Distilled from AvdLee/SwiftUI-Agent-Skill (swiftui-expert-skill)

@@ -1,3 +1,28 @@
+// MARK: - BasicsProgressSnapshot
+
+/// Snapshot of the first-run Basics flags used during startup routing.
+///
+/// Reading both flags in one storage call avoids repeated actor hops on launch and
+/// keeps route resolution deterministic.
+public struct BasicsProgressSnapshot: Sendable {
+
+    /// Whether the player completed the VoiceOver Basics sequence.
+    public let isCompleted: Bool
+
+    /// Whether the player dismissed the first-run prompt without completing Basics.
+    public let isDismissed: Bool
+
+    /// Creates a snapshot of the current Basics flags.
+    ///
+    /// - Parameters:
+    ///   - isCompleted: `true` when Basics was completed.
+    ///   - isDismissed: `true` when the prompt was dismissed.
+    public init(isCompleted: Bool, isDismissed: Bool) {
+        self.isCompleted = isCompleted
+        self.isDismissed = isDismissed
+    }
+}
+
 // MARK: - StorageComponent
 
 /// Abstraction over result and progress persistence.
@@ -32,11 +57,26 @@ public protocol StorageComponent: AnyObject, Sendable {
     /// Returns whether the VoiceOver Basics sequence has been completed.
     func isBasicsCompleted() async -> Bool
 
+    /// Returns both first-run Basics flags in a single storage read.
+    ///
+    /// This is the preferred startup API because it avoids multiple cross-actor
+    /// hops during route resolution.
+    func basicsProgressSnapshot() async -> BasicsProgressSnapshot
+
     /// Persists the "Basics completed" flag.
     func markBasicsCompleted() async
 
     /// Returns whether the user dismissed the first-run Basics prompt.
     func isBasicsDismissed() async -> Bool
+
+    /// Returns best stored results for the provided game IDs.
+    ///
+    /// Implementations should batch the read when possible so hub refresh does not
+    /// pay one actor hop per game.
+    ///
+    /// - Parameter gameIDs: Stable catalog IDs.
+    /// - Returns: A dictionary keyed by game ID for IDs that have a stored result.
+    func bestResults(for gameIDs: [String]) async -> [String: GameResult]
 
     /// Persists the "Basics dismissed" flag when the user opts out of first-run.
     func markBasicsDismissed() async

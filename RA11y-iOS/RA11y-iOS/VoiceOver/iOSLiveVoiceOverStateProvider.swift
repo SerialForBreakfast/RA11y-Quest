@@ -19,20 +19,22 @@ import RA11yCore
 /// ```
 ///
 /// ## Concurrency
-/// `isVoiceOverRunning` is thread-safe per Apple documentation.
+/// `UIAccessibility.isVoiceOverRunning` is MainActor-isolated in current SDKs; this
+/// type implements `VoiceOverStateProvider` (synchronous `Bool`) by reading on the
+/// main queue when invoked from a non-main context, preserving the protocol contract.
 /// `stateChanges` yields on the main actor; callers running on background contexts
 /// must handle the transfer appropriately.
-///
-/// ## Concurrency
-/// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
+/// The struct defaults to `@MainActor` isolation; the `isVoiceOverRunning` getter is
+/// `nonisolated` so `VoiceOverStateProvider` conformance remains usable from
+/// nonisolated call sites (e.g. `GameStartDecision.evaluate`).
 public struct iOSLiveVoiceOverStateProvider: VoiceOverStateProvider {
 
     public init() {}
 
     // MARK: - VoiceOverStateProvider
 
-    public var isVoiceOverRunning: Bool {
-        UIAccessibility.isVoiceOverRunning
+    public nonisolated var isVoiceOverRunning: Bool {
+        Self.readVoiceOverStateSynchronously()
     }
 
     /// Emits the updated `isVoiceOverRunning` value on every VoiceOver toggle.
@@ -47,7 +49,6 @@ public struct iOSLiveVoiceOverStateProvider: VoiceOverStateProvider {
                     named: UIAccessibility.voiceOverStatusDidChangeNotification
                 )
                 for await _ in notifications {
-                    guard !Task.isCancelled else { break }
                     continuation.yield(UIAccessibility.isVoiceOverRunning)
                 }
                 continuation.finish()
@@ -56,5 +57,27 @@ public struct iOSLiveVoiceOverStateProvider: VoiceOverStateProvider {
                 task.cancel()
             }
         }
+    }
+}
+
+// MARK: - Main-queue VoiceOver read
+
+extension iOSLiveVoiceOverStateProvider {
+
+    /// Reads `UIAccessibility.isVoiceOverRunning` on the main actor (UIKit’s required
+    /// context), using a synchronous main-queue hop when the caller is off the main thread.
+    private nonisolated static func readVoiceOverStateSynchronously() -> Bool {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                UIAccessibility.isVoiceOverRunning
+            }
+        }
+        var value = false
+        DispatchQueue.main.sync {
+            value = MainActor.assumeIsolated {
+                UIAccessibility.isVoiceOverRunning
+            }
+        }
+        return value
     }
 }

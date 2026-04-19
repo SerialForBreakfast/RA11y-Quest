@@ -57,6 +57,14 @@ public actor UserDefaultsStorageComponent: StorageComponent {
         defaults.bool(forKey: Self.basicsKey)
     }
 
+    /// Returns both Basics flags in one actor-isolated read.
+    public func basicsProgressSnapshot() async -> BasicsProgressSnapshot {
+        BasicsProgressSnapshot(
+            isCompleted: defaults.bool(forKey: Self.basicsKey),
+            isDismissed: defaults.bool(forKey: Self.dismissedKey)
+        )
+    }
+
     /// Marks the Basics sequence as completed in UserDefaults.
     public func markBasicsCompleted() async {
         defaults.set(true, forKey: Self.basicsKey)
@@ -66,6 +74,18 @@ public actor UserDefaultsStorageComponent: StorageComponent {
     /// Returns whether the Basics sequence was dismissed.
     public func isBasicsDismissed() async -> Bool {
         defaults.bool(forKey: Self.dismissedKey)
+    }
+
+    /// Returns best results for all requested game IDs in one actor call.
+    public func bestResults(for gameIDs: [String]) async -> [String: GameResult] {
+        var results: [String: GameResult] = [:]
+        results.reserveCapacity(gameIDs.count)
+        for gameID in gameIDs {
+            if let result = _bestResult(for: gameID) {
+                results[gameID] = result
+            }
+        }
+        return results
     }
 
     /// Marks the Basics sequence as dismissed in UserDefaults.
@@ -86,3 +106,21 @@ public actor UserDefaultsStorageComponent: StorageComponent {
         "\(Self.keyPrefix)\(gameID).bestResult"
     }
 }
+
+// MARK: - Screenshot Testing Support
+
+#if DEBUG
+public extension UserDefaultsStorageComponent {
+
+    /// Keys exposed for the screenshot automation reset handler in `RA11y_iOSApp`.
+    ///
+    /// - Warning: Use only from the `-screenshotResetOnboarding` launch argument
+    ///   handler. Never call from production paths.
+    enum ScreenshotTestingKeys {
+        /// Key for the "basics completed" flag. Mirrors `UserDefaultsStorageComponent.basicsKey`.
+        public static let basicsCompleted = UserDefaultsStorageComponent.basicsKey
+        /// Key for the "basics dismissed" flag. Mirrors `UserDefaultsStorageComponent.dismissedKey`.
+        public static let basicsDismissed = UserDefaultsStorageComponent.dismissedKey
+    }
+}
+#endif
