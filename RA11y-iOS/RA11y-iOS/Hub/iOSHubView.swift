@@ -34,11 +34,10 @@ import RA11yCore
 /// ## VoiceOver Reading Order
 /// 1. Navigation title "RA11y"
 /// 2. Orientation strip — scroll gesture; with VoiceOver on, also tap / double-tap to open
-/// 3. Lights Off mode section — heading, description, toggle (`hub.lightsOff.toggle`)
-/// 4. "Choose Your Trial, Adventurer" (.isHeader)
-/// 5–7. Quest cards (combined label per card)
-/// 8. "VoiceOver Basics"
-/// 9. "Enable VoiceOver to play" (only if VO OFF)
+/// 3. "Choose Your Trial, Adventurer" (.isHeader)
+/// 4–6. Quest cards (combined label per card)
+/// 7. "VoiceOver Basics"
+/// 8. "Enable VoiceOver to play" (only if VO OFF)
 ///
 /// ## Scrolling
 /// Standard VoiceOver scroll: three-finger swipe up/down scrolls the quest list.
@@ -112,41 +111,6 @@ struct iOSHubView: View {
         return scroll
     }
 
-    /// Lights Off training mode — global toggle persisted in app storage (see `LightsOffMode-Decisions.txt`).
-    private var hubLightsOffSection: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            Text(String(localized: "hub.lightsOff.heading"))
-                .font(.ra11yCaption)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .accessibilityAddTraits(.isHeader)
-
-            Text(String(localized: "hub.lightsOff.description"))
-                .font(.ra11yCaption)
-                .foregroundStyle(Color.ra11yCardTertiaryText)
-
-            Toggle(
-                String(localized: "hub.lightsOff.toggle.label"),
-                isOn: Binding(
-                    get: { viewModel.isLightsOffModeEnabled },
-                    set: { newValue in
-                        Task { await viewModel.setLightsOffModeEnabled(newValue) }
-                    }
-                )
-            )
-            .tint(Color.ra11yAccent)
-            .accessibilityIdentifier("hub.lightsOff.toggle")
-            .accessibilityHint(String(localized: "hub.lightsOff.toggle.hint"))
-        }
-        .padding(RA11ySpacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.42), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-        )
-    }
-
     private var contentMaxWidth: CGFloat {
         sizeClass == .regular ? 600 : .infinity
     }
@@ -185,10 +149,6 @@ struct iOSHubView: View {
                     hubOrientationBanner
                         .padding(.horizontal, cardHorizontalPadding)
                         .padding(.top, RA11ySpacing.sm)
-
-                    hubLightsOffSection
-                        .padding(.horizontal, cardHorizontalPadding)
-                        .padding(.top, RA11ySpacing.md)
 
                     iOSHubDMGreetingView()
                         .padding(.top, RA11ySpacing.sm)

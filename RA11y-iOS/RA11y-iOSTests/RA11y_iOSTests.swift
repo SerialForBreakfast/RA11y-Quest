@@ -136,7 +136,6 @@ actor TestStorageComponent: StorageComponent {
 
     private var basicsCompleted = false
     private var basicsDismissed = false
-    private var lightsOffModeEnabled = false
 
     /// Returns nil; results are not persisted for routing tests.
     func bestResult(for gameID: String) async -> GameResult? {
@@ -164,13 +163,5 @@ actor TestStorageComponent: StorageComponent {
     /// Marks basics as dismissed.
     func markBasicsDismissed() async {
         basicsDismissed = true
-    }
-
-    func isLightsOffModeEnabled() async -> Bool {
-        lightsOffModeEnabled
-    }
-
-    func setLightsOffModeEnabled(_ enabled: Bool) async {
-        lightsOffModeEnabled = enabled
     }
 }

@@ -11,7 +11,6 @@ actor InMemoryStorageComponent: StorageComponent {
     private var results: [String: GameResult] = [:]
     private var _basicsCompleted = false
     private var _basicsDismissed = false
-    private var _lightsOffModeEnabled = false
 
     /// Returns the best stored result for the given game ID, if any.
     func bestResult(for gameID: String) async -> GameResult? {
@@ -43,15 +42,5 @@ actor InMemoryStorageComponent: StorageComponent {
     /// Marks the Basics sequence as dismissed.
     func markBasicsDismissed() async {
         _basicsDismissed = true
-    }
-
-    /// Returns whether Lights Off mode is enabled.
-    func isLightsOffModeEnabled() async -> Bool {
-        _lightsOffModeEnabled
-    }
-
-    /// Sets the Lights Off mode preference.
-    func setLightsOffModeEnabled(_ enabled: Bool) async {
-        _lightsOffModeEnabled = enabled
     }
 }

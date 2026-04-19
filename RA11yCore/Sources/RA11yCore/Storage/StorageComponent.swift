@@ -40,15 +40,4 @@ public protocol StorageComponent: AnyObject, Sendable {
 
     /// Persists the "Basics dismissed" flag when the user opts out of first-run.
     func markBasicsDismissed() async
-
-    /// Returns whether Lights Off training mode is enabled (visual blackout of gameplay).
-    ///
-    /// When `true`, games should hide decorative visuals while preserving accessibility
-    /// traversal and semantics. Default is `false`.
-    func isLightsOffModeEnabled() async -> Bool
-
-    /// Persists the Lights Off mode preference.
-    ///
-    /// - Parameter enabled: `true` to black out gameplay visuals on the next session.
-    func setLightsOffModeEnabled(_ enabled: Bool) async
 }

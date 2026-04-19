@@ -89,9 +89,6 @@ struct RA11y_iOSApp: App {
             UserDefaults.standard.removeObject(
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsDismissed
             )
-            UserDefaults.standard.removeObject(
-                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.lightsOffModeEnabled
-            )
             RA11yLogger.startup.debug("Screenshot: onboarding flags cleared for first-run screen")
         }
 
@@ -99,9 +96,6 @@ struct RA11y_iOSApp: App {
             UserDefaults.standard.set(
                 true,
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
-            )
-            UserDefaults.standard.removeObject(
-                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.lightsOffModeEnabled
             )
             RA11yLogger.startup.debug("Screenshot: basicsCompleted set for hub route")
         }
@@ -116,9 +110,6 @@ struct RA11y_iOSApp: App {
             UserDefaults.standard.set(
                 true,
                 forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.basicsCompleted
-            )
-            UserDefaults.standard.removeObject(
-                forKey: UserDefaultsStorageComponent.ScreenshotTestingKeys.lightsOffModeEnabled
             )
             RA11yLogger.startup.debug("Screenshot: basicsCompleted set for direct-game route")
         }

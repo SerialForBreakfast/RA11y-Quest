@@ -27,7 +27,9 @@ struct iOSRogueGauntletView: View {
     // MARK: - State
 
     @State private var viewModel: RogueGauntletViewModel
-    @State private var lightsOffModeEnabled = false
+
+    /// Final timed level only: blackout of seal artwork (`LightsOffMode-Recommendations.txt`).
+    private var isLightsOffFinalLevel: Bool { viewModel.phase == .timed }
 
     // MARK: - Environment
 
@@ -50,7 +52,7 @@ struct iOSRogueGauntletView: View {
     var body: some View {
         levelContent
             .background {
-                if lightsOffModeEnabled && viewModel.phase != .prologue {
+                if isLightsOffFinalLevel {
                     Color.black
                         .ignoresSafeArea()
                 } else {
@@ -60,9 +62,6 @@ struct iOSRogueGauntletView: View {
             }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
-            .task {
-                lightsOffModeEnabled = await storage.isLightsOffModeEnabled()
-            }
             .onChange(of: viewModel.completedResult) { _, result in
                 guard let result else { return }
                 let announcement = gameSpecificAnnouncement(for: result)
@@ -93,7 +92,7 @@ struct iOSRogueGauntletView: View {
                 seal: viewModel.targetSeal ?? .placeholder,
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
                 onActivate: { seal in await viewModel.activateSeal(seal) },
                 onContinue: { viewModel.advanceToRising() }
             )
@@ -111,7 +110,7 @@ struct iOSRogueGauntletView: View {
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
                 timedOut: viewModel.l2TimedOut,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
                 onActivate: { seal in await viewModel.activateSeal(seal) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToTimed() },
@@ -130,7 +129,7 @@ struct iOSRogueGauntletView: View {
                 timeRemaining: viewModel.timeRemaining,
                 statusMessage: viewModel.statusMessage,
                 timedOut: viewModel.l3TimedOut,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
                 onActivate: { seal in await viewModel.activateSeal(seal) },
                 onHint: { viewModel.requestHint() },
                 onRetry: { viewModel.retryTimed() }
@@ -273,6 +272,7 @@ final class RogueGauntletViewModel {
         stopTimer()
         mistakes = 0
         statusMessage = nil
+        levelComplete = false
         l3TimedOut = false
         completedResult = nil
         voiceOverDisabledMidGame = false
@@ -969,6 +969,19 @@ private struct RogueTimedView: View {
         GeometryReader { geo in
             ScrollView(.vertical) {
                 VStack(spacing: RA11ySpacing.lg) {
+                    Text(String(localized: "rogue.lightsOff.flavor"))
+                        .font(.ra11ySubheadline)
+                        .foregroundStyle(Color.ra11yCardSecondaryText)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(RA11ySpacing.base)
+                        .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RA11yRadius.card)
+                                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
+                        )
+                        .accessibilityAddTraits(.isStaticText)
+
                     roguePromptCard(
                         title: String(format: String(localized: "rogue.l3.objective.format"), targetSeal.displayName),
                         a11yLabel: String(format: String(localized: "rogue.a11y.l3.objective"), targetSeal.displayName),
@@ -1112,8 +1125,7 @@ private struct SealButton: View {
 
 /// Circular medallion image for a seal sprite, with a fallback SF Symbol.
 ///
-/// Uses `.blendMode(.multiply)` so white-background sprite exports blend cleanly
-/// against the dark circular base — matching the M5 RelicImage pattern.
+/// Seal sprites ship with alpha; they composite on the dark circle without multiply.
 private struct SealImage: View {
     let assetName: String
 
@@ -1127,7 +1139,6 @@ private struct SealImage: View {
                     .resizable()
                     .scaledToFit()
                     .padding(8)
-                    .blendMode(.multiply)
             } else {
                 Image(systemName: "seal.fill")
                     .resizable()

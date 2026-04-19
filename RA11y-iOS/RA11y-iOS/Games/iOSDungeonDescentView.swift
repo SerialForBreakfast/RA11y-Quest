@@ -28,7 +28,9 @@ struct iOSDungeonDescentView: View {
     // MARK: - State
 
     @State private var viewModel: DungeonDescentViewModel
-    @State private var lightsOffModeEnabled = false
+
+    /// Final timed level only: blackout of room icons and variable layout (`LightsOffMode-Recommendations.txt`).
+    private var isLightsOffFinalLevel: Bool { viewModel.phase == .timed }
 
     // MARK: - Environment
 
@@ -58,7 +60,7 @@ struct iOSDungeonDescentView: View {
     var body: some View {
         levelContent
             .background {
-                if lightsOffModeEnabled && viewModel.phase != .prologue {
+                if isLightsOffFinalLevel {
                     Color.black
                         .ignoresSafeArea()
                 } else {
@@ -68,11 +70,6 @@ struct iOSDungeonDescentView: View {
             }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
-            .task {
-                let enabled = await storage.isLightsOffModeEnabled()
-                lightsOffModeEnabled = enabled
-                viewModel.configureLightsOffMode(enabled)
-            }
             .onChange(of: viewModel.completedResult) { _, result in
                 guard let result else { return }
                 router.push(.gameResult(result, gameKind: .scrollHunt, gameSpecificAnnouncement: gameSpecificAnnouncement(for: result)))
@@ -110,7 +107,8 @@ struct iOSDungeonDescentView: View {
                 timeRemaining: nil,
                 timedOut: false,
                 mistakes: viewModel.mistakes,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
+                lightsOffFlavorText: nil,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -134,7 +132,8 @@ struct iOSDungeonDescentView: View {
                 timeRemaining: viewModel.timeRemaining,
                 timedOut: viewModel.l2TimedOut,
                 mistakes: viewModel.mistakes,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
+                lightsOffFlavorText: nil,
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -158,7 +157,8 @@ struct iOSDungeonDescentView: View {
                 timeRemaining: viewModel.timeRemaining,
                 timedOut: viewModel.l3TimedOut,
                 mistakes: viewModel.mistakes,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
+                lightsOffFlavorText: String(localized: "dungeon.lightsOff.flavor"),
                 onUpdateReachability: { visible, frame in
                     viewModel.updateTargetReachability(visibleRect: visible, targetFrame: frame)
                 },
@@ -242,9 +242,6 @@ final class DungeonDescentViewModel {
     private let storage: any StorageComponent
     private let screenshotScene: iOSScreenshotScene?
 
-    /// When `true`, each new level uses a shuffled room order with a random target (Lights Off).
-    private var lightsOffModeEnabled = false
-
     /// L3 session — created fresh each time L3 starts (including retries).
     private var session: GameSession?
 
@@ -269,25 +266,18 @@ final class DungeonDescentViewModel {
         }
     }
 
-    /// Stores the Lights Off preference from storage before the player begins a level.
-    ///
-    /// Called from the container view's `.task` after `await storage.isLightsOffModeEnabled()`.
-    func configureLightsOffMode(_ enabled: Bool) {
-        lightsOffModeEnabled = enabled
-    }
-
-    /// Returns whether dungeon layout should vary target placement between sessions.
+    /// Returns whether L3 should randomize room order and target placement (final timed level).
     ///
     /// Screenshot and UI-test launches keep fixed layouts for determinism.
-    private func shouldRandomizeDungeonLayout() -> Bool {
+    private func shouldRandomizeDungeonLayoutForTimedLevel() -> Bool {
         if screenshotScene != nil { return false }
         if ProcessInfo.processInfo.arguments.contains("-uiTesting") { return false }
-        return lightsOffModeEnabled
+        return true
     }
 
-    /// Builds the room list for the current level, optionally randomizing target placement for Lights Off.
-    private func roomsForLevel(_ base: [DungeonRoom]) -> [DungeonRoom] {
-        if shouldRandomizeDungeonLayout() {
+    /// Builds the room list for the current level, optionally randomizing target placement on L3.
+    private func roomsForLevel(_ base: [DungeonRoom], randomizeTargetPlacement: Bool) -> [DungeonRoom] {
+        if randomizeTargetPlacement, shouldRandomizeDungeonLayoutForTimedLevel() {
             return DungeonRoom.randomizedRoomsPreservingPool(base)
         }
         return base
@@ -307,7 +297,7 @@ final class DungeonDescentViewModel {
         statusMessage = nil
         levelComplete = false
         targetIsReachable = false
-        rooms = roomsForLevel(DungeonRoom.l1Rooms)
+        rooms = roomsForLevel(DungeonRoom.l1Rooms, randomizeTargetPlacement: false)
         phase = .firstAttempt
     }
 
@@ -319,7 +309,7 @@ final class DungeonDescentViewModel {
         levelComplete = false
         l2TimedOut = false
         targetIsReachable = false
-        rooms = roomsForLevel(DungeonRoom.l2Rooms)
+        rooms = roomsForLevel(DungeonRoom.l2Rooms, randomizeTargetPlacement: false)
         timeRemaining = 60
         phase = .rising
         startTimer(total: 60) { [weak self] in await self?.handleL2Timeout() }
@@ -339,11 +329,12 @@ final class DungeonDescentViewModel {
         stopTimer()
         mistakes = 0
         statusMessage = nil
+        levelComplete = false
         l3TimedOut = false
         completedResult = nil
         voiceOverDisabledMidGame = false
         targetIsReachable = false
-        rooms = roomsForLevel(DungeonRoom.l3Rooms)
+        rooms = roomsForLevel(DungeonRoom.l3Rooms, randomizeTargetPlacement: true)
         timeRemaining = 45
         phase = .timed
 
@@ -947,6 +938,8 @@ private struct DungeonPlayView: View {
     let mistakes: Int
     /// When `true`, room icons are covered by an accessibility-inert blackout layer.
     let lightsOffMode: Bool
+    /// Optional atmospheric copy for the final timed level (Lights Off); `nil` for L1–L2.
+    let lightsOffFlavorText: String?
     let onUpdateReachability: (CGRect, CGRect) -> Void
     let onActivateTarget: (DungeonRoom) async -> Void
     let onActivateNonTarget: (DungeonRoom) async -> Void
@@ -963,6 +956,21 @@ private struct DungeonPlayView: View {
         GeometryReader { geo in
             ScrollView(.vertical) {
                 VStack(spacing: RA11ySpacing.base) {
+                    if let lightsOffFlavorText {
+                        Text(lightsOffFlavorText)
+                            .font(.ra11ySubheadline)
+                            .foregroundStyle(Color.ra11yCardSecondaryText)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(RA11ySpacing.base)
+                            .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: RA11yRadius.card)
+                                    .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
+                            )
+                            .accessibilityAddTraits(.isStaticText)
+                    }
+
                     objectiveCard
 
                     if let total = timeTotal, let remaining = timeRemaining {

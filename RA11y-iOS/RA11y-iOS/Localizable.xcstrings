@@ -694,6 +694,17 @@
         }
       }
     },
+    "dungeon.lightsOff.flavor" : {
+      "comment" : "Atmospheric banner for the final timed Dungeon level when room icons are blacked out.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your potion had a side effect—your vision begins to dim. Listen for the room you need and scroll with care."
+          }
+        }
+      }
+    },
     "dungeon.explain.title" : {
       "localizations" : {
         "en" : {
@@ -1246,6 +1257,17 @@
         }
       }
     },
+    "enchanter.lightsOff.flavor" : {
+      "comment" : "Atmospheric banner for the final timed Enchanter level when visuals are blacked out.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your torch sputters out and darkness takes over. Trust VoiceOver and what you learned—find the relic by sound and memory alone."
+          }
+        }
+      }
+    },
     "firstRun.body" : {
       "localizations" : {
         "en" : {
@@ -1471,50 +1493,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "How to enable VoiceOver"
-          }
-        }
-      }
-    },
-    "hub.lightsOff.description" : {
-      "comment" : "Explains that gameplay visuals are hidden while prompts and VoiceOver remain available.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hide decorative visuals during trials. Use VoiceOver labels and prompts to play."
-          }
-        }
-      }
-    },
-    "hub.lightsOff.heading" : {
-      "comment" : "Section heading for Lights Off training mode toggle on the hub.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lights Off mode"
-          }
-        }
-      }
-    },
-    "hub.lightsOff.toggle.hint" : {
-      "comment" : "Accessibility hint for the Lights Off toggle.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When on, hides game artwork and icons during trials. Instructions and timers stay visible."
-          }
-        }
-      }
-    },
-    "hub.lightsOff.toggle.label" : {
-      "comment" : "Accessibility label for the Lights Off toggle switch.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lights Off mode"
           }
         }
       }
@@ -2075,6 +2053,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "First attempt passed. The Rogue's instinct awakens."
+          }
+        }
+      }
+    },
+    "rogue.lightsOff.flavor" : {
+      "comment" : "Atmospheric banner for the final timed Rogue level when seal artwork is blacked out.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A magical wind from deep within the cavern extinguishes your torch. Double-tap by touch and sound alone."
           }
         }
       }

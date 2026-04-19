@@ -27,11 +27,6 @@ public final class HubViewModel {
     /// Populated by `refreshBestResults()`, which the hub view drives via `.task`.
     public private(set) var bestResults: [String: GameRank] = [:]
 
-    /// When `true`, gameplay screens hide decorative visuals while preserving VoiceOver traversal.
-    ///
-    /// Loaded from storage in `refreshBestResults()` and updated by `setLightsOffModeEnabled(_:)`.
-    public private(set) var isLightsOffModeEnabled: Bool = false
-
     // MARK: - Private
 
     private let storage: any StorageComponent
@@ -128,17 +123,6 @@ public final class HubViewModel {
         }
         bestResults = results
 
-        isLightsOffModeEnabled = await storage.isLightsOffModeEnabled()
-
         RA11yLogger.startup.debug("hubResultsLoad complete — \(results.count) stored result(s)")
-    }
-
-    /// Persists Lights Off mode and mirrors the value into `isLightsOffModeEnabled`.
-    ///
-    /// ## Concurrency
-    /// `@MainActor` — awaits the storage actor; safe from SwiftUI controls and `.task`.
-    public func setLightsOffModeEnabled(_ enabled: Bool) async {
-        await storage.setLightsOffModeEnabled(enabled)
-        isLightsOffModeEnabled = enabled
     }
 }

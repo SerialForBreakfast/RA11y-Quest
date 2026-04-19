@@ -22,7 +22,6 @@ public actor UserDefaultsStorageComponent: StorageComponent {
     private static let keyPrefix    = "com.ra11y.storage."
     private static let basicsKey    = "\(keyPrefix)basicsCompleted"
     private static let dismissedKey = "\(keyPrefix)basicsDismissed"
-    private static let lightsOffKey = "\(keyPrefix)lightsOffModeEnabled"
 
     // MARK: - Init
 
@@ -75,17 +74,6 @@ public actor UserDefaultsStorageComponent: StorageComponent {
         RA11yLogger.storage.info("Basics sequence marked as dismissed.")
     }
 
-    /// Returns whether Lights Off mode is enabled.
-    public func isLightsOffModeEnabled() async -> Bool {
-        defaults.bool(forKey: Self.lightsOffKey)
-    }
-
-    /// Persists the Lights Off mode preference.
-    public func setLightsOffModeEnabled(_ enabled: Bool) async {
-        defaults.set(enabled, forKey: Self.lightsOffKey)
-        RA11yLogger.storage.debug("Lights Off mode set — \(enabled)")
-    }
-
     // MARK: - Private Helpers
 
     /// Synchronous read used internally to avoid cross-actor hops within the same actor.
@@ -113,8 +101,6 @@ public extension UserDefaultsStorageComponent {
         public static let basicsCompleted = UserDefaultsStorageComponent.basicsKey
         /// Key for the "basics dismissed" flag. Mirrors `UserDefaultsStorageComponent.dismissedKey`.
         public static let basicsDismissed = UserDefaultsStorageComponent.dismissedKey
-        /// Key for Lights Off mode. Mirrors `lightsOffKey`.
-        public static let lightsOffModeEnabled = UserDefaultsStorageComponent.lightsOffKey
     }
 }
 #endif

@@ -112,26 +112,4 @@ struct StorageTests {
 
         #expect(await b.isBasicsDismissed() == false)
     }
-
-    // MARK: - Lights Off Mode
-
-    @Test func lightsOffModeDefaultsToDisabled() async {
-        let storage = InMemoryStorageComponent()
-        #expect(await storage.isLightsOffModeEnabled() == false)
-    }
-
-    @Test func lightsOffModePersists() async {
-        let storage = InMemoryStorageComponent()
-        await storage.setLightsOffModeEnabled(true)
-        #expect(await storage.isLightsOffModeEnabled() == true)
-        await storage.setLightsOffModeEnabled(false)
-        #expect(await storage.isLightsOffModeEnabled() == false)
-    }
-
-    @Test func lightsOffModeIsInstanceIsolated() async {
-        let a = InMemoryStorageComponent()
-        let b = InMemoryStorageComponent()
-        await a.setLightsOffModeEnabled(true)
-        #expect(await b.isLightsOffModeEnabled() == false)
-    }
 }

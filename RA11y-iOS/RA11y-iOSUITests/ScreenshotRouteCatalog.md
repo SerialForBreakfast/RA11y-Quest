@@ -32,7 +32,7 @@ These tests live in `RA11y_iOSUITests.swift`. They do **not** attach PNGs and ar
 
 | Purpose | Test method | Launch arguments | Anchor identifier |
 |---|---|---|---|
-| Screenshot-style launch clears Lights Off so hub stays deterministic | `testScreenshotLaunchArgsResetLightsOffToggle` | `-uiTesting` and `-screenshotMarkOnboardingComplete` | `hub.dmGreeting`, `hub.lightsOff.toggle` |
+| Screenshot-style launch with basics complete reaches hub greeting | `testScreenshotLaunchArgsReachHubWithBasicsComplete` | `-uiTesting` and `-screenshotMarkOnboardingComplete` | `hub.dmGreeting` |
 
 `RA11y_iOSApp` removes the Lights Off UserDefaults key when those arguments are present; this test enables the toggle, terminates, relaunches with the same args, and asserts the toggle is off.
 

@@ -27,7 +27,9 @@ struct iOSEnchantersTrialView: View {
     // MARK: - State
 
     @State private var viewModel: EnchanterTrialViewModel
-    @State private var lightsOffModeEnabled = false
+
+    /// Final timed level only: full-screen blackout and gameplay overlays (see `LightsOffMode-Recommendations.txt`).
+    private var isLightsOffFinalLevel: Bool { viewModel.phase == .timed }
 
     // MARK: - Environment
 
@@ -64,7 +66,7 @@ struct iOSEnchantersTrialView: View {
     var body: some View {
         levelContent
             .background {
-                if lightsOffModeEnabled && viewModel.phase != .prologue {
+                if isLightsOffFinalLevel {
                     Color.black
                         .ignoresSafeArea()
                 } else {
@@ -74,9 +76,6 @@ struct iOSEnchantersTrialView: View {
             }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
-            .task {
-                lightsOffModeEnabled = await storage.isLightsOffModeEnabled()
-            }
             .onChange(of: viewModel.completedResult) { _, result in
                 guard let result else { return }
                 let announcement = gameSpecificAnnouncement(for: result)
@@ -112,7 +111,7 @@ struct iOSEnchantersTrialView: View {
                 mistakes: viewModel.mistakes,
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
                 onActivate: { relic in await viewModel.activateRelic(relic) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToRising() }
@@ -131,7 +130,7 @@ struct iOSEnchantersTrialView: View {
                 statusMessage: viewModel.statusMessage,
                 levelComplete: viewModel.levelComplete,
                 timedOut: viewModel.l2TimedOut,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
                 onActivate: { relic in await viewModel.activateRelic(relic) },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToTimed() },
@@ -149,7 +148,7 @@ struct iOSEnchantersTrialView: View {
                 timeRemaining: viewModel.timeRemaining,
                 statusMessage: viewModel.statusMessage,
                 timedOut: viewModel.l3TimedOut,
-                lightsOffMode: lightsOffModeEnabled,
+                lightsOffMode: isLightsOffFinalLevel,
                 onActivate: { relic in await viewModel.activateRelic(relic) },
                 onHint: { viewModel.requestHint() },
                 onRetry: { viewModel.retryTimed() }
@@ -304,6 +303,7 @@ final class EnchanterTrialViewModel {
         stopTimer()
         mistakes = 0
         statusMessage = nil
+        levelComplete = false
         l3TimedOut = false
         completedResult = nil
         voiceOverDisabledMidGame = false
@@ -723,7 +723,7 @@ struct EnchanterRelic: Identifiable, Hashable, Equatable {
     // MARK: - Set Builders
 
     /// Returns a deterministic 3-relic set for L1 (UI-testing friendly).
-    /// L1 relic selection: shuffled each attempt so index memory alone cannot win (see `LightsOffMode-Recommendations.txt`).
+    /// L1 relic selection: shuffled each attempt so index memory alone cannot win.
     static func setForL1() -> [EnchanterRelic] {
         if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
             return Array(l1Pool.prefix(3))
@@ -1161,6 +1161,8 @@ private struct EnchanterTimedView: View {
     var body: some View {
         ScrollView(.vertical) {
             enchanterLevelContent {
+                enchanterLightsOffFlavorBanner
+
                 promptCard(
                     title: String(format: String(localized: "simon.l3.target.format"), targetRelic.displayName),
                     a11yLabel: String(format: String(localized: "simon.a11y.l3.target"), targetRelic.displayName),
@@ -1205,6 +1207,22 @@ private struct EnchanterTimedView: View {
         } else {
             inner
         }
+    }
+
+    /// Atmospheric copy for the final timed level (torch / darkness).
+    private var enchanterLightsOffFlavorBanner: some View {
+        Text(String(localized: "enchanter.lightsOff.flavor"))
+            .font(.ra11ySubheadline)
+            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(RA11ySpacing.base)
+            .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: RA11yRadius.card)
+                    .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
+            )
+            .accessibilityAddTraits(.isStaticText)
     }
 
     private var relicStack: some View {
