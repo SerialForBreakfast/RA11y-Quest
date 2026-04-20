@@ -626,7 +626,6 @@
     },
     "dungeon.a11y.scroll.vo.focusAnnouncement" : {
       "comment" : "VoiceOver announcement after screen-changed and backup focus on the Moonstone alignment lane ScrollView.",
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

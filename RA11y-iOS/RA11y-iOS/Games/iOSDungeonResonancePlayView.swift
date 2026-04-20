@@ -22,8 +22,31 @@ private enum ResonancePlayfieldCoordinateSpace {
     static let name = "resonancePlayfield"
 }
 
-/// Height of the playfield `ZStack` (between top/bottom safe-area insets) for scroll content sizing.
+/// Height of the playfield `ZStack` (between top/bottom chrome regions) for scroll content sizing.
+///
+/// The top and bottom chrome reserve a stable footprint, so this value should not jump when
+/// controls appear or disappear during a phase.
 private struct ResonancePlayfieldViewportHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 { value = next }
+    }
+}
+
+/// Measured top chrome height so the playfield can use only the visible remaining space.
+private struct ResonanceTopChromeHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 { value = next }
+    }
+}
+
+/// Measured bottom chrome height so the playfield can use only the visible remaining space.
+private struct ResonanceBottomChromeHeightPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
@@ -49,19 +72,18 @@ private enum iOSResonancePlayAccessibilitySortTier {
 /// activation only when the moonstone aligns with the aim line.
 ///
 /// **VoiceOver:** The scroll lane is a UIKit ``iOSResonanceVoiceOverScrollProxyRepresentable`` (`UIScrollView`)
-/// — a **single** element named “Moonstone alignment lane” for three-finger shaft scrolling. Sort priority places
-/// the top HUD (objective, tips) **before** the lane, and the lane **before** bottom controls—programmatic
-/// `layoutChanged` to the lane is **not** posted (it skipped the nav title and instructions). Aim/orb alignment and
-/// viewport height use scoped `GeometryReader` backgrounds + preference keys (not a root wrapping `GeometryReader`).
+/// — a **single** element named “Moonstone alignment lane” for three-finger shaft scrolling. The UIKit
+/// proxy restores deterministic VoiceOver landing on entry, while sort priority remains a secondary aid.
+/// Aim/orb alignment and viewport height use scoped `GeometryReader` backgrounds + preference keys
+/// (not a root wrapping `GeometryReader`).
 ///
 /// **VoiceOver lane proxy:** The **visual** lane is a clipped, **non-scrolling** stack whose vertical
 /// offset mirrors the UIKit scroller’s content offset (same lane label on the scroll view). Chamber
 /// names on decoys are decorative; they are not separate VoiceOver items. The glyph column stays
 /// `accessibilityHidden`. On iOS,
-/// three-finger scrolling affects the scroll view associated with the **current VoiceOver focus**—if
-/// focus is on objective/timer chrome, three-finger swipes will not move the lane; the player must
-/// navigate until VoiceOver announces the scroll proxy (localized `dungeon.a11y.scroll.container`; see
-/// hints and L1 tip copy). Quests
+/// three-finger scrolling affects the scroll view associated with the **current VoiceOver focus**. The
+/// lane proxy is auto-focused on entry, but the decorative glyph column still remains hidden from
+/// accessibility so there is only one playfield scroll surface. Quests
 /// cannot be entered without VoiceOver (see ``iOSAppRouter/pushGame(kind:provider:)``), so a
 /// separate non-VO `ScrollView` path is not maintained here.
 ///
@@ -104,11 +126,18 @@ struct iOSDungeonResonancePlayView: View {
 
     /// Playfield height between safe-area insets; drives minimum UIKit scroll content height so VoiceOver can scroll.
     @State private var playfieldViewportHeight: CGFloat = 600
+    @State private var topChromeHeight: CGFloat = 0
+    @State private var bottomChromeHeight: CGFloat = 0
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var aimBand: iOSResonanceAimBand {
         iOSResonanceAimBand.displayBand(deltaPoints: displayDeltaPoints, levelComplete: levelComplete)
+    }
+
+    /// Reserve enough height for the status row even when no transient message is visible.
+    private var topChromeStatusSizingMessage: String {
+        String(localized: "dungeon.resonance.hint")
     }
 
     /// Geometric height of the glyph column only (rows + spacing), before any scroll slack.
@@ -121,18 +150,20 @@ struct iOSDungeonResonancePlayView: View {
 
     /// Scroll content block height passed to the UIKit proxy and mirrored by the visual lane (intrinsic + optional spacer).
     ///
-    /// A `UIScrollView` only scrolls when `contentSize.height > bounds.height`. Short shafts (few rooms) produced
-    /// intrinsic content shorter than the viewport, so three-finger scroll did nothing. We pad with a clear spacer
-    /// in the SwiftUI lane so offsets stay aligned with the UIKit content height.
+    /// A `UIScrollView` only scrolls when `contentSize.height > bounds.height`. The scroll *range*
+    /// (contentSize.height − bounds.height) must be at least `intrinsic + 2 * verticalPadding`
+    /// so every row can be brought to the aim line. Setting `contentBlockHeight = intrinsic + viewport`
+    /// gives exactly that range: (intrinsic + viewport + 2*pad) − viewport = intrinsic + 2*pad.
     private var voiceOverLaneTotalScrollBlockHeight: CGFloat {
         let intrinsic = voiceOverLaneIntrinsicBlockHeight
         guard playfieldViewportHeight > 50 else { return intrinsic }
-        let verticalPadding = RA11ySpacing.xl
-        let minBlockForScroll = max(0, playfieldViewportHeight - 2 * verticalPadding) + 32
-        return max(intrinsic, minBlockForScroll)
+        return intrinsic + playfieldViewportHeight
     }
 
     /// Transparent tail under the lane so its laid-out height matches ``voiceOverLaneTotalScrollBlockHeight``.
+    ///
+    /// The visual lane and UIKit proxy must always stay in sync. If lane metrics change, update both
+    /// this spacer math and the proxy scroll sizing together.
     private var voiceOverLaneBottomSpacerHeight: CGFloat {
         max(0, voiceOverLaneTotalScrollBlockHeight - voiceOverLaneIntrinsicBlockHeight)
     }
@@ -159,7 +190,39 @@ struct iOSDungeonResonancePlayView: View {
         onResonanceDeltaChanged(delta)
     }
 
+    /// The playfield `ZStack` must always contain the UIKit proxy unconditionally. New overlays above it
+    /// must disable hit testing, and new playfield content must remain hidden from accessibility.
     var body: some View {
+        GeometryReader { geometry in
+            let clampedPlayfieldHeight = max(
+                240,
+                geometry.size.height - topChromeHeight - bottomChromeHeight
+            )
+            VStack(spacing: 0) {
+                topChrome
+
+                playfieldContent(height: clampedPlayfieldHeight)
+
+                bottomChrome
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+            .background(Color.ra11yGameFallbackBackground)
+            .environment(\.colorScheme, .dark)
+            .onAppear {
+                playfieldViewportHeight = clampedPlayfieldHeight
+            }
+            .onChange(of: clampedPlayfieldHeight) { _, newHeight in
+                guard abs(newHeight - playfieldViewportHeight) > 0.5 else { return }
+                playfieldViewportHeight = newHeight
+                applyResonanceAlignmentFromLastFrames()
+            }
+            .onAppear {
+                logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
+            }
+        }
+    }
+
+    private func playfieldContent(height: CGFloat) -> some View {
         ZStack {
             iOSShaftResonanceBackground()
 
@@ -167,7 +230,7 @@ struct iOSDungeonResonancePlayView: View {
             resonanceLaneColumn
                 .padding(.vertical, RA11ySpacing.xl)
                 .offset(y: -voiceOverProxyScrollOffsetY)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, minHeight: height, maxHeight: height, alignment: .top)
                 .clipped()
                 .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
                 .allowsHitTesting(false)
@@ -189,51 +252,33 @@ struct iOSDungeonResonancePlayView: View {
                     }
                 }
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
             .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.moonstoneLaneScrollProxy)
 
             centerOrbStack
+                .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
                 .allowsHitTesting(false)
                 /// Hides the decorative orb/reticle from the VoiceOver rotor.
                 .accessibilityHidden(true)
 
             if lightsOffMode {
                 iOSResonanceLightsOffVignette()
+                    .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
                     .allowsHitTesting(false)
             }
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+        .clipped()
         .coordinateSpace(name: ResonancePlayfieldCoordinateSpace.name)
-        .background {
-            GeometryReader { geo in
-                Color.clear
-                    .preference(
-                        key: ResonancePlayfieldViewportHeightPreferenceKey.self,
-                        value: geo.size.height
-                    )
-            }
-        }
         .background(Color.ra11yGameFallbackBackground)
-        .onPreferenceChange(ResonancePlayfieldViewportHeightPreferenceKey.self) { height in
-            Task { @MainActor in
-                await Task.yield()
-                guard height > 10, abs(height - playfieldViewportHeight) > 0.5 else { return }
-                playfieldViewportHeight = height
-                applyResonanceAlignmentFromLastFrames()
-            }
-        }
         .onPreferenceChange(iOSResonanceTargetMidYPreferenceKey.self) { targetY in
             Task { @MainActor in
-                await Task.yield()
                 guard targetY > -500, abs(targetY - lastTargetMidYInPlayfield) > 0.25 else { return }
                 lastTargetMidYInPlayfield = targetY
                 applyResonanceAlignmentFromLastFrames()
             }
-        }
-        .safeAreaInset(edge: .top, spacing: 0) { topChrome }
-        .safeAreaInset(edge: .bottom, spacing: 0) { bottomChrome }
-        .environment(\.colorScheme, .dark)
-        .onAppear {
-            logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
         }
     }
 
@@ -291,20 +336,65 @@ struct iOSDungeonResonancePlayView: View {
     // MARK: - Chrome
 
     private var topChrome: some View {
+        ZStack(alignment: .top) {
+            topChromeSizingTemplate
+                .hidden()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            topChromeVisibleContent
+        }
+        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+        .padding(.bottom, RA11ySpacing.sm)
+        .background(.ultraThinMaterial.opacity(0.92))
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .preference(
+                        key: ResonanceTopChromeHeightPreferenceKey.self,
+                        value: geo.size.height
+                    )
+            }
+        }
+        /// Higher than the Moonstone lane proxy so Objective / gesture tips are read before the scroll surface.
+        .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.topChrome)
+        .onPreferenceChange(ResonanceTopChromeHeightPreferenceKey.self) { height in
+            guard height > 0, abs(height - topChromeHeight) > 0.5 else { return }
+            topChromeHeight = height
+        }
+    }
+
+    private var bottomChrome: some View {
+        ZStack(alignment: .top) {
+            bottomChromeSizingTemplate
+                .hidden()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            bottomChromeVisibleContent
+        }
+        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+        .padding(.vertical, RA11ySpacing.md)
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .preference(
+                        key: ResonanceBottomChromeHeightPreferenceKey.self,
+                        value: geo.size.height
+                    )
+            }
+        }
+        .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.bottomChrome)
+        .onPreferenceChange(ResonanceBottomChromeHeightPreferenceKey.self) { height in
+            guard height > 0, abs(height - bottomChromeHeight) > 0.5 else { return }
+            bottomChromeHeight = height
+        }
+    }
+
+    private var topChromeVisibleContent: some View {
         VStack(spacing: RA11ySpacing.base) {
             if let lightsOffFlavorText {
-                Text(lightsOffFlavorText)
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(RA11ySpacing.base)
-                    .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: RA11yRadius.card)
-                            .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-                    )
-                    .accessibilityAddTraits(.isStaticText)
+                lightsOffFlavorCard(message: lightsOffFlavorText)
             }
 
             objectiveCard
@@ -322,64 +412,73 @@ struct iOSDungeonResonancePlayView: View {
 
             if let statusMessage {
                 iOSResonanceStatusRow(message: statusMessage)
+            } else {
+                iOSResonanceStatusRow(message: topChromeStatusSizingMessage)
+                    .hidden()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
         }
-        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-        .padding(.bottom, RA11ySpacing.sm)
-        .background(.ultraThinMaterial.opacity(0.92))
-        /// Higher than the Moonstone lane proxy so Objective / gesture tips are read before the scroll surface.
-        .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.topChrome)
     }
 
-    /// `false` during most of L1 when the seal is unavailable and there is no hint — avoids an empty
-    /// `VStack` inset that VoiceOver can focus as an unnamed rectangle.
-    private var hasPlayfieldBottomControls: Bool {
-        if levelComplete, onContinue != nil { return true }
-        if targetIsReachable, rooms.contains(where: \.isTarget) { return true }
-        if onHint != nil { return true }
-        return false
-    }
+    private var topChromeSizingTemplate: some View {
+        VStack(spacing: RA11ySpacing.base) {
+            if let lightsOffFlavorText {
+                lightsOffFlavorCard(message: lightsOffFlavorText)
+            }
 
-    @ViewBuilder
-    private var bottomChrome: some View {
-        if timedOut {
-            timeoutBanner
-                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-                .padding(.vertical, RA11ySpacing.md)
-                .background(.ultraThinMaterial.opacity(0.95))
-                .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.bottomChrome)
-        } else if hasPlayfieldBottomControls {
-            sealOrProgressControls
-                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-                .padding(.vertical, RA11ySpacing.md)
-                .background(.ultraThinMaterial.opacity(0.95))
-                .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.bottomChrome)
+            objectiveCard
+
+            if showsFirstLevelGestureTip {
+                firstLevelGestureTipCard
+            }
+
+            if let total = timeTotal, let remaining = timeRemaining {
+                DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(timerA11yLabel)
+                    .accessibilityHint(String(localized: "a11y.timer.group.hint"))
+            }
+
+            iOSResonanceStatusRow(message: topChromeStatusSizingMessage)
         }
     }
 
-    @ViewBuilder
-    private var sealOrProgressControls: some View {
-        if levelComplete, let onContinue {
-            continueButton(onContinue)
-        } else if !timedOut {
-            // At least one subview when `hasPlayfieldBottomControls` is true (see `bottomChrome`).
-            VStack(spacing: RA11ySpacing.sm) {
-                if targetIsReachable, let targetRoom = rooms.first(where: \.isTarget) {
-                    Button {
-                        Task { await onActivateTarget(targetRoom) }
-                    } label: {
-                        Text(String(localized: "dungeon.resonance.seal"))
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .tint(Color.ra11yAccent)
-                    .accessibilityIdentifier("dungeon.resonance.seal")
-                    .accessibilityHint(String(localized: "dungeon.resonance.seal.hint"))
-                }
-                if let onHint {
-                    hintButton(onHint)
-                }
+    private var bottomChromeVisibleContent: some View {
+        Group {
+            if timedOut {
+                timeoutBanner
+                    .background(.ultraThinMaterial.opacity(0.95))
+            } else if levelComplete, let continueAction = onContinue {
+                continueButton(continueAction)
+                    .background(.ultraThinMaterial.opacity(0.95))
+            } else if targetIsReachable, let targetRoom = rooms.first(where: \.isTarget) {
+                playfieldControlsContent(targetRoom: targetRoom)
+                    .background(.ultraThinMaterial.opacity(0.95))
+            } else if onHint != nil {
+                playfieldControlsWithoutSeal
+                    .background(.ultraThinMaterial.opacity(0.95))
+            } else {
+                Color.clear
+                    .frame(maxWidth: .infinity, minHeight: 0)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
+    /// Hidden sizing template that keeps the playfield height stable while lock state changes.
+    private var bottomChromeSizingTemplate: some View {
+        Group {
+            if timedOut {
+                timeoutBanner
+            } else if levelComplete, let continueAction = onContinue {
+                continueButton(continueAction)
+            } else if let targetRoom = rooms.first(where: \.isTarget) {
+                playfieldControlsContent(targetRoom: targetRoom)
+            } else if onHint != nil {
+                playfieldControlsWithoutSeal
+            } else {
+                EmptyView()
             }
         }
     }
@@ -399,6 +498,60 @@ struct iOSDungeonResonancePlayView: View {
                 .controlSize(.large)
                 .tint(Color.ra11yAccent)
                 .accessibilityIdentifier("dungeon.retry")
+            }
+        }
+    }
+
+    private func lightsOffFlavorCard(message: String) -> some View {
+        Text(message)
+            .font(.ra11ySubheadline)
+            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(RA11ySpacing.base)
+            .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: RA11yRadius.card)
+                    .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
+            )
+            .accessibilityAddTraits(.isStaticText)
+    }
+
+    private func playfieldControlsContent(targetRoom: DungeonRoom) -> some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            Button {
+                Task { await onActivateTarget(targetRoom) }
+            } label: {
+                Text(String(localized: "dungeon.resonance.seal"))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(Color.ra11yAccent)
+            .accessibilityIdentifier("dungeon.resonance.seal")
+            .accessibilityHint(String(localized: "dungeon.resonance.seal.hint"))
+
+            if let onHint {
+                hintButton(onHint)
+            }
+        }
+    }
+
+    private var playfieldControlsWithoutSeal: some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            Button(action: {}) {
+                Text(String(localized: "dungeon.resonance.seal"))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(Color.ra11yAccent)
+            .hidden()
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+
+            if let onHint {
+                hintButton(onHint)
             }
         }
     }

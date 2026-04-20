@@ -12,9 +12,21 @@ private final class ResonanceVoiceOverProxyScrollView: UIScrollView {
     var onFirstReadyForAccessibilityLayout: (() -> Void)?
 
     private var didFireFirstLayout = false
+    private var lastLoggedBoundsHeight: CGFloat = -1
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        if abs(bounds.height - lastLoggedBoundsHeight) > 0.5 {
+            lastLoggedBoundsHeight = bounds.height
+            RA11yLogger.scrollInteraction.debug(
+                "UIKit proxy: layoutSubviews bounds.height=\(self.bounds.height) contentSize.height=\(self.contentSize.height)"
+            )
+            #if DEBUG
+            print(
+                "[RA11yScroll] UIKit proxy: layoutSubviews bounds.height \(String(format: "%.1f", self.bounds.height)) contentSize.height \(String(format: "%.1f", self.contentSize.height))"
+            )
+            #endif
+        }
         guard !didFireFirstLayout,
               bounds.width > 0.5,
               bounds.height > 0.5,
@@ -22,6 +34,26 @@ private final class ResonanceVoiceOverProxyScrollView: UIScrollView {
         else { return }
         didFireFirstLayout = true
         onFirstReadyForAccessibilityLayout?()
+    }
+
+    override func accessibilityElementDidBecomeFocused() {
+        super.accessibilityElementDidBecomeFocused()
+        RA11yLogger.scrollInteraction.debug(
+            "UIKit proxy: accessibilityElementDidBecomeFocused contentOffset.y=\(self.contentOffset.y) contentSize.height=\(self.contentSize.height) bounds.height=\(self.bounds.height)"
+        )
+        #if DEBUG
+        print(
+            "[RA11yScroll] UIKit proxy: accessibilityElementDidBecomeFocused contentOffset.y \(String(format: "%.1f", self.contentOffset.y)) contentSize.height \(String(format: "%.1f", self.contentSize.height)) bounds.height \(String(format: "%.1f", self.bounds.height))"
+        )
+        #endif
+    }
+
+    override func accessibilityElementDidLoseFocus() {
+        super.accessibilityElementDidLoseFocus()
+        RA11yLogger.scrollInteraction.debug("UIKit proxy: accessibilityElementDidLoseFocus")
+        #if DEBUG
+        print("[RA11yScroll] UIKit proxy: accessibilityElementDidLoseFocus")
+        #endif
     }
 }
 
@@ -41,8 +73,9 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
     private var contentHeightConstraint: NSLayoutConstraint?
 
     private var didScheduleVoiceOverLanding = false
+    private var lastLoggedScrollRange: CGFloat = -10_000
 
-    /// One-shot DEBUG warning if scroll range is zero (VoiceOver scroll will not change `contentOffset`).
+    /// One-shot DEBUG warning if scroll range is too small for reliable VoiceOver lane travel.
     private var didLogInsufficientScrollRange = false
 
     func attach(scrollView: UIScrollView, contentView: UIView, heightConstraint: NSLayoutConstraint) {
@@ -57,37 +90,70 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
             constraint.constant = totalHeight
         }
         scrollView.layoutIfNeeded()
+        let boundsH = scrollView.bounds.height
+        let contentH = scrollView.contentSize.height
+        let scrollRange = contentH - boundsH
+        if abs(scrollRange - lastLoggedScrollRange) > 0.5 {
+            lastLoggedScrollRange = scrollRange
+            RA11yLogger.scrollInteraction.debug(
+                "UIKit proxy: updateContentHeight totalHeight=\(totalHeight) contentSize.height=\(contentH) bounds.height=\(boundsH) scrollRange=\(scrollRange)"
+            )
+            #if DEBUG
+            print(
+                "[RA11yScroll] UIKit proxy: updateContentHeight totalHeight \(String(format: "%.1f", totalHeight)) contentSize.height \(String(format: "%.1f", contentH)) bounds.height \(String(format: "%.1f", boundsH)) scrollRange \(String(format: "%.1f", scrollRange))"
+            )
+            #endif
+        }
         #if DEBUG
         if !didLogInsufficientScrollRange {
-            let boundsH = scrollView.bounds.height
-            let contentH = scrollView.contentSize.height
-            if boundsH > 10, contentH > 0, contentH <= boundsH + 0.5 {
+            if boundsH > 10, contentH > 0, scrollRange <= 96 {
                 didLogInsufficientScrollRange = true
                 RA11yLogger.scrollInteraction.warning(
-                    "Resonance scroll proxy: contentSize.height (\(contentH)) <= bounds.height (\(boundsH)) — three-finger VoiceOver scroll cannot increase contentOffset"
+                    "Resonance scroll proxy: scroll range (\(scrollRange)) is too small for reliable three-finger VoiceOver travel; contentSize.height=\(contentH), bounds.height=\(boundsH)"
                 )
             }
         }
         #endif
     }
 
-    /// Called once after the scroll view has a non-empty frame in a window.
-    ///
-    /// **Does not** post `layoutChanged` with the scroll view: doing so moved VoiceOver focus straight to the
-    /// Moonstone lane, **skipping** the navigation title and top HUD (objectives, gesture instructions). That
-    /// broke swipe order and confused three-finger scroll (focus jumped before users read how to scroll).
-    /// Natural focus order is restored; players swipe to **Moonstone alignment lane** when ready.
+    /// Called once after the scroll view has a non-empty frame in a window. Restores the original
+    /// VoiceOver landing sequence so the lane is immediately ready for three-finger scroll.
     @MainActor
     func scheduleVoiceOverLandingIfNeeded() {
         guard !didScheduleVoiceOverLanding else { return }
         didScheduleVoiceOverLanding = true
 
-        RA11yLogger.scrollInteraction.debug(
-            "UIKit proxy: no programmatic layoutChanged — preserves nav + HUD VoiceOver order before the lane"
-        )
-        #if DEBUG
-        print("[RA11yScroll] UIKit proxy: skipped layoutChanged/announcement — VO order uses sortPriority + swipe")
-        #endif
+        guard UIAccessibility.isVoiceOverRunning else {
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: skip programmatic VO focus — VoiceOver off")
+            #if DEBUG
+            print("[RA11yScroll] UIKit proxy: skip programmatic VO focus — VoiceOver off")
+            #endif
+            return
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            UIAccessibility.post(notification: .screenChanged, argument: nil)
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted UIAccessibility.Notification.screenChanged")
+            #if DEBUG
+            print("[RA11yScroll] UIKit proxy: posted UIAccessibility.Notification.screenChanged")
+            #endif
+
+            try? await Task.sleep(for: .milliseconds(300))
+            guard let sv = scrollView else { return }
+            UIAccessibility.post(notification: .layoutChanged, argument: sv)
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted layoutChanged with UIScrollView")
+            #if DEBUG
+            print("[RA11yScroll] UIKit proxy: posted layoutChanged with UIScrollView")
+            #endif
+
+            let focusLine = String(localized: "dungeon.a11y.scroll.vo.focusAnnouncement")
+            UIAccessibility.post(notification: .announcement, argument: focusLine)
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted VO focus announcement (length=\(focusLine.count))")
+            #if DEBUG
+            print("[RA11yScroll] UIKit proxy: posted VO focus announcement (length=\(focusLine.count))")
+            #endif
+        }
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -136,6 +202,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
         scrollView.alwaysBounceVertical = true
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
+        scrollView.accessibilityRespondsToUserInteraction = true
         scrollView.delegate = context.coordinator
         scrollView.contentInsetAdjustmentBehavior = .never
 
@@ -185,5 +252,6 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
         scrollView.accessibilityIdentifier = "dungeon.resonance.scrollLane"
         scrollView.accessibilityLabel = accessibilityLabelText
         scrollView.accessibilityHint = accessibilityHintText
+        scrollView.accessibilityRespondsToUserInteraction = true
     }
 }
