@@ -49,9 +49,13 @@ Transparency rules
 ------------------
 - **Opaque:** `dungeon_resonance_bg` only.
 - **Alpha:** all other listed assets. Subjects centered with **padding inside the PNG**
-  so SwiftUI can scale without clipping highlights. If generator emits flat white
-  behind glyphs, run `utility/remove_white_background.py --mode edge` **only** when
-  the subject is isolated on white; review edges for fringing.
+  so SwiftUI can scale without clipping highlights.
+- **Glyph lane exports:** `dungeon_target_moonstone`, `dungeon_decoy_*` shipped historically as
+  **RGB-only** wide canvases; SwiftUI drew obvious grey/light boxes around scaled glyphs. They
+  must be **PNG RGBA** (true alpha). If a revision lands as flat RGB again, run
+  `utility/remove_white_background.py --mode edge` on edge-connected near-white (backs up then
+  replaces in place), or re-export from the art pipeline with proper alpha. Review on a dark
+  background (game shaft) on device.
 
 Multiple form factors
 ----------------------

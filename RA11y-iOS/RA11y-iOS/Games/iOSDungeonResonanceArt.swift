@@ -5,6 +5,11 @@
 /// PNGs live in `Assets.xcassets` as universal 1x imagesets. Layering and point sizes
 /// are documented in `memlog/requirements/Design/DungeonResonanceAssetPipeline.txt`.
 ///
+/// **Lane glyphs** (moonstone + decoys): source PNGs must be **RGBA** (true transparency).
+/// Flat RGB mats (no alpha) show as grey or white rectangles behind `Image`. If a source file
+/// regresses to RGB-only, run `utility/remove_white_background.py` (see asset pipeline) or
+/// re-export from the art tool with alpha.
+///
 /// Warm / Near orb states may use code-driven effects (`DesignTicket-DungeonResonancePromptSheet`)
 /// rather than additional PNGs until explicitly added.
 enum iOSDungeonResonanceArt {

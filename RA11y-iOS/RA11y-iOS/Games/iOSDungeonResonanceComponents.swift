@@ -4,7 +4,7 @@ import RA11yCore
 
 // MARK: - Alignment (ADR-0003)
 
-/// Vertical distance bands between the moonstone target and the fixed aim line (screen center).
+/// Vertical distance bands between the moonstone target and the fixed aim line (playfield center).
 ///
 /// Values match the tuned mockup in `iOSDungeonResonanceMockupView` and drive orb/reticle
 /// presentation plus `QuestFeedbackBand` for multimodal feedback.
@@ -13,9 +13,11 @@ enum iOSResonanceAlignment {
     static let nearMaxPoints: CGFloat = 54
     static let warmMaxPoints: CGFloat = 118
 
-    /// Distance magnitude in points; callers supply global-space Y centers.
-    static func deltaPoints(targetMidYGlobal: CGFloat, aimMidYGlobal: CGFloat) -> CGFloat {
-        abs(targetMidYGlobal - aimMidYGlobal)
+    /// Distance magnitude in points; callers supply vertical centers in the **same** coordinate space.
+    ///
+    /// Crystal Resonance gameplay uses the named `resonancePlayfield` coordinate space.
+    static func deltaPoints(targetMidY: CGFloat, aimMidY: CGFloat) -> CGFloat {
+        abs(targetMidY - aimMidY)
     }
 
     /// Semantic feedback band derived from current alignment (no success state).
@@ -30,6 +32,20 @@ enum iOSResonanceAlignment {
     static func isReachable(deltaPoints: CGFloat) -> Bool {
         deltaPoints < lockedMaxPoints
     }
+}
+
+// MARK: - Lane layout (visual + VoiceOver scroll proxy)
+
+/// Shared metrics so the UIKit VoiceOver scroll proxy’s content height matches the on-screen glyph stack.
+///
+/// Row height uses the same default as ``iOSLaneDecoyChip``’s ``SwiftUI/ScaledMetric`` base (`.title`, 76 pt).
+/// At very large Dynamic Type sizes the visual chips may grow slightly; the proxy still uses these
+/// nominal values so scroll distance stays close to the shaft layout.
+enum iOSDungeonResonanceLaneLayout {
+    /// Vertical space between stacked decoys and Moonstone rows in the playfield.
+    static let rowSpacingPoints: CGFloat = 56
+    /// Nominal content height per lane row for scroll content math and the UIKit accessibility rows.
+    static let rowContentHeightPoints: CGFloat = 76
 }
 
 // MARK: - Presentation band (orb + reticle)
@@ -54,7 +70,7 @@ enum iOSResonanceAimBand: Equatable {
 
 // MARK: - Preference
 
-/// Global-space vertical center of the moonstone target (alignment with fixed aim line).
+/// Vertical center of the moonstone in the same coordinate space as the playfield aim line (named `resonancePlayfield`).
 struct iOSResonanceTargetMidYPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = -10_000
 
@@ -163,8 +179,10 @@ struct iOSMoonstoneTargetOrb: View {
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.targetMoonstone) {
                 Image(uiImage: ui)
+                    .interpolation(.high)
                     .resizable()
                     .scaledToFit()
+                    .compositingGroup()
                     .frame(width: moonW, height: moonH)
                     .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.4), radius: 10)
             } else {
@@ -204,8 +222,10 @@ struct iOSLaneDecoyChip: View {
         Group {
             if let ui = UIImage(named: style.assetName) {
                 Image(uiImage: ui)
+                    .interpolation(.high)
                     .resizable()
                     .scaledToFit()
+                    .compositingGroup()
                     .frame(width: chip, height: chip)
             } else {
                 legacyDecoyPlaceholder

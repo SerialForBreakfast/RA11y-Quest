@@ -506,7 +506,8 @@ final class DungeonDescentViewModel {
 
     /// Handles activation of a non-target room (decoy).
     ///
-    /// Increments the mistake counter, announces feedback, and records the mistake
+    /// Increments the mistake counter, announces feedback, emits quest multimodal wrong-activation
+    /// feedback (when not in a screenshot scene), and records the mistake
     /// against the L3 `GameSession` if one is running.
     func activateNonTarget(_ room: DungeonRoom) async {
         guard !room.isTarget else { return }
@@ -515,16 +516,20 @@ final class DungeonDescentViewModel {
         mistakes += 1
         statusMessage = String(localized: "dungeon.feedback.non_target")
         announce(String(localized: "dungeon.feedback.non_target"))
+        if screenshotScene == nil {
+            questFeedbackCoordinator.process(.wrongActivation)
+        }
 
         if phase == .timed, let session {
             do { try await session.recordMistake() } catch { /* session in non-running state */ }
         }
     }
 
-    /// Announces the scroll hint to VoiceOver and as a visible status message.
+    /// Announces the resonance alignment hint to VoiceOver and as a visible status message.
+    ///
+    /// Copy is intentionally Moonstone-and-orb alignment only; room asset names are not part of this hint.
     func requestHint() {
-        let targetName = rooms.first(where: \.isTarget)?.displayName ?? "the target"
-        let message = String(format: String(localized: "dungeon.hint.format"), targetName)
+        let message = String(localized: "dungeon.resonance.hint")
         statusMessage = message
         guard screenshotScene == nil else { return }
         questFeedbackCoordinator.process(.hintRequested)
@@ -723,10 +728,11 @@ final class DungeonDescentViewModel {
 
 // MARK: - DungeonRoom
 
-/// A single chamber marker along the Crystal Resonance scroll shaft.
+/// One vertical slot in the resonance lane (scene art and icon assets).
 ///
-/// Passage rooms (isTarget) are correct targets; all others are non-interactive decoys.
-/// Level-specific room sets are defined in `l1Rooms`, `l2Rooms`, `l3Rooms`.
+/// The scroll game is **alignment**: move the Moonstone glyph to the orb. `displayName` exists for
+/// catalog / Lights Off copy, not as a navigation metaphor in VO—player-facing objectives use alignment strings.
+/// Exactly one room per level has `isTarget`; the rest are visual decoys.
 struct DungeonRoom: Identifiable {
     let id: String
     let displayName: String

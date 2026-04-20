@@ -5,7 +5,7 @@ import RA11yCore
 
 // MARK: - UIScrollView subclass
 
-/// Hosts the accessibility element VoiceOver should treat as the **sole** scroll surface for the lane.
+/// Hosts the accessibility element VoiceOver treats as the **sole** scroll surface for the lane.
 /// Invokes a one-shot callback after first valid layout so programmatic focus can target this view.
 private final class ResonanceVoiceOverProxyScrollView: UIScrollView {
 
@@ -27,7 +27,7 @@ private final class ResonanceVoiceOverProxyScrollView: UIScrollView {
 
 // MARK: - Coordinator
 
-/// Bridges `UIScrollView` offset updates to SwiftUI and schedules initial VoiceOver focus on the UIKit view.
+/// Bridges `UIScrollView` offset updates to SwiftUI and schedules initial VoiceOver focus on the UIKit scroll view.
 ///
 /// ## Concurrency
 /// `scrollViewDidScroll` and layout callbacks run on the main thread; `UIAccessibility.post` and `Task`
@@ -42,6 +42,9 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
 
     private var didScheduleVoiceOverLanding = false
 
+    /// One-shot DEBUG warning if scroll range is zero (VoiceOver scroll will not change `contentOffset`).
+    private var didLogInsufficientScrollRange = false
+
     func attach(scrollView: UIScrollView, contentView: UIView, heightConstraint: NSLayoutConstraint) {
         self.scrollView = scrollView
         self.contentView = contentView
@@ -54,44 +57,37 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
             constraint.constant = totalHeight
         }
         scrollView.layoutIfNeeded()
+        #if DEBUG
+        if !didLogInsufficientScrollRange {
+            let boundsH = scrollView.bounds.height
+            let contentH = scrollView.contentSize.height
+            if boundsH > 10, contentH > 0, contentH <= boundsH + 0.5 {
+                didLogInsufficientScrollRange = true
+                RA11yLogger.scrollInteraction.warning(
+                    "Resonance scroll proxy: contentSize.height (\(contentH)) <= bounds.height (\(boundsH)) — three-finger VoiceOver scroll cannot increase contentOffset"
+                )
+            }
+        }
+        #endif
     }
 
-    /// Called once after the scroll view has a non-empty frame in a window. Posts the same sequence as
-    /// the former SwiftUI path (`screenChanged` → delay → move focus via `layoutChanged` → announcement).
+    /// Called once after the scroll view has a non-empty frame in a window.
+    ///
+    /// **Does not** post `layoutChanged` with the scroll view: doing so moved VoiceOver focus straight to the
+    /// Moonstone lane, **skipping** the navigation title and top HUD (objectives, gesture instructions). That
+    /// broke swipe order and confused three-finger scroll (focus jumped before users read how to scroll).
+    /// Natural focus order is restored; players swipe to **Moonstone alignment lane** when ready.
     @MainActor
     func scheduleVoiceOverLandingIfNeeded() {
         guard !didScheduleVoiceOverLanding else { return }
         didScheduleVoiceOverLanding = true
 
-        guard UIAccessibility.isVoiceOverRunning else {
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: skip programmatic VO focus — VoiceOver off")
-            #if DEBUG
-            print("[RA11yScroll] UIKit proxy: skip programmatic VO focus — VoiceOver off")
-            #endif
-            return
-        }
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(500))
-            UIAccessibility.post(notification: .screenChanged, argument: nil)
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted UIAccessibility.Notification.screenChanged")
-            #if DEBUG
-            print("[RA11yScroll] UIKit proxy: posted UIAccessibility.Notification.screenChanged")
-            #endif
-            try? await Task.sleep(for: .milliseconds(300))
-            guard let sv = scrollView else { return }
-            UIAccessibility.post(notification: .layoutChanged, argument: sv)
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted layoutChanged with UIScrollView")
-            #if DEBUG
-            print("[RA11yScroll] UIKit proxy: posted layoutChanged with UIScrollView")
-            #endif
-            let focusLine = String(localized: "dungeon.a11y.scroll.vo.focusAnnouncement")
-            UIAccessibility.post(notification: .announcement, argument: focusLine)
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted VO focus announcement (length=\(focusLine.count))")
-            #if DEBUG
-            print("[RA11yScroll] UIKit proxy: posted VO focus announcement (length=\(focusLine.count))")
-            #endif
-        }
+        RA11yLogger.scrollInteraction.debug(
+            "UIKit proxy: no programmatic layoutChanged — preserves nav + HUD VoiceOver order before the lane"
+        )
+        #if DEBUG
+        print("[RA11yScroll] UIKit proxy: skipped layoutChanged/announcement — VO order uses sortPriority + swipe")
+        #endif
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -101,11 +97,18 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
 
 // MARK: - UIViewRepresentable
 
-/// Transparent `UIScrollView` VoiceOver proxy for Crystal Resonance: one accessibility element with a
-/// large content size so three-finger scrolling moves `contentOffset` and drives the mirrored lane offset.
+/// Transparent `UIScrollView` VoiceOver proxy for Crystal Resonance: **one** accessibility element (the lane)
+/// with a large content size so three-finger scrolling moves `contentOffset` and drives the mirrored lane offset.
 ///
-/// SwiftUI’s `ScrollView` delegated accessibility through the SwiftUI runtime inconsistently in swipe
-/// tests; hosting UIKit preserves a first-class scroll view in the platform accessibility tree.
+/// **VoiceOver three-finger scroll** is implemented by the system for focused `UIScrollView` instances; it does **not**
+/// surface as a normal `UIGestureRecognizer` you can log from `UIResponder`/`touches`. Verify behavior with
+/// ``scrollViewDidScroll`` / `contentOffset` (and the `[RA11yScroll]` logs from the SwiftUI bridge).
+///
+/// Chamber labels in ``DungeonRoom`` are not exposed here—they are decorative narrative tied to decoys and the
+/// objective string in the HUD, not separate VoiceOver destinations.
+///
+/// SwiftUI’s `ScrollView` delegated accessibility through the SwiftUI runtime inconsistently in swipe tests;
+/// hosting UIKit preserves a first-class scroll view in the platform accessibility tree.
 ///
 /// ## Concurrency
 /// `UIViewRepresentable` updates occur on the main thread; offset callbacks are main-thread.
@@ -129,6 +132,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> UIScrollView {
         let scrollView = ResonanceVoiceOverProxyScrollView()
         scrollView.backgroundColor = .clear
+        scrollView.isScrollEnabled = true
         scrollView.alwaysBounceVertical = true
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false

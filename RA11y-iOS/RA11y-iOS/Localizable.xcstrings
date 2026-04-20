@@ -440,6 +440,17 @@
         }
       }
     },
+    "dungeon.a11y.continue.nextAscent.hint" : {
+      "comment" : "VoiceOver hint for the Next control shown when a Crystal Resonance sub-level is complete.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advances to the next level when this trial is finished."
+          }
+        }
+      }
+    },
     "dungeon.a11y.explain.lesson" : {
       "localizations" : {
         "en" : {
@@ -501,18 +512,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: align the Guard Room Moonstone with the orb. Use the Moonstone alignment lane and three-finger scroll until you feel the lock."
+            "value" : "Objective: align the Moonstone with the center orb. Keep VoiceOver on the Moonstone alignment lane and three-finger scroll until the lock cue."
           }
         }
       }
     },
     "dungeon.a11y.l1.objective.format" : {
-      "comment" : "VoiceOver objective. %@ is the target room display name.",
+      "comment" : "VoiceOver objective for L1 resonance play; alignment metaphor only.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: Align the %@ with the orb. VoiceOver is focused on the Moonstone alignment lane. Use three fingers to scroll up or down until you feel the lock."
+            "value" : "Objective: Align the Moonstone with the center orb. VoiceOver is on the Moonstone alignment lane. Three-finger scroll up or down until the lock cue."
           }
         }
       }
@@ -532,18 +543,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: align the Relic Vault Moonstone with the orb. Keep VoiceOver on the Moonstone alignment lane and three-finger scroll to align."
+            "value" : "Objective: align the Moonstone with the center orb before time runs out. Keep VoiceOver on the Moonstone alignment lane and three-finger scroll."
           }
         }
       }
     },
     "dungeon.a11y.l2.objective.format" : {
-      "comment" : "VoiceOver objective. %@ is the target room display name.",
+      "comment" : "VoiceOver objective for L2 resonance play.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: Align the %@ with the orb. Keep VoiceOver on Moonstone alignment lane and three-finger scroll to align."
+            "value" : "Objective: Align the Moonstone with the center orb. Timer is running. Keep VoiceOver on the Moonstone alignment lane; three-finger scroll to align."
           }
         }
       }
@@ -555,7 +566,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Time remaining. %d seconds. Descend now."
+            "value" : "Time remaining. %d seconds. Align while you can."
           }
         }
       }
@@ -566,18 +577,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: Descend to the Ancient Vault. Act quickly."
+            "value" : "Objective: align the Moonstone with the center orb. Act quickly—watch the timer."
           }
         }
       }
     },
     "dungeon.a11y.l3.objective.format" : {
-      "comment" : "VoiceOver objective. %@ is the target room display name.",
+      "comment" : "VoiceOver objective for L3 resonance play.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: Align the %@ with the orb. Act quickly. Keep VoiceOver on Moonstone alignment lane and three-finger scroll."
+            "value" : "Objective: Align the Moonstone with the center orb. Act quickly. Keep VoiceOver on the Moonstone alignment lane; three-finger scroll to align."
           }
         }
       }
@@ -588,7 +599,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Time remaining. %d seconds. The gate descends."
+            "value" : "Time remaining. %d seconds. Finish the alignment."
           }
         }
       }
@@ -608,29 +619,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This is the invisible scroll layer behind the lane—not the objective row. Three-finger swipes scroll only while VoiceOver focus is on Moonstone alignment lane; if you hear the objective or timer, swipe until you hear this name, then scroll. Align the Moonstone with the orb at the center of the screen."
+            "value" : "Invisible scroll layer behind the Moonstone lane. Three-finger swipes move the lane only when VoiceOver is focused here. If you hear the objective or timer instead, swipe until you hear Moonstone alignment lane, then scroll. Align the Moonstone with the center orb."
           }
         }
       }
     },
     "dungeon.a11y.scroll.vo.focusAnnouncement" : {
       "comment" : "VoiceOver announcement after screen-changed and backup focus on the Moonstone alignment lane ScrollView.",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Moonstone alignment lane is focused. Swipe with three fingers up or down to scroll the Moonstone toward the orb."
-          }
-        }
-      }
-    },
-    "dungeon.a11y.continue.nextAscent.hint" : {
-      "comment" : "VoiceOver hint for the Next control shown when a Crystal Resonance sub-level is complete.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Advances to the next ascent when this chamber trial is finished."
           }
         }
       }
@@ -807,6 +808,7 @@
       }
     },
     "dungeon.hint.format" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -877,18 +879,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descend to: The Guard Room"
+            "value" : "Align the Moonstone with the center orb."
           }
         }
       }
     },
     "dungeon.l1.objective.format" : {
-      "comment" : "Visible objective line. %@ is the target room display name.",
+      "comment" : "Visible objective line for L1: alignment only.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descend to: %@"
+            "value" : "Align the Moonstone with the center orb."
           }
         }
       }
@@ -932,18 +934,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descend to: The Relic Vault"
+            "value" : "Align the Moonstone with the center orb before time runs out."
           }
         }
       }
     },
     "dungeon.l2.objective.format" : {
-      "comment" : "Visible objective line. %@ is the target room display name.",
+      "comment" : "Visible objective line for L2: alignment with timer pressure.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descend to: %@"
+            "value" : "Align the Moonstone with the center orb before time runs out."
           }
         }
       }
@@ -975,18 +977,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descend to: The Ancient Vault"
+            "value" : "Align the Moonstone with the center orb before the timer ends."
           }
         }
       }
     },
     "dungeon.l3.objective.format" : {
-      "comment" : "Visible objective line. %@ is the target room display name.",
+      "comment" : "Visible objective line for L3: timed alignment.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descend to: %@"
+            "value" : "Align the Moonstone with the center orb before the timer ends."
           }
         }
       }
@@ -1085,6 +1087,17 @@
         }
       }
     },
+    "dungeon.resonance.hint" : {
+      "comment" : "Hint button copy for Crystal Resonance: alignment task, no room names.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll the Moonstone alignment lane until the Moonstone lines up with the center orb, then use Seal resonance."
+          }
+        }
+      }
+    },
     "dungeon.resonance.seal" : {
       "comment" : "Primary action when the moonstone is aligned with the orb.",
       "localizations" : {
@@ -1101,7 +1114,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Completes this chamber when the moonstone is aligned."
+            "value" : "Confirms the alignment when the Moonstone matches the center orb."
           }
         }
       }
@@ -1112,7 +1125,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If nothing moves: you are not on the scroll lane. Move VoiceOver until it reads Moonstone alignment lane—the invisible scroll area over the chamber lane—then try three fingers again."
+            "value" : "If nothing moves: VoiceOver is not on the scroll lane. Move focus until it reads Moonstone alignment lane—the invisible scroll area over the glyph lane—then try three fingers again."
           }
         }
       }
