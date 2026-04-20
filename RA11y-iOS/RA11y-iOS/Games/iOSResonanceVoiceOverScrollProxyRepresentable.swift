@@ -64,9 +64,10 @@ private final class ResonanceVoiceOverProxyScrollView: UIScrollView {
 /// ## Concurrency
 /// `scrollViewDidScroll` and layout callbacks run on the main thread; `UIAccessibility.post` and `Task`
 /// for focus scheduling use `@MainActor`.
-final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewDelegate {
+final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewAccessibilityDelegate {
 
     var onContentOffsetYChanged: (CGFloat) -> Void = { _ in }
+    var accessibilityScrollStatusText: () -> String? = { nil }
 
     private weak var scrollView: UIScrollView?
     private weak var contentView: UIView?
@@ -132,19 +133,26 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
         }
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(500))
-            UIAccessibility.post(notification: .screenChanged, argument: nil)
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted UIAccessibility.Notification.screenChanged")
+            try? await Task.sleep(for: .milliseconds(650))
+            guard let sv = scrollView else { return }
+            UIAccessibility.post(notification: .screenChanged, argument: sv)
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted UIAccessibility.Notification.screenChanged with UIScrollView")
             #if DEBUG
-            print("[RA11yScroll] UIKit proxy: posted UIAccessibility.Notification.screenChanged")
+            print("[RA11yScroll] UIKit proxy: posted UIAccessibility.Notification.screenChanged with UIScrollView")
             #endif
 
-            try? await Task.sleep(for: .milliseconds(300))
-            guard let sv = scrollView else { return }
+            try? await Task.sleep(for: .milliseconds(250))
             UIAccessibility.post(notification: .layoutChanged, argument: sv)
             RA11yLogger.scrollInteraction.debug("UIKit proxy: posted layoutChanged with UIScrollView")
             #if DEBUG
             print("[RA11yScroll] UIKit proxy: posted layoutChanged with UIScrollView")
+            #endif
+
+            try? await Task.sleep(for: .milliseconds(350))
+            UIAccessibility.post(notification: .layoutChanged, argument: sv)
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: re-posted layoutChanged with UIScrollView")
+            #if DEBUG
+            print("[RA11yScroll] UIKit proxy: re-posted layoutChanged with UIScrollView")
             #endif
 
             let focusLine = String(localized: "dungeon.a11y.scroll.vo.focusAnnouncement")
@@ -158,6 +166,10 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewD
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         onContentOffsetYChanged(scrollView.contentOffset.y)
+    }
+
+    func accessibilityScrollStatus(for scrollView: UIScrollView) -> String? {
+        accessibilityScrollStatusText()
     }
 }
 
@@ -188,6 +200,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
 
     var accessibilityLabelText: String
     var accessibilityHintText: String
+    var accessibilityScrollStatusText: String?
 
     var onContentOffsetYChanged: (CGFloat) -> Void
 
@@ -214,6 +227,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
         contentView.translatesAutoresizingMaskIntoConstraints = false
 
         context.coordinator.onContentOffsetYChanged = onContentOffsetYChanged
+        context.coordinator.accessibilityScrollStatusText = { accessibilityScrollStatusText }
 
         let totalHeight = computeTotalContentHeight()
         let heightConstraint = contentView.heightAnchor.constraint(equalToConstant: totalHeight)
@@ -239,6 +253,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
 
     func updateUIView(_ scrollView: UIScrollView, context: Context) {
         context.coordinator.onContentOffsetYChanged = onContentOffsetYChanged
+        context.coordinator.accessibilityScrollStatusText = { accessibilityScrollStatusText }
         context.coordinator.updateContentHeight(totalHeight: computeTotalContentHeight(), scrollView: scrollView)
         configureAccessibility(on: scrollView)
     }

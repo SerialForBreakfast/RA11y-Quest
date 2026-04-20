@@ -117,7 +117,6 @@ struct iOSDungeonDescentView: View {
                 onRetry: nil
             )
             .navigationTitle(String(localized: "dungeon.l1.title"))
-            .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("dungeon.firstAttempt")
             .transition(.identity)
 
@@ -140,7 +139,6 @@ struct iOSDungeonDescentView: View {
                 onRetry: { viewModel.retryRising() }
             )
             .navigationTitle(String(localized: "dungeon.l2.title"))
-            .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("dungeon.rising")
             .transition(.identity)
 
@@ -163,7 +161,6 @@ struct iOSDungeonDescentView: View {
                 onRetry: { viewModel.retryTimed() }
             )
             .navigationTitle(String(localized: "dungeon.l3.title"))
-            .onAppear { viewModel.announceObjectivePrompt() }
             .accessibilityIdentifier("dungeon.timed")
             .transition(.identity)
         }

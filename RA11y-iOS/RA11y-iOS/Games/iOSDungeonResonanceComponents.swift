@@ -9,7 +9,9 @@ import RA11yCore
 /// Values match the tuned mockup in `iOSDungeonResonanceMockupView` and drive orb/reticle
 /// presentation plus `QuestFeedbackBand` for multimodal feedback.
 enum iOSResonanceAlignment {
-    static let lockedMaxPoints: CGFloat = 26
+    /// Wider than the original 26 pt lock window so coarse VoiceOver scroll increments can still
+    /// settle into the seal state instead of bouncing off the lower edge immediately.
+    static let lockedMaxPoints: CGFloat = 52
     static let nearMaxPoints: CGFloat = 54
     static let warmMaxPoints: CGFloat = 118
 

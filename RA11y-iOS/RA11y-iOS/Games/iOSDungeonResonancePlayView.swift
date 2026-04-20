@@ -168,6 +168,37 @@ struct iOSDungeonResonancePlayView: View {
         max(0, voiceOverLaneTotalScrollBlockHeight - voiceOverLaneIntrinsicBlockHeight)
     }
 
+    private var currentVoiceOverScrollStatusText: String {
+        let selectedName = currentLaneSelectionName
+        let bandText = currentAlignmentAnnouncementText
+        return "\(selectedName). \(bandText)"
+    }
+
+    private var currentLaneSelectionName: String {
+        guard !rooms.isEmpty else { return String(localized: "dungeon.a11y.scroll.container") }
+        let step = iOSDungeonResonanceLaneLayout.rowContentHeightPoints + iOSDungeonResonanceLaneLayout.rowSpacingPoints
+        let centeredY = voiceOverProxyScrollOffsetY
+            + playfieldViewportHeight * 0.5
+            - RA11ySpacing.xl
+            - iOSDungeonResonanceLaneLayout.rowContentHeightPoints * 0.5
+        let rawIndex = Int(round(centeredY / step))
+        let index = min(max(rawIndex, 0), rooms.count - 1)
+        return rooms[index].displayName
+    }
+
+    private var currentAlignmentAnnouncementText: String {
+        switch iOSResonanceAlignment.questBand(deltaPoints: displayDeltaPoints) {
+        case .far:
+            return String(localized: "dungeon.resonance.a11y.orb.far")
+        case .warm:
+            return String(localized: "dungeon.resonance.a11y.orb.warm")
+        case .near:
+            return String(localized: "dungeon.resonance.a11y.orb.near")
+        case .locked:
+            return String(localized: "dungeon.resonance.a11y.orb.locked")
+        }
+    }
+
     /// Recomputes alignment from moonstone position vs. playfield vertical center (fixed orb line).
     private func applyResonanceAlignmentFromLastFrames() {
         let playfieldH = playfieldViewportHeight
@@ -242,6 +273,7 @@ struct iOSDungeonResonancePlayView: View {
                 verticalPadding: RA11ySpacing.xl,
                 accessibilityLabelText: String(localized: "dungeon.a11y.scroll.container"),
                 accessibilityHintText: String(localized: "dungeon.a11y.scroll.container.hint"),
+                accessibilityScrollStatusText: currentVoiceOverScrollStatusText,
                 onContentOffsetYChanged: { newY in
                     let oldY = voiceOverProxyScrollOffsetY
                     voiceOverProxyScrollOffsetY = newY
@@ -452,11 +484,8 @@ struct iOSDungeonResonancePlayView: View {
             } else if levelComplete, let continueAction = onContinue {
                 continueButton(continueAction)
                     .background(.ultraThinMaterial.opacity(0.95))
-            } else if targetIsReachable, let targetRoom = rooms.first(where: \.isTarget) {
-                playfieldControlsContent(targetRoom: targetRoom)
-                    .background(.ultraThinMaterial.opacity(0.95))
-            } else if onHint != nil {
-                playfieldControlsWithoutSeal
+            } else if let targetRoom = rooms.first(where: \.isTarget) {
+                playfieldControlsContent(targetRoom: targetRoom, isEnabled: targetIsReachable)
                     .background(.ultraThinMaterial.opacity(0.95))
             } else {
                 Color.clear
@@ -474,9 +503,7 @@ struct iOSDungeonResonancePlayView: View {
             } else if levelComplete, let continueAction = onContinue {
                 continueButton(continueAction)
             } else if let targetRoom = rooms.first(where: \.isTarget) {
-                playfieldControlsContent(targetRoom: targetRoom)
-            } else if onHint != nil {
-                playfieldControlsWithoutSeal
+                playfieldControlsContent(targetRoom: targetRoom, isEnabled: true)
             } else {
                 EmptyView()
             }
@@ -517,7 +544,7 @@ struct iOSDungeonResonancePlayView: View {
             .accessibilityAddTraits(.isStaticText)
     }
 
-    private func playfieldControlsContent(targetRoom: DungeonRoom) -> some View {
+    private func playfieldControlsContent(targetRoom: DungeonRoom, isEnabled: Bool) -> some View {
         VStack(spacing: RA11ySpacing.sm) {
             Button {
                 Task { await onActivateTarget(targetRoom) }
@@ -528,27 +555,13 @@ struct iOSDungeonResonancePlayView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .tint(Color.ra11yAccent)
+            .disabled(!isEnabled)
             .accessibilityIdentifier("dungeon.resonance.seal")
-            .accessibilityHint(String(localized: "dungeon.resonance.seal.hint"))
-
-            if let onHint {
-                hintButton(onHint)
-            }
-        }
-    }
-
-    private var playfieldControlsWithoutSeal: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            Button(action: {}) {
-                Text(String(localized: "dungeon.resonance.seal"))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .tint(Color.ra11yAccent)
-            .hidden()
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
+            .accessibilityHint(
+                isEnabled
+                    ? String(localized: "dungeon.resonance.seal.hint")
+                    : String(localized: "dungeon.target.notReachable")
+            )
 
             if let onHint {
                 hintButton(onHint)
