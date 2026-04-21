@@ -42,12 +42,18 @@ struct GameCatalogTests {
         }
     }
 
-    /// All three MVP games must be present in the catalog.
-    @Test func allThreeMVPGamesPresent() {
+    /// All shipped quest kinds must appear in the catalog.
+    @Test func allQuestKindsPresentInCatalog() {
         let kinds = Set(GameCatalog.all.map(\.kind))
         #expect(kinds.contains(.findAndFocus))
-        #expect(kinds.contains(.activateDoubleTap))
         #expect(kinds.contains(.scrollHunt))
+        #expect(kinds.contains(.banishment))
+    }
+
+    @Test func banishmentDefinitionLookup() {
+        let def = GameCatalog.definition(for: "the-banishment")
+        #expect(def?.kind == .banishment)
+        #expect(def?.prerequisiteID == "scroll-hunt")
     }
 
     // MARK: - Per-Game Data Contract

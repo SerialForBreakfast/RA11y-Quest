@@ -6,7 +6,7 @@ import RA11yCore
 
 /// The game hub — the player's home base and quest board.
 ///
-/// Implemented per `TICKET-M3-Hub-UI-Progress`. Renders three training games as
+/// Implemented per `TICKET-M3-Hub-UI-Progress`. Renders catalog training games as
 /// D&D-themed quest cards. Quest starts call ``iOSAppRouter/pushGame(kind:provider:)`` so
 /// games are never entered without VoiceOver. Also provides help affordance and
 /// reflects best results from storage without requiring an app relaunch.
@@ -36,7 +36,7 @@ import RA11yCore
 /// 1. Navigation title — visible text "RA11y Quest"; VoiceOver label "Rally Quest"
 /// 2. Orientation strip — scroll gesture; with VoiceOver on, also tap / double-tap to open
 /// 3. "Choose Your Trial, Adventurer" (.isHeader)
-/// 4–6. Quest cards (combined label per card)
+/// 4+. Quest cards (combined label per card)
 /// 7. "VoiceOver Basics"
 /// 8. "Enable VoiceOver to play" (only if VO OFF)
 ///
@@ -46,6 +46,20 @@ import RA11yCore
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSHubView: View {
+
+    // MARK: - DEBUG audit
+
+    /// Unlocks every quest card for local QA without prerequisite clears.
+    ///
+    /// Enable: Xcode → Product → Scheme → Edit Scheme → Run → Arguments → add
+    /// `-unlockAllQuestsForAudit`. **DEBUG builds only** — release always behaves as `false`.
+    private static var unlockAllQuestsForAudit: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-unlockAllQuestsForAudit")
+        #else
+        false
+        #endif
+    }
 
     // MARK: - State
 
@@ -139,7 +153,12 @@ struct iOSHubView: View {
         shouldRefreshOnAppear: Bool = true
     ) {
         self.shouldRefreshOnAppear = shouldRefreshOnAppear
-        _viewModel = State(initialValue: HubViewModel(storage: storage))
+        _viewModel = State(
+            initialValue: HubViewModel(
+                storage: storage,
+                unlockAllQuestsForAudit: Self.unlockAllQuestsForAudit
+            )
+        )
     }
 
     // MARK: - Body

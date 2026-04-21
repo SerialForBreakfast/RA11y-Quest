@@ -50,6 +50,8 @@ enum iOSDungeonResonanceLaneLayout {
     static let rowContentHeightPoints: CGFloat = 76
     /// Extra vertical slack between lane rows so three-finger VoiceOver scrolling crosses a larger range per slot.
     static let voiceOverLaneStrideSlackPoints: CGFloat = 64
+    /// Matches ``iOSMoonstoneTargetOrb`` default width ÷ height so the reticle’s **elliptical** hole fits the oblong Moonstone.
+    static let moonstoneWidthOverHeight: CGFloat = 96.0 / 72.0
 }
 
 // MARK: - Presentation band (orb + reticle)
@@ -214,6 +216,9 @@ enum iOSResonanceDecoyStyle: CaseIterable {
 }
 
 /// Moving resonance target — prefers `dungeon_target_moonstone` from the asset catalog.
+///
+/// In play, ``iOSDungeonResonancePlayView`` applies a **larger** center-row scale to this view than to decoys so the
+/// Moonstone oval reads as seating into the reticle while echo glyphs stay visually “off.”
 struct iOSMoonstoneTargetOrb: View {
     @ScaledMetric(relativeTo: .title) private var moonW: CGFloat = 96
     @ScaledMetric(relativeTo: .title) private var moonH: CGFloat = 72
@@ -325,19 +330,22 @@ struct iOSLaneLaneMarkerNeutral: View {
 
 // MARK: - Center orb & reticle
 
-/// Cuts a circular window in the middle of the reticle so lane glyphs remain visible through the ring.
+/// Cuts an **elliptical** window in the middle of the reticle (Moonstone oblong inside a circular ring PNG) so lane glyphs
+/// read through the hole and the lock shape matches the Moonstone aspect ratio.
 private struct iOSResonanceReticleDonutMask: View {
     let diameter: CGFloat
-    /// Inner hole diameter as a fraction of outer (tuned so the Moonstone reads through the ring).
-    var innerDiameterFraction: CGFloat = 0.54
+    /// Inner hole **width** as a fraction of the square mask’s width (height follows ``iOSDungeonResonanceLaneLayout.moonstoneWidthOverHeight``).
+    var innerWidthFraction: CGFloat = 0.58
 
     var body: some View {
+        let innerW = diameter * innerWidthFraction
+        let innerH = innerW / iOSDungeonResonanceLaneLayout.moonstoneWidthOverHeight
         ZStack {
             Circle()
                 .fill(Color.white)
-            Circle()
+            Ellipse()
                 .fill(Color.black)
-                .frame(width: diameter * innerDiameterFraction, height: diameter * innerDiameterFraction)
+                .frame(width: innerW, height: innerH)
                 .blendMode(.destinationOut)
         }
         .frame(width: diameter, height: diameter)
@@ -367,7 +375,7 @@ struct iOSResonanceReticleRing: View {
                 iOSResonanceWideCanvasImage(uiImage: ui, width: diameter, height: diameter)
                     .opacity(0.62 + pulse * 0.32)
                     .mask {
-                        iOSResonanceReticleDonutMask(diameter: diameter, innerDiameterFraction: 0.54)
+                        iOSResonanceReticleDonutMask(diameter: diameter, innerWidthFraction: 0.58)
                     }
             } else {
                 Circle()
@@ -400,17 +408,18 @@ struct iOSResonanceCenterOrb: View {
             if let uiImage = UIImage(named: orbImageName) {
                 iOSResonanceWideCanvasImage(uiImage: uiImage, width: orbDiameter, height: orbDiameter)
                     .saturation(bandSaturation)
+                    /// Fully clear core so the Moonstone lane reads through the hub (avoids grey “film” / checkerboard seams with the reticle hole).
                     .mask {
                         RadialGradient(
                             stops: [
-                                .init(color: Color.white.opacity(0.06), location: 0.0),
-                                .init(color: Color.white.opacity(0.55), location: 0.34),
-                                .init(color: Color.white.opacity(0.92), location: 0.62),
+                                .init(color: .clear, location: 0.0),
+                                .init(color: Color.white.opacity(0.28), location: 0.32),
+                                .init(color: Color.white.opacity(0.78), location: 0.58),
                                 .init(color: Color.white, location: 1.0),
                             ],
                             center: .center,
                             startRadius: 0,
-                            endRadius: orbDiameter * 0.52
+                            endRadius: orbDiameter * 0.56
                         )
                     }
                     .overlay {

@@ -47,8 +47,6 @@ struct iOSRootView: View {
         if args.contains("-uiTesting") {
             if args.contains("-screenshotDirectToEnchanter") {
                 router.pushGame(kind: .findAndFocus)
-            } else if args.contains("-screenshotDirectToRogue") {
-                router.pushGame(kind: .activateDoubleTap)
             } else if args.contains("-screenshotDirectToDungeon") {
                 router.pushGame(kind: .scrollHunt)
             }
@@ -91,10 +89,10 @@ struct iOSRootView: View {
             iOSFirstRunView(mode: mode, storage: storage)
         case .enchantersTrial:
             iOSEnchantersTrialView(storage: storage)
-        case .roguesGauntlet:
-            iOSRogueGauntletView(storage: storage)
         case .dungeonDescent:
             iOSDungeonDescentView(storage: storage)
+        case .theBanishment:
+            iOSBanishmentQuestView(storage: storage)
         case .dungeonResonancePrototype:
             iOSDungeonResonanceMockupView()
         case .gameResult(let result, let gameKind, let gameSpecificAnnouncement):
@@ -124,8 +122,8 @@ struct iOSRootView: View {
     private func gameKind(forGameID gameID: String) -> GameKind? {
         switch gameID {
         case "find-and-focus": return .findAndFocus
-        case "rogue-gauntlet": return .activateDoubleTap
         case "scroll-hunt": return .scrollHunt
+        case "the-banishment": return .banishment
         default: return nil
         }
     }
@@ -141,8 +139,8 @@ struct iOSRootView: View {
     /// long (> ~50 ms) the storage actor or UserDefaults is the bottleneck.
     ///
     /// ## Screenshot Testing — Direct Route Override
-    /// When launched with `-screenshotDirectToEnchanter` (or `-screenshotDirectToRogue` /
-    /// `-screenshotDirectToDungeon`), the router's `path` is pre-populated by the `@State`
+    /// When launched with `-screenshotDirectToEnchanter` or `-screenshotDirectToDungeon`,
+    /// the router's `path` is pre-populated by the `@State`
     /// initializer before this task even runs. This function does not touch the path for
     /// those scenarios — it only removes the loading overlay by setting `hasResolvedInitialRoute`.
     private func resolveInitialRouteIfNeeded() async {

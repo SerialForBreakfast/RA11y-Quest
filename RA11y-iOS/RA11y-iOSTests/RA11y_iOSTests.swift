@@ -72,8 +72,8 @@ struct VoiceOverGatingTests {
     /// VO ON → proceed decision (game route, added in M5).
     @Test func voiceOverOnProceeds() {
         let stub     = StubVoiceOverStateProvider(isVoiceOverRunning: true)
-        let decision = GameStartDecision.evaluate(kind: .activateDoubleTap, provider: stub)
-        #expect(decision == .proceed(kind: .activateDoubleTap))
+        let decision = GameStartDecision.evaluate(kind: .scrollHunt, provider: stub)
+        #expect(decision == .proceed(kind: .scrollHunt))
     }
 
     /// Interstitial route can be pushed onto the navigation stack.
@@ -83,7 +83,7 @@ struct VoiceOverGatingTests {
         #expect(!router.path.isEmpty)
     }
 
-    /// Gating applies to all three MVP game kinds, not just one.
+    /// Gating applies to every MVP game kind, not just one.
     @Test func voiceOverOffGatesAllGameKinds() {
         let stub = StubVoiceOverStateProvider(isVoiceOverRunning: false)
         for kind in GameKind.allCases {

@@ -1,7 +1,7 @@
 # Crystal Resonance — VoiceOver Scroll Proxy Investigation (SwiftUI)
 
 **Date:** 2026-04-19 (ongoing)  
-**Status:** Open — SwiftUI-based proxy remains unreliable in VoiceOver swipe order; **next step is a UIKit `UIScrollView` integration** for a predictable accessibility tree and scroll behavior.  
+**Status:** Open for **device QA and layout invariants** — UIKit scroll proxy is **shipped** (`iOSResonanceVoiceOverScrollProxyRepresentable`); remaining risk is focus order, content-height/sync bugs, and regression when chrome or assets change (see QC doc §1).  
 **Related:** [ADR-0003-Dungeon-Resonance-Scroll-Interaction.md](./ADR-0003-Dungeon-Resonance-Scroll-Interaction.md) (design intent; not a guarantee of SwiftUI runtime behavior)
 
 ---
@@ -111,3 +111,4 @@ Keep this document updated when the UIKit path lands (files, API boundaries, any
 |------|------|
 | 2026-04-19 | Initial capture after SwiftUI mitigation attempts; records UIKit as follow-up. |
 | 2026-04-19 | **Shipped interop:** `iOSResonanceVoiceOverScrollProxyRepresentable.swift` — transparent `UIScrollView` with Auto Layout content height, `UIScrollViewDelegate` for `contentOffset.y`, accessibility id/label/hint on the scroll view, initial VO sequence (`screenChanged` → delay → `layoutChanged` with `UIScrollView` → announcement). Wired from `iOSDungeonResonancePlayView` replacing SwiftUI `ScrollView`. |
+| 2026-04-21 | Header status updated: problem history remains valid; **current** work is QC invariants + on-device verification, not “waiting on UIKit.” |

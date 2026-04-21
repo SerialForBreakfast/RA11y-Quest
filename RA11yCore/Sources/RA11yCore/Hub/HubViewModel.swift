@@ -31,6 +31,14 @@ public final class HubViewModel {
 
     private let storage: any StorageComponent
 
+    /// When `true`, every catalog game is treated as unlocked regardless of ``bestResults``.
+    ///
+    /// Used only for **local audit** (e.g. skipping prerequisite clears on a dev build) without
+    /// farming prerequisites. The iOS host enables this in **DEBUG** via launch argument
+    /// `-unlockAllQuestsForAudit` (Xcode → Scheme → Run → Arguments). Release builds
+    /// must always pass `false`.
+    private let unlockAllQuestsForAudit: Bool
+
     // MARK: - Init
 
     /// Creates a view model backed by the given storage component.
@@ -38,12 +46,16 @@ public final class HubViewModel {
     /// `bestResults` starts empty; call `refreshBestResults()` (or let the hub
     /// view's `.task` do so) to populate from storage.
     ///
-    /// - Parameter storage: Persistence layer for best results. Inject
-    ///   `UserDefaultsStorageComponent()` in production and
-    ///   `InMemoryStorageComponent` in tests.
-    public init(storage: any StorageComponent) {
+    /// - Parameters:
+    ///   - storage: Persistence layer for best results. Inject
+    ///     `UserDefaultsStorageComponent()` in production and
+    ///     `InMemoryStorageComponent` in tests.
+    ///   - unlockAllQuestsForAudit: Bypass prerequisite gating for QA/design audits.
+    ///     Defaults to `false`; the iOS app sets this from a DEBUG launch flag only.
+    public init(storage: any StorageComponent, unlockAllQuestsForAudit: Bool = false) {
         self.storage = storage
-        RA11yLogger.startup.debug("HubViewModel.init")
+        self.unlockAllQuestsForAudit = unlockAllQuestsForAudit
+        RA11yLogger.startup.debug("HubViewModel.init unlockAllQuestsForAudit=\(unlockAllQuestsForAudit)")
     }
 
     // MARK: - Public API
@@ -68,6 +80,7 @@ public final class HubViewModel {
     /// - Parameter game: The `GameDefinition` to evaluate.
     /// - Returns: `true` if the game can be started.
     public func isUnlocked(_ game: GameDefinition) -> Bool {
+        if unlockAllQuestsForAudit { return true }
         guard let prerequisiteID = game.prerequisiteID else { return true }
         return bestResults[prerequisiteID] != nil
     }

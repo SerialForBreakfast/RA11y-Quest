@@ -178,7 +178,12 @@ struct iOSDungeonResonancePlayView: View {
             + gapCount * laneColumnInterItemSpacing
             + 2 * laneCenterSpacerHeight
             + voiceOverLaneTrailingSlack
-        let minForLastSlot = CGFloat(max(0, n - 1)) * laneStepPoints + playfieldViewportHeight + 48
+        /// Reserve enough runway for ``snappedLaneOffset`` (includes the first `VStack` gap after the top spacer).
+        let minForLastSlot =
+            CGFloat(max(0, n - 1)) * laneStepPoints
+            + playfieldViewportHeight
+            + 48
+            + laneColumnInterItemSpacing
         return max(rowsBlock, minForLastSlot)
     }
 
@@ -195,8 +200,13 @@ struct iOSDungeonResonancePlayView: View {
         return "\(selectedName). \(bandText)"
     }
 
+    /// Row whose **layout** center is nearest the aim line for the current scroll offset (authoritative for scroll status).
+    private var laneIndexAtAimLine: Int {
+        laneIndexClosestToAimLine(scrollOffsetY: voiceOverProxyScrollOffsetY)
+    }
+
     private var currentLaneSelectionName: String {
-        localizedResonanceItemName(atLaneIndex: selectedLaneIndex)
+        localizedResonanceItemName(atLaneIndex: laneIndexAtAimLine)
     }
 
     /// Maps the lane index to Moonstone / decoy glyph names for VoiceOver scroll status (not ``DungeonRoom/displayName``).
@@ -249,12 +259,51 @@ struct iOSDungeonResonancePlayView: View {
         return min(max(index, 0), rooms.count - 1)
     }
 
+    /// Vertical center of the playfield aim line (orb / reticle hub), in ``ResonancePlayfieldCoordinateSpace``.
+    private var resonanceAimLineMidY: CGFloat {
+        playfieldViewportHeight * 0.5
+    }
+
+    /// Y coordinate of lane row `laneIndex`’s vertical center in **lane content space** (before ``View/offset(y:)``).
+    ///
+    /// ``resonanceLaneColumn`` is a `VStack` with ``View/spacing`` between **every** adjacent child, including the gap
+    /// between the top centering spacer and the first row. Scroll math must add that leading gap or row centers sit
+    /// one spacing interval too low on screen (Moonstone below the hub while VoiceOver names Moonstone).
+    private func laneRowCenterContentY(laneIndex: Int) -> CGFloat {
+        let s = laneCenterSpacerHeight
+        let g = laneColumnInterItemSpacing
+        let h = iOSDungeonResonanceLaneLayout.rowContentHeightPoints
+        let i = clampedLaneIndex(laneIndex)
+        return s + g + CGFloat(i) * laneStepPoints + h * 0.5
+    }
+
+    /// `UIScrollView.contentOffset.y` that places ``laneRowCenterContentY`` on ``resonanceAimLineMidY`` for `index`.
     private func snappedLaneOffset(for index: Int) -> CGFloat {
-        CGFloat(clampedLaneIndex(index)) * laneStepPoints
+        laneRowCenterContentY(laneIndex: index) - resonanceAimLineMidY
+    }
+
+    /// Which lane row is physically centered on the aim line for a given scroll offset (matches ``resonanceLaneColumn`` geometry).
+    ///
+    /// Using nearest-row geometry avoids VoiceOver scroll status naming the **next** slot when float rounding or
+    /// transient `contentOffset` drifts from ``snappedLaneOffset(for:)``.
+    private func laneIndexClosestToAimLine(scrollOffsetY: CGFloat) -> Int {
+        guard !rooms.isEmpty, playfieldViewportHeight > 50 else { return 0 }
+        let aimMidY = resonanceAimLineMidY
+        var best = 0
+        var bestDist = CGFloat.greatestFiniteMagnitude
+        for i in 0..<rooms.count {
+            let rowCenterY = laneRowCenterContentY(laneIndex: i) - scrollOffsetY
+            let d = abs(rowCenterY - aimMidY)
+            if d < bestDist {
+                bestDist = d
+                best = i
+            }
+        }
+        return clampedLaneIndex(best)
     }
 
     private func handleProxyScrollOffsetChange(_ newY: CGFloat) {
-        let snappedIndex = clampedLaneIndex(Int(round(newY / max(laneStepPoints, 1))))
+        let snappedIndex = laneIndexClosestToAimLine(scrollOffsetY: newY)
         let oldY = voiceOverProxyScrollOffsetY
         let snappedOffset = snappedLaneOffset(for: snappedIndex)
         let previousIndex = selectedLaneIndex
@@ -387,7 +436,12 @@ struct iOSDungeonResonancePlayView: View {
                         moonstoneRow(room: room, index: index)
                     } else {
                         iOSLaneDecoyChip(style: .forRoomIndex(index))
-                            .modifier(iOSResonanceLaneSelectionModifier(distanceFromSelection: abs(index - selectedLaneIndex)))
+                            .modifier(
+                                iOSResonanceLaneSelectionModifier(
+                                    distanceFromSelection: abs(index - laneIndexAtAimLine),
+                                    isMoonstone: false
+                                )
+                            )
                     }
                 }
                 .frame(height: iOSDungeonResonanceLaneLayout.rowContentHeightPoints)
@@ -410,7 +464,12 @@ struct iOSDungeonResonancePlayView: View {
 
     private func moonstoneRow(room: DungeonRoom, index: Int) -> some View {
         iOSMoonstoneTargetOrb()
-            .modifier(iOSResonanceLaneSelectionModifier(distanceFromSelection: abs(index - selectedLaneIndex)))
+            .modifier(
+                iOSResonanceLaneSelectionModifier(
+                    distanceFromSelection: abs(index - laneIndexAtAimLine),
+                    isMoonstone: true
+                )
+            )
             .background {
                 GeometryReader { geo in
                     Color.clear.preference(
@@ -426,8 +485,9 @@ struct iOSDungeonResonancePlayView: View {
 
     private var centerOrbStack: some View {
         ZStack {
-            iOSResonanceReticleRing(band: aimBand)
+            /// Orb first so the reticle’s punched center looks through to the lane (orb uses a transparent core mask).
             iOSResonanceCenterOrb(band: aimBand)
+            iOSResonanceReticleRing(band: aimBand)
             if aimBand == .success, UIImage(named: iOSDungeonResonanceArt.successFlare) != nil {
                 iOSResonanceSuccessFlareOverlay()
             }
@@ -745,13 +805,27 @@ struct iOSDungeonResonancePlayView: View {
 
 // MARK: - Lane emphasis
 
-/// Keeps the lane visually focused on a single room even though the underlying proxy is a full-height scroll view.
+/// Keeps the lane visually focused on one slot and sells the **fit** metaphor: the Moonstone nests into the hub when
+/// centered; echo glyphs stay slightly undersized and canted so they read as “almost but not quite” the lock shape.
 private struct iOSResonanceLaneSelectionModifier: ViewModifier {
     let distanceFromSelection: Int
+    let isMoonstone: Bool
+
+    /// Centered Moonstone: modest boost so the oval meets the reticle’s inner opening; centered decoy: smaller than 1 so it never “seats.”
+    private var centerScale: CGFloat { isMoonstone ? 1.04 : 0.91 }
+
+    private var offRowScale: CGFloat { 0.88 }
+
+    /// Tiny yaw on centered decoys only — enough to break symmetry against the circular orb without clownish spin.
+    private var decoyCenterTilt: Angle {
+        guard !isMoonstone, distanceFromSelection == 0 else { return .zero }
+        return .degrees(3.5)
+    }
 
     func body(content: Content) -> some View {
         content
-            .scaleEffect(distanceFromSelection == 0 ? 1.0 : 0.88)
+            .scaleEffect(distanceFromSelection == 0 ? centerScale : offRowScale)
+            .rotationEffect(decoyCenterTilt)
             .opacity(distanceFromSelection == 0 ? 1.0 : (distanceFromSelection == 1 ? 0.28 : 0.0))
             // Avoid blur — it composites into dark rectangular bands behind PNG glyphs in the shaft.
             .animation(.easeOut(duration: 0.18), value: distanceFromSelection)

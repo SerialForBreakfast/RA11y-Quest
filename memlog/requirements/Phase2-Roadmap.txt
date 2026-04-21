@@ -72,7 +72,7 @@ M3 - Game Hub (Sandbox) v1
 -------------------------
 Goal: A usable hub that launches games and shows progress.
 Includes:
-- Hub UI listing 3 games:
+- Hub UI listing MVP games from catalog (currently two):
   - Title, goal, estimated duration.
   - Best rank badge ("Not played" if absent).
   - Start action.
@@ -103,27 +103,36 @@ Exit Criteria:
 - Quest completable reliably with VoiceOver on.
 - Rank persists as best score.
 
-M6 - Crystal Resonance / Dungeon Descent v2 (SwiftUI)           [IN DESIGN]
+M6 - Crystal Resonance / Dungeon Descent v2 (SwiftUI)           [IN PROGRESS]
 -----------------------------------------------
 Goal: Teach three-finger scroll via resonance alignment mechanic.
 Skill: Three fingers move the page; one finger navigates within it.
 Note: Replaces the original Scroll Hunt room-list mechanic (see ADR-0003).
       The Rogue's Gauntlet (originally M6) has been retired from the curriculum.
+      Implementation status: L0–L3 shell, resonance feedback, and UIKit VoiceOver
+      scroll proxy (`iOSResonanceVoiceOverScrollProxyRepresentable`) are in-repo;
+      device QA, copy alignment to Crystal Resonance terminology, and final art/QC
+      remain open (see `CrystalResonance-Asset-And-Scroll-QC.md`).
 Spec: ADR-0003, DesignTicket-DungeonResonancePromptSheet.txt
 Exit Criteria:
 - Player must scroll to align target with fixed orb to succeed.
 - Multimodal feedback (haptics, sound, VoiceOver) guides Lights Off stage.
 - Result persists.
 
-M7 - The Banishment (SwiftUI)                                    [IN DESIGN]
+M7 - The Banishment (SwiftUI)                                    [IN PROGRESS]
 -------------------------------------
 Goal: Teach two-finger scrub (Z-shape) to dismiss any trapped state.
 Skill: VoiceOver escape gesture — exits modals, alerts, sheets, and navigation.
-Spec: QuestConcept-Banishment.txt
+Spec: QuestConcept-Banishment.txt (gameplay + accessibility tree locked before art;
+      SF Symbol greybox phase required).
+Note: Greybox flow (`the-banishment`), routing, scoring, and localized copy are
+      implemented; Lights Off polish and on-device VoiceOver escape verification
+      remain exit criteria.
 Exit Criteria:
 - Player banishes creatures (modal presentations) using two-finger scrub.
 - Lights Off stage: creature approach communicated via haptics and audio only.
 - Result persists.
+- VoiceOver linear navigation and escape verified on device with placeholder UI.
 
 M8 - MVP Polish + Release Readiness
 ----------------------------------
@@ -142,7 +151,7 @@ MVP Definition
 ==============
 MVP is M0 through M8. The smallest "complete" MVP for a user is:
 - Hub + VO gate/help + at least 1 game + persistence.
-However, the planned MVP release target includes all 3 games.
+However, the planned MVP release target includes the full catalog shipped in-app (currently two quests plus future milestones such as Banishment).
 
 Post-MVP Roadmap (High-Level)
 =============================

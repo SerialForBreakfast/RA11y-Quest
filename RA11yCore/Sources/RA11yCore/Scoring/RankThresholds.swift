@@ -105,21 +105,7 @@ public extension RankThresholds {
         okMaxTime:          45, okMaxMistakes:      4
     )
 
-    /// Thresholds for Activate — The Rogue's Gauntlet (Game 2).
-    ///
-    /// Per `GameSpec-ActivateDoubleTap.txt` and `GameRules-MVP.txt`:
-    /// - Legendary (Perfect): 0 mistakes, ≤8s
-    /// - Skilled   (Good):    ≤1 mistake, ≤16s
-    /// - Novice    (Ok):      completed,  ≤40s
-    /// - Defeated  (Failed):  timed out OR ≥5 mistakes
-    static let activateDoubleTap = RankThresholds(
-        timeoutSeconds:     40,
-        perfectMaxTime:      8, perfectMaxMistakes: 0,
-        goodMaxTime:        16, goodMaxMistakes:    1,
-        okMaxTime:          40, okMaxMistakes:      4
-    )
-
-    /// Thresholds for Crystal Resonance (Game 3; catalog id `scroll-hunt`).
+    /// Thresholds for Crystal Resonance (Game 2; catalog id `scroll-hunt`).
     ///
     /// Per `GameSpec-ScrollHunt.txt` and `GameRules-MVP.txt`:
     /// - Legendary (Perfect): 0 mistakes, ≤15s
@@ -131,5 +117,16 @@ public extension RankThresholds {
         perfectMaxTime:     15, perfectMaxMistakes: 0,
         goodMaxTime:        30, goodMaxMistakes:    1,
         okMaxTime:          60, okMaxMistakes:      5
+    )
+
+    /// Thresholds for The Banishment (`the-banishment`) — timed gauntlet (tower + Lights Off).
+    ///
+    /// Greybox tuning: one continuous scored session after the practice ward; `timeoutSeconds`
+    /// must match the iOS playfield countdown for The Banishment.
+    static let banishment = RankThresholds(
+        timeoutSeconds:     55,
+        perfectMaxTime:     14, perfectMaxMistakes: 0,
+        goodMaxTime:        28, goodMaxMistakes:    1,
+        okMaxTime:          55, okMaxMistakes:      4
     )
 }

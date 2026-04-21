@@ -83,4 +83,16 @@ python3 utility/remove_white_background.py --in-place --edge-matte path/to/dunge
 
 ---
 
-*Last updated: 2026-04-21 (scroll slack + row height lock, reticle/orb centre transparency, `--edge-matte`, QC doc).*
+## 3. Off-by-one hub alignment (VoiceOver name vs visible Moonstone)
+
+### Cause
+`resonanceLaneColumn` uses `VStack(spacing:)`, so there is an extra **leading** gap between the top centering spacer and row `0`. Scroll math that used `s + i × laneStep + h/2` omitted that gap: row centers were **one spacing interval** too low, Moonstone sat **below** the reticle hub, and `laneIndexClosestToAimLine` could disagree with the eye.
+
+### Fix (iOS)
+- Row center in content space: `s + laneColumnInterItemSpacing + i × laneStep + h/2`.
+- Snapped `contentOffset.y`: `laneRowCenterContentY(i) − playfieldHeight/2` (not `i × laneStep` alone).
+- Extra `minForLastSlot` headroom for the larger maximum offset.
+
+---
+
+*Last updated: 2026-04-20 (§3 VStack leading gap in lane scroll math; orb clear core + reticle draw order for hub see-through).*

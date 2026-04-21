@@ -23,14 +23,49 @@ struct HubViewModelTests {
         HubViewModel(storage: storage)
     }
 
+    // MARK: - Unlock / audit
+
+    /// Local audit flag must bypass prerequisite gating without mutating storage.
+    @Test func auditUnlockExposesAllQuestsWithoutStoredProgress() async throws {
+        let storage = InMemoryStorageComponent()
+        let banishment = try #require(GameCatalog.definition(for: "the-banishment"))
+        let viewModel = HubViewModel(storage: storage, unlockAllQuestsForAudit: true)
+        await viewModel.refreshBestResults()
+
+        #expect(viewModel.isUnlocked(banishment))
+        #expect(viewModel.prerequisite(for: banishment) == nil)
+    }
+
+    /// Default behavior: Crystal Resonance stays locked until the Enchanter has a stored result.
+    @Test func scrollHuntLockedUntilFindAndFocusClearsWithoutAuditFlag() async throws {
+        let storage = InMemoryStorageComponent()
+        let resonance = try #require(GameCatalog.definition(for: "scroll-hunt"))
+        let viewModel = makeViewModel(storage: storage)
+        await viewModel.refreshBestResults()
+
+        #expect(!viewModel.isUnlocked(resonance))
+        #expect(viewModel.prerequisite(for: resonance)?.id == "find-and-focus")
+    }
+
+    /// The Banishment stays locked until Crystal Resonance has a stored result.
+    @Test func banishmentLockedUntilScrollHuntClearsWithoutAuditFlag() async throws {
+        let storage = InMemoryStorageComponent()
+        let banishment = try #require(GameCatalog.definition(for: "the-banishment"))
+        let viewModel = makeViewModel(storage: storage)
+        await viewModel.refreshBestResults()
+
+        #expect(!viewModel.isUnlocked(banishment))
+        #expect(viewModel.prerequisite(for: banishment)?.id == "scroll-hunt")
+    }
+
     // MARK: - Best Results: Initial State
 
     /// A freshly created view model has no results until `refreshBestResults()` is called.
     @Test func freshViewModelHasNoBestResults() async {
         let viewModel = makeViewModel()
         #expect(viewModel.bestRank(for: "find-and-focus") == nil)
-        #expect(viewModel.bestRank(for: "activate-double-tap") == nil)
         #expect(viewModel.bestRank(for: "scroll-hunt") == nil)
+        #expect(viewModel.bestRank(for: "the-banishment") == nil)
     }
 
     /// `refreshBestResults()` returns nil for games that have never been played.
@@ -39,8 +74,8 @@ struct HubViewModelTests {
         await viewModel.refreshBestResults()
 
         #expect(viewModel.bestRank(for: "find-and-focus") == nil)
-        #expect(viewModel.bestRank(for: "activate-double-tap") == nil)
         #expect(viewModel.bestRank(for: "scroll-hunt") == nil)
+        #expect(viewModel.bestRank(for: "the-banishment") == nil)
     }
 
     // MARK: - Best Results: Load from Storage
@@ -56,9 +91,9 @@ struct HubViewModelTests {
         let viewModel = makeViewModel(storage: storage)
         await viewModel.refreshBestResults()
 
-        #expect(viewModel.bestRank(for: "find-and-focus")      == .perfect)
-        #expect(viewModel.bestRank(for: "activate-double-tap") == nil)
-        #expect(viewModel.bestRank(for: "scroll-hunt")         == .ok)
+        #expect(viewModel.bestRank(for: "find-and-focus") == .perfect)
+        #expect(viewModel.bestRank(for: "scroll-hunt")    == .ok)
+        #expect(viewModel.bestRank(for: "the-banishment") == nil)
     }
 
     // MARK: - Best Results: Refresh
