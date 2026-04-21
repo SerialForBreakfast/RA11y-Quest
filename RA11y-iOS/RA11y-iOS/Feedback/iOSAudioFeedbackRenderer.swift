@@ -1,6 +1,8 @@
+import AudioToolbox
 import AVFoundation
 import OSLog
 import RA11yCore
+import UIKit
 
 /// Renders semantic feedback intents as lightweight generated iOS tones.
 ///
@@ -39,15 +41,29 @@ final class iOSAudioFeedbackRenderer: iOSAudioFeedbackRendering {
 
     func render(intent: QuestFeedbackIntent, cue: QuestFeedbackCue) {
         guard cue.audio != .none else { return }
-        configureSessionIfNeeded()
-        prepareEngineIfNeeded()
 
-        guard engine.isRunning else {
-            RA11yLogger.feedback.error("Audio cue dropped because engine is not running")
+        // `1520` — system “peek” tap; louder than `1104` and still short enough to read through VoiceOver.
+        if cue.audio == .laneSlotStep, UIAccessibility.isVoiceOverRunning {
+            AudioServicesPlaySystemSound(1520)
+            RA11yLogger.feedback.debug("Lane slot audio: system peek (VoiceOver on)")
             return
         }
 
+        configureSessionIfNeeded()
+        prepareEngineIfNeeded()
+
         let segments = cuePattern(for: intent, family: cue.audio)
+
+        guard engine.isRunning else {
+            if cue.audio == .laneSlotStep {
+                AudioServicesPlaySystemSound(1520)
+                RA11yLogger.feedback.warning("Lane slot: engine down; played system sound fallback")
+            } else {
+                RA11yLogger.feedback.error("Audio cue dropped because engine is not running")
+            }
+            return
+        }
+
         guard let buffer = makeBuffer(for: segments) else {
             RA11yLogger.feedback.error("Failed to synthesize audio cue for family \(cue.audio.rawValue)")
             return
@@ -99,6 +115,10 @@ final class iOSAudioFeedbackRenderer: iOSAudioFeedbackRendering {
             return []
         case .resonance:
             return resonancePattern(for: intent)
+        case .laneSlotStep:
+            return [
+                ToneSegment(primaryFrequency: 588, secondaryFrequency: 884, duration: 0.09, amplitude: 0.22, trailingSilence: 0.0),
+            ]
         case .mutedError:
             return [
                 ToneSegment(primaryFrequency: 288, secondaryFrequency: 272, duration: 0.08, amplitude: 0.07, trailingSilence: 0.02),
@@ -126,23 +146,23 @@ final class iOSAudioFeedbackRenderer: iOSAudioFeedbackRendering {
         switch intent {
         case .proximityEntered(.warm):
             return [
-                ToneSegment(primaryFrequency: 432, secondaryFrequency: 438, duration: 0.12, amplitude: 0.05, trailingSilence: 0.0),
+                ToneSegment(primaryFrequency: 432, secondaryFrequency: 438, duration: 0.12, amplitude: 0.09, trailingSilence: 0.0),
             ]
         case .proximityEntered(.near):
             return [
-                ToneSegment(primaryFrequency: 524, secondaryFrequency: 526, duration: 0.12, amplitude: 0.07, trailingSilence: 0.0),
+                ToneSegment(primaryFrequency: 524, secondaryFrequency: 526, duration: 0.12, amplitude: 0.12, trailingSilence: 0.0),
             ]
         case .proximityEntered(.locked), .lockAcquired:
             return [
-                ToneSegment(primaryFrequency: 660, secondaryFrequency: 990, duration: 0.18, amplitude: 0.1, trailingSilence: 0.0),
+                ToneSegment(primaryFrequency: 660, secondaryFrequency: 990, duration: 0.18, amplitude: 0.14, trailingSilence: 0.0),
             ]
         case .lockLost:
             return [
-                ToneSegment(primaryFrequency: 510, secondaryFrequency: 500, duration: 0.1, amplitude: 0.06, trailingSilence: 0.0),
+                ToneSegment(primaryFrequency: 510, secondaryFrequency: 500, duration: 0.1, amplitude: 0.09, trailingSilence: 0.0),
             ]
         default:
             return [
-                ToneSegment(primaryFrequency: 410, secondaryFrequency: 418, duration: 0.1, amplitude: 0.04, trailingSilence: 0.0),
+                ToneSegment(primaryFrequency: 410, secondaryFrequency: 418, duration: 0.1, amplitude: 0.08, trailingSilence: 0.0),
             ]
         }
     }

@@ -1,0 +1,33 @@
+Crystal Resonance — canonical player-facing metaphor (2026-04-21)
+==================================================================
+
+Use this vocabulary everywhere the player reads or hears copy about Game 3.
+
+Core
+----
+- Quest name: **Crystal Resonance** (hub title `game.scrollHunt.title`; internal code id may stay `scroll-hunt`).
+- Training goal: three-finger scrolling with VoiceOver to move the **Moonstone alignment lane**, not “descending chambers.”
+
+Hero object & aim
+-----------------
+- **Moonstone** — the one correct glyph; must meet the **center orb** (also **crystal orb** in orb VoiceOver labels).
+- **Seal resonance** / **Seal** — primary action when aligned (not “descend” or “enter room”).
+
+Lane & scrolling
+----------------
+- **Moonstone alignment lane** — the VoiceOver scroll surface; three-finger scroll moves glyphs vertically.
+- Avoid **chamber**, **marker**, **descend** as the main verb for this mechanic; optional light **crystal shaft** flavor only where tone fits.
+
+Distractors
+-----------
+- **Echo glyphs** (implementation: Ember shard, Shadow glyph, Sun sigil) — wrong shapes that *almost* fit; not navigation targets.
+- Do not use **dungeon room** titles in VoiceOver for lane rows (see `dungeon.resonance.item.*`).
+
+Deprecated for this quest
+-------------------------
+- “Scroll Hunt” as user-facing quest name (keep only in internal enum `GameKind.scrollHunt` if needed).
+- “Crystal shaft scroll list”, “descend to X chamber”, “second marker”, “eight chambers” as *mechanical* instructions.
+
+Related docs
+------------
+- `DungeonResonanceAssetPipeline.txt`, `CrystalResonance-Asset-And-Scroll-QC.md`, ADR-0003.

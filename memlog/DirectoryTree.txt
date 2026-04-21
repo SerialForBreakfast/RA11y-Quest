@@ -387,6 +387,7 @@ Current structure (as of 2026-04-19)
 |   |   |-- ADR-0001-Concurrency-Strategy.md
 |   |   |-- ADR-0002-AI-Assisted-Screenshot-Validation.md
 |   |   |-- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+|   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md
 |   |   |-- AccessibilityFeatureGamification.md
 |   |   |-- InitialBrainstorming.txt
@@ -400,6 +401,7 @@ Current structure (as of 2026-04-19)
 |   |-- ExtractScreenshots.swift
 |   |-- ValidateScreenshotContract.swift
 |   |-- build_and_test.sh
+|   |-- ensure_png_rgba.py
 |   |-- remove_white_background.py
 |   |-- resolve_simulator_udid.jq
 |   `-- validate_screenshot_contract.sh

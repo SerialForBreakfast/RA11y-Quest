@@ -73,11 +73,19 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewA
     private weak var contentView: UIView?
     private var contentHeightConstraint: NSLayoutConstraint?
 
+    /// When true, ``scrollViewDidScroll`` ignores callbacks — ``setContentOffset`` from SwiftUI must not
+    /// mutate ``@State`` during ``UIViewRepresentable/updateUIView`` (undefined behavior + bad VoiceOver landing).
+    private var isApplyingProgrammaticContentOffset = false
+
     private var didScheduleVoiceOverLanding = false
     private var lastLoggedScrollRange: CGFloat = -10_000
 
     /// One-shot DEBUG warning if scroll range is too small for reliable VoiceOver lane travel.
     private var didLogInsufficientScrollRange = false
+
+    /// Coalesces ``updateUIView`` layout work — SwiftUI can emit many updates per frame; without this,
+    /// queued `DispatchQueue.main.async` blocks apply stale `bounds`/`contentSize` pairs.
+    private var deferredScrollLayoutWorkItem: DispatchWorkItem?
 
     func attach(scrollView: UIScrollView, contentView: UIView, heightConstraint: NSLayoutConstraint) {
         self.scrollView = scrollView
@@ -120,15 +128,12 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewA
     /// Keeps the UIKit proxy aligned with the snapped SwiftUI slot selection instead of free-running on
     /// inertial scroll physics. This makes VoiceOver page scroll behave like a discrete room selector.
     func updateDesiredContentOffsetY(_ desiredOffsetY: CGFloat, scrollView: UIScrollView) {
-        let clampedOffsetY = max(
-            0,
-            min(
-                desiredOffsetY,
-                max(0, scrollView.contentSize.height - scrollView.bounds.height)
-            )
-        )
+        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
+        let clampedOffsetY = max(0, min(desiredOffsetY, maxY))
         guard abs(clampedOffsetY - scrollView.contentOffset.y) > 0.5 else { return }
+        isApplyingProgrammaticContentOffset = true
         scrollView.setContentOffset(CGPoint(x: 0, y: clampedOffsetY), animated: false)
+        isApplyingProgrammaticContentOffset = false
     }
 
     /// Called once after the scroll view has a non-empty frame in a window. Restores the original
@@ -179,11 +184,27 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewA
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        onContentOffsetYChanged(scrollView.contentOffset.y)
+        guard !isApplyingProgrammaticContentOffset else { return }
+        let y = scrollView.contentOffset.y
+        DispatchQueue.main.async { [onContentOffsetYChanged] in
+            onContentOffsetYChanged(y)
+        }
     }
 
     func accessibilityScrollStatus(for scrollView: UIScrollView) -> String? {
         accessibilityScrollStatusText()
+    }
+
+    /// Applies scroll content height and snapped offset on the next main-queue turn with a stable `bounds` rect.
+    func scheduleDeferredContentLayout(totalHeight: CGFloat, desiredOffsetY: CGFloat, scrollView: UIScrollView) {
+        deferredScrollLayoutWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self, weak scrollView] in
+            guard let self, let scrollView else { return }
+            self.updateContentHeight(totalHeight: totalHeight, scrollView: scrollView)
+            self.updateDesiredContentOffsetY(desiredOffsetY, scrollView: scrollView)
+        }
+        deferredScrollLayoutWorkItem = work
+        DispatchQueue.main.async(execute: work)
     }
 }
 
@@ -269,9 +290,14 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
     func updateUIView(_ scrollView: UIScrollView, context: Context) {
         context.coordinator.onContentOffsetYChanged = onContentOffsetYChanged
         context.coordinator.accessibilityScrollStatusText = { accessibilityScrollStatusText }
-        context.coordinator.updateContentHeight(totalHeight: computeTotalContentHeight(), scrollView: scrollView)
-        context.coordinator.updateDesiredContentOffsetY(desiredContentOffsetY, scrollView: scrollView)
+        let totalHeight = computeTotalContentHeight()
+        let desiredY = desiredContentOffsetY
         configureAccessibility(on: scrollView)
+        context.coordinator.scheduleDeferredContentLayout(
+            totalHeight: totalHeight,
+            desiredOffsetY: desiredY,
+            scrollView: scrollView
+        )
     }
 
     private func computeTotalContentHeight() -> CGFloat {

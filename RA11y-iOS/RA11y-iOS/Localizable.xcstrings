@@ -373,7 +373,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use three fingers to scroll content that extends beyond the visible area—this is how you descend the crystal shaft in Crystal Resonance."
+            "value" : "Use three fingers to scroll content that extends beyond the visible area—the same gesture moves the Moonstone alignment lane in Crystal Resonance."
           }
         }
       }
@@ -456,7 +456,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceOver Lesson. With VoiceOver on, swiping moves between items, not the page. To scroll the page down, use three fingers and swipe up. Three fingers swipe down to scroll back up."
+            "value" : "VoiceOver lesson. With VoiceOver on, one-finger swipes move focus between items—they do not move the Moonstone alignment lane. To scroll the lane, use three fingers: swipe up or down until the Moonstone meets the center orb."
           }
         }
       }
@@ -472,13 +472,13 @@
       }
     },
     "dungeon.a11y.hud.depth" : {
-      "comment" : "Accessibility label for the depth HUD. Arguments are current visible depth and total rooms.",
+      "comment" : "Accessibility label for the lane position HUD. Arguments are current index and total glyphs.",
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Depth: %d of %d."
+            "value" : "Glyph position: %d of %d."
           }
         }
       }
@@ -502,7 +502,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d misstep(s). The gate descends."
+            "value" : "%d misstep(s). Time is running out—finish the alignment."
           }
         }
       }
@@ -577,7 +577,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objective: align the Moonstone with the center orb. Act quickly—watch the timer."
+            "value" : "Objective: align the Moonstone with the center orb. Act quickly—listen to the timer."
           }
         }
       }
@@ -650,7 +650,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Half your time. The torches begin to die."
+            "value" : "Half your time is gone. Align the Moonstone while you can."
           }
         }
       }
@@ -660,7 +660,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Three-quarters of your time is gone. Keep descending."
+            "value" : "Three-quarters of your time is gone. Keep scrolling the alignment lane."
           }
         }
       }
@@ -670,7 +670,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "One-finger swipe — move between chamber markers (navigate)"
+            "value" : "One-finger swipe — move VoiceOver focus between items (navigate)"
           }
         }
       }
@@ -700,7 +700,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With VoiceOver on, swiping with one finger moves focus between items — it does NOT scroll the page. To scroll down and reveal deeper content, use three fingers and swipe up. To scroll back up, use three fingers and swipe down."
+            "value" : "With VoiceOver on, one-finger swipes move focus between items—they do not scroll the Moonstone alignment lane. To move the lane, use three fingers: swipe up to shift the glyphs one way, swipe down to shift them the other, until the Moonstone meets the center orb."
           }
         }
       }
@@ -720,7 +720,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The relic sings from deep in the crystal shaft—below what glance alone can see. You must descend. Here, one finger navigates; it does not scroll. To go deeper, use three fingers and listen for the resonance."
+            "value" : "The crystal shaft hums with echoes—glyphs that almost fit, but only the Moonstone locks to the orb. One finger moves VoiceOver focus; it does not move the lane. Use three fingers on the Moonstone alignment lane and listen for the resonance as the Moonstone nears the center."
           }
         }
       }
@@ -741,7 +741,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Step %lld: keep descending."
+            "value" : "Step %lld: keep three-finger scrolling the practice lane."
           }
         }
       }
@@ -751,7 +751,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Begins your first descent. No timer."
+            "value" : "Begins your first Crystal Resonance trial. No timer."
           }
         }
       }
@@ -771,7 +771,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nothing useful here. Keep descending."
+            "value" : "That glyph is not the Moonstone. Scroll the alignment lane until the Moonstone meets the center orb."
           }
         }
       }
@@ -815,19 +815,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Guide whispers: use three fingers to scroll downward and reveal %@."
+            "value" : "The Guide whispers: three-finger scroll the Moonstone alignment lane until the Moonstone lines up with the center orb."
           }
         }
       }
     },
     "dungeon.hud.depth.format" : {
-      "comment" : "Depth HUD label. Arguments: current depth index (1-based), total rooms.",
+      "comment" : "Lane position HUD label (legacy). Arguments: current index (1-based), total glyphs.",
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Depth: %d of %d"
+            "value" : "Glyph position: %d of %d"
           }
         }
       }
@@ -848,7 +848,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First descent complete. The crystal yields its first secret."
+            "value" : "First resonance sealed. The crystal yields its first secret."
           }
         }
       }
@@ -859,7 +859,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The shaft has two rings of chambers. Descend to the second marker."
+            "value" : "The shaft fills with echo glyphs—only the Moonstone answers the orb. Scroll the alignment lane until they lock."
           }
         }
       }
@@ -914,7 +914,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relic Vault reached. The vault glows faintly."
+            "value" : "Resonance holds. The vault stirs—the Moonstone found its lock."
           }
         }
       }
@@ -925,7 +925,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The crystal deepens. Eight chambers. The Relic Vault waits at the bottom. Some markers will call to you—ignore them. Descend."
+            "value" : "More echoes crowd the shaft—tempting shapes that are not the Moonstone. Ignore them; align the Moonstone with the center orb before time runs out."
           }
         }
       }
@@ -968,7 +968,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The shaft seals at midnight. Twelve chambers deep. The Ancient Vault holds the relic. Descend and claim it before the gate falls."
+            "value" : "The crystal tightens—twelve positions, one true resonance. Find the Moonstone, align it with the orb, and seal before the gate falls."
           }
         }
       }
@@ -1000,7 +1000,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ancient Vault reached. The relic is yours. Trial passed."
+            "value" : "Ancient vault opens—the relic answers your resonance. Trial passed."
           }
         }
       }
@@ -1021,7 +1021,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your potion had a side effect—your vision begins to dim. Listen for the room you need and scroll with care."
+            "value" : "Your potion had a side effect—your vision begins to dim. Trust the Moonstone alignment lane: listen, feel the lock cues, and three-finger scroll with care."
           }
         }
       }
@@ -1054,7 +1054,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Crystal orb, aligned, ready to confirm"
+            "value" : "Crystal orb, aligned, ready to seal resonance"
           }
         }
       }
@@ -1106,7 +1106,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ember shard"
+            "value" : "Ember Shard"
           }
         }
       }
@@ -1128,7 +1128,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shadow glyph"
+            "value" : "Shadow Glyph"
           }
         }
       }
@@ -1139,7 +1139,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sun sigil"
+            "value" : "Sun Sigil"
+          }
+        }
+      }
+    },
+    "dungeon.resonance.mockup.laneSectionAbove" : {
+      "comment" : "Developer mockup caption above the sample Moonstone row.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Above the Moonstone (preview)"
+          }
+        }
+      }
+    },
+    "dungeon.resonance.mockup.laneSectionBelow" : {
+      "comment" : "Developer mockup caption below the sample Moonstone row.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Below the Moonstone (preview)"
           }
         }
       }
@@ -1160,7 +1182,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirms the alignment when the Moonstone matches the center orb."
+            "value" : "Seals the resonance when the Moonstone matches the center orb."
           }
         }
       }
@@ -1193,7 +1215,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Legendary resonance. Flawless descent. The crystal answers you."
+            "value" : "Legendary resonance. Flawless alignment. The crystal answers you."
           }
         }
       }
@@ -1204,7 +1226,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You reached the vault. The crystal tested you—and you endured."
+            "value" : "You sealed the resonance. The crystal tested you—and you endured."
           }
         }
       }
@@ -1650,7 +1672,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Second quest: scroll with three fingers through the crystal shaft until you can claim the relic."
+            "value" : "Second quest: three-finger scroll the Moonstone alignment lane until the Moonstone locks to the center orb—then seal resonance."
           }
         }
       }
@@ -2023,7 +2045,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In Crystal Resonance you practiced the rule: with VoiceOver on, one-finger swipes move between elements—they do not scroll the page. To scroll, use three fingers and swipe up (scroll down) or down (scroll up)."
+            "value" : "In Crystal Resonance you practiced: with VoiceOver on, one-finger swipes move focus—they do not move the Moonstone alignment lane. Use three fingers to scroll the lane until the Moonstone meets the center orb, then seal resonance."
           }
         }
       }

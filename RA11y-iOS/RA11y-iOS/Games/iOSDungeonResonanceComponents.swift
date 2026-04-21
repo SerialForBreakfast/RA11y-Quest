@@ -141,13 +141,40 @@ struct iOSResonanceLightsOffVignette: View {
             )
             if let spot = UIImage(named: iOSDungeonResonanceArt.spotlightMaskReference) {
                 Image(uiImage: spot)
+                    .renderingMode(.original)
+                    .interpolation(.high)
                     .resizable()
                     .scaledToFill()
                     .blendMode(.plusLighter)
-                    .opacity(0.35)
+                    .opacity(0.32)
             }
         }
         .ignoresSafeArea()
+    }
+}
+
+// MARK: - Wide canvas catalog scaling
+
+/// Draw helper for Crystal Resonance PNGs authored on **wide landscape** masters (~1376×768) with the
+/// subject centered (see ``iOSDungeonResonanceArt`` and the design pipeline note).
+///
+/// ``SwiftUI/View/scaledToFit()`` fits the **entire** bitmap into small point frames, so the centered
+/// glyph shrinks to a faint smear. ``SwiftUI/View/scaledToFill()`` with a fixed ``SwiftUI/View/frame``
+/// and ``SwiftUI/View/clipped()`` center-crops and fills the allotted points so silhouettes read at the
+/// intended visual weight on phone and iPad.
+struct iOSResonanceWideCanvasImage: View {
+    let uiImage: UIImage
+    var width: CGFloat?
+    var height: CGFloat?
+
+    var body: some View {
+        Image(uiImage: uiImage)
+            .renderingMode(.original)
+            .interpolation(.high)
+            .resizable()
+            .scaledToFill()
+            .frame(width: width, height: height)
+            .clipped()
     }
 }
 
@@ -194,13 +221,8 @@ struct iOSMoonstoneTargetOrb: View {
     var body: some View {
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.targetMoonstone) {
-                Image(uiImage: ui)
-                    .interpolation(.high)
-                    .resizable()
-                    .scaledToFit()
-                    .compositingGroup()
-                    .frame(width: moonW, height: moonH)
-                    .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.4), radius: 10)
+                iOSResonanceWideCanvasImage(uiImage: ui, width: moonW, height: moonH)
+                    // Avoid shadow / compositingGroup — both can read as grey boxes on dark shaft art.
             } else {
                 ZStack {
                     Ellipse()
@@ -237,12 +259,7 @@ struct iOSLaneDecoyChip: View {
     var body: some View {
         Group {
             if let ui = UIImage(named: style.assetName) {
-                Image(uiImage: ui)
-                    .interpolation(.high)
-                    .resizable()
-                    .scaledToFit()
-                    .compositingGroup()
-                    .frame(width: chip, height: chip)
+                iOSResonanceWideCanvasImage(uiImage: ui, width: chip, height: chip)
             } else {
                 legacyDecoyPlaceholder
             }
@@ -287,11 +304,11 @@ struct iOSLaneLaneMarkerNeutral: View {
     var body: some View {
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.laneMarkerNeutral) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 22)
-                    .frame(maxWidth: .infinity)
+                GeometryReader { geo in
+                    iOSResonanceWideCanvasImage(uiImage: ui, width: geo.size.width, height: 22)
+                }
+                .frame(height: 22)
+                .frame(maxWidth: .infinity)
             } else {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.white.opacity(0.06))
@@ -307,6 +324,26 @@ struct iOSLaneLaneMarkerNeutral: View {
 }
 
 // MARK: - Center orb & reticle
+
+/// Cuts a circular window in the middle of the reticle so lane glyphs remain visible through the ring.
+private struct iOSResonanceReticleDonutMask: View {
+    let diameter: CGFloat
+    /// Inner hole diameter as a fraction of outer (tuned so the Moonstone reads through the ring).
+    var innerDiameterFraction: CGFloat = 0.54
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.white)
+            Circle()
+                .fill(Color.black)
+                .frame(width: diameter * innerDiameterFraction, height: diameter * innerDiameterFraction)
+                .blendMode(.destinationOut)
+        }
+        .frame(width: diameter, height: diameter)
+        .compositingGroup()
+    }
+}
 
 /// Fixed center reticle ring; responds to `iOSResonanceAimBand` for glow/pulse.
 struct iOSResonanceReticleRing: View {
@@ -327,12 +364,11 @@ struct iOSResonanceReticleRing: View {
 
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.reticleRing) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: diameter, height: diameter)
-                    .opacity(0.42 + pulse * 0.5)
-                    .shadow(color: Color.ra11yAccent.opacity(0.12 + pulse * 0.38), radius: 6 + pulse * 10)
+                iOSResonanceWideCanvasImage(uiImage: ui, width: diameter, height: diameter)
+                    .opacity(0.62 + pulse * 0.32)
+                    .mask {
+                        iOSResonanceReticleDonutMask(diameter: diameter, innerDiameterFraction: 0.54)
+                    }
             } else {
                 Circle()
                     .strokeBorder(
@@ -347,7 +383,6 @@ struct iOSResonanceReticleRing: View {
                         lineWidth: 2 + pulse * 2
                     )
                     .frame(width: diameter, height: diameter)
-                    .shadow(color: Color.ra11yAccent.opacity(0.15 + pulse * 0.35), radius: 8 + pulse * 10)
             }
         }
         .accessibilityHidden(true)
@@ -363,12 +398,26 @@ struct iOSResonanceCenterOrb: View {
     var body: some View {
         ZStack {
             if let uiImage = UIImage(named: orbImageName) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: orbDiameter, height: orbDiameter)
+                iOSResonanceWideCanvasImage(uiImage: uiImage, width: orbDiameter, height: orbDiameter)
                     .saturation(bandSaturation)
-                    .shadow(color: orbGlowColor, radius: orbGlowRadius)
+                    .mask {
+                        RadialGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(0.06), location: 0.0),
+                                .init(color: Color.white.opacity(0.55), location: 0.34),
+                                .init(color: Color.white.opacity(0.92), location: 0.62),
+                                .init(color: Color.white, location: 1.0),
+                            ],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: orbDiameter * 0.52
+                        )
+                    }
+                    .overlay {
+                        Circle()
+                            .strokeBorder(orbGlowColor.opacity(0.4), lineWidth: 1.5)
+                            .frame(width: orbDiameter + 6, height: orbDiameter + 6)
+                    }
             } else {
                 Circle()
                     .fill(orbGradient)
@@ -487,10 +536,7 @@ struct iOSResonanceSuccessFlareOverlay: View {
 
     var body: some View {
         if let ui = UIImage(named: iOSDungeonResonanceArt.successFlare) {
-            Image(uiImage: ui)
-                .resizable()
-                .scaledToFit()
-                .frame(width: flareSize, height: flareSize)
+            iOSResonanceWideCanvasImage(uiImage: ui, width: flareSize, height: flareSize)
                 .blendMode(.screen)
                 .opacity(0.88)
                 .accessibilityHidden(true)

@@ -119,7 +119,7 @@ public extension RankThresholds {
         okMaxTime:          40, okMaxMistakes:      4
     )
 
-    /// Thresholds for Scroll Hunt — Crystal Resonance (Game 3).
+    /// Thresholds for Crystal Resonance (Game 3; catalog id `scroll-hunt`).
     ///
     /// Per `GameSpec-ScrollHunt.txt` and `GameRules-MVP.txt`:
     /// - Legendary (Perfect): 0 mistakes, ≤15s

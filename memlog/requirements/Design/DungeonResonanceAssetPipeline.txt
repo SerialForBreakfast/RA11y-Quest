@@ -1,7 +1,8 @@
 RA11y — Dungeon Resonance v2 Asset Pipeline
 ============================================
 Date: 2026-04-19
-Related: ADR-0003, DesignTicket-DungeonResonancePromptSheet.txt
+Related: ADR-0003, DesignTicket-DungeonResonancePromptSheet.txt,
+  `CrystalResonance-Terminology.txt` (canonical Moonstone / alignment lane copy).
 
 Purpose
 -------
@@ -27,9 +28,9 @@ Layer stack (back → front)
    fixed center; `allowsHitTesting(false)` so scroll passes through.
 5. Optional `dungeon_success_flare` — short-lived overlay on Success; compose with
    `.opacity` + blend mode; respect Reduce Motion (skip or shorten).
-6. Lights Off: darken world with **code** radial gradient **plus** optional
-   `dungeon_spotlight_mask_reference` multiply/softLight; orb and reticle stay
-   fully opaque above the mask.
+6. Lights Off (L3): darken the playfield with ``iOSResonanceLightsOffVignette`` (radial gradient **plus**
+   optional `dungeon_spotlight_mask_reference`). Do **not** stack ``ra11yLightsOffGameplayBlackout`` on the
+   glyph lane — it paints an opaque plate and duplicates the vignette. Orb and reticle stay above the vignette.
 
 Runtime sizing (SwiftUI)
 ------------------------
@@ -40,7 +41,8 @@ Use **points**, not raw pixels. Recommended defaults (tune in mockup / final gam
 - **Orb:** `@ScaledMetric(relativeTo: .title)` base **112 pt** diameter, clamp 88–140 pt;
   same visual weight on iPhone and iPad.
 - **Reticle ring:** ~1.45–1.55× orb diameter so the ring frames the orb without
-  covering it; single asset scales with `.resizable` + `aspectFit` in a square frame.
+  covering it; single asset uses ``iOSResonanceWideCanvasImage`` (`.scaledToFill` +
+  `.clipped()` in a square frame) so wide masters still read at full weight.
 - **Moonstone (target):** ~72–96 pt wide (oval); decoys same order of magnitude; distinct
   silhouettes remain readable at Dynamic Type–adjacent sizes.
 - **Lane marker:** low visual weight; ~22–28 pt height bars or proportional glyph.
@@ -56,6 +58,13 @@ Transparency rules
   `utility/remove_white_background.py --mode edge` on edge-connected near-white (backs up then
   replaces in place), or re-export from the art pipeline with proper alpha. Review on a dark
   background (game shaft) on device.
+  For **light grey** export mats touching the border, try `--edge-matte` (riskier — QC glyphs).
+
+Living QC / failure modes (scroll sync, grey boxes, centre transparency): see
+  `memlog/research/CrystalResonance-Asset-And-Scroll-QC.md`.
+
+Batch normalize catalog PNGs (RGBA for composited art, RGB kept for full-bleed bgs): run
+  `python3 utility/ensure_png_rgba.py` from repo root (see script docstring).
 
 Multiple form factors
 ----------------------

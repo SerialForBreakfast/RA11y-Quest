@@ -39,7 +39,7 @@ public enum QuestFeedbackIntent: Equatable, Sendable {
 public enum QuestFeedbackInput: Equatable, Sendable {
     /// Alignment band derived from current gameplay geometry.
     case alignmentBandChanged(QuestFeedbackBand)
-    /// Discrete lane slot changed while scrolling the resonance shaft (semantic focus move, not raw geometry).
+    /// Discrete lane slot changed while scrolling the Moonstone alignment lane (semantic focus move, not raw geometry).
     case laneSlotChanged
     /// The player activated the wrong object or trigger.
     case wrongActivation
@@ -68,6 +68,8 @@ public struct QuestFeedbackState: Equatable, Sendable {
 public enum QuestFeedbackAudioFamily: String, Codable, Hashable, Sendable {
     case none
     case resonance
+    /// Short, clear step tone for discrete lane / list moves (Crystal Resonance shaft slots).
+    case laneSlotStep
     case mutedError
     case crystallineSuccess
     case warningPulse
@@ -78,6 +80,8 @@ public enum QuestFeedbackAudioFamily: String, Codable, Hashable, Sendable {
 public enum QuestFeedbackHapticFamily: String, Codable, Hashable, Sendable {
     case none
     case softTick
+    /// Discrete selection nudge — maps to `UISelectionFeedbackGenerator` for VoiceOver-friendly shaft steps.
+    case selectionChanged
     case proximityPulse
     case alignmentSnap
     case errorTap

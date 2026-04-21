@@ -60,7 +60,7 @@ public struct QuestFeedbackProfile: Equatable, Sendable {
 }
 
 public extension QuestFeedbackProfile {
-    /// Resonance-oriented cue mapping for Crystal Resonance (Scroll Hunt) v2.
+    /// Resonance-oriented cue mapping for Crystal Resonance (Moonstone alignment lane) v2.
     static let dungeonResonance = QuestFeedbackProfile(
         name: "dungeonResonance",
         warmCue: QuestFeedbackCue(audio: .resonance, haptic: .softTick, cooldownSeconds: 0.25),
@@ -71,7 +71,7 @@ public extension QuestFeedbackProfile {
         successCue: QuestFeedbackCue(audio: .crystallineSuccess, haptic: .successPulse, cooldownSeconds: 0.0),
         timeoutCue: QuestFeedbackCue(audio: .warningPulse, haptic: .warningTap, cooldownSeconds: 0.0),
         hintCue: QuestFeedbackCue(audio: .hintChime, haptic: .softTick, cooldownSeconds: 0.4),
-        laneSlotCue: QuestFeedbackCue(audio: .resonance, haptic: .softTick, cooldownSeconds: 0.1)
+        laneSlotCue: QuestFeedbackCue(audio: .laneSlotStep, haptic: .selectionChanged, cooldownSeconds: 0.08)
     )
 
     /// Light-touch profile suitable for calmer, tutorial-heavy quests.
@@ -85,6 +85,6 @@ public extension QuestFeedbackProfile {
         successCue: QuestFeedbackCue(audio: .crystallineSuccess, haptic: .successPulse, cooldownSeconds: 0.0),
         timeoutCue: QuestFeedbackCue(audio: .warningPulse, haptic: .warningTap, cooldownSeconds: 0.0),
         hintCue: QuestFeedbackCue(audio: .hintChime, haptic: .softTick, cooldownSeconds: 0.4),
-        laneSlotCue: QuestFeedbackCue(audio: .none, haptic: .softTick, cooldownSeconds: 0.12)
+        laneSlotCue: QuestFeedbackCue(audio: .none, haptic: .selectionChanged, cooldownSeconds: 0.12)
     )
 }

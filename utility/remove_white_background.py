@@ -16,6 +16,12 @@ Do **not** run edge mode on full-screen **screenshots** or on painted scene art 
 ``*_bg.png``, ``dungeon_room_*.png``): only on relic / seal / hub icon sprites that sit
 on a flat white field.
 
+**Light grey mattes** (e.g. ``#ececec`` export beds) are **not** removed by default edge
+mode. Options: (1) re-export PNG with true alpha from the art tool; (2) try ``--edge-matte``
+(flood-fills light neutral greys from the border — **verify** glyphs did not connect to the
+edge through grey); (3) ``--mode global`` with a tight ``--fuzz`` only when the glyph uses
+no near-white interior (aggressive).
+
 **Dimensions:** MVP game sprites are often landscape RGB (e.g. 1376×768) with no alpha
 until processed. The default size guard distinguishes those from device screenshots
 (tall portrait or large two-axis tablet frames) so you usually **do not** need
@@ -77,7 +83,23 @@ def is_near_white(r: int, g: int, b: int, fuzz: int) -> bool:
     return r >= 255 - fuzz and g >= 255 - fuzz and b >= 255 - fuzz
 
 
-def remove_edge_connected_near_white(img: Image.Image, fuzz: int) -> Image.Image:
+def is_near_light_neutral_matte(r: int, g: int, b: int, fuzz: int) -> bool:
+    """
+    True for flat light grey / off-white mats that touch the image edge (common bad exports).
+
+    More aggressive than ``is_near_white`` — use only with ``--edge-matte`` and inspect output:
+    silver highlights on glyphs can connect to the border through a grey path and be erased.
+    """
+    mx = max(r, g, b)
+    mn = min(r, g, b)
+    if mx < 200 - fuzz:
+        return False
+    if mx - mn > 28 + fuzz // 2:
+        return False
+    return mx >= 235 - fuzz
+
+
+def remove_edge_connected_near_white(img: Image.Image, fuzz: int, *, edge_matte: bool = False) -> Image.Image:
     """
     Sets alpha to 0 for near-white pixels connected to any image edge.
 
@@ -98,7 +120,10 @@ def remove_edge_connected_near_white(img: Image.Image, fuzz: int) -> Image.Image
         if a == 0:
             visited.add((x, y))
             return
-        if is_near_white(r, g, b, fuzz):
+        is_bg = is_near_white(r, g, b, fuzz) or (
+            edge_matte and is_near_light_neutral_matte(r, g, b, fuzz)
+        )
+        if is_bg:
             visited.add((x, y))
             q.append((x, y))
 
@@ -124,7 +149,10 @@ def remove_edge_connected_near_white(img: Image.Image, fuzz: int) -> Image.Image
             if na == 0:
                 visited.add((nx, ny))
                 continue
-            if is_near_white(nr, ng, nb, fuzz):
+            is_nb = is_near_white(nr, ng, nb, fuzz) or (
+                edge_matte and is_near_light_neutral_matte(nr, ng, nb, fuzz)
+            )
+            if is_nb:
                 visited.add((nx, ny))
                 q.append((nx, ny))
 
@@ -199,11 +227,12 @@ def process_file(
     mode: str,
     output_path: Path,
     allow_large: bool,
+    edge_matte: bool,
 ) -> None:
     img = Image.open(path)
     warn_if_screenshot_like(img.width, img.height, allow_large)
     if mode == "edge":
-        out = remove_edge_connected_near_white(img, fuzz)
+        out = remove_edge_connected_near_white(img, fuzz, edge_matte=edge_matte)
     else:
         out = remove_global_near_white(img, fuzz)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -232,6 +261,11 @@ def main() -> None:
         default="edge",
         help="edge: only white connected to border (safer for glyphs). "
         "global: all near-white transparent (ImageMagick-like).",
+    )
+    parser.add_argument(
+        "--edge-matte",
+        action="store_true",
+        help="With --mode edge, also flood-fill light neutral greys touching the border (riskier; QC on device).",
     )
     parser.add_argument(
         "-o",
@@ -282,6 +316,7 @@ def main() -> None:
                 mode=args.mode,
                 output_path=out_path,
                 allow_large=args.allow_large,
+                edge_matte=args.edge_matte,
             )
             print(f"updated {path} (backup {backup})")
         return
@@ -301,6 +336,7 @@ def main() -> None:
             mode=args.mode,
             output_path=target,
             allow_large=args.allow_large,
+            edge_matte=args.edge_matte,
         )
         print(f"wrote {target}")
         return
@@ -319,6 +355,7 @@ def main() -> None:
             mode=args.mode,
             output_path=target,
             allow_large=args.allow_large,
+            edge_matte=args.edge_matte,
         )
         print(f"wrote {target}")
 

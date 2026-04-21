@@ -169,7 +169,7 @@ struct ScoringModelTests {
         #expect(fewer.isBetter(than: more))
     }
 
-    // MARK: - RankThresholds — Scroll Hunt (Game 3 — Crystal Resonance)
+    // MARK: - RankThresholds — Crystal Resonance (Game 3)
     // Spec: Legendary ≤15s, 0 mistakes | Skilled ≤30s, ≤1 mistake | Novice ≤60s | Defeated ≥6 mistakes
 
     /// Legendary: ≤15s, 0 mistakes (spec exact value from GameSpec-ScrollHunt.txt).

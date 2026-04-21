@@ -10,7 +10,7 @@ public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     case findAndFocus
     /// Activate — Bomb Defusal drill training double-tap activation on the correct control.
     case activateDoubleTap
-    /// Scroll Hunt — Crystal Resonance drill training three-finger scrolling to reveal hidden content.
+    /// Crystal Resonance (player-facing name). Internal catalog id `scroll-hunt`; trains three-finger scrolling of the Moonstone alignment lane.
     case scrollHunt
 }
 

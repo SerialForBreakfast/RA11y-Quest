@@ -6,7 +6,7 @@ import RA11yCore
 
 // MARK: - iOSDungeonDescentView
 
-/// Container for Crystal Resonance (Scroll Hunt) — M7.
+/// Container for Crystal Resonance (Moonstone alignment lane) — M7.
 ///
 /// Implements the full 4-level game arc defined in `GameSpec-ScrollHunt.txt`
 /// and `GameRules-MVP.txt`:

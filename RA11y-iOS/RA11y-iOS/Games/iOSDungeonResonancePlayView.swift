@@ -134,6 +134,11 @@ struct iOSDungeonResonancePlayView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    /// Stable identity for the current lane room set (L1/L2/L3 transitions and L3 reshuffles).
+    private var roomLaneIdentity: String {
+        rooms.map(\.id).joined(separator: "\u{1e}")
+    }
+
     private var aimBand: iOSResonanceAimBand {
         iOSResonanceAimBand.displayBand(deltaPoints: displayDeltaPoints, levelComplete: levelComplete)
     }
@@ -157,14 +162,24 @@ struct iOSDungeonResonancePlayView: View {
         max(0, playfieldViewportHeight * 0.5 - iOSDungeonResonanceLaneLayout.rowContentHeightPoints * 0.5)
     }
 
-    /// Full height of ``resonanceLaneColumn`` (top/bottom center spacers, lane rows, and inter-row gaps).
+    /// Extra scrollable runway below the lane so VoiceOver three-finger paging can exceed the last snap
+    /// without `contentOffset` sitting on the `maxY` clamp (see repo `memlog/research/CrystalResonance-Asset-And-Scroll-QC.md`).
+    private var voiceOverLaneTrailingSlack: CGFloat {
+        max(160, playfieldViewportHeight * 0.28)
+    }
+
+    /// Full height of ``resonanceLaneColumn`` (top/bottom center spacers, lane rows, inter-row gaps, trailing slack).
     private var voiceOverLaneIntrinsicBlockHeight: CGFloat {
         let n = rooms.count
         guard n > 0 else { return RA11ySpacing.xl * 2 }
-        let gapCount = CGFloat(n + 1)
-        return CGFloat(n) * iOSDungeonResonanceLaneLayout.rowContentHeightPoints
+        /// One more gap than ``n + 1``: the stack is top spacer, ``n`` rows, bottom spacer, **trailing** clear.
+        let gapCount = CGFloat(n + 2)
+        let rowsBlock = CGFloat(n) * iOSDungeonResonanceLaneLayout.rowContentHeightPoints
             + gapCount * laneColumnInterItemSpacing
             + 2 * laneCenterSpacerHeight
+            + voiceOverLaneTrailingSlack
+        let minForLastSlot = CGFloat(max(0, n - 1)) * laneStepPoints + playfieldViewportHeight + 48
+        return max(rowsBlock, minForLastSlot)
     }
 
     /// Scroll content block height passed to the UIKit proxy and mirrored by the visual lane.
@@ -255,6 +270,18 @@ struct iOSDungeonResonancePlayView: View {
         }
     }
 
+    /// Snaps VoiceOver scroll state and the mirrored lane to the **Moonstone row** whenever the room list changes.
+    ///
+    /// Without this, `@State` defaults to slot `0` while L1’s target can be at index `2`, so the shaft highlights
+    /// the wrong row until the player scrolls and the proxy corrects.
+    private func applyLaneSelectionForCurrentRooms() {
+        guard !rooms.isEmpty else { return }
+        let moonIndex = rooms.firstIndex(where: \.isTarget) ?? 0
+        let idx = clampedLaneIndex(moonIndex)
+        selectedLaneIndex = idx
+        voiceOverProxyScrollOffsetY = snappedLaneOffset(for: idx)
+    }
+
     /// The playfield `ZStack` must always contain the UIKit proxy unconditionally. New overlays above it
     /// must disable hit testing, and new playfield content must remain hidden from accessibility.
     var body: some View {
@@ -275,14 +302,20 @@ struct iOSDungeonResonancePlayView: View {
             .environment(\.colorScheme, .dark)
             .onAppear {
                 playfieldViewportHeight = clampedPlayfieldHeight
+                applyLaneSelectionForCurrentRooms()
+                logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
+            }
+            .onChange(of: roomLaneIdentity) { _, _ in
+                DispatchQueue.main.async {
+                    applyLaneSelectionForCurrentRooms()
+                }
             }
             .onChange(of: clampedPlayfieldHeight) { _, newHeight in
                 guard abs(newHeight - playfieldViewportHeight) > 0.5 else { return }
-                playfieldViewportHeight = newHeight
-                applyResonanceAlignmentFromLastFrames()
-            }
-            .onAppear {
-                logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
+                DispatchQueue.main.async {
+                    playfieldViewportHeight = newHeight
+                    applyResonanceAlignmentFromLastFrames()
+                }
             }
         }
     }
@@ -296,7 +329,8 @@ struct iOSDungeonResonancePlayView: View {
                 .offset(y: -voiceOverProxyScrollOffsetY)
                 .frame(maxWidth: .infinity, minHeight: height, maxHeight: height, alignment: .top)
                 .clipped()
-                .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
+                /// L3 Lights Off: rely on ``iOSResonanceLightsOffVignette`` for dimming. A full ``ra11yLightsOffGameplayBlackout``
+                /// stack here paints an opaque slab over the lane (grey/black plate) and fights the vignette art.
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
@@ -332,7 +366,7 @@ struct iOSDungeonResonancePlayView: View {
         .coordinateSpace(name: ResonancePlayfieldCoordinateSpace.name)
         .background(Color.ra11yGameFallbackBackground)
         .onPreferenceChange(iOSResonanceTargetMidYPreferenceKey.self) { targetY in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 guard targetY > -500, abs(targetY - lastTargetMidYInPlayfield) > 0.25 else { return }
                 lastTargetMidYInPlayfield = targetY
                 applyResonanceAlignmentFromLastFrames()
@@ -348,15 +382,22 @@ struct iOSDungeonResonancePlayView: View {
                 .frame(height: laneCenterSpacerHeight)
                 .accessibilityHidden(true)
             ForEach(Array(rooms.enumerated()), id: \.element.id) { index, room in
-                if room.isTarget {
-                    moonstoneRow(room: room, index: index)
-                } else {
-                    iOSLaneDecoyChip(style: .forRoomIndex(index))
-                        .modifier(iOSResonanceLaneSelectionModifier(distanceFromSelection: abs(index - selectedLaneIndex)))
+                Group {
+                    if room.isTarget {
+                        moonstoneRow(room: room, index: index)
+                    } else {
+                        iOSLaneDecoyChip(style: .forRoomIndex(index))
+                            .modifier(iOSResonanceLaneSelectionModifier(distanceFromSelection: abs(index - selectedLaneIndex)))
+                    }
                 }
+                .frame(height: iOSDungeonResonanceLaneLayout.rowContentHeightPoints)
+                .frame(maxWidth: .infinity)
             }
             Color.clear
                 .frame(height: laneCenterSpacerHeight)
+                .accessibilityHidden(true)
+            Color.clear
+                .frame(height: voiceOverLaneTrailingSlack)
                 .accessibilityHidden(true)
         }
         .frame(maxWidth: 520)
@@ -420,7 +461,9 @@ struct iOSDungeonResonancePlayView: View {
         .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.topChrome)
         .onPreferenceChange(ResonanceTopChromeHeightPreferenceKey.self) { height in
             guard height > 0, abs(height - topChromeHeight) > 0.5 else { return }
-            topChromeHeight = height
+            DispatchQueue.main.async {
+                topChromeHeight = height
+            }
         }
     }
 
@@ -447,7 +490,9 @@ struct iOSDungeonResonancePlayView: View {
         .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.bottomChrome)
         .onPreferenceChange(ResonanceBottomChromeHeightPreferenceKey.self) { height in
             guard height > 0, abs(height - bottomChromeHeight) > 0.5 else { return }
-            bottomChromeHeight = height
+            DispatchQueue.main.async {
+                bottomChromeHeight = height
+            }
         }
     }
 
@@ -708,7 +753,7 @@ private struct iOSResonanceLaneSelectionModifier: ViewModifier {
         content
             .scaleEffect(distanceFromSelection == 0 ? 1.0 : 0.88)
             .opacity(distanceFromSelection == 0 ? 1.0 : (distanceFromSelection == 1 ? 0.28 : 0.0))
-            .blur(radius: distanceFromSelection > 1 ? 3 : 0)
+            // Avoid blur — it composites into dark rectangular bands behind PNG glyphs in the shaft.
             .animation(.easeOut(duration: 0.18), value: distanceFromSelection)
     }
 }

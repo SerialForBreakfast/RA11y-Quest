@@ -1,0 +1,16 @@
+---
+description: Repo agent guidelines — follow AGENTS.md (safety, tooling, workflow)
+alwaysApply: true
+---
+
+# AGENTS.md is authoritative
+
+For this repository, **read and follow** the root **`AGENTS.md`** file. It takes precedence over generic coding advice for:
+
+- Prohibited commands and simulator safety  
+- Filesystem boundaries and where to write artefacts  
+- **Scripting / shell policy** (bash, Unix CLI, Swift & Xcode only for improvised commands; no ad-hoc Python/Ruby/Node one-liners)  
+- Build/test patterns (`utility/build_and_test.sh`, etc.)  
+- iOS/macOS project conventions noted there  
+
+Do **not** contradict `AGENTS.md`. If a task needs detail, **open `AGENTS.md`** rather than guessing. Keeping one canonical doc avoids duplicating long policy in Cursor rules.
