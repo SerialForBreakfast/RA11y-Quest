@@ -117,6 +117,20 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewA
         #endif
     }
 
+    /// Keeps the UIKit proxy aligned with the snapped SwiftUI slot selection instead of free-running on
+    /// inertial scroll physics. This makes VoiceOver page scroll behave like a discrete room selector.
+    func updateDesiredContentOffsetY(_ desiredOffsetY: CGFloat, scrollView: UIScrollView) {
+        let clampedOffsetY = max(
+            0,
+            min(
+                desiredOffsetY,
+                max(0, scrollView.contentSize.height - scrollView.bounds.height)
+            )
+        )
+        guard abs(clampedOffsetY - scrollView.contentOffset.y) > 0.5 else { return }
+        scrollView.setContentOffset(CGPoint(x: 0, y: clampedOffsetY), animated: false)
+    }
+
     /// Called once after the scroll view has a non-empty frame in a window. Restores the original
     /// VoiceOver landing sequence so the lane is immediately ready for three-finger scroll.
     @MainActor
@@ -201,6 +215,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
     var accessibilityLabelText: String
     var accessibilityHintText: String
     var accessibilityScrollStatusText: String?
+    var desiredContentOffsetY: CGFloat
 
     var onContentOffsetYChanged: (CGFloat) -> Void
 
@@ -255,6 +270,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
         context.coordinator.onContentOffsetYChanged = onContentOffsetYChanged
         context.coordinator.accessibilityScrollStatusText = { accessibilityScrollStatusText }
         context.coordinator.updateContentHeight(totalHeight: computeTotalContentHeight(), scrollView: scrollView)
+        context.coordinator.updateDesiredContentOffsetY(desiredContentOffsetY, scrollView: scrollView)
         configureAccessibility(on: scrollView)
     }
 

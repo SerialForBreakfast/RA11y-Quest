@@ -777,6 +777,7 @@
       }
     },
     "dungeon.hint.a11yHint" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -787,6 +788,7 @@
       }
     },
     "dungeon.hint.a11yLabel" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -797,6 +799,7 @@
       }
     },
     "dungeon.hint.button" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
