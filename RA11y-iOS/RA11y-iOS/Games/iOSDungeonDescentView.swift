@@ -110,6 +110,8 @@ struct iOSDungeonDescentView: View {
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: nil,
                 showsFirstLevelGestureTip: true,
+                continueButtonTitle: String(localized: "dungeon.resonance.continue.toRising"),
+                initialLaneIndexOverride: viewModel.resonanceInitialLaneIndexOverride,
                 onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
                 onLaneSlotChanged: { viewModel.notifyResonanceLaneSlotChanged() },
@@ -133,6 +135,8 @@ struct iOSDungeonDescentView: View {
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: nil,
                 showsFirstLevelGestureTip: false,
+                continueButtonTitle: String(localized: "dungeon.resonance.continue.toFinalTrial"),
+                initialLaneIndexOverride: viewModel.resonanceInitialLaneIndexOverride,
                 onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
                 onLaneSlotChanged: { viewModel.notifyResonanceLaneSlotChanged() },
@@ -156,6 +160,8 @@ struct iOSDungeonDescentView: View {
                 lightsOffMode: isLightsOffFinalLevel,
                 lightsOffFlavorText: String(localized: "dungeon.lightsOff.flavor"),
                 showsFirstLevelGestureTip: false,
+                continueButtonTitle: nil,
+                initialLaneIndexOverride: viewModel.resonanceInitialLaneIndexOverride,
                 onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
                 onLaneSlotChanged: { viewModel.notifyResonanceLaneSlotChanged() },
@@ -213,6 +219,10 @@ final class DungeonDescentViewModel {
     private(set) var statusMessage: String?
     private(set) var mistakes: Int = 0
     private(set) var levelComplete: Bool = false
+
+    /// When set, ``iOSDungeonResonancePlayView`` seeds the scroll proxy to this lane index (screenshot determinism).
+    /// Normal play leaves this `nil` so the play surface picks a **decoy** under the hub first.
+    private(set) var resonanceInitialLaneIndexOverride: Int?
 
     // MARK: - Timer State (L2 + L3)
 
@@ -273,18 +283,18 @@ final class DungeonDescentViewModel {
         }
     }
 
-    /// Returns whether L3 should randomize room order and target placement (final timed level).
+    /// Returns whether lane order and Moonstone position should be randomized (L1–L3).
     ///
     /// Screenshot and UI-test launches keep fixed layouts for determinism.
-    private func shouldRandomizeDungeonLayoutForTimedLevel() -> Bool {
+    private func shouldRandomizeResonanceLaneLayout() -> Bool {
         if screenshotScene != nil { return false }
         if ProcessInfo.processInfo.arguments.contains("-uiTesting") { return false }
         return true
     }
 
-    /// Builds the room list for the current level, optionally randomizing target placement on L3.
+    /// Builds the room list for the current level, optionally shuffling order and picking a random Moonstone slot.
     private func roomsForLevel(_ base: [DungeonRoom], randomizeTargetPlacement: Bool) -> [DungeonRoom] {
-        if randomizeTargetPlacement, shouldRandomizeDungeonLayoutForTimedLevel() {
+        if randomizeTargetPlacement, shouldRandomizeResonanceLaneLayout() {
             return DungeonRoom.randomizedRoomsPreservingPool(base)
         }
         return base
@@ -305,7 +315,8 @@ final class DungeonDescentViewModel {
         statusMessage = nil
         levelComplete = false
         targetIsReachable = false
-        rooms = roomsForLevel(DungeonRoom.l1Rooms, randomizeTargetPlacement: false)
+        resonanceInitialLaneIndexOverride = nil
+        rooms = roomsForLevel(DungeonRoom.l1Rooms, randomizeTargetPlacement: true)
         phase = .firstAttempt
     }
 
@@ -318,7 +329,8 @@ final class DungeonDescentViewModel {
         levelComplete = false
         l2TimedOut = false
         targetIsReachable = false
-        rooms = roomsForLevel(DungeonRoom.l2Rooms, randomizeTargetPlacement: false)
+        resonanceInitialLaneIndexOverride = nil
+        rooms = roomsForLevel(DungeonRoom.l2Rooms, randomizeTargetPlacement: true)
         timeRemaining = 60
         phase = .rising
         startTimer(total: 60) { [weak self] in await self?.handleL2Timeout() }
@@ -344,6 +356,7 @@ final class DungeonDescentViewModel {
         completedResult = nil
         voiceOverDisabledMidGame = false
         targetIsReachable = false
+        resonanceInitialLaneIndexOverride = nil
         rooms = roomsForLevel(DungeonRoom.l3Rooms, randomizeTargetPlacement: true)
         timeRemaining = 45
         phase = .timed
@@ -704,11 +717,14 @@ final class DungeonDescentViewModel {
         case .dungeonPrologue:
             phase = .prologue
             practiceScrollObserved = true
+            resonanceInitialLaneIndexOverride = nil
         case .dungeonFirstAttempt:
             phase = .firstAttempt
             rooms = DungeonRoom.l1Rooms
             targetIsReachable = true
+            resonanceInitialLaneIndexOverride = rooms.firstIndex(where: \.isTarget)
         default:
+            resonanceInitialLaneIndexOverride = nil
             break
         }
     }
@@ -793,12 +809,11 @@ struct DungeonRoom: Identifiable {
         DungeonRoom(id: "collapsed_wall",  displayName: "Collapsed Wall",  subtitle: "A gap you can pass.",            assetName: "dungeon_room_collapsed_wall",  isTarget: false),
     ]
 
-    // MARK: - Lights Off (random target position)
+    // MARK: - Lane randomization (Moonstone slot + vertical order)
 
-    /// Returns a copy of `base` with exactly one random target, shuffled order, for Lights Off mode.
+    /// Returns a copy of `base` with exactly one random Moonstone row and **shuffled** vertical order.
     ///
-    /// Preserves stable semantics within a run: the player must scroll to the target and activate it.
-    /// Across runs, which room is correct and its vertical position vary so positional memory alone is insufficient.
+    /// Used for L1–L3 during normal play so repeat runs cannot rely on memorized shaft positions.
     static func randomizedRoomsPreservingPool(_ base: [DungeonRoom]) -> [DungeonRoom] {
         let targetIndex = Int.random(in: base.indices)
         let objectiveSubtitle = String(localized: "dungeon.room.objective.subtitle")

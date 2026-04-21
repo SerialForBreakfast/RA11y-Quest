@@ -129,6 +129,24 @@ struct FirstRunRoutingTests {
     }
 }
 
+// MARK: - Crystal Resonance lane randomization
+
+/// Business rules for shuffled Moonstone lanes (``DungeonRoom/randomizedRoomsPreservingPool``).
+@MainActor
+struct DungeonRoomRandomizationTests {
+
+    @Test func randomizedPoolPreservesCountAndExactlyOneTarget() {
+        let bases = [DungeonRoom.l1Rooms, DungeonRoom.l2Rooms, DungeonRoom.l3Rooms]
+        for base in bases {
+            let r = DungeonRoom.randomizedRoomsPreservingPool(base)
+            #expect(r.count == base.count)
+            #expect(r.filter(\.isTarget).count == 1)
+            let targetIDs = Set(r.filter(\.isTarget).map(\.id))
+            #expect(targetIDs.count == 1)
+        }
+    }
+}
+
 // MARK: - Test Storage
 
 /// In-memory storage used by iOS routing tests.

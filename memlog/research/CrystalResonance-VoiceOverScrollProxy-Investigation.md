@@ -36,7 +36,7 @@ Primary implementation: `RA11y-iOS/RA11y-iOS/Games/iOSDungeonResonancePlayView.s
 ## What we observed (evidence)
 
 - Console / `[RA11yScroll]` logs sometimes show **`VO proxy scroll contentOffset.y`** changing — the **underlying** scroll view can move even when VoiceOver focus is wrong.
-- Logs show **`playSurface.onAppear`**, **`UIAccessibility.Notification.screenChanged`**, **`accessibilityFocusScrollLane`** binding, and **`dungeon.a11y.scroll.vo.focusAnnouncement`** being posted — **programmatic focus/announce** runs, but does not prove linear swipe order later reaches the scroll proxy.
+- Logs show **`playSurface.onAppear`**, **`UIAccessibility.Notification.screenChanged`**, **`layoutChanged`** with the `UIScrollView`, and (historically) a trailing **announcement** — **programmatic focus** runs, but does not prove linear swipe order later reaches the scroll proxy. The extra announcement was removed to avoid double-speak with the scroll view’s label and hint.
 - Occasional **`Failed to create … image slot … wide=0`** messages — likely a **zero-width layer** (asset/FX path); treat as **separate** from scroll proxy until traced; may correlate with layout glitches.
 
 ---
@@ -101,7 +101,7 @@ Keep this document updated when the UIKit path lands (files, API boundaries, any
 | Play surface | `RA11y-iOS/RA11y-iOS/Games/iOSDungeonResonancePlayView.swift` |
 | Game container / phases | `RA11y-iOS/RA11y-iOS/Games/iOSDungeonDescentView.swift` |
 | Router / UI testing gate | `RA11y-iOS/RA11y-iOS/App/iOSAppRouter.swift` (`-uiTesting`) |
-| Localized scroll proxy label / hint / focus line | `dungeon.a11y.scroll.container`, `dungeon.a11y.scroll.container.hint`, `dungeon.a11y.scroll.vo.focusAnnouncement`; L1 tip `dungeon.resonance.tip.voFocusOnLane` — `RA11y-iOS/RA11y-iOS/Localizable.xcstrings` |
+| Localized scroll proxy label / hint (optional legacy announcement key) | `dungeon.a11y.scroll.container`, `dungeon.a11y.scroll.container.hint`, `dungeon.a11y.scroll.vo.focusAnnouncement` (unused by coordinator after 2026-04); L1 tip `dungeon.resonance.tip.voFocusOnLane` — `RA11y-iOS/RA11y-iOS/Localizable.xcstrings` |
 
 ---
 
@@ -112,3 +112,5 @@ Keep this document updated when the UIKit path lands (files, API boundaries, any
 | 2026-04-19 | Initial capture after SwiftUI mitigation attempts; records UIKit as follow-up. |
 | 2026-04-19 | **Shipped interop:** `iOSResonanceVoiceOverScrollProxyRepresentable.swift` — transparent `UIScrollView` with Auto Layout content height, `UIScrollViewDelegate` for `contentOffset.y`, accessibility id/label/hint on the scroll view, initial VO sequence (`screenChanged` → delay → `layoutChanged` with `UIScrollView` → announcement). Wired from `iOSDungeonResonancePlayView` replacing SwiftUI `ScrollView`. |
 | 2026-04-21 | Header status updated: problem history remains valid; **current** work is QC invariants + on-device verification, not “waiting on UIKit.” |
+| 2026-04-21 | Coordinator: removed redundant `.announcement` (was double-speak with label+hint). |
+| 2026-04-21 | Coordinator: **two** `layoutChanged` posts (second after 320 ms) restored for iPad focus landing; still no `.announcement`. |

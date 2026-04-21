@@ -58,6 +58,8 @@ EDGE_SPRITE_IMAGESET_PREFIXES: tuple[str, ...] = (
     "dungeon_lane_marker_neutral",
     "dungeon_resonance_orb_",
     "dungeon_reticle_ring",
+    "dungeon_target_",
+    "dungeon_decoy_",
     "dungeon_success_flare",
     "dungeon_spotlight_mask_reference",
     "dungeon_hub_icon",

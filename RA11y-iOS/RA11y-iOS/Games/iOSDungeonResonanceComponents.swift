@@ -332,24 +332,41 @@ struct iOSLaneLaneMarkerNeutral: View {
 
 /// Cuts an **elliptical** window in the middle of the reticle (Moonstone oblong inside a circular ring PNG) so lane glyphs
 /// read through the hole and the lock shape matches the Moonstone aspect ratio.
+///
+/// Uses even-odd fill instead of ``blendMode(.destinationOut)`` so UI updates (e.g. seal press / state changes)
+/// do not flash a transient grey compositing slab around the hub.
 private struct iOSResonanceReticleDonutMask: View {
     let diameter: CGFloat
     /// Inner hole **width** as a fraction of the square mask’s width (height follows ``iOSDungeonResonanceLaneLayout.moonstoneWidthOverHeight``).
     var innerWidthFraction: CGFloat = 0.58
 
     var body: some View {
+        iOSResonanceReticleDonutMaskShape(diameter: diameter, innerWidthFraction: innerWidthFraction)
+            .fill(Color.white, style: FillStyle(eoFill: true))
+            .frame(width: diameter, height: diameter)
+    }
+}
+
+/// Even-odd donut for ``iOSResonanceReticleDonutMask`` — stable masking without destination-out compositing.
+private struct iOSResonanceReticleDonutMaskShape: Shape {
+    var diameter: CGFloat
+    var innerWidthFraction: CGFloat
+
+    func path(in rect: CGRect) -> Path {
         let innerW = diameter * innerWidthFraction
-        let innerH = innerW / iOSDungeonResonanceLaneLayout.moonstoneWidthOverHeight
-        ZStack {
-            Circle()
-                .fill(Color.white)
-            Ellipse()
-                .fill(Color.black)
-                .frame(width: innerW, height: innerH)
-                .blendMode(.destinationOut)
-        }
-        .frame(width: diameter, height: diameter)
-        .compositingGroup()
+        // Matches `iOSDungeonResonanceLaneLayout.moonstoneWidthOverHeight` (Shape `path(in:)` is nonisolated).
+        let moonstoneWidthOverHeight: CGFloat = 96.0 / 72.0
+        let innerH = innerW / moonstoneWidthOverHeight
+        let outerOrigin = CGPoint(x: rect.midX - diameter * 0.5, y: rect.midY - diameter * 0.5)
+        var path = Path()
+        path.addEllipse(in: CGRect(origin: outerOrigin, size: CGSize(width: diameter, height: diameter)))
+        path.addEllipse(in: CGRect(
+            x: rect.midX - innerW * 0.5,
+            y: rect.midY - innerH * 0.5,
+            width: innerW,
+            height: innerH
+        ))
+        return path
     }
 }
 
@@ -427,6 +444,7 @@ struct iOSResonanceCenterOrb: View {
                             .strokeBorder(orbGlowColor.opacity(0.4), lineWidth: 1.5)
                             .frame(width: orbDiameter + 6, height: orbDiameter + 6)
                     }
+                    .clipShape(Circle())
             } else {
                 Circle()
                     .fill(orbGradient)

@@ -38,7 +38,7 @@ This class of bug is **layout/sync**, not PNG.
 | **`.blur` on lane rows** | Dark fringes | Avoid blur on stacked PNG lanes |
 | **Template rendering** | Tinted / boxed | `.renderingMode(.original)` |
 | **Opaque centre in reticle/orb art** | Cannot see lane through ring | **Art:** donut PNG; **Code:** donut `mask` + radial orb mask (see `iOSResonanceReticleRing` / `iOSResonanceCenterOrb`) |
-| **L3 `ra11yLightsOffGameplayBlackout` on the glyph lane** | Opaque black plate over the stack + vignette | Crystal Resonance uses **vignette only** on the lane; do not stack the generic gameplay blackout on `resonanceLaneColumn` (see `iOSDungeonResonancePlayView`). |
+| **L3 Lights Off visuals** | Player peeks glyphs/orb through dim vignette | **Final trial (L3)** uses Enchanter parity: **black playfield** + ``ra11yLightsOffGameplayBlackout`` on `resonanceLaneColumn` only + **hidden** center orb stack—no vignette. Do not add a second global blackout on the scroll proxy (stays clear for VO). |
 
 ### Script vs regenerate
 - **`utility/remove_white_background.py`:** Best for **near-white** mats touching the **edge** (`--mode edge`). Does **not** fix mid-image grey boxes unless they touch the border and match matte heuristics (`--edge-matte`).
@@ -67,7 +67,23 @@ This class of bug is **layout/sync**, not PNG.
 
 ---
 
-## 5. Command examples (glyphs only)
+## 5. Automated QA script (repeatable PNG gate)
+
+From repo root, after imports or re-exports:
+
+```bash
+python3 utility/qa_crystal_resonance_png_assets.py
+python3 utility/qa_crystal_resonance_png_assets.py --verbose-ok   # wide-master OK lines
+python3 utility/qa_crystal_resonance_png_assets.py --strict-warnings
+```
+
+- **Catches:** missing imageset, sprites as **RGB** (no alpha), nearly empty RGBA, suspicious semi-transparent halos (sampled).
+- **Does not catch:** GPU-specific checkerboard with technically valid RGBA — still use §4 device checklist.
+- **Generative image prompts (DALL·E / Midjourney / etc.):**
+  ``memlog/requirements/Design/CrystalResonance-ImageGen-PromptTemplate.txt``
+  (same content as ``python3 utility/qa_crystal_resonance_png_assets.py --llm-snippet``).
+
+## 6. Command examples (glyphs only — normalize / repair)
 
 ```bash
 # Normalize entire catalog: backgrounds stay RGB; sprites get edge alpha; dungeon_room_* → RGBA opaque
@@ -83,7 +99,7 @@ python3 utility/remove_white_background.py --in-place --edge-matte path/to/dunge
 
 ---
 
-## 3. Off-by-one hub alignment (VoiceOver name vs visible Moonstone)
+## 7. Off-by-one hub alignment (VoiceOver name vs visible Moonstone)
 
 ### Cause
 `resonanceLaneColumn` uses `VStack(spacing:)`, so there is an extra **leading** gap between the top centering spacer and row `0`. Scroll math that used `s + i × laneStep + h/2` omitted that gap: row centers were **one spacing interval** too low, Moonstone sat **below** the reticle hub, and `laneIndexClosestToAimLine` could disagree with the eye.
@@ -95,4 +111,4 @@ python3 utility/remove_white_background.py --in-place --edge-matte path/to/dunge
 
 ---
 
-*Last updated: 2026-04-20 (§3 VStack leading gap in lane scroll math; orb clear core + reticle draw order for hub see-through).*
+*Last updated: 2026-04-21 (§5 ``utility/qa_crystal_resonance_png_assets.py``; §6 command renumber; DesignProcess Phase 5 link).*

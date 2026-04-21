@@ -167,18 +167,15 @@ final class iOSResonanceVoiceOverScrollProxyCoordinator: NSObject, UIScrollViewA
             print("[RA11yScroll] UIKit proxy: posted layoutChanged with UIScrollView")
             #endif
 
-            try? await Task.sleep(for: .milliseconds(350))
+            /// Second `layoutChanged` after SwiftUI + UIKit finish settling—**without** this, focus often stays on
+            /// chrome on iPad; users can still swipe to the lane, but auto-landing regresses. We intentionally
+            /// **do not** re-add `.announcement`: that duplicated the scroll view’s label/hint and sounded like
+            /// the same instruction twice.
+            try? await Task.sleep(for: .milliseconds(320))
             UIAccessibility.post(notification: .layoutChanged, argument: sv)
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: re-posted layoutChanged with UIScrollView")
+            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted follow-up layoutChanged with UIScrollView")
             #if DEBUG
-            print("[RA11yScroll] UIKit proxy: re-posted layoutChanged with UIScrollView")
-            #endif
-
-            let focusLine = String(localized: "dungeon.a11y.scroll.vo.focusAnnouncement")
-            UIAccessibility.post(notification: .announcement, argument: focusLine)
-            RA11yLogger.scrollInteraction.debug("UIKit proxy: posted VO focus announcement (length=\(focusLine.count))")
-            #if DEBUG
-            print("[RA11yScroll] UIKit proxy: posted VO focus announcement (length=\(focusLine.count))")
+            print("[RA11yScroll] UIKit proxy: posted follow-up layoutChanged with UIScrollView")
             #endif
         }
     }

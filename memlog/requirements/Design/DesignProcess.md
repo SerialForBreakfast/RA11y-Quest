@@ -196,6 +196,22 @@ Prompt sheet requirements (one file per quest)
         master for tall backgrounds
       - No sprite sheets, contact sheets, or multi-variation layouts
 
+Generative image tools (LLM / diffusion) — Crystal Resonance
+-------------------------------------------------------------
+  When commissioning **new** PNGs (not hand-painting), start from the shared
+  template of positive/negative constraints and per-asset paragraphs:
+
+    memlog/requirements/Design/CrystalResonance-ImageGen-PromptTemplate.txt
+
+  That file is written for **image generation** prompts only (style, alpha,
+  donut reticle, centered wide masters). It does not describe QA scripts or
+  Xcode steps. To print the same text in a terminal::
+
+    python3 utility/qa_crystal_resonance_png_assets.py --llm-snippet
+
+  Fold the relevant paragraphs into your quest prompt sheet (Phase 4) per
+  filename; keep one generation per asset.
+
 Global style constraints for RA11y (include in every prompt)
 -------------------------------------------------------------
   - Painterly flat fantasy illustration consistent with existing RA11y mockups
@@ -284,6 +300,28 @@ Asset registry test
   After import, verify every required asset name resolves from the bundle:
     UIImage(named: assetName) != nil for every name in the prompt sheet.
   This test should be added to the unit test suite and run on every build.
+
+Automated PNG QA (Crystal Resonance lane / hub art)
+---------------------------------------------------
+  Run from repo root whenever Crystal Resonance PNGs are added, re-exported, or
+  batch-normalized::
+
+    python3 utility/qa_crystal_resonance_png_assets.py
+
+  - **FAIL** (exit 1): missing imageset, unreadable file, or **sprite saved as RGB**
+    (common cause of grey mats / checkerboard fringes on dark UI in SwiftUI).
+  - **WARN**: odd color modes, nearly empty RGBA, possible premultiplied halos
+    (use ``--strict-warnings`` in CI if those should fail the job).
+  - **Does not replace** on-device checks or VoiceOver scroll QA — see
+    ``memlog/research/CrystalResonance-Asset-And-Scroll-QC.md``.
+
+  **Image generation** (what to ask DALL·E, Midjourney, Firefly, etc.) is
+  documented in ``CrystalResonance-ImageGen-PromptTemplate.txt`` — not here.
+  After assets exist, this Python QA validates files on disk (RGB vs RGBA, etc.).
+
+  **Engineering note:** opaque SwiftUI back-plates behind every lane PNG were
+  tried to hide checkerboard; they **regressed** other hub art. Prefer fixing
+  **source alpha** (template + ``remove_white_background.py`` / ``ensure_png_rgba.py``).
 
 ---
 
@@ -454,7 +492,9 @@ Phase 2   GameSpec-[Name].txt
 Phase 3   Mockups-v2/[name]_mockup.html
 Phase 4   DesignTicket-[Name]PromptSheet.txt
           [Name]AssetPipeline.txt
+          (Crystal Resonance: CrystalResonance-ImageGen-PromptTemplate.txt)
 Phase 5   Assets imported to Assets.xcassets
+          ``python3 utility/qa_crystal_resonance_png_assets.py`` passing (Crystal Resonance)
           Asset registry unit test passing
 Phase 6   Quest SwiftUI implementation
           ViewModel with state machine
@@ -470,6 +510,9 @@ Phase 8   VoiceOver walkthrough complete
 
 Revision History
 ================
+2026-04-21  Phase 5: ``utility/qa_crystal_resonance_png_assets.py`` for on-disk
+            PNG checks; ``CrystalResonance-ImageGen-PromptTemplate.txt`` for
+            generative **image** prompts (separate from QA).
 2026-04-19  Initial version. Derived from Dungeon Resonance v2 design process,
             existing DesignTicket conventions, ADR-0003, and observed patterns
             from Enchanter, Rogue, and Crystal Resonance quest development.

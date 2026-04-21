@@ -104,6 +104,12 @@ struct iOSDungeonResonancePlayView: View {
     let lightsOffFlavorText: String?
     let showsFirstLevelGestureTip: Bool
 
+    /// When set, replaces the generic “Next” label after a level completes (Crystal Resonance ascent copy).
+    let continueButtonTitle: String?
+
+    /// Screenshot / deterministic builds: pin the first scroll offset to this lane index. `nil` = prefer a decoy under the hub.
+    let initialLaneIndexOverride: Int?
+
     /// Invoked when the moonstone's vertical alignment changes (playfield-space delta from the aim line).
     let onResonanceDeltaChanged: (CGFloat) -> Void
 
@@ -319,16 +325,32 @@ struct iOSDungeonResonancePlayView: View {
         }
     }
 
-    /// Snaps VoiceOver scroll state and the mirrored lane to the **Moonstone row** whenever the room list changes.
+    /// Snaps VoiceOver scroll state whenever the room list changes.
     ///
-    /// Without this, `@State` defaults to slot `0` while L1’s target can be at index `2`, so the shaft highlights
-    /// the wrong row until the player scrolls and the proxy corrects.
+    /// Normal play starts on a **decoy** under the hub so the Moonstone is never pre-aligned and repeat players
+    /// cannot rely on muscle memory. Optional ``initialLaneIndexOverride`` keeps marketing screenshots stable.
     private func applyLaneSelectionForCurrentRooms() {
         guard !rooms.isEmpty else { return }
-        let moonIndex = rooms.firstIndex(where: \.isTarget) ?? 0
-        let idx = clampedLaneIndex(moonIndex)
+        let idx: Int
+        if let initialLaneIndexOverride {
+            idx = clampedLaneIndex(initialLaneIndexOverride)
+        } else {
+            idx = initialLaneIndexPreferringDecoy()
+        }
         selectedLaneIndex = idx
         voiceOverProxyScrollOffsetY = snappedLaneOffset(for: idx)
+    }
+
+    /// Picks a lane index whose row is **not** the Moonstone when possible (deterministic under UI tests).
+    private func initialLaneIndexPreferringDecoy() -> Int {
+        let decoyIndices = rooms.indices.filter { !rooms[$0].isTarget }
+        guard !decoyIndices.isEmpty else {
+            return clampedLaneIndex(rooms.firstIndex(where: \.isTarget) ?? 0)
+        }
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            return clampedLaneIndex(decoyIndices.min() ?? 0)
+        }
+        return clampedLaneIndex(decoyIndices.randomElement() ?? decoyIndices[0])
     }
 
     /// The playfield `ZStack` must always contain the UIKit proxy unconditionally. New overlays above it
@@ -371,15 +393,20 @@ struct iOSDungeonResonancePlayView: View {
 
     private func playfieldContent(height: CGFloat) -> some View {
         ZStack {
-            iOSShaftResonanceBackground()
+            /// L3 Lights Off: solid playfield (Enchanter-style) so shaft art and hub cannot cue alignment visually.
+            if lightsOffMode {
+                Color.black
+            } else {
+                iOSShaftResonanceBackground()
+            }
 
             /// Decorative lane: offset tracks the proxy scroller; hidden from VoiceOver.
             resonanceLaneColumn
                 .offset(y: -voiceOverProxyScrollOffsetY)
                 .frame(maxWidth: .infinity, minHeight: height, maxHeight: height, alignment: .top)
                 .clipped()
-                /// L3 Lights Off: rely on ``iOSResonanceLightsOffVignette`` for dimming. A full ``ra11yLightsOffGameplayBlackout``
-                /// stack here paints an opaque slab over the lane (grey/black plate) and fights the vignette art.
+                /// L3: opaque blackout over glyphs only (``ra11yLightsOffGameplayBlackout``), matching ``iOSEnchantersTrialView`` relic treatment.
+                .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
@@ -398,16 +425,11 @@ struct iOSDungeonResonancePlayView: View {
             .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.moonstoneLaneScrollProxy)
 
             centerOrbStack
+                .opacity(lightsOffMode ? 0 : 1)
                 .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
                 .allowsHitTesting(false)
                 /// Hides the decorative orb/reticle from the VoiceOver rotor.
                 .accessibilityHidden(true)
-
-            if lightsOffMode {
-                iOSResonanceLightsOffVignette()
-                    .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
-                    .allowsHitTesting(false)
-            }
         }
         .frame(maxWidth: .infinity)
         .frame(height: height)
@@ -702,14 +724,17 @@ struct iOSDungeonResonancePlayView: View {
     }
 
     private func continueButton(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(String(localized: "level.button.next"))
+        let title = continueButtonTitle ?? String(localized: "level.button.next")
+        return Button(action: action) {
+            Text(title)
                 .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .tint(Color.ra11yAccent)
         .accessibilityIdentifier("dungeon.continue")
+        .accessibilityLabel(title)
         .accessibilityHint(String(localized: "dungeon.a11y.continue.nextAscent.hint"))
     }
 
@@ -733,20 +758,27 @@ struct iOSDungeonResonancePlayView: View {
     }
 
     private var firstLevelGestureTipCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            Text(String(localized: "dungeon.explain.gesture.swipe3"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
-            Text(String(localized: "dungeon.explain.gesture.swipe3u"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
-            Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+                Text(String(localized: "dungeon.explain.gesture.swipe3"))
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(String(localized: "dungeon.explain.gesture.swipe3u"))
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxHeight: 220)
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.black.opacity(0.45), in: .rect(cornerRadius: RA11yRadius.card))

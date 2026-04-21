@@ -998,6 +998,7 @@
     },
     "dungeon.a11y.scroll.vo.focusAnnouncement" : {
       "comment" : "VoiceOver announcement after screen-changed and backup focus on the Moonstone alignment lane ScrollView.",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1467,7 +1468,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scroll the Moonstone alignment lane until the Moonstone lines up with the center orb, then use Seal resonance."
+            "value" : "Scroll the Moonstone alignment lane until the Moonstone lines up with the center orb, then Activate the Seal."
           }
         }
       }
@@ -1544,7 +1545,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seal resonance"
+            "value" : "Activate the Seal"
           }
         }
       }
@@ -1559,13 +1560,35 @@
         }
       }
     },
+    "dungeon.resonance.continue.toRising" : {
+      "comment" : "L1 complete — primary button advances to Rising Challenge.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue to Rising Challenge"
+          }
+        }
+      }
+    },
+    "dungeon.resonance.continue.toFinalTrial" : {
+      "comment" : "L2 complete — primary button advances to timed final trial.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue to Final Trial"
+          }
+        }
+      }
+    },
     "dungeon.resonance.tip.voFocusOnLane" : {
       "comment" : "L1 in-game tip: VoiceOver must be focused on the scroll proxy, not chrome, for three-finger scroll to move the Moonstone.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If nothing moves: VoiceOver is not on the scroll lane. Move focus until it reads Moonstone alignment lane—the invisible scroll area over the glyph lane—then try three fingers again."
+            "value" : "If nothing moves, VoiceOver is not on the scroll lane. Swipe until you hear “Moonstone alignment lane,” then scroll with three fingers."
           }
         }
       }
