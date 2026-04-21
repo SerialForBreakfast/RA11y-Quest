@@ -14,18 +14,55 @@ private func logResonanceScroll(_ message: String) {
     #endif
 }
 
-// MARK: - Aim line (global Y)
+// MARK: - Playfield coordinate space
 
-/// Supplies the screen-global Y of the resonance play area vertical midpoint (fixed orb / aim line).
-/// Measured from a hit-invisible `GeometryReader` overlay so the play surface does not wrap in a
-/// root-level `GeometryReader` (those often register an unnamed VoiceOver frame).
-private struct ResonanceAimLineGlobalMidYPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = -10_000
+/// Named space for alignment math: origin at top-left of the gameplay `ZStack` (between safe-area insets).
+/// Moonstone `midY` and aim (`playfieldHeight * 0.5`) are both measured here—**not** `.global`, which is unstable during layout and produced bogus deltas (e.g. `targetMidY=10` vs `aimMidY=139`).
+private enum ResonancePlayfieldCoordinateSpace {
+    static let name = "resonancePlayfield"
+}
+
+/// Height of the playfield `ZStack` (between top/bottom chrome regions) for scroll content sizing.
+///
+/// The top and bottom chrome reserve a stable footprint, so this value should not jump when
+/// controls appear or disappear during a phase.
+private struct ResonancePlayfieldViewportHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         let next = nextValue()
-        if next > -1_000 { value = next }
+        if next > 0 { value = next }
     }
+}
+
+/// Measured top chrome height so the playfield can use only the visible remaining space.
+private struct ResonanceTopChromeHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 { value = next }
+    }
+}
+
+/// Measured bottom chrome height so the playfield can use only the visible remaining space.
+private struct ResonanceBottomChromeHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 { value = next }
+    }
+}
+
+// MARK: - VoiceOver sort tiers (playfield)
+
+/// `accessibilitySortPriority` — **higher** values are read **earlier** in VoiceOver swipe order among peers.
+/// The lane must come first so Crystal Resonance is immediately scrollable on entry.
+private enum iOSResonancePlayAccessibilitySortTier {
+    static let moonstoneLaneScrollProxy: Double = 30
+    static let topChrome: Double = 20
+    static let bottomChrome: Double = 10
 }
 
 // MARK: - iOSDungeonResonancePlayView
@@ -34,17 +71,18 @@ private struct ResonanceAimLineGlobalMidYPreferenceKey: PreferenceKey {
 /// activation only when the moonstone aligns with the aim line.
 ///
 /// **VoiceOver:** The scroll lane is a UIKit ``iOSResonanceVoiceOverScrollProxyRepresentable`` (`UIScrollView`)
-/// with higher `accessibilitySortPriority` than chrome. Initial focus uses `UIAccessibility.post`
-/// (`.screenChanged`, then `.layoutChanged` with the scroll view, then announcement). The play surface
-/// avoids a **root** `GeometryReader` (measurement uses a hidden overlay `GeometryReader` + preference key).
+/// — a **single** element named “Moonstone alignment lane” for three-finger shaft scrolling. The UIKit
+/// proxy restores deterministic VoiceOver landing on entry, while sort priority remains a secondary aid.
+/// Aim/orb alignment and viewport height use scoped `GeometryReader` backgrounds + preference keys
+/// (not a root wrapping `GeometryReader`).
 ///
 /// **VoiceOver lane proxy:** The **visual** lane is a clipped, **non-scrolling** stack whose vertical
-/// offset mirrors the UIKit scroller’s content offset (same lane accessibility label on the scroll view).
-/// VoiceOver scrolls that proxy only; the glyph column stays `accessibilityHidden`. On iOS,
-/// three-finger scrolling affects the scroll view associated with the **current VoiceOver focus**—if
-/// focus is on objective/timer chrome, three-finger swipes will not move the lane; the player must
-/// navigate until VoiceOver announces the scroll proxy (localized `dungeon.a11y.scroll.container`; see
-/// hints and L1 tip copy). Quests
+/// offset mirrors the UIKit scroller’s content offset (same lane label on the scroll view). Chamber
+/// names on decoys are decorative; they are not separate VoiceOver items. The glyph column stays
+/// `accessibilityHidden`. On iOS,
+/// three-finger scrolling affects the scroll view associated with the **current VoiceOver focus**. The
+/// lane proxy is auto-focused on entry, but the decorative glyph column still remains hidden from
+/// accessibility so there is only one playfield scroll surface. Quests
 /// cannot be entered without VoiceOver (see ``iOSAppRouter/pushGame(kind:provider:)``), so a
 /// separate non-VO `ScrollView` path is not maintained here.
 ///
@@ -66,10 +104,18 @@ struct iOSDungeonResonancePlayView: View {
     let lightsOffFlavorText: String?
     let showsFirstLevelGestureTip: Bool
 
-    /// Invoked when the moonstone's vertical alignment changes (global-space delta from aim line).
+    /// When set, replaces the generic “Next” label after a level completes (Crystal Resonance ascent copy).
+    let continueButtonTitle: String?
+
+    /// Screenshot / deterministic builds: pin the first scroll offset to this lane index. `nil` = prefer a decoy under the hub.
+    let initialLaneIndexOverride: Int?
+
+    /// Invoked when the moonstone's vertical alignment changes (playfield-space delta from the aim line).
     let onResonanceDeltaChanged: (CGFloat) -> Void
 
     let onActivateTarget: (DungeonRoom) async -> Void
+    /// Invoked when the VoiceOver scroll proxy snaps to a different lane slot (after ``handleProxyScrollOffsetChange``).
+    let onLaneSlotChanged: (() -> Void)?
     let onHint: (() -> Void)?
     let onContinue: (() -> Void)?
     let onRetry: (() -> Void)?
@@ -79,145 +125,378 @@ struct iOSDungeonResonancePlayView: View {
     /// Limits alignment telemetry spam while still capturing motion during scroll debugging.
     @State private var lastAlignmentLogTime: Date = .distantPast
 
-    /// Vertical scroll offset driven by the UIKit proxy ``iOSResonanceVoiceOverScrollProxyRepresentable``; applied to the visual lane below.
+    /// Snapped vertical offset for the selected room slot. The UIKit proxy still receives the three-finger
+    /// swipe, but gameplay uses discrete room positions rather than raw inertial scrolling.
     @State private var voiceOverProxyScrollOffsetY: CGFloat = 0
+    @State private var selectedLaneIndex: Int = 0
 
-    /// Vertical midpoint (global Y) of the resonance play area aim line (from ``ResonanceAimLineGlobalMidYPreferenceKey``).
-    @State private var aimLineGlobalMidY: CGFloat = -10_000
+    /// Last moonstone vertical center in ``ResonancePlayfieldCoordinateSpace`` (paired with aim = `playfieldViewportHeight * 0.5`).
+    @State private var lastTargetMidYInPlayfield: CGFloat = -10_000
 
-    /// Last moonstone `midY` from ``iOSResonanceTargetMidYPreferenceKey`` (paired with `aimLineGlobalMidY`).
-    @State private var lastTargetGlobalMidY: CGFloat = -10_000
+    /// Playfield height between safe-area insets; drives minimum UIKit scroll content height so VoiceOver can scroll.
+    @State private var playfieldViewportHeight: CGFloat = 600
+    @State private var topChromeHeight: CGFloat = 0
+    @State private var bottomChromeHeight: CGFloat = 0
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+
+    /// Stable identity for the current lane room set (L1/L2/L3 transitions and L3 reshuffles).
+    private var roomLaneIdentity: String {
+        rooms.map(\.id).joined(separator: "\u{1e}")
+    }
 
     private var aimBand: iOSResonanceAimBand {
         iOSResonanceAimBand.displayBand(deltaPoints: displayDeltaPoints, levelComplete: levelComplete)
     }
 
-    /// Minimum height for the VoiceOver proxy scroll content so three-finger scroll has room (mirrors L0 practice).
-    private var voiceOverProxyScrollableContentHeight: CGFloat {
-        let rowCount = max(rooms.count * 2, 18)
-        return CGFloat(rowCount) * 44 + 2 * RA11ySpacing.xl
+    /// Reserve enough height for the status row even when no transient message is visible.
+    private var topChromeStatusSizingMessage: String {
+        String(localized: "dungeon.resonance.hint")
     }
 
-    /// Recomputes alignment when either the aim line or moonstone global position changes (preferences can arrive in either order).
+    /// Distance between successive lane row centers (matches ``resonanceLaneColumn`` `VStack` spacing + row height).
+    private var laneColumnInterItemSpacing: CGFloat {
+        iOSDungeonResonanceLaneLayout.rowSpacingPoints + iOSDungeonResonanceLaneLayout.voiceOverLaneStrideSlackPoints
+    }
+
+    private var laneStepPoints: CGFloat {
+        iOSDungeonResonanceLaneLayout.rowContentHeightPoints + laneColumnInterItemSpacing
+    }
+
+    /// Symmetric spacer that makes every room a centerable snap target.
+    private var laneCenterSpacerHeight: CGFloat {
+        max(0, playfieldViewportHeight * 0.5 - iOSDungeonResonanceLaneLayout.rowContentHeightPoints * 0.5)
+    }
+
+    /// Extra scrollable runway below the lane so VoiceOver three-finger paging can exceed the last snap
+    /// without `contentOffset` sitting on the `maxY` clamp (see repo `memlog/research/CrystalResonance-Asset-And-Scroll-QC.md`).
+    private var voiceOverLaneTrailingSlack: CGFloat {
+        max(160, playfieldViewportHeight * 0.28)
+    }
+
+    /// Full height of ``resonanceLaneColumn`` (top/bottom center spacers, lane rows, inter-row gaps, trailing slack).
+    private var voiceOverLaneIntrinsicBlockHeight: CGFloat {
+        let n = rooms.count
+        guard n > 0 else { return RA11ySpacing.xl * 2 }
+        /// One more gap than ``n + 1``: the stack is top spacer, ``n`` rows, bottom spacer, **trailing** clear.
+        let gapCount = CGFloat(n + 2)
+        let rowsBlock = CGFloat(n) * iOSDungeonResonanceLaneLayout.rowContentHeightPoints
+            + gapCount * laneColumnInterItemSpacing
+            + 2 * laneCenterSpacerHeight
+            + voiceOverLaneTrailingSlack
+        /// Reserve enough runway for ``snappedLaneOffset`` (includes the first `VStack` gap after the top spacer).
+        let minForLastSlot =
+            CGFloat(max(0, n - 1)) * laneStepPoints
+            + playfieldViewportHeight
+            + 48
+            + laneColumnInterItemSpacing
+        return max(rowsBlock, minForLastSlot)
+    }
+
+    /// Scroll content block height passed to the UIKit proxy and mirrored by the visual lane.
+    ///
+    /// Center spacers turn the lane into a discrete selector: offset `index * laneStepPoints` centers room `index`.
+    private var voiceOverLaneTotalScrollBlockHeight: CGFloat {
+        voiceOverLaneIntrinsicBlockHeight
+    }
+
+    private var currentVoiceOverScrollStatusText: String {
+        let selectedName = currentLaneSelectionName
+        let bandText = currentAlignmentAnnouncementText
+        return "\(selectedName). \(bandText)"
+    }
+
+    /// Row whose **layout** center is nearest the aim line for the current scroll offset (authoritative for scroll status).
+    private var laneIndexAtAimLine: Int {
+        laneIndexClosestToAimLine(scrollOffsetY: voiceOverProxyScrollOffsetY)
+    }
+
+    private var currentLaneSelectionName: String {
+        localizedResonanceItemName(atLaneIndex: laneIndexAtAimLine)
+    }
+
+    /// Maps the lane index to Moonstone / decoy glyph names for VoiceOver scroll status (not ``DungeonRoom/displayName``).
+    private func localizedResonanceItemName(atLaneIndex index: Int) -> String {
+        guard !rooms.isEmpty else { return String(localized: "dungeon.a11y.scroll.container") }
+        let i = clampedLaneIndex(index)
+        if rooms[i].isTarget {
+            return String(localized: "dungeon.resonance.item.moonstone")
+        }
+        return iOSResonanceDecoyStyle.forRoomIndex(i).localizedAccessibilityItemName
+    }
+
+    private var currentAlignmentAnnouncementText: String {
+        switch iOSResonanceAlignment.questBand(deltaPoints: displayDeltaPoints) {
+        case .far:
+            return String(localized: "dungeon.resonance.a11y.orb.far")
+        case .warm:
+            return String(localized: "dungeon.resonance.a11y.orb.warm")
+        case .near:
+            return String(localized: "dungeon.resonance.a11y.orb.near")
+        case .locked:
+            return String(localized: "dungeon.resonance.a11y.orb.locked")
+        }
+    }
+
+    /// Recomputes alignment from moonstone position vs. playfield vertical center (fixed orb line).
     private func applyResonanceAlignmentFromLastFrames() {
-        let targetY = lastTargetGlobalMidY
-        let aimMidY = aimLineGlobalMidY
-        guard targetY > -1_000, aimMidY > -1_000 else { return }
+        let playfieldH = playfieldViewportHeight
+        guard playfieldH > 50 else { return }
+        let aimMidY = playfieldH * 0.5
+        let targetY = lastTargetMidYInPlayfield
+        guard targetY > -1_000 else { return }
         let delta = iOSResonanceAlignment.deltaPoints(
-            targetMidYGlobal: targetY,
-            aimMidYGlobal: aimMidY
+            targetMidY: targetY,
+            aimMidY: aimMidY
         )
         displayDeltaPoints = delta
         let now = Date()
         if now.timeIntervalSince(lastAlignmentLogTime) >= 0.28 {
             lastAlignmentLogTime = now
             logResonanceScroll(
-                "alignment sample targetMidY=\(String(format: "%.1f", targetY)) aimMidY=\(String(format: "%.1f", aimMidY)) delta=\(String(format: "%.1f", delta)) reachable=\(iOSResonanceAlignment.isReachable(deltaPoints: delta)) vo=\(UIAccessibility.isVoiceOverRunning)"
+                "alignment sample playfieldH=\(String(format: "%.1f", playfieldH)) targetMidY=\(String(format: "%.1f", targetY)) aimMidY=\(String(format: "%.1f", aimMidY)) delta=\(String(format: "%.1f", delta)) reachable=\(iOSResonanceAlignment.isReachable(deltaPoints: delta)) vo=\(UIAccessibility.isVoiceOverRunning)"
             )
         }
         onResonanceDeltaChanged(delta)
     }
 
+    private func clampedLaneIndex(_ index: Int) -> Int {
+        guard !rooms.isEmpty else { return 0 }
+        return min(max(index, 0), rooms.count - 1)
+    }
+
+    /// Vertical center of the playfield aim line (orb / reticle hub), in ``ResonancePlayfieldCoordinateSpace``.
+    private var resonanceAimLineMidY: CGFloat {
+        playfieldViewportHeight * 0.5
+    }
+
+    /// Y coordinate of lane row `laneIndex`’s vertical center in **lane content space** (before ``View/offset(y:)``).
+    ///
+    /// ``resonanceLaneColumn`` is a `VStack` with ``View/spacing`` between **every** adjacent child, including the gap
+    /// between the top centering spacer and the first row. Scroll math must add that leading gap or row centers sit
+    /// one spacing interval too low on screen (Moonstone below the hub while VoiceOver names Moonstone).
+    private func laneRowCenterContentY(laneIndex: Int) -> CGFloat {
+        let s = laneCenterSpacerHeight
+        let g = laneColumnInterItemSpacing
+        let h = iOSDungeonResonanceLaneLayout.rowContentHeightPoints
+        let i = clampedLaneIndex(laneIndex)
+        return s + g + CGFloat(i) * laneStepPoints + h * 0.5
+    }
+
+    /// `UIScrollView.contentOffset.y` that places ``laneRowCenterContentY`` on ``resonanceAimLineMidY`` for `index`.
+    private func snappedLaneOffset(for index: Int) -> CGFloat {
+        laneRowCenterContentY(laneIndex: index) - resonanceAimLineMidY
+    }
+
+    /// Which lane row is physically centered on the aim line for a given scroll offset (matches ``resonanceLaneColumn`` geometry).
+    ///
+    /// Using nearest-row geometry avoids VoiceOver scroll status naming the **next** slot when float rounding or
+    /// transient `contentOffset` drifts from ``snappedLaneOffset(for:)``.
+    private func laneIndexClosestToAimLine(scrollOffsetY: CGFloat) -> Int {
+        guard !rooms.isEmpty, playfieldViewportHeight > 50 else { return 0 }
+        let aimMidY = resonanceAimLineMidY
+        var best = 0
+        var bestDist = CGFloat.greatestFiniteMagnitude
+        for i in 0..<rooms.count {
+            let rowCenterY = laneRowCenterContentY(laneIndex: i) - scrollOffsetY
+            let d = abs(rowCenterY - aimMidY)
+            if d < bestDist {
+                bestDist = d
+                best = i
+            }
+        }
+        return clampedLaneIndex(best)
+    }
+
+    private func handleProxyScrollOffsetChange(_ newY: CGFloat) {
+        let snappedIndex = laneIndexClosestToAimLine(scrollOffsetY: newY)
+        let oldY = voiceOverProxyScrollOffsetY
+        let snappedOffset = snappedLaneOffset(for: snappedIndex)
+        let previousIndex = selectedLaneIndex
+        selectedLaneIndex = snappedIndex
+        voiceOverProxyScrollOffsetY = snappedOffset
+        if snappedIndex != previousIndex {
+            onLaneSlotChanged?()
+        }
+        if abs(snappedOffset - oldY) > 0.5 {
+            logResonanceScroll(
+                "VO proxy scroll contentOffset.y \(String(format: "%.1f", oldY)) → \(String(format: "%.1f", snappedOffset))"
+            )
+        }
+    }
+
+    /// Snaps VoiceOver scroll state whenever the room list changes.
+    ///
+    /// Normal play starts on a **decoy** under the hub so the Moonstone is never pre-aligned and repeat players
+    /// cannot rely on muscle memory. Optional ``initialLaneIndexOverride`` keeps marketing screenshots stable.
+    private func applyLaneSelectionForCurrentRooms() {
+        guard !rooms.isEmpty else { return }
+        let idx: Int
+        if let initialLaneIndexOverride {
+            idx = clampedLaneIndex(initialLaneIndexOverride)
+        } else {
+            idx = initialLaneIndexPreferringDecoy()
+        }
+        selectedLaneIndex = idx
+        voiceOverProxyScrollOffsetY = snappedLaneOffset(for: idx)
+    }
+
+    /// Picks a lane index whose row is **not** the Moonstone when possible (deterministic under UI tests).
+    private func initialLaneIndexPreferringDecoy() -> Int {
+        let decoyIndices = rooms.indices.filter { !rooms[$0].isTarget }
+        guard !decoyIndices.isEmpty else {
+            return clampedLaneIndex(rooms.firstIndex(where: \.isTarget) ?? 0)
+        }
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            return clampedLaneIndex(decoyIndices.min() ?? 0)
+        }
+        return clampedLaneIndex(decoyIndices.randomElement() ?? decoyIndices[0])
+    }
+
+    /// The playfield `ZStack` must always contain the UIKit proxy unconditionally. New overlays above it
+    /// must disable hit testing, and new playfield content must remain hidden from accessibility.
     var body: some View {
+        GeometryReader { geometry in
+            let clampedPlayfieldHeight = max(
+                240,
+                geometry.size.height - topChromeHeight - bottomChromeHeight
+            )
+            VStack(spacing: 0) {
+                topChrome
+
+                playfieldContent(height: clampedPlayfieldHeight)
+
+                bottomChrome
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+            .background(Color.ra11yGameFallbackBackground)
+            .environment(\.colorScheme, .dark)
+            .onAppear {
+                playfieldViewportHeight = clampedPlayfieldHeight
+                applyLaneSelectionForCurrentRooms()
+                logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
+            }
+            .onChange(of: roomLaneIdentity) { _, _ in
+                DispatchQueue.main.async {
+                    applyLaneSelectionForCurrentRooms()
+                }
+            }
+            .onChange(of: clampedPlayfieldHeight) { _, newHeight in
+                guard abs(newHeight - playfieldViewportHeight) > 0.5 else { return }
+                DispatchQueue.main.async {
+                    playfieldViewportHeight = newHeight
+                    applyResonanceAlignmentFromLastFrames()
+                }
+            }
+        }
+    }
+
+    private func playfieldContent(height: CGFloat) -> some View {
         ZStack {
-            iOSShaftResonanceBackground()
+            /// L3 Lights Off: solid playfield (Enchanter-style) so shaft art and hub cannot cue alignment visually.
+            if lightsOffMode {
+                Color.black
+            } else {
+                iOSShaftResonanceBackground()
+            }
 
             /// Decorative lane: offset tracks the proxy scroller; hidden from VoiceOver.
             resonanceLaneColumn
-                .padding(.vertical, RA11ySpacing.xl)
                 .offset(y: -voiceOverProxyScrollOffsetY)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, minHeight: height, maxHeight: height, alignment: .top)
                 .clipped()
+                /// L3: opaque blackout over glyphs only (``ra11yLightsOffGameplayBlackout``), matching ``iOSEnchantersTrialView`` relic treatment.
                 .ra11yLightsOffGameplayBlackout(isEnabled: lightsOffMode)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
 
-            /// UIKit `UIScrollView` proxy (see ``iOSResonanceVoiceOverScrollProxyRepresentable``); visually clear, one AX element.
+            /// UIKit `UIScrollView` proxy (see ``iOSResonanceVoiceOverScrollProxyRepresentable``); visually clear, one AX element (the lane).
             iOSResonanceVoiceOverScrollProxyRepresentable(
-                contentBlockHeight: voiceOverProxyScrollableContentHeight,
-                verticalPadding: RA11ySpacing.xl,
+                contentBlockHeight: voiceOverLaneTotalScrollBlockHeight,
+                verticalPadding: 0,
                 accessibilityLabelText: String(localized: "dungeon.a11y.scroll.container"),
                 accessibilityHintText: String(localized: "dungeon.a11y.scroll.container.hint"),
-                onContentOffsetYChanged: { newY in
-                    let oldY = voiceOverProxyScrollOffsetY
-                    voiceOverProxyScrollOffsetY = newY
-                    if abs(newY - oldY) > 0.5 {
-                        logResonanceScroll(
-                            "VO proxy scroll contentOffset.y \(String(format: "%.1f", oldY)) → \(String(format: "%.1f", newY))"
-                        )
-                    }
-                }
+                accessibilityScrollStatusText: currentVoiceOverScrollStatusText,
+                desiredContentOffsetY: snappedLaneOffset(for: selectedLaneIndex),
+                onContentOffsetYChanged: handleProxyScrollOffsetChange
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .accessibilitySortPriority(10)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.moonstoneLaneScrollProxy)
 
             centerOrbStack
+                .opacity(lightsOffMode ? 0 : 1)
+                .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
                 .allowsHitTesting(false)
                 /// Hides the decorative orb/reticle from the VoiceOver rotor.
                 .accessibilityHidden(true)
-
-            if lightsOffMode {
-                iOSResonanceLightsOffVignette()
-                    .allowsHitTesting(false)
-            }
         }
-        .overlay {
-            GeometryReader { geo in
-                Color.clear
-                    .preference(
-                        key: ResonanceAimLineGlobalMidYPreferenceKey.self,
-                        value: geo.frame(in: .global).midY
-                    )
-            }
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-        }
-        .onPreferenceChange(ResonanceAimLineGlobalMidYPreferenceKey.self) { midY in
-            aimLineGlobalMidY = midY
-            applyResonanceAlignmentFromLastFrames()
-        }
-        .onPreferenceChange(iOSResonanceTargetMidYPreferenceKey.self) { targetY in
-            lastTargetGlobalMidY = targetY
-            applyResonanceAlignmentFromLastFrames()
-        }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+        .clipped()
+        .coordinateSpace(name: ResonancePlayfieldCoordinateSpace.name)
         .background(Color.ra11yGameFallbackBackground)
-        .safeAreaInset(edge: .top, spacing: 0) { topChrome }
-        .safeAreaInset(edge: .bottom, spacing: 0) { bottomChrome }
-        .environment(\.colorScheme, .dark)
-        .onAppear {
-            logResonanceScroll("playSurface.onAppear vo=\(UIAccessibility.isVoiceOverRunning) reducedMotion=\(UIAccessibility.isReduceMotionEnabled)")
+        .onPreferenceChange(iOSResonanceTargetMidYPreferenceKey.self) { targetY in
+            DispatchQueue.main.async {
+                guard targetY > -500, abs(targetY - lastTargetMidYInPlayfield) > 0.25 else { return }
+                lastTargetMidYInPlayfield = targetY
+                applyResonanceAlignmentFromLastFrames()
+            }
         }
     }
 
     // MARK: - Lane
 
     private var resonanceLaneColumn: some View {
-        VStack(spacing: 56) {
+        VStack(alignment: .center, spacing: laneColumnInterItemSpacing) {
+            Color.clear
+                .frame(height: laneCenterSpacerHeight)
+                .accessibilityHidden(true)
             ForEach(Array(rooms.enumerated()), id: \.element.id) { index, room in
-                if room.isTarget {
-                    moonstoneRow(room: room)
-                } else {
-                    iOSLaneDecoyChip(style: .forRoomIndex(index))
+                Group {
+                    if room.isTarget {
+                        moonstoneRow(room: room, index: index)
+                    } else {
+                        iOSLaneDecoyChip(style: .forRoomIndex(index))
+                            .modifier(
+                                iOSResonanceLaneSelectionModifier(
+                                    distanceFromSelection: abs(index - laneIndexAtAimLine),
+                                    isMoonstone: false
+                                )
+                            )
+                    }
                 }
+                .frame(height: iOSDungeonResonanceLaneLayout.rowContentHeightPoints)
+                .frame(maxWidth: .infinity)
             }
+            Color.clear
+                .frame(height: laneCenterSpacerHeight)
+                .accessibilityHidden(true)
+            Color.clear
+                .frame(height: voiceOverLaneTrailingSlack)
+                .accessibilityHidden(true)
         }
         .frame(maxWidth: 520)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, RA11ySpacing.lg)
-        /// Single scroll target for VoiceOver: lane glyphs stay visual-only; without this, nested
-        /// identifiers can receive focus and three-finger swipes no longer move the `ScrollView`.
+        /// Lane glyphs stay visual-only; VoiceOver uses the single UIKit scroll surface. This prevents duplicate
+        /// focusable elements inside the decorative stack.
         .accessibilityElement(children: .ignore)
     }
 
-    private func moonstoneRow(room: DungeonRoom) -> some View {
+    private func moonstoneRow(room: DungeonRoom, index: Int) -> some View {
         iOSMoonstoneTargetOrb()
+            .modifier(
+                iOSResonanceLaneSelectionModifier(
+                    distanceFromSelection: abs(index - laneIndexAtAimLine),
+                    isMoonstone: true
+                )
+            )
             .background {
                 GeometryReader { geo in
                     Color.clear.preference(
                         key: iOSResonanceTargetMidYPreferenceKey.self,
-                        value: geo.frame(in: .global).midY
+                        value: geo.frame(in: .named(ResonancePlayfieldCoordinateSpace.name)).midY
                     )
                 }
             }
@@ -228,8 +507,9 @@ struct iOSDungeonResonancePlayView: View {
 
     private var centerOrbStack: some View {
         ZStack {
-            iOSResonanceReticleRing(band: aimBand)
+            /// Orb first so the reticle’s punched center looks through to the lane (orb uses a transparent core mask).
             iOSResonanceCenterOrb(band: aimBand)
+            iOSResonanceReticleRing(band: aimBand)
             if aimBand == .success, UIImage(named: iOSDungeonResonanceArt.successFlare) != nil {
                 iOSResonanceSuccessFlareOverlay()
             }
@@ -240,20 +520,68 @@ struct iOSDungeonResonancePlayView: View {
     // MARK: - Chrome
 
     private var topChrome: some View {
+        ZStack(alignment: .top) {
+            topChromeSizingTemplate
+                .hidden()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            topChromeVisibleContent
+        }
+        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+        .padding(.bottom, RA11ySpacing.sm)
+        .background(Color.black.opacity(0.5))
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .preference(
+                        key: ResonanceTopChromeHeightPreferenceKey.self,
+                        value: geo.size.height
+                    )
+            }
+        }
+        .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.topChrome)
+        .onPreferenceChange(ResonanceTopChromeHeightPreferenceKey.self) { height in
+            guard height > 0, abs(height - topChromeHeight) > 0.5 else { return }
+            DispatchQueue.main.async {
+                topChromeHeight = height
+            }
+        }
+    }
+
+    private var bottomChrome: some View {
+        ZStack(alignment: .top) {
+            bottomChromeSizingTemplate
+                .hidden()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            bottomChromeVisibleContent
+        }
+        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
+        .padding(.vertical, RA11ySpacing.md)
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .preference(
+                        key: ResonanceBottomChromeHeightPreferenceKey.self,
+                        value: geo.size.height
+                    )
+            }
+        }
+        .accessibilitySortPriority(iOSResonancePlayAccessibilitySortTier.bottomChrome)
+        .onPreferenceChange(ResonanceBottomChromeHeightPreferenceKey.self) { height in
+            guard height > 0, abs(height - bottomChromeHeight) > 0.5 else { return }
+            DispatchQueue.main.async {
+                bottomChromeHeight = height
+            }
+        }
+    }
+
+    private var topChromeVisibleContent: some View {
         VStack(spacing: RA11ySpacing.base) {
             if let lightsOffFlavorText {
-                Text(lightsOffFlavorText)
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(RA11ySpacing.base)
-                    .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: RA11yRadius.card)
-                            .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-                    )
-                    .accessibilityAddTraits(.isStaticText)
+                lightsOffFlavorCard(message: lightsOffFlavorText)
             }
 
             objectiveCard
@@ -271,65 +599,68 @@ struct iOSDungeonResonancePlayView: View {
 
             if let statusMessage {
                 iOSResonanceStatusRow(message: statusMessage)
+            } else {
+                iOSResonanceStatusRow(message: topChromeStatusSizingMessage)
+                    .hidden()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
         }
-        .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-        .padding(.bottom, RA11ySpacing.sm)
-        .background(.ultraThinMaterial.opacity(0.92))
-        /// After the playfield scroll proxy (`accessibilitySortPriority` 10); keeps objectives and HUD
-        /// from preempting swipe order when the platform merges inset and content accessibility trees.
-        .accessibilitySortPriority(-5)
     }
 
-    /// `false` during most of L1 when the seal is unavailable and there is no hint — avoids an empty
-    /// `VStack` inset that VoiceOver can focus as an unnamed rectangle.
-    private var hasPlayfieldBottomControls: Bool {
-        if levelComplete, onContinue != nil { return true }
-        if targetIsReachable, rooms.contains(where: \.isTarget) { return true }
-        if onHint != nil { return true }
-        return false
-    }
+    private var topChromeSizingTemplate: some View {
+        VStack(spacing: RA11ySpacing.base) {
+            if let lightsOffFlavorText {
+                lightsOffFlavorCard(message: lightsOffFlavorText)
+            }
 
-    @ViewBuilder
-    private var bottomChrome: some View {
-        if timedOut {
-            timeoutBanner
-                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-                .padding(.vertical, RA11ySpacing.md)
-                .background(.ultraThinMaterial.opacity(0.95))
-                .accessibilitySortPriority(-5)
-        } else if hasPlayfieldBottomControls {
-            sealOrProgressControls
-                .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-                .padding(.vertical, RA11ySpacing.md)
-                .background(.ultraThinMaterial.opacity(0.95))
-                .accessibilitySortPriority(-5)
+            objectiveCard
+
+            if showsFirstLevelGestureTip {
+                firstLevelGestureTipCard
+            }
+
+            if let total = timeTotal, let remaining = timeRemaining {
+                DungeonTimerHUD(timeRemaining: remaining, total: total, mistakes: mistakes)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(timerA11yLabel)
+                    .accessibilityHint(String(localized: "a11y.timer.group.hint"))
+            }
+
+            iOSResonanceStatusRow(message: topChromeStatusSizingMessage)
         }
     }
 
-    @ViewBuilder
-    private var sealOrProgressControls: some View {
-        if levelComplete, let onContinue {
-            continueButton(onContinue)
-        } else if !timedOut {
-            // At least one subview when `hasPlayfieldBottomControls` is true (see `bottomChrome`).
-            VStack(spacing: RA11ySpacing.sm) {
-                if targetIsReachable, let targetRoom = rooms.first(where: \.isTarget) {
-                    Button {
-                        Task { await onActivateTarget(targetRoom) }
-                    } label: {
-                        Text(String(localized: "dungeon.resonance.seal"))
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .tint(Color.ra11yAccent)
-                    .accessibilityIdentifier("dungeon.resonance.seal")
-                    .accessibilityHint(String(localized: "dungeon.resonance.seal.hint"))
-                }
-                if let onHint {
-                    hintButton(onHint)
-                }
+    private var bottomChromeVisibleContent: some View {
+        Group {
+            if timedOut {
+                timeoutBanner
+                    .background(Color.black.opacity(0.55))
+            } else if levelComplete, let continueAction = onContinue {
+                continueButton(continueAction)
+                    .background(Color.black.opacity(0.55))
+            } else if let targetRoom = rooms.first(where: \.isTarget) {
+                playfieldControlsContent(targetRoom: targetRoom, isEnabled: targetIsReachable)
+                    .background(Color.black.opacity(0.55))
+            } else {
+                Color.clear
+                    .frame(maxWidth: .infinity, minHeight: 0)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
+    /// Hidden sizing template that keeps the playfield height stable while lock state changes.
+    private var bottomChromeSizingTemplate: some View {
+        Group {
+            if timedOut {
+                timeoutBanner
+            } else if levelComplete, let continueAction = onContinue {
+                continueButton(continueAction)
+            } else if let targetRoom = rooms.first(where: \.isTarget) {
+                playfieldControlsContent(targetRoom: targetRoom, isEnabled: true)
+            } else {
+                EmptyView()
             }
         }
     }
@@ -353,24 +684,57 @@ struct iOSDungeonResonancePlayView: View {
         }
     }
 
-    private func hintButton(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(String(localized: "dungeon.hint.button"), systemImage: "ear.fill")
+    private func lightsOffFlavorCard(message: String) -> some View {
+        Text(message)
+            .font(.ra11ySubheadline)
+            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(RA11ySpacing.base)
+            .background(Color.black.opacity(0.5), in: .rect(cornerRadius: RA11yRadius.card))
+            .accessibilityAddTraits(.isStaticText)
+    }
+
+    private func playfieldControlsContent(targetRoom: DungeonRoom, isEnabled: Bool) -> some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            Button {
+                Task { await onActivateTarget(targetRoom) }
+            } label: {
+                Text(String(localized: "dungeon.resonance.seal"))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(Color.ra11yAccent)
+            .accessibilityIdentifier("dungeon.resonance.seal")
+            .accessibilityHint(
+                isEnabled
+                    ? String(localized: "dungeon.resonance.seal.hint")
+                    : String(localized: "dungeon.target.notReachable")
+            )
+            Text(
+                isEnabled
+                    ? String(localized: "dungeon.resonance.a11y.orb.locked")
+                    : String(localized: "dungeon.target.notReachable")
+            )
+            .font(.ra11yCaption)
+            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
-        .accessibilityLabel(String(localized: "dungeon.hint.a11yLabel"))
-        .accessibilityHint(String(localized: "dungeon.hint.a11yHint"))
     }
 
     private func continueButton(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(String(localized: "level.button.next"))
+        let title = continueButtonTitle ?? String(localized: "level.button.next")
+        return Button(action: action) {
+            Text(title)
                 .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .tint(Color.ra11yAccent)
         .accessibilityIdentifier("dungeon.continue")
+        .accessibilityLabel(title)
         .accessibilityHint(String(localized: "dungeon.a11y.continue.nextAscent.hint"))
     }
 
@@ -388,62 +752,61 @@ struct iOSDungeonResonancePlayView: View {
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
-        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(objectiveA11yLabel)
         .accessibilityHint(objectiveA11yHint)
     }
 
     private var firstLevelGestureTipCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
-            Text(String(localized: "dungeon.explain.gesture.swipe3"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
-            Text(String(localized: "dungeon.explain.gesture.swipe3u"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
-            Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
-                .multilineTextAlignment(.leading)
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
+                Text(String(localized: "dungeon.explain.gesture.swipe3"))
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(String(localized: "dungeon.explain.gesture.swipe3u"))
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
+                    .font(.ra11ySubheadline)
+                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxHeight: 220)
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.black.opacity(0.45), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.35), lineWidth: 1)
-        )
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isStaticText)
     }
 
+    /// On-screen objective line: alignment task only (decoy art uses room-themed assets without naming them here).
     private var objectiveText: String {
-        guard let target = rooms.first(where: \.isTarget) else { return "" }
         switch rooms.count {
         case DungeonRoom.l1Rooms.count:
-            return String(format: String(localized: "dungeon.l1.objective.format"), target.displayName)
+            return String(localized: "dungeon.l1.objective.format")
         case DungeonRoom.l2Rooms.count:
-            return String(format: String(localized: "dungeon.l2.objective.format"), target.displayName)
+            return String(localized: "dungeon.l2.objective.format")
         default:
-            return String(format: String(localized: "dungeon.l3.objective.format"), target.displayName)
+            return String(localized: "dungeon.l3.objective.format")
         }
     }
 
+    /// VoiceOver objective: same metaphor as ``objectiveText``—Moonstone vs orb, not dungeon navigation.
     private var objectiveA11yLabel: String {
-        guard let target = rooms.first(where: \.isTarget) else { return "" }
         switch rooms.count {
         case DungeonRoom.l1Rooms.count:
-            return String(format: String(localized: "dungeon.a11y.l1.objective.format"), target.displayName)
+            return String(localized: "dungeon.a11y.l1.objective.format")
         case DungeonRoom.l2Rooms.count:
-            return String(format: String(localized: "dungeon.a11y.l2.objective.format"), target.displayName)
+            return String(localized: "dungeon.a11y.l2.objective.format")
         default:
-            return String(format: String(localized: "dungeon.a11y.l3.objective.format"), target.displayName)
+            return String(localized: "dungeon.a11y.l3.objective.format")
         }
     }
 
@@ -469,6 +832,35 @@ struct iOSDungeonResonancePlayView: View {
         case DungeonRoom.l3Rooms.count: return 45
         default: return nil
         }
+    }
+}
+
+// MARK: - Lane emphasis
+
+/// Keeps the lane visually focused on one slot and sells the **fit** metaphor: the Moonstone nests into the hub when
+/// centered; echo glyphs stay slightly undersized and canted so they read as “almost but not quite” the lock shape.
+private struct iOSResonanceLaneSelectionModifier: ViewModifier {
+    let distanceFromSelection: Int
+    let isMoonstone: Bool
+
+    /// Centered Moonstone: modest boost so the oval meets the reticle’s inner opening; centered decoy: smaller than 1 so it never “seats.”
+    private var centerScale: CGFloat { isMoonstone ? 1.04 : 0.91 }
+
+    private var offRowScale: CGFloat { 0.88 }
+
+    /// Tiny yaw on centered decoys only — enough to break symmetry against the circular orb without clownish spin.
+    private var decoyCenterTilt: Angle {
+        guard !isMoonstone, distanceFromSelection == 0 else { return .zero }
+        return .degrees(3.5)
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(distanceFromSelection == 0 ? centerScale : offRowScale)
+            .rotationEffect(decoyCenterTilt)
+            .opacity(distanceFromSelection == 0 ? 1.0 : (distanceFromSelection == 1 ? 0.28 : 0.0))
+            // Avoid blur — it composites into dark rectangular bands behind PNG glyphs in the shaft.
+            .animation(.easeOut(duration: 0.18), value: distanceFromSelection)
     }
 }
 

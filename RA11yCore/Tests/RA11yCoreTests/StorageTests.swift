@@ -65,7 +65,7 @@ struct StorageTests {
 
         await storage.saveResultIfBetter(result)
 
-        let other = await storage.bestResult(for: "activate-double-tap")
+        let other = await storage.bestResult(for: "scroll-hunt")
         #expect(other == nil)
     }
 

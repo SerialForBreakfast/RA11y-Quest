@@ -1,0 +1,86 @@
+Crystal Resonance — generative image prompt template (RA11y)
+=============================================================
+Date: 2026-04-21
+Purpose: Copy, adapt, or prepend these blocks when using LLMs or diffusion tools
+to create **initial** PNGs for the iOS asset catalog. One generation = one asset.
+This file is only **generation prompt** text — not Xcode or CI instructions.
+
+----------------------------------------------------------------------
+GLOBAL — prepend to EVERY sprite / glyph generation
+----------------------------------------------------------------------
+Style: Painterly fantasy, torchlit stone dungeon, warm amber light, dark umber
+and slate shadows, subtle gold magical accents. High contrast, readable at small
+size on phone. One subject only, centered in frame.
+
+Output: PNG with **true transparency** everywhere except the painted subject.
+The area outside the subject must be **fully transparent** (not white, not
+light grey, not checkerboard, not soft fog filling the canvas).
+
+Forbidden in every prompt: text, letters, numbers, logos, watermarks, UI chrome,
+multiple unrelated objects, sprite sheets, contact sheets, before/after grids.
+
+Negative hints to add when the tool supports them: white background, grey
+background, parchment mat, drop shadow as a separate layer, vignette on the
+whole canvas, film grain across transparent pixels, low-resolution export.
+
+Wide canvas: landscape aspect (~1376×768 or 16:9) is fine; keep the **subject
+visually centered** so SwiftUI can center-crop to a square or oval frame.
+
+----------------------------------------------------------------------
+MOONSTONE (dungeon_target_moonstone) — lane target glyph
+----------------------------------------------------------------------
+A single rough-cut magical moonstone crystal, cool violet-blue inner glow,
+faceted silhouette, slightly elongated oval footprint. Centered. Transparent
+background only. No pedestal, no full scene, no dungeon room behind it. Crisp
+silhouette at ~96×72 pt equivalent.
+
+----------------------------------------------------------------------
+ECHO GLYPH / DECOY (dungeon_decoy_*) — wrong-lane distractors
+----------------------------------------------------------------------
+One abstract magical sigil or shard each generation (ember-like shard, shadow
+rune, sun motif). Distinct silhouette from the moonstone; slightly smaller
+visual mass. Centered, transparent background, no scene. Bold readable shape.
+
+----------------------------------------------------------------------
+RETICLE RING (dungeon_reticle_ring) — hub framing ring
+----------------------------------------------------------------------
+Ornate circular aiming ring: engraved gold or brass on dark metal, **donut
+shape** with a **clear transparent hole in the middle** large enough that a
+moonstone glyph could sit there in gameplay. No solid disc filling the center.
+Subject centered; outer edge may fade but **no** full-canvas haze.
+
+----------------------------------------------------------------------
+ORB — idle / locked (dungeon_resonance_orb_idle, dungeon_resonance_orb_locked)
+----------------------------------------------------------------------
+Crystal or glass orb for a fixed hub: **soft transparent or highly translucent
+core** so content behind can read through; bright rim glow. Idle = calmer;
+locked = brighter, tighter resonance. Circular overall; centered; transparent
+outside the orb body. Not an opaque flat circle.
+
+----------------------------------------------------------------------
+SUCCESS FLARE (dungeon_success_flare) — optional burst
+----------------------------------------------------------------------
+Brief radial magical burst, screen blend friendly, **mostly transparent** with
+bright highlights; no solid rectangle. Centered.
+
+----------------------------------------------------------------------
+LANE MARKER (dungeon_lane_marker_neutral) — thin tick / divider
+----------------------------------------------------------------------
+Subtle horizontal lane tick or neutral marker, low visual noise, centered
+vertically in a short strip. Transparent background.
+
+----------------------------------------------------------------------
+BACKGROUND ONLY (dungeon_resonance_bg)
+----------------------------------------------------------------------
+Full-bleed vertical interior: grand torchlit stone hall, stairs, arches,
+atmospheric depth. **Fully opaque** illustration (no transparency). No UI, no
+characters, no single floating crystal — environment only.
+
+----------------------------------------------------------------------
+After generation (for humans — do not paste into image models)
+----------------------------------------------------------------------
+- Export sprites as PNG with a real alpha channel; background as a separate
+  opaque environment illustration.
+- If the export has a white or light-grey mat around the subject, fix alpha in
+  post (re-export or cleanup) before importing — the app expects clean
+  transparency, not stacked “backdrop” layers in code for lane glyphs.

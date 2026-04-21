@@ -3,7 +3,7 @@ import RA11yCore
 
 // MARK: - iOSGameResultView
 
-/// Shared result screen displayed by all three training games on completion.
+/// Shared result screen displayed by training games on completion.
 ///
 /// Accepts a `GameResultPresenter`, the `GameKind` (used to render the skill-transfer
 /// card), an optional game-specific announcement string, and two action closures.
@@ -146,10 +146,10 @@ struct iOSGameResultView: View {
         switch gameKind {
         case .findAndFocus:
             return String(localized: "result.skillTransfer.findAndFocus.body")
-        case .activateDoubleTap:
-            return String(localized: "result.skillTransfer.activateDoubleTap.body")
         case .scrollHunt:
             return String(localized: "result.skillTransfer.scrollHunt.body")
+        case .banishment:
+            return String(localized: "result.skillTransfer.banishment.body")
         }
     }
 
@@ -157,10 +157,10 @@ struct iOSGameResultView: View {
         switch gameKind {
         case .findAndFocus:
             return String(localized: "result.skillTransfer.findAndFocus.realWorld")
-        case .activateDoubleTap:
-            return String(localized: "result.skillTransfer.activateDoubleTap.realWorld")
         case .scrollHunt:
             return String(localized: "result.skillTransfer.scrollHunt.realWorld")
+        case .banishment:
+            return String(localized: "result.skillTransfer.banishment.realWorld")
         }
     }
 
@@ -211,20 +211,6 @@ struct iOSGameResultView: View {
             ),
             gameKind: .findAndFocus,
             gameSpecificAnnouncement: "The Enchanter bows. A perfect invocation.",
-            onPlayAgain: {},
-            onReturnToHub: {}
-        )
-    }
-}
-
-#Preview("Defeated — Rogue") {
-    NavigationStack {
-        iOSGameResultView(
-            presenter: GameResultPresenter(
-                result: GameResult(gameID: "activate-double-tap", rank: .failed, timeSeconds: 40, mistakes: 3)
-            ),
-            gameKind: .activateDoubleTap,
-            gameSpecificAnnouncement: "The trap room claimed you. Study the seals and return.",
             onPlayAgain: {},
             onReturnToHub: {}
         )

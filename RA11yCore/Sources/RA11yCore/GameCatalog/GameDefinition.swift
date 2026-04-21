@@ -8,10 +8,10 @@ import Foundation
 public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     /// Find & Focus — Simon Says drill training focus navigation and element identification.
     case findAndFocus
-    /// Activate — Bomb Defusal drill training double-tap activation on the correct control.
-    case activateDoubleTap
-    /// Scroll Hunt — Crystal Resonance drill training three-finger scrolling to reveal hidden content.
+    /// Crystal Resonance (player-facing name). Internal catalog id `scroll-hunt`; trains three-finger scrolling of the Moonstone alignment lane.
     case scrollHunt
+    /// The Banishment — two-finger scrub / accessibility escape (`the-banishment`).
+    case banishment
 }
 
 // MARK: - GameDefinition
@@ -89,8 +89,7 @@ public enum GameCatalog {
     ///
     /// Games are sequentially gated: each game after the first has a `prerequisiteID`
     /// pointing to the game that must be beaten before it is unlocked. Display order
-    /// matches unlock order: **Enchanter (focus) → Crystal Resonance (scrolling) → Rogue (activation)** —
-    /// scrolling before the gauntlet matches the hub progression after the Enchanter's Trial.
+    /// matches unlock order: **Enchanter → Crystal Resonance → The Banishment**.
     ///
     /// Thumbnails use dedicated square hub icons (`*_hub_icon`) designed for
     /// the dark quest card at ~72–96 pt. Background scene images and individual
@@ -116,12 +115,12 @@ public enum GameCatalog {
             prerequisiteID: "find-and-focus"
         ),
         GameDefinition(
-            id: "activate-double-tap",
-            titleKey: "game.activateDoubleTap.title",
-            goalKey: "game.activateDoubleTap.goal",
-            estimatedDuration: "~5 min",
-            kind: .activateDoubleTap,
-            thumbnailAssetName: "rogue_hub_icon",
+            id: "the-banishment",
+            titleKey: "game.banishment.title",
+            goalKey: "game.banishment.goal",
+            estimatedDuration: "~6 min",
+            kind: .banishment,
+            thumbnailAssetName: "banishment_hub_icon",
             prerequisiteID: "scroll-hunt"
         ),
     ]

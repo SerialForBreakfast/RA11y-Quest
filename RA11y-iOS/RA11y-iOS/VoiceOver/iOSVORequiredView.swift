@@ -210,7 +210,7 @@ struct iOSVORequiredView: View {
 
 #Preview("VO Required — Manual Fallback") {
     NavigationStack {
-        iOSVORequiredView(kind: .activateDoubleTap)
+        iOSVORequiredView(kind: .scrollHunt)
             .environment(iOSAppRouter())
     }
 }

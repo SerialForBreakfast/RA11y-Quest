@@ -239,10 +239,12 @@ struct iOSDungeonResonanceMockupView: View {
             )
             if let spot = UIImage(named: iOSDungeonResonanceArt.spotlightMaskReference) {
                 Image(uiImage: spot)
+                    .renderingMode(.original)
+                    .interpolation(.high)
                     .resizable()
                     .scaledToFill()
                     .blendMode(.plusLighter)
-                    .opacity(0.35)
+                    .opacity(0.32)
             }
         }
         .ignoresSafeArea()
@@ -252,7 +254,7 @@ struct iOSDungeonResonanceMockupView: View {
 
     private var laneColumn: some View {
         VStack(spacing: 56) {
-            laneSectionLabel("Shallow")
+            laneSectionLabel(String(localized: "dungeon.resonance.mockup.laneSectionAbove"))
 
             LaneDecoyChip(style: .ember, accessibilityHidden: true)
             LaneLaneMarkerNeutral()
@@ -266,7 +268,7 @@ struct iOSDungeonResonanceMockupView: View {
 
             LaneDecoyChip(style: .sunSigil, accessibilityHidden: true)
 
-            laneSectionLabel("Deep")
+            laneSectionLabel(String(localized: "dungeon.resonance.mockup.laneSectionBelow"))
             Color.clear.frame(height: 200)
         }
         .frame(maxWidth: 520)
@@ -274,6 +276,7 @@ struct iOSDungeonResonanceMockupView: View {
         .padding(.horizontal, RA11ySpacing.lg)
     }
 
+    /// Preview-only lane captions; aligns mockup labels with the Moonstone / echo-glyph metaphor.
     private func laneSectionLabel(_ text: String) -> some View {
         Text(text)
             .font(.ra11yCaption)
@@ -460,11 +463,7 @@ private struct MoonstoneTargetOrb: View {
     var body: some View {
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.targetMoonstone) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(width: moonW, height: moonH)
+                iOSResonanceWideCanvasImage(uiImage: ui, width: moonW, height: moonH)
                     .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.4), radius: 10)
             } else {
                 ZStack {
@@ -517,11 +516,7 @@ private struct LaneDecoyChip: View {
     var body: some View {
         Group {
             if let ui = UIImage(named: style.assetName) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(width: chip, height: chip)
+                iOSResonanceWideCanvasImage(uiImage: ui, width: chip, height: chip)
             } else {
                 legacyDecoyPlaceholder
             }
@@ -567,12 +562,11 @@ private struct LaneLaneMarkerNeutral: View {
     var body: some View {
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.laneMarkerNeutral) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(height: 22)
-                    .frame(maxWidth: .infinity)
+                GeometryReader { geo in
+                    iOSResonanceWideCanvasImage(uiImage: ui, width: geo.size.width, height: 22)
+                }
+                .frame(height: 22)
+                .frame(maxWidth: .infinity)
             } else {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.white.opacity(0.06))
@@ -607,10 +601,7 @@ private struct ResonanceReticleRing: View {
 
         Group {
             if let ui = UIImage(named: iOSDungeonResonanceArt.reticleRing) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: diameter, height: diameter)
+                iOSResonanceWideCanvasImage(uiImage: ui, width: diameter, height: diameter)
                     .opacity(0.42 + pulse * 0.5)
                     .shadow(color: Color.ra11yAccent.opacity(0.12 + pulse * 0.38), radius: 6 + pulse * 10)
             } else {
@@ -642,10 +633,7 @@ private struct ResonanceCenterOrb: View {
     var body: some View {
         ZStack {
             if let uiImage = UIImage(named: orbImageName) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: orbDiameter, height: orbDiameter)
+                iOSResonanceWideCanvasImage(uiImage: uiImage, width: orbDiameter, height: orbDiameter)
                     .saturation(bandSaturation)
                     .shadow(color: orbGlowColor, radius: orbGlowRadius)
             } else {
@@ -751,11 +739,11 @@ private struct ResonanceCenterOrb: View {
 
     private var accessibilityLabelText: String {
         switch band {
-        case .far: return "Crystal orb, faint resonance"
-        case .warm: return "Crystal orb, warmth building"
-        case .near: return "Crystal orb, close to lock"
-        case .locked: return "Crystal orb, aligned, ready to confirm"
-        case .success: return "Crystal orb, resonance sealed"
+        case .far: return String(localized: "dungeon.resonance.a11y.orb.far")
+        case .warm: return String(localized: "dungeon.resonance.a11y.orb.warm")
+        case .near: return String(localized: "dungeon.resonance.a11y.orb.near")
+        case .locked: return String(localized: "dungeon.resonance.a11y.orb.locked")
+        case .success: return String(localized: "dungeon.resonance.a11y.orb.success")
         }
     }
 }
@@ -766,10 +754,7 @@ private struct ResonanceSuccessFlareOverlay: View {
 
     var body: some View {
         if let ui = UIImage(named: iOSDungeonResonanceArt.successFlare) {
-            Image(uiImage: ui)
-                .resizable()
-                .scaledToFit()
-                .frame(width: flareSize, height: flareSize)
+            iOSResonanceWideCanvasImage(uiImage: ui, width: flareSize, height: flareSize)
                 .blendMode(.screen)
                 .opacity(0.88)
                 .accessibilityHidden(true)

@@ -105,7 +105,7 @@ struct RA11y_iOSApp: App {
         // `@State router` — which has the game destination pre-populated in its path
         // via its initializer closure — is unblocked quickly.
         // Any new game-direct arg should be listed here alongside -screenshotMarkOnboardingComplete.
-        let directGameArgs = ["-screenshotDirectToEnchanter", "-screenshotDirectToRogue", "-screenshotDirectToDungeon"]
+        let directGameArgs = ["-screenshotDirectToEnchanter", "-screenshotDirectToDungeon"]
         if directGameArgs.contains(where: { args.contains($0) }) {
             UserDefaults.standard.set(
                 true,

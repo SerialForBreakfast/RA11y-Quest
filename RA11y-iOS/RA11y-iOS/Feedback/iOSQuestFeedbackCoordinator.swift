@@ -93,6 +93,8 @@ final class iOSQuestFeedbackCoordinator {
             return profile.timeoutCue
         case .hint:
             return profile.hintCue
+        case .laneSlotTick:
+            return profile.laneSlotCue
         }
     }
 
@@ -112,6 +114,8 @@ final class iOSQuestFeedbackCoordinator {
             return "timeout"
         case .hint:
             return "hint"
+        case .laneSlotTick:
+            return "lane-slot"
         }
     }
 }

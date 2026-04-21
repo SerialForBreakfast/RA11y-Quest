@@ -18,6 +18,8 @@ public enum QuestFeedbackReducer {
         switch input {
         case .alignmentBandChanged(let newBand):
             return reduceBandChange(state: &state, newBand: newBand)
+        case .laneSlotChanged:
+            return [.laneSlotTick]
         case .wrongActivation:
             return [.wrongActivation]
         case .success:

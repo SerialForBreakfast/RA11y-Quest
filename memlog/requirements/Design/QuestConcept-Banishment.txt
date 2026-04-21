@@ -1,15 +1,17 @@
 RA11y — Quest Concept
 The Banishment
 
-Date: 2026-04-19
+Date: 2026-04-19 (revised 2026-04-20)
 Owner: Product / Design (Requirements)
-Status: Draft
+Status: Draft — gameplay & accessibility architecture before art
 Process: See DesignProcess.md
+Related: ADR-0003 (Resonance interaction model), CrystalResonance-VoiceOverScrollProxy-Investigation.md
 
 Skill
 =====
 Two-finger scrub (Z-shape) — the VoiceOver escape gesture.
-Triggers accessibilityPerformEscape() on the current view.
+Maps to accessibilityPerformEscape() / the platform escape path for the focused
+accessibility subtree.
 
 One-Sentence Lesson
 ===================
@@ -18,112 +20,212 @@ banishes it.
 
 Real-World Mapping
 ==================
-This gesture dismisses alerts, modals, sheets, action sheets, and navigates
-back in navigation controllers. It is the universal escape hatch in every
-iOS app. Without it, users get stranded inside presented views with no way
-out. With it, no presented UI can trap them permanently.
+This gesture dismisses alerts, modals, sheets, action sheets, and often pops
+navigation when focus is inside presented UI. It is the primary escape hatch
+on iOS when focus feels “stuck.” Players should connect the in-quest “creature”
+to “anything that blocked the rest of the app.”
 
 Prerequisites
 =============
 - Enchanter's Trial (swipe to navigate, double-tap to activate)
 - Crystal Resonance (three-finger scroll)
 
-The player must already have focus navigation and activation in muscle memory.
-This quest introduces the first two-finger gesture in the curriculum and lays
-the foundation for Magic Tap and the Rotor.
+The player already practices double-tap and scroll in context. This quest is the
+first deliberate two-finger gesture in the curriculum and sets up Magic Tap and
+the Rotor later.
 
 Downstream Skills Unlocked
 ===========================
-- Magic Tap (two-finger double-tap) — context-aware action
-- The Rotor (two-finger twist) — change navigation granularity
-Both build on the two-finger gesture vocabulary introduced here.
+- Magic Tap (two-finger double-tap)
+- The Rotor (two-finger twist)
+Both extend the two-finger vocabulary introduced here.
 
-Stage Structure
-===============
+================================================================================
+0. PROCESS: GAMEPLAY FIRST, SF SYMBOLS FIRST, ART LAST
+================================================================================
+
+Milestone order (non-negotiable for this quest):
+
+  Phase A — Paper + this doc
+    Lock stage outcomes, failure modes, copy themes, and rank rules.
+
+  Phase B — Greybox implementation (SF Symbols + system materials only)
+    No creature PNGs, no bespoke backgrounds. Use SF Symbols for “creature”,
+    “threat,” “ward,” “tower,” etc. until escape + focus model are proven on
+    device with VoiceOver.
+
+  Phase C — Accessibility tree freeze
+    Document the exact VoiceOver swipe order and the single “escape surface”
+    contract (see §6). No new focusable chrome may be added without re-running
+    the device checklist.
+
+  Phase D — Asset generation
+    Only after Phase B/C exit criteria pass: replace placeholders with catalog
+    art using the same layout frames and accessibility identifiers.
+
+Rationale: Crystal Resonance showed that as the playfield gained layers (chrome,
+lane, proxy, vignette), programmatic focus and linear navigation became the hardest
+part of the ship. Banishment must not repeat “beautiful art, broken tree.”
+
+================================================================================
+1. LESSONS FROM CRYSTAL RESONANCE (APPLY TO BANISHMENT)
+================================================================================
+
+Focus and navigation
+--------------------
+- Programmatic focus (screenChanged, delayed Tasks, sortPriority) can announce
+  correctly and still fail day-to-day discovery: the next right-swipe may never
+  reach the element that must receive the lesson gesture.
+- Three-finger scroll only reaches the UIScrollView (or scrollable ancestor) that
+  has VoiceOver focus. Banishment’s analogue: two-finger scrub must apply to a
+  view hierarchy that actually implements / forwards performEscape for the
+  focused element.
+- “Mystery” VoiceOver targets often come from empty containers, GeometryReader
+  shells, or invisible spacers. Banishment UI must avoid placeholder stacks that
+  synthesize unnamed rectangles.
+
+Complexity budget
+-----------------
+- Prefer ONE primary interactive accessibility element during a trap (e.g. the
+  presented “creature” surface) plus a small, documented set of chrome items
+  (objective, optional timer). Everything else: accessibilityHidden(true) or
+  merged into a single combined element.
+- When a UIKit host is required for predictable behaviour (Resonance uses a
+  UIScrollView proxy), prefer that path early for Banishment if SwiftUI
+  presentation + escape testing is flaky on device.
+
+Layout vs rules
+---------------
+- Any “did the player succeed?” rule must use the same coordinate / state model
+  as the view that receives the gesture. Avoid duplicating geometry in a second
+  layer that can drift (Resonance: VStack spacing had to match scroll math).
+
+Lights Off
+----------
+- Keep one stable visual anchor (e.g. centre glyph) visible; narrative darkness
+  affects the frame, not the escape contract.
+
+================================================================================
+2. GAMEPLAY OVERVIEW (LOCK BEFORE ART)
+================================================================================
+
+Core loop (all stages)
+----------------------
+1. Player is in a “safe” state (short reading order, can reach hub affordances).
+2. A trap state presents: something blocks continuation until dismissed.
+3. Wrong actions (swipe to move focus, double-tap on decoy) produce immediate
+   thematic feedback and restate the required gesture (copy + optional audio).
+4. Successful two-finger scrub dismisses the trap and advances the beat.
+5. Stage 2+ adds time pressure and sequence; Stage 3 removes non-essential
+   visuals, not the escape mechanism.
+
+“Creature” abstraction
+----------------------
+Design and copy treat each threat as a modal family. Implementation maps each
+to a real dismissal path that responds to performEscape (native alert, sheet,
+or a custom container that overrides accessibilityPerformEscape() to dismiss).
+
+Stage structure (unchanged intent, implementation-constrained)
+----------------------------------------------------------------
 
 Stage 1 — The Ward (untimed, hints visible)
--------------------------------------------
-A single Shadow Rat ambushes the player. A modal overlay fills the screen.
-VoiceOver announces the creature and that the Mark of Z banishes it.
-The player draws the two-finger Z. The creature flees. A door opens.
+  - One trap. One successful scrub ends the stage.
+  - Hint text and VoiceOver copy may name the gesture explicitly.
+  - No rank; teach the motion.
+  - Wrong-action lines remain as in §5.
 
-One creature. Hint visible. Zero pressure. No rank.
+Stage 2 — The Lich's Tower (timed, hints off)
+  - Sequence of traps (each dismissible by scrub).
+  - “Stacked” boss beats may be implemented as successive presentations or a
+    single container that decrements layers on each successful escape — choose
+    the variant that keeps the accessibility tree shallow (decision in Phase B).
+  - Scored; strikes and time feed rank.
 
-If the player tries double-tap: "The Shadow Rat laughs. Only Fear can banish it."
-If the player tries to swipe: "There is nothing to navigate to. Cast the Mark of Z."
+Stage 3 — Lights Off: The Dark Tower
+  - Same escape contract as Stage 2; creature identity via VO + haptics +
+    audio; centre anchor remains visible per Lights Off rules in ADR-0003 spirit.
+  - Scored separately or combined with Stage 2 per storage design (TBD in tech
+    spec).
 
-Goal: confidence — "I can make this gesture."
+================================================================================
+3. ACCESSIBILITY ARCHITECTURE CONTRACT (DRAFT — REFINE IN PHASE B)
+================================================================================
 
-Stage 2 — The Lich's Tower (hard timer, no hints)
---------------------------------------------------
-The Lich sends a sequence of creatures in rapid succession. Each creature is
-a modal or sheet that must be dismissed with the Z gesture. The Lich itself
-is a stack of three layered threats — each layer requires one scrub to dismiss.
+During an active trap
+---------------------
+- [ ] The view that must be dismissed is reachable without traversing decorative
+    layers.
+- [ ] Performing escape while focus is on that view (or its documented subtree)
+    dismisses the trap — verified on hardware VoiceOver.
+- [ ] Optional: one combined “Quest instruction” element for static copy; not
+    duplicated as separate hidden views.
 
-No hint. Escalating pace. Scored.
+During safe / between traps
+---------------------------
+- [ ] Reading order matches hub conventions where possible (short path back to
+    primary CTA).
 
-Creatures / modal types:
-  Shadow Rat       — basic alert (one scrub)
-  Stone Golem      — full-screen blocking sheet (one scrub)
-  Venomous Wisp    — action sheet with options (scrub dismisses all options)
-  The Lich (boss)  — three stacked layers, one scrub per layer
+Explicitly out of scope for default play
+-----------------------------------------
+- Requiring the player to rotor-hunt or manually explore a long list of lane-like
+  elements to find the escape target.
 
-Wrong-action feedback (same as Stage 1, no hint):
-  The creature shrugs or laughs. VoiceOver confirms the gesture required.
+================================================================================
+4. WRONG-ACTION BEHAVIOUR
+================================================================================
 
-Goal: mastery under pressure — the gesture becomes automatic.
+Same principles as prior draft:
 
-Stage 3 — Lights Off: The Dark Tower (hard timer, no visuals)
---------------------------------------------------------------
-The dungeon goes dark. No visual creature. No visual Z indicator.
-All gameplay information is delivered through three channels only:
+  Wrong gesture: creature mocks; VoiceOver names scrub / “Mark of Z” (or neutral
+                 skill label if we avoid fantasy in a11y strings — TBD in copy pass).
+  Hesitation:    strike + short recovery; retry within ~2s feel.
+  Cooldown:      minimal; never blocks retry longer than cue playback.
 
-  VoiceOver:  creature name and "Cast Fear" on arrival;
-              "Struck" if player hesitates too long;
-              "[creature] flees" on successful dismissal
-  Haptics:    rhythmic pulse escalating in tempo as creature closes in;
-              heavy impact if the creature strikes;
-              success pulse on dismissal
-  Audio:      low growl building in volume as creature approaches;
-              sharp screech + silence on successful dismissal;
-              impact sound if struck
+Double-tap on decoy: “The Shadow Rat laughs. Only Fear can banish it.” (example)
+Swipe when nothing to navigate: “There is nothing to navigate to. Cast the Mark of Z.”
 
-The orb / anchor glyph at screen centre remains visible as the only visual
-element — the player has a stable focal point even in darkness.
+================================================================================
+5. RANKS
+================================================================================
 
-Goal: internalisation — the player proves the skill requires no visual support.
-This stage demonstrates that VoiceOver + haptics + audio is a complete
-information system.
+(unchanged intent)
 
-Wrong-Action Behaviour
-======================
-This quest explicitly teaches that prior strategies (double-tap, swipe) do not
-work inside a trapped state. Wrong-action feedback must be immediate, thematic,
-and non-punishing:
-
-  Wrong gesture:  creature mocks the attempt; VoiceOver names the correct gesture
-  Hesitation:     creature strikes; short cooldown; player can immediately retry
-  Cooldown:       minimal — never longer than the haptic + audio cue duration;
-                  the player must be able to retry within two seconds
-
-Ranks (Stage 2 and Stage 3 scored separately)
-=============================================
-  Legendary:  no strikes received, fast completion
+  Legendary:  no strikes, fast completion
   Skilled:    one strike or slightly over threshold time
   Novice:     completed with multiple strikes
   Defeated:   timer expired
 
-Thematic Rank Copy (examples)
-------------------------------
-  Legendary:  "The dungeon falls silent. The creatures will not return."
-  Skilled:    "They fled. The Ward holds."
-  Novice:     "You survived. Practice the Mark until it is instinct."
-  Defeated:   "The darkness wins this round. Try again."
+Exact thresholds live in GameRules / RankThresholds when implementation starts;
+they must be tuned after greybox timing data.
 
-Acceptance Criteria
-===================
-- The quest concept names exactly one skill and one lesson.
-- Three stages defined: practice / trial / lights off.
-- Wrong-action behaviour specified for each stage.
-- Prerequisites and downstream skills identified.
-- No overlap with Enchanter's Trial or Crystal Resonance skill content.
+================================================================================
+6. ACCEPTANCE CRITERIA (UPDATED)
+================================================================================
+
+Concept
+-------
+- Names exactly one new skill (two-finger scrub / escape) and one lesson.
+- Three stages: practice / timed / lights off.
+- Wrong-action behaviour specified; prerequisites and downstream skills stated.
+- No reliance on bespoke art for core mechanics (SF Symbol phase must suffice).
+
+Engineering / QA (before art)
+-----------------------------
+- [ ] Device VoiceOver: each trap dismisses with scrub without rotor workarounds.
+- [ ] No unnamed focusable rects in trap or safe states (audit with linear nav).
+- [ ] Wrong-action and success paths announced at appropriate verbosity (rate-limited).
+- [ ] Lights Off: escape still works; anchor remains visible; multimodal cues sufficient.
+
+Art
+---
+- [ ] Asset list generated only after criteria above pass; filenames and sizes
+    align with final layout metrics from Phase B.
+
+================================================================================
+7. OPEN DECISIONS (RESOLVE IN PHASE B TECH NOTES)
+================================================================================
+
+- SwiftUI-only presentation vs UIKit-hosted presentation for dismissible traps.
+- Single “layer stack” boss vs three sequential modals (accessibility depth vs drama).
+- Whether fantasy proper nouns appear in accessibilityLabel or only in visual text
+  (prefer plain-language a11y strings; see DesignProcess.md).

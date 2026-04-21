@@ -72,8 +72,8 @@ struct VoiceOverGatingTests {
     /// VO ON → proceed decision (game route, added in M5).
     @Test func voiceOverOnProceeds() {
         let stub     = StubVoiceOverStateProvider(isVoiceOverRunning: true)
-        let decision = GameStartDecision.evaluate(kind: .activateDoubleTap, provider: stub)
-        #expect(decision == .proceed(kind: .activateDoubleTap))
+        let decision = GameStartDecision.evaluate(kind: .scrollHunt, provider: stub)
+        #expect(decision == .proceed(kind: .scrollHunt))
     }
 
     /// Interstitial route can be pushed onto the navigation stack.
@@ -83,7 +83,7 @@ struct VoiceOverGatingTests {
         #expect(!router.path.isEmpty)
     }
 
-    /// Gating applies to all three MVP game kinds, not just one.
+    /// Gating applies to every MVP game kind, not just one.
     @Test func voiceOverOffGatesAllGameKinds() {
         let stub = StubVoiceOverStateProvider(isVoiceOverRunning: false)
         for kind in GameKind.allCases {
@@ -126,6 +126,24 @@ struct FirstRunRoutingTests {
 
         let route = await router.resolveInitialRoute(using: storage)
         #expect(route == .firstRun(mode: .entry))
+    }
+}
+
+// MARK: - Crystal Resonance lane randomization
+
+/// Business rules for shuffled Moonstone lanes (``DungeonRoom/randomizedRoomsPreservingPool``).
+@MainActor
+struct DungeonRoomRandomizationTests {
+
+    @Test func randomizedPoolPreservesCountAndExactlyOneTarget() {
+        let bases = [DungeonRoom.l1Rooms, DungeonRoom.l2Rooms, DungeonRoom.l3Rooms]
+        for base in bases {
+            let r = DungeonRoom.randomizedRoomsPreservingPool(base)
+            #expect(r.count == base.count)
+            #expect(r.filter(\.isTarget).count == 1)
+            let targetIDs = Set(r.filter(\.isTarget).map(\.id))
+            #expect(targetIDs.count == 1)
+        }
     }
 }
 

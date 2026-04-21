@@ -18,6 +18,9 @@ public extension Font {
     /// Major heading; section or page title.
     static let ra11yTitle: Font = .title2
 
+    /// Emphasized line between headline and title (e.g. trap callouts).
+    static let ra11yTitle3: Font = .title3
+
     /// Sub-heading; card title or list header.
     static let ra11yHeadline: Font = .headline
 

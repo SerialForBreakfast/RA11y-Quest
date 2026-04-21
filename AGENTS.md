@@ -10,6 +10,12 @@ Follow every section. These are not suggestions.
 If any guidance below conflicts, the repository operational rules in this file take precedence for work in this repo.
 The SwiftUI rules are intended for design and implementation guidance and should not override repo safety or workflow rules.
 
+### How coding agents discover this file
+
+- **OpenAI Codex** loads **`AGENTS.md`** from the repository root (and parent paths) automatically—no duplicate policy file needed for Codex.
+- **Anthropic Claude Code** loads **`CLAUDE.md`** by default; this repo keeps a **short root `CLAUDE.md`** that points here so behavior stays single-source.
+- **Cursor** uses **`.cursor/rules/agents-md-authority.mdc`** to require following this document.
+
 ---
 
 ## Project Structure
@@ -135,6 +141,27 @@ Prefer standard shell tools over interpreted scripting languages. This
 reduces interpreter version dependencies, limits arbitrary code execution
 surface, and keeps scripts auditable by anyone with basic shell knowledge.
 
+### Maintainer toolchain (agents — required)
+
+The primary maintainer reviews agent work using **bash**, **standard Unix
+command-line tools**, and **Swift / Xcode** (`swift`, `xcodebuild`, etc.)
+only. They do **not** use Python or other extra runtimes for day-to-day
+review.
+
+**Agents MUST follow that boundary for anything they *run* in the shell:**
+
+- **Allowed:** `bash` / `sh`, POSIX and macOS CLI (`grep`, `sed`, `awk`, `jq`,
+  `plutil`, `xcrun`, `xcodebuild`, `swift`, committed `utility/*.sh`, and
+  other tools that are clearly “plain Unix + Apple toolchain.”
+- **Forbidden for improvised use:** `python`, `python3`, `ruby`, `node`,
+  `npm`, `npx`, or similar **one-liners and ad-hoc scripts**—including
+  “quick” JSON/XML validation—so the maintainer can reason about safety
+  without learning another language. Use `./utility/build_and_test.sh`,
+  Xcode build output, or shell tools (`plutil`, etc.) instead.
+- **Exception:** Run **only** the already-committed, documented Python
+  utilities under `utility/` when the task is explicitly the asset/PNG
+  pipeline listed below—not new `python3 -c '…'` invocations.
+
 ### Preferred Tools (use these first)
 
 - **Text processing:** `awk`, `sed`, `grep`, `ripgrep (rg)`, `cut`, `tr`, `sort`, `uniq`
@@ -156,6 +183,7 @@ script unless ALL of the following are true:
 
 Existing project scripts that already use Python are grandfathered:
 - `utility/remove_white_background.py` — approved, do not rewrite
+- `utility/ensure_png_rgba.py` — batch RGBA normalization for `Assets.xcassets` composited art (uses edge logic from `remove_white_background.py`)
 - `utility/build_and_test.sh` — shell, already compliant
 
 ### For New Automation

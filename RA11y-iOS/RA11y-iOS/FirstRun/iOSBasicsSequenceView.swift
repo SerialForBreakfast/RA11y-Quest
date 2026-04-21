@@ -3,8 +3,8 @@ import RA11yCore
 
 // MARK: - iOSBasicsSequenceView
 
-/// Guided VoiceOver Basics sequence that walks the player through all three MVP games
-/// in hub unlock order (Enchanter → Crystal Resonance → Rogue).
+/// Guided VoiceOver Basics sequence that walks the player through MVP games
+/// in hub unlock order (Enchanter → Crystal Resonance → The Banishment).
 ///
 /// This view acts as the **conductor** for the M4 basics flow. It stays on the navigation
 /// stack throughout the sequence and orchestrates the push-and-return loop:
@@ -27,7 +27,7 @@ struct iOSBasicsSequenceView: View {
     // MARK: - Private Properties
 
     private let storage: any StorageComponent
-    private let steps: [GameKind] = [.findAndFocus, .scrollHunt, .activateDoubleTap]
+    private let steps: [GameKind] = [.findAndFocus, .scrollHunt, .banishment]
 
     // MARK: - State
 
@@ -163,10 +163,10 @@ struct iOSBasicsSequenceView: View {
         switch steps[currentIndex] {
         case .findAndFocus:
             return String(localized: "basicsSequence.skill.findAndFocus.title")
-        case .activateDoubleTap:
-            return String(localized: "basicsSequence.skill.activateDoubleTap.title")
         case .scrollHunt:
             return String(localized: "basicsSequence.skill.scrollHunt.title")
+        case .banishment:
+            return String(localized: "basicsSequence.skill.banishment.title")
         }
     }
 
@@ -174,10 +174,10 @@ struct iOSBasicsSequenceView: View {
         switch steps[currentIndex] {
         case .findAndFocus:
             return String(localized: "basicsSequence.skill.findAndFocus.intro")
-        case .activateDoubleTap:
-            return String(localized: "basicsSequence.skill.activateDoubleTap.intro")
         case .scrollHunt:
             return String(localized: "basicsSequence.skill.scrollHunt.intro")
+        case .banishment:
+            return String(localized: "basicsSequence.skill.banishment.intro")
         }
     }
 
@@ -226,7 +226,7 @@ struct iOSBasicsSequenceView: View {
         if nextIndex < steps.count {
             currentIndex = nextIndex
         } else {
-            // All three games completed — mark done and return to hub.
+            // All Basics steps completed — mark done and return to hub.
             router.isInBasicsSequence = false
             Task {
                 await storage.markBasicsCompleted()
