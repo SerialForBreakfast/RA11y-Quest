@@ -1100,6 +1100,50 @@
         }
       }
     },
+    "dungeon.resonance.item.emberShard" : {
+      "comment" : "VoiceOver / scroll status name for the ember decoy glyph in Crystal Resonance.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ember shard"
+          }
+        }
+      }
+    },
+    "dungeon.resonance.item.moonstone" : {
+      "comment" : "VoiceOver / scroll status name for the Moonstone target in Crystal Resonance.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moonstone"
+          }
+        }
+      }
+    },
+    "dungeon.resonance.item.shadowGlyph" : {
+      "comment" : "VoiceOver / scroll status name for the shadow-glyph decoy in Crystal Resonance.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shadow glyph"
+          }
+        }
+      }
+    },
+    "dungeon.resonance.item.sunSigil" : {
+      "comment" : "VoiceOver / scroll status name for the sun-sigil decoy in Crystal Resonance.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sun sigil"
+          }
+        }
+      }
+    },
     "dungeon.resonance.seal" : {
       "comment" : "Primary action when the moonstone is aligned with the orb.",
       "localizations" : {

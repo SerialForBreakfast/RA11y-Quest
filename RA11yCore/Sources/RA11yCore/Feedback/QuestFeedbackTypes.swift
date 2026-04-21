@@ -16,6 +16,8 @@ public enum QuestFeedbackBand: Int, CaseIterable, Codable, Hashable, Sendable {
 public enum QuestFeedbackIntent: Equatable, Sendable {
     /// The player entered a meaningful proximity band.
     case proximityEntered(QuestFeedbackBand)
+    /// The player moved VoiceOver / scroll focus to another slot in a multi-item alignment lane (e.g. Crystal Resonance).
+    case laneSlotTick
     /// The player reached the activation window.
     case lockAcquired
     /// The player left the activation window after being locked.
@@ -37,6 +39,8 @@ public enum QuestFeedbackIntent: Equatable, Sendable {
 public enum QuestFeedbackInput: Equatable, Sendable {
     /// Alignment band derived from current gameplay geometry.
     case alignmentBandChanged(QuestFeedbackBand)
+    /// Discrete lane slot changed while scrolling the resonance shaft (semantic focus move, not raw geometry).
+    case laneSlotChanged
     /// The player activated the wrong object or trigger.
     case wrongActivation
     /// The player completed the objective.

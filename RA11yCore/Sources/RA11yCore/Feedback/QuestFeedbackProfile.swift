@@ -30,6 +30,9 @@ public struct QuestFeedbackProfile: Equatable, Sendable {
     /// Cue used when the player requests help.
     public let hintCue: QuestFeedbackCue
 
+    /// Cue used when the player moves between items in a scroll alignment lane.
+    public let laneSlotCue: QuestFeedbackCue
+
     /// Creates a reusable profile.
     public init(
         name: String,
@@ -40,7 +43,8 @@ public struct QuestFeedbackProfile: Equatable, Sendable {
         wrongActivationCue: QuestFeedbackCue,
         successCue: QuestFeedbackCue,
         timeoutCue: QuestFeedbackCue,
-        hintCue: QuestFeedbackCue
+        hintCue: QuestFeedbackCue,
+        laneSlotCue: QuestFeedbackCue
     ) {
         self.name = name
         self.warmCue = warmCue
@@ -51,6 +55,7 @@ public struct QuestFeedbackProfile: Equatable, Sendable {
         self.successCue = successCue
         self.timeoutCue = timeoutCue
         self.hintCue = hintCue
+        self.laneSlotCue = laneSlotCue
     }
 }
 
@@ -65,7 +70,8 @@ public extension QuestFeedbackProfile {
         wrongActivationCue: QuestFeedbackCue(audio: .mutedError, haptic: .errorTap, cooldownSeconds: 0.0),
         successCue: QuestFeedbackCue(audio: .crystallineSuccess, haptic: .successPulse, cooldownSeconds: 0.0),
         timeoutCue: QuestFeedbackCue(audio: .warningPulse, haptic: .warningTap, cooldownSeconds: 0.0),
-        hintCue: QuestFeedbackCue(audio: .hintChime, haptic: .softTick, cooldownSeconds: 0.4)
+        hintCue: QuestFeedbackCue(audio: .hintChime, haptic: .softTick, cooldownSeconds: 0.4),
+        laneSlotCue: QuestFeedbackCue(audio: .resonance, haptic: .softTick, cooldownSeconds: 0.1)
     )
 
     /// Light-touch profile suitable for calmer, tutorial-heavy quests.
@@ -78,6 +84,7 @@ public extension QuestFeedbackProfile {
         wrongActivationCue: QuestFeedbackCue(audio: .mutedError, haptic: .errorTap, cooldownSeconds: 0.0),
         successCue: QuestFeedbackCue(audio: .crystallineSuccess, haptic: .successPulse, cooldownSeconds: 0.0),
         timeoutCue: QuestFeedbackCue(audio: .warningPulse, haptic: .warningTap, cooldownSeconds: 0.0),
-        hintCue: QuestFeedbackCue(audio: .hintChime, haptic: .softTick, cooldownSeconds: 0.4)
+        hintCue: QuestFeedbackCue(audio: .hintChime, haptic: .softTick, cooldownSeconds: 0.4),
+        laneSlotCue: QuestFeedbackCue(audio: .none, haptic: .softTick, cooldownSeconds: 0.12)
     )
 }

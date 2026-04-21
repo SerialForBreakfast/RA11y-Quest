@@ -112,6 +112,7 @@ struct iOSDungeonDescentView: View {
                 showsFirstLevelGestureTip: true,
                 onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
+                onLaneSlotChanged: { viewModel.notifyResonanceLaneSlotChanged() },
                 onHint: nil,
                 onContinue: { viewModel.advanceToRising() },
                 onRetry: nil
@@ -134,6 +135,7 @@ struct iOSDungeonDescentView: View {
                 showsFirstLevelGestureTip: false,
                 onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
+                onLaneSlotChanged: { viewModel.notifyResonanceLaneSlotChanged() },
                 onHint: { viewModel.requestHint() },
                 onContinue: { viewModel.advanceToTimed() },
                 onRetry: { viewModel.retryRising() }
@@ -156,6 +158,7 @@ struct iOSDungeonDescentView: View {
                 showsFirstLevelGestureTip: false,
                 onResonanceDeltaChanged: { viewModel.updateResonanceDelta($0) },
                 onActivateTarget: { room in await viewModel.activateTarget(room) },
+                onLaneSlotChanged: { viewModel.notifyResonanceLaneSlotChanged() },
                 onHint: { viewModel.requestHint() },
                 onContinue: nil,
                 onRetry: { viewModel.retryTimed() }
@@ -434,6 +437,21 @@ final class DungeonDescentViewModel {
             #if DEBUG
             print("[RA11yScroll] ViewModel band→\(band) reachable=\(self.targetIsReachable)")
             #endif
+        }
+    }
+
+    /// Fires multimodal feedback when the VoiceOver scroll proxy snaps to another lane item.
+    ///
+    /// ## Concurrency
+    /// Must run on the main actor with SwiftUI; the play view invokes this from scroll offset updates.
+    func notifyResonanceLaneSlotChanged() {
+        guard screenshotScene == nil else { return }
+        if completedResult != nil { return }
+        switch phase {
+        case .firstAttempt, .rising, .timed:
+            questFeedbackCoordinator.process(.laneSlotChanged)
+        default:
+            break
         }
     }
 

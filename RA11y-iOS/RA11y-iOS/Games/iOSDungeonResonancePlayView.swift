@@ -108,6 +108,8 @@ struct iOSDungeonResonancePlayView: View {
     let onResonanceDeltaChanged: (CGFloat) -> Void
 
     let onActivateTarget: (DungeonRoom) async -> Void
+    /// Invoked when the VoiceOver scroll proxy snaps to a different lane slot (after ``handleProxyScrollOffsetChange``).
+    let onLaneSlotChanged: (() -> Void)?
     let onHint: (() -> Void)?
     let onContinue: (() -> Void)?
     let onRetry: (() -> Void)?
@@ -141,8 +143,13 @@ struct iOSDungeonResonancePlayView: View {
         String(localized: "dungeon.resonance.hint")
     }
 
+    /// Distance between successive lane row centers (matches ``resonanceLaneColumn`` `VStack` spacing + row height).
+    private var laneColumnInterItemSpacing: CGFloat {
+        iOSDungeonResonanceLaneLayout.rowSpacingPoints + iOSDungeonResonanceLaneLayout.voiceOverLaneStrideSlackPoints
+    }
+
     private var laneStepPoints: CGFloat {
-        iOSDungeonResonanceLaneLayout.rowContentHeightPoints + iOSDungeonResonanceLaneLayout.rowSpacingPoints
+        iOSDungeonResonanceLaneLayout.rowContentHeightPoints + laneColumnInterItemSpacing
     }
 
     /// Symmetric spacer that makes every room a centerable snap target.
@@ -150,19 +157,21 @@ struct iOSDungeonResonancePlayView: View {
         max(0, playfieldViewportHeight * 0.5 - iOSDungeonResonanceLaneLayout.rowContentHeightPoints * 0.5)
     }
 
-    /// Geometric height of the glyph column only (rows + spacing), before any scroll slack.
+    /// Full height of ``resonanceLaneColumn`` (top/bottom center spacers, lane rows, and inter-row gaps).
     private var voiceOverLaneIntrinsicBlockHeight: CGFloat {
         let n = rooms.count
         guard n > 0 else { return RA11ySpacing.xl * 2 }
+        let gapCount = CGFloat(n + 1)
         return CGFloat(n) * iOSDungeonResonanceLaneLayout.rowContentHeightPoints
-            + CGFloat(n - 1) * iOSDungeonResonanceLaneLayout.rowSpacingPoints
+            + gapCount * laneColumnInterItemSpacing
+            + 2 * laneCenterSpacerHeight
     }
 
     /// Scroll content block height passed to the UIKit proxy and mirrored by the visual lane.
     ///
     /// Center spacers turn the lane into a discrete selector: offset `index * laneStepPoints` centers room `index`.
     private var voiceOverLaneTotalScrollBlockHeight: CGFloat {
-        voiceOverLaneIntrinsicBlockHeight + laneCenterSpacerHeight * 2
+        voiceOverLaneIntrinsicBlockHeight
     }
 
     private var currentVoiceOverScrollStatusText: String {
@@ -172,8 +181,17 @@ struct iOSDungeonResonancePlayView: View {
     }
 
     private var currentLaneSelectionName: String {
+        localizedResonanceItemName(atLaneIndex: selectedLaneIndex)
+    }
+
+    /// Maps the lane index to Moonstone / decoy glyph names for VoiceOver scroll status (not ``DungeonRoom/displayName``).
+    private func localizedResonanceItemName(atLaneIndex index: Int) -> String {
         guard !rooms.isEmpty else { return String(localized: "dungeon.a11y.scroll.container") }
-        return rooms[clampedLaneIndex(selectedLaneIndex)].displayName
+        let i = clampedLaneIndex(index)
+        if rooms[i].isTarget {
+            return String(localized: "dungeon.resonance.item.moonstone")
+        }
+        return iOSResonanceDecoyStyle.forRoomIndex(i).localizedAccessibilityItemName
     }
 
     private var currentAlignmentAnnouncementText: String {
@@ -224,8 +242,12 @@ struct iOSDungeonResonancePlayView: View {
         let snappedIndex = clampedLaneIndex(Int(round(newY / max(laneStepPoints, 1))))
         let oldY = voiceOverProxyScrollOffsetY
         let snappedOffset = snappedLaneOffset(for: snappedIndex)
+        let previousIndex = selectedLaneIndex
         selectedLaneIndex = snappedIndex
         voiceOverProxyScrollOffsetY = snappedOffset
+        if snappedIndex != previousIndex {
+            onLaneSlotChanged?()
+        }
         if abs(snappedOffset - oldY) > 0.5 {
             logResonanceScroll(
                 "VO proxy scroll contentOffset.y \(String(format: "%.1f", oldY)) → \(String(format: "%.1f", snappedOffset))"
@@ -321,7 +343,7 @@ struct iOSDungeonResonancePlayView: View {
     // MARK: - Lane
 
     private var resonanceLaneColumn: some View {
-        VStack(alignment: .center, spacing: iOSDungeonResonanceLaneLayout.rowSpacingPoints) {
+        VStack(alignment: .center, spacing: laneColumnInterItemSpacing) {
             Color.clear
                 .frame(height: laneCenterSpacerHeight)
                 .accessibilityHidden(true)
@@ -385,7 +407,7 @@ struct iOSDungeonResonancePlayView: View {
         }
         .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
         .padding(.bottom, RA11ySpacing.sm)
-        .background(.ultraThinMaterial.opacity(0.88))
+        .background(Color.black.opacity(0.5))
         .background {
             GeometryReader { geo in
                 Color.clear
@@ -486,13 +508,13 @@ struct iOSDungeonResonancePlayView: View {
         Group {
             if timedOut {
                 timeoutBanner
-                    .background(.ultraThinMaterial.opacity(0.95))
+                    .background(Color.black.opacity(0.55))
             } else if levelComplete, let continueAction = onContinue {
                 continueButton(continueAction)
-                    .background(.ultraThinMaterial.opacity(0.95))
+                    .background(Color.black.opacity(0.55))
             } else if let targetRoom = rooms.first(where: \.isTarget) {
                 playfieldControlsContent(targetRoom: targetRoom, isEnabled: targetIsReachable)
-                    .background(.ultraThinMaterial.opacity(0.95))
+                    .background(Color.black.opacity(0.55))
             } else {
                 Color.clear
                     .frame(maxWidth: .infinity, minHeight: 0)

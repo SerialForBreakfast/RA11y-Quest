@@ -48,6 +48,8 @@ enum iOSDungeonResonanceLaneLayout {
     static let rowSpacingPoints: CGFloat = 56
     /// Nominal content height per lane row for scroll content math and the UIKit accessibility rows.
     static let rowContentHeightPoints: CGFloat = 76
+    /// Extra vertical slack between lane rows so three-finger VoiceOver scrolling crosses a larger range per slot.
+    static let voiceOverLaneStrideSlackPoints: CGFloat = 64
 }
 
 // MARK: - Presentation band (orb + reticle)
@@ -169,6 +171,18 @@ enum iOSResonanceDecoyStyle: CaseIterable {
     static func forRoomIndex(_ index: Int) -> iOSResonanceDecoyStyle {
         let all = iOSResonanceDecoyStyle.allCases
         return all[index % all.count]
+    }
+
+    /// VoiceOver name for the visible glyph — Crystal Resonance uses relic motifs, not dungeon room titles.
+    var localizedAccessibilityItemName: String {
+        switch self {
+        case .ember:
+            String(localized: "dungeon.resonance.item.emberShard")
+        case .shadowGlyph:
+            String(localized: "dungeon.resonance.item.shadowGlyph")
+        case .sunSigil:
+            String(localized: "dungeon.resonance.item.sunSigil")
+        }
     }
 }
 

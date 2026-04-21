@@ -98,6 +98,15 @@ struct QuestFeedbackReducerTests {
         #expect(intents == [.hint])
     }
 
+    @Test func laneSlotChangeEmitsLaneSlotTickWithoutMutatingBandState() {
+        var state = QuestFeedbackState(currentBand: .near)
+
+        let intents = QuestFeedbackReducer.reduce(state: &state, input: .laneSlotChanged)
+
+        #expect(intents == [.laneSlotTick])
+        #expect(state.currentBand == .near)
+    }
+
     @Test func dungeonResonanceProfileUsesAlignmentSnapForLockCue() {
         let profile = QuestFeedbackProfile.dungeonResonance
         #expect(profile.lockCue.haptic == .alignmentSnap)
