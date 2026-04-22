@@ -35,8 +35,13 @@ struct BanishmentThreat: Identifiable, Equatable {
 ///
 /// **VoiceOver:** Wrong decoys are separate buttons; the scrub target is the combined
 /// instruction block (and the full-screen trap root) with ``AccessibilityAction/escape``.
+/// Each trap posts ``announceThreatArrival()`` — a single announcement naming the encounter
+/// and the two-finger Z scrub (escape) so Lights Off play does not depend on on-screen copy.
+///
 /// ## Concurrency
 /// `@MainActor` — matches SwiftUI observation and `GameSessionCoordinator`.
+/// Delayed announcement tasks are cancelled in ``handleViewDisappear()`` so pops/timeouts
+/// do not speak stale encounter lines.
 @Observable
 @MainActor
 final class BanishmentQuestViewModel {
@@ -53,6 +58,8 @@ final class BanishmentQuestViewModel {
     private var session: GameSession?
     private var coordinator: GameSessionCoordinator?
     private var timerTask: Task<Void, Never>?
+    /// Chains a follow-up ``UIAccessibility.post(notification: .announcement, …)`` after VO finishes a prior line.
+    private var pendingAnnouncementTask: Task<Void, Never>?
 
     private let storage: any StorageComponent
 
@@ -171,12 +178,10 @@ final class BanishmentQuestViewModel {
         case .tower(let index):
             if index + 1 < Self.towerThreats.count {
                 phase = .tower(index + 1)
-                announce(String(localized: "banishment.feedback.banished"))
-                announceThreatArrival()
+                announceBanishedThenEncounterArrival()
             } else {
                 phase = .darkTower
-                announce(String(localized: "banishment.feedback.enterDark"))
-                announceThreatArrival()
+                announceEnterDarkThenEncounterArrival()
             }
         case .darkTower:
             Task { await self.completeScoredRun() }
@@ -203,6 +208,7 @@ final class BanishmentQuestViewModel {
     }
 
     func handleViewDisappear() {
+        cancelPendingAnnouncementTask()
         stopTimer()
         coordinator?.stopMonitoring()
         guard let session else { return }
@@ -211,10 +217,41 @@ final class BanishmentQuestViewModel {
 
     // MARK: - Private
 
+    /// Speaks who appeared and how to banish (Z scrub / escape) in one announcement.
     private func announceThreatArrival() {
         guard let threat = currentThreat else { return }
-        let format = String(localized: "banishment.a11y.threatArrived")
+        let format = String(localized: "banishment.a11y.encounterAnnouncement")
         announce(String(format: format, threat.spokenName))
+    }
+
+    private func announceBanishedThenEncounterArrival() {
+        announce(String(localized: "banishment.feedback.banished"))
+        scheduleAnnouncement(afterSeconds: 0.85) { [weak self] in
+            self?.announceThreatArrival()
+        }
+    }
+
+    private func announceEnterDarkThenEncounterArrival() {
+        announce(String(localized: "banishment.feedback.enterDark"))
+        scheduleAnnouncement(afterSeconds: 1.2) { [weak self] in
+            self?.announceThreatArrival()
+        }
+    }
+
+    private func cancelPendingAnnouncementTask() {
+        pendingAnnouncementTask?.cancel()
+        pendingAnnouncementTask = nil
+    }
+
+    /// Schedules a MainActor announcement after a delay so VoiceOver does not truncate the prior line.
+    private func scheduleAnnouncement(afterSeconds delay: TimeInterval, _ body: @escaping @MainActor () -> Void) {
+        cancelPendingAnnouncementTask()
+        pendingAnnouncementTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled else { return }
+            body()
+            pendingAnnouncementTask = nil
+        }
     }
 
     private func completeScoredRun() async {
@@ -232,6 +269,7 @@ final class BanishmentQuestViewModel {
     }
 
     private func handleTimeout() async {
+        cancelPendingAnnouncementTask()
         guard let session else { return }
         timedOut = true
         stopTimer()
@@ -276,6 +314,7 @@ final class BanishmentQuestViewModel {
                 try? await Task.sleep(for: .milliseconds(200))
                 guard let self, !Task.isCancelled else { return }
                 if coordinator.voiceOverDisabledMidGame {
+                    self.cancelPendingAnnouncementTask()
                     self.voiceOverDisabledMidGame = true
                     self.stopTimer()
                     return
@@ -292,6 +331,11 @@ final class BanishmentQuestViewModel {
 // MARK: - iOSBanishmentQuestView
 
 /// The Banishment — teaches VoiceOver’s two-finger scrub escape using SF Symbol greybox UI.
+///
+/// **VoiceOver:** While a trap is active, the system navigation bar is hidden so the scrub
+/// gesture is not delivered to UIKit’s back affordance (which can pop the whole quest).
+/// Players leave via ``trapLeaveQuestControl``; the scrub is handled by
+/// ``BanishmentTrapOverlay``’s ``accessibilityAction(.escape)``.
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -313,10 +357,12 @@ struct iOSBanishmentQuestView: View {
             mainContent
             if viewModel.currentThreat != nil {
                 trapOverlay
+                trapLeaveQuestControl
             }
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(viewModel.currentThreat == nil ? .automatic : .hidden, for: .navigationBar)
         .onChange(of: viewModel.completedResult) { _, result in
             guard let result else { return }
             router.push(.gameResult(result, gameKind: .banishment, gameSpecificAnnouncement: announcement(for: result)))
@@ -467,6 +513,32 @@ struct iOSBanishmentQuestView: View {
             onEscape: { viewModel.performBanishEscape() },
             onWrongDecoy: { viewModel.wrongDecoyTapped() }
         )
+        .id(viewModel.currentThreat?.id ?? "banishment.trap.nil")
+    }
+
+    /// Explicit exit while the trap hides the system bar (see type-level VoiceOver note).
+    private var trapLeaveQuestControl: some View {
+        VStack {
+            HStack {
+                Button {
+                    router.pop()
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .font(.body.weight(.semibold))
+                        .padding(RA11ySpacing.sm)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(viewModel.isLightsOffPhase ? Color.white.opacity(0.92) : Color.ra11yAccent)
+                .accessibilityLabel(String(localized: "result.returnToHub"))
+                .accessibilityHint(String(localized: "banishment.leaveQuest.a11yHint"))
+                .accessibilityIdentifier("banishment.leaveQuest")
+                Spacer()
+            }
+            .padding(.horizontal, RA11ySpacing.md)
+            .padding(.top, RA11ySpacing.xs)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func announcement(for result: GameResult) -> String {
@@ -481,13 +553,27 @@ struct iOSBanishmentQuestView: View {
 
 // MARK: - Trap overlay
 
-/// Full-screen trap: combined instruction + escape, plus an optional wrong decoy control.
+/// Full-screen trap presented like a **popup encounter** (card animates in; VO announces arrival).
+///
+/// The **“false seal”** button is a deliberate wrong path: it records a lesson beat (ward
+/// feedback or scored **mistake**) if the player double-taps a plausible but incorrect control
+/// instead of using **escape** / the two-finger scrub. Keep it for transfer to real
+/// “tap everything” habits under stress.
+///
+/// Expects the hosting screen to hide the system navigation bar during traps so the
+/// VoiceOver scrub is not handled as a navigation “back” pop.
+///
+/// **Lights Off:** On-screen scrub copy is hidden; the instruction card’s accessibility label
+/// carries the Z-scrub banish line, and ``banishment.a11y.encounterAnnouncement`` is announced
+/// when the trap appears.
 private struct BanishmentTrapOverlay: View {
     let threat: BanishmentThreat?
     let showsHint: Bool
     let isLightsOff: Bool
     let onEscape: () -> Void
     let onWrongDecoy: () -> Void
+
+    @State private var encounterPresents: Bool = false
 
     var body: some View {
         ZStack {
@@ -497,40 +583,9 @@ private struct BanishmentTrapOverlay: View {
 
             VStack(spacing: RA11ySpacing.xl) {
                 if let threat {
-                    Image(systemName: threat.symbolName)
-                        .font(.system(size: 72))
-                        .foregroundStyle(isLightsOff ? Color.white.opacity(0.85) : Color.ra11yAccent)
-                        .accessibilityHidden(true)
-
-                    VStack(spacing: RA11ySpacing.sm) {
-                        Text(String(localized: "banishment.trap.title"))
-                            .font(.ra11yHeadline)
-                            .multilineTextAlignment(.center)
-                        Text(String(format: String(localized: "banishment.trap.creatureFormat"), threat.spokenName))
-                            .font(.ra11yTitle3)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                        if showsHint {
-                            Text(String(localized: "banishment.trap.hint"))
-                                .font(.ra11yBody)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                    .padding(RA11ySpacing.lg)
-                    .background(.thinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel(accessibilityInstructionLabel(threat: threat))
-                    .accessibilityHint(String(localized: "banishment.trap.escape.hint"))
-                    .accessibilityAction(.escape, onEscape)
-
-                    Button(String(localized: "banishment.trap.decoyButton")) {
-                        onWrongDecoy()
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityIdentifier("banishment.decoy")
-                    .accessibilityHint(String(localized: "banishment.trap.decoy.hint"))
-                    .accessibilityAction(.escape, onEscape)
+                    threatPortrait(for: threat)
+                    encounterCard(for: threat)
+                    decoyButton
                 }
             }
             .padding(RA11ySpacing.xl)
@@ -538,9 +593,85 @@ private struct BanishmentTrapOverlay: View {
         .accessibilityElement(children: .contain)
         .accessibilityAction(.escape, onEscape)
         .accessibilityIdentifier("banishment.trap.root")
+        .onAppear(perform: playEncounterEntrance)
+        .onChange(of: threat?.id) { _, _ in
+            playEncounterEntrance()
+        }
+    }
+
+    @ViewBuilder
+    private func threatPortrait(for threat: BanishmentThreat) -> some View {
+        Image(systemName: threat.symbolName)
+            .font(.system(size: 72))
+            .foregroundStyle(isLightsOff ? Color.white.opacity(0.85) : Color.ra11yAccent)
+            .accessibilityHidden(true)
+            .scaleEffect(encounterPresents ? 1 : 0.88)
+            .opacity(encounterPresents ? 1 : 0)
+    }
+
+    @ViewBuilder
+    private func encounterCard(for threat: BanishmentThreat) -> some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            Text(String(localized: "banishment.trap.encounterKicker"))
+                .font(.ra11yCaption)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .multilineTextAlignment(.center)
+            let headline = String(
+                format: String(localized: "banishment.trap.creatureAppears"),
+                threat.spokenName
+            )
+            Text(headline)
+                .font(.ra11yTitle)
+                .bold()
+                .multilineTextAlignment(.center)
+            if showsHint {
+                Text(String(localized: "banishment.trap.hint"))
+                    .font(.ra11yBody)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(RA11ySpacing.lg)
+        .background(.thinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
+        .compositingGroup()
+        .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
+        .offset(y: encounterPresents ? 0 : 22)
+        .scaleEffect(encounterPresents ? 1 : 0.94, anchor: .center)
+        .opacity(encounterPresents ? 1 : 0)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityInstructionLabel(threat: threat))
+        .accessibilityHint(
+            isLightsOff
+                ? String(localized: "banishment.a11y.lightsOffTrapHint")
+                : String(localized: "banishment.trap.escape.hint")
+        )
+        .accessibilityAction(.escape, onEscape)
+    }
+
+    private var decoyButton: some View {
+        Button(String(localized: "banishment.trap.decoyButton")) {
+            onWrongDecoy()
+        }
+        .buttonStyle(.bordered)
+        .offset(y: encounterPresents ? 0 : 12)
+        .opacity(encounterPresents ? 1 : 0)
+        .accessibilityIdentifier("banishment.decoy")
+        .accessibilityHint(String(localized: "banishment.trap.decoy.hint"))
+        .accessibilityAction(.escape, onEscape)
+    }
+
+    private func playEncounterEntrance() {
+        encounterPresents = false
+        withAnimation(.spring(response: 0.48, dampingFraction: 0.78)) {
+            encounterPresents = true
+        }
     }
 
     private func accessibilityInstructionLabel(threat: BanishmentThreat) -> String {
+        if isLightsOff {
+            return String(format: String(localized: "banishment.a11y.trapLightsOffCombined"), threat.spokenName)
+        }
         let base = String(format: String(localized: "banishment.a11y.trapCombined"), threat.spokenName)
         if showsHint {
             return "\(base) \(String(localized: "banishment.trap.hint"))"
