@@ -33,22 +33,24 @@ struct BanishmentThreat: Identifiable, Equatable {
 
 /// Drives The Banishment: practice ward, timed tower sequence, Lights Off capstone.
 ///
-/// **VoiceOver:** Wrong decoys are separate buttons; the scrub target is the combined
-/// instruction block (and the full-screen trap root) with ``AccessibilityAction/escape``.
-/// Each trap posts ``announceThreatArrival()`` — a single announcement naming the encounter
-/// and the two-finger Z scrub (escape) so Lights Off play does not depend on on-screen copy.
+/// **VoiceOver:** The scrub target is the combined instruction block (and the full-screen trap
+/// root) with ``AccessibilityAction/escape``—no decoy / fake buttons.
+/// Short, themed lines are posted in sequence without fixed delays; ``performBanishEscape()``
+/// cancels any optional queued work and advances the run immediately (skippable pace).
+///
+/// **Timers (Enchanter-style):** The scored act uses a **separate** countdown **per** tower
+/// encounter and for the one dark act; segment budgets sum to
+/// ``RankThresholds.banishment`` `timeoutSeconds` (one ``GameSession`` for the run).
 ///
 /// ## Concurrency
 /// `@MainActor` — matches SwiftUI observation and `GameSessionCoordinator`.
-/// Delayed announcement tasks are cancelled in ``handleViewDisappear()`` so pops/timeouts
-/// do not speak stale encounter lines.
 @Observable
 @MainActor
 final class BanishmentQuestViewModel {
 
     private(set) var phase: BanishmentPhase = .prologue
     private(set) var mistakes: Int = 0
-    /// Countdown during scored phases (`RankThresholds.banishment.timeoutSeconds`).
+    /// Countdown for the **current** scored segment (Enchanter-style per-beat).
     private(set) var timeRemaining: Double = 0
     private(set) var statusMessage: String?
     private(set) var timedOut: Bool = false
@@ -58,8 +60,13 @@ final class BanishmentQuestViewModel {
     private var session: GameSession?
     private var coordinator: GameSessionCoordinator?
     private var timerTask: Task<Void, Never>?
-    /// Chains a follow-up ``UIAccessibility.post(notification: .announcement, …)`` after VO finishes a prior line.
-    private var pendingAnnouncementTask: Task<Void, Never>?
+    /// Wall time when the running ``GameSession`` was started; used for timeout ``GameResult`` and alignment with the actor.
+    private var scoredSessionStart: Date?
+    /// Start of the current scored **segment** (each tower threat + the dark act).
+    private var segmentDeadlineStart: Date?
+    /// True from the first line of ``completeScoredRun()`` until it finishes, so ``handleViewDisappear()`` will not
+    /// schedule ``abandon()`` concurrently with ``session.complete()`` (that race could invalidate complete).
+    private var isCommittingScoredRunCompletion: Bool = false
 
     private let storage: any StorageComponent
 
@@ -81,8 +88,13 @@ final class BanishmentQuestViewModel {
         spokenName: String(localized: "banishment.threat.dark.spoken")
     )
 
-    /// Must match ``RankThresholds/banishment`` `timeoutSeconds`.
-    private static let scoredDuration: Double = 55
+    /// Per-encounter segment lengths (seconds) for the scored act. Must sum to ``RankThresholds/banishment`` `timeoutSeconds`.
+    private static let towerSegmentSeconds: [Double] = [14, 14, 14]
+    private static let darkSegmentSeconds: Double = 13
+    /// `timeoutSeconds` in ``RankThresholds/banishment`` (sum of segments).
+    private static var scoredActTotalCap: Double {
+        Self.towerSegmentSeconds.reduce(0, +) + Self.darkSegmentSeconds
+    }
 
     init(storage: any StorageComponent) {
         self.storage = storage
@@ -119,6 +131,7 @@ final class BanishmentQuestViewModel {
     func beginTrial() {
         phase = .wardTrap
         statusMessage = nil
+        announce(String(localized: "banishment.a11y.approach"))
         announceThreatArrival()
     }
 
@@ -134,8 +147,10 @@ final class BanishmentQuestViewModel {
         timedOut = false
         completedResult = nil
         statusMessage = nil
-        timeRemaining = Self.scoredDuration
+        timeRemaining = 0
         voiceOverDisabledMidGame = false
+        scoredSessionStart = nil
+        segmentDeadlineStart = nil
 
         let newSession = GameSession(
             gameID: "the-banishment",
@@ -153,7 +168,9 @@ final class BanishmentQuestViewModel {
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                try await newSession.start()
+                let startDate = Date()
+                try await newSession.start(at: startDate)
+                self.scoredSessionStart = startDate
             } catch {
                 RA11yLogger.gameSession.error("Banishment session start failed: \(error.localizedDescription)")
                 return
@@ -164,54 +181,67 @@ final class BanishmentQuestViewModel {
                 try? await Task.sleep(for: .seconds(3))
                 guard !Task.isCancelled else { return }
             }
-            self.startScoredTimer()
+            self.restartScoredSegmentTimer()
+            self.startScoredCountdown()
         }
         announceThreatArrival()
     }
 
     /// VoiceOver two-finger scrub / escape — dismisses the active trap when allowed.
+    /// Cancels any soft-queued work and advances **immediately** (skippable pace).
     func performBanishEscape() {
+        if isCommittingScoredRunCompletion || completedResult != nil {
+            RA11yLogger.banishment.debug("performBanishEscape ignored — isCommitting=\(self.isCommittingScoredRunCompletion) hasResult=\(self.completedResult != nil) — \(RA11yLogger.startupTimestampTag())")
+            return
+        }
         switch phase {
         case .wardTrap:
-            announce(String(localized: "banishment.feedback.banished"))
+            let done = currentThreat
+            if let name = done?.spokenName {
+                announce(String(format: String(localized: "banishment.feedback.banishedNamed"), name))
+            } else {
+                announce(String(localized: "banishment.feedback.banished"))
+            }
             continueAfterWard()
         case .tower(let index):
+            let banished = currentThreat
             if index + 1 < Self.towerThreats.count {
                 phase = .tower(index + 1)
-                announceBanishedThenEncounterArrival()
+                if let n = banished?.spokenName {
+                    announce(String(format: String(localized: "banishment.feedback.banishedNamed"), n))
+                }
+                announceThreatArrival()
+                restartScoredSegmentTimer()
             } else {
                 phase = .darkTower
-                announceEnterDarkThenEncounterArrival()
+                if let n = banished?.spokenName {
+                    announce(String(format: String(localized: "banishment.feedback.banishedNamed"), n))
+                }
+                announce(String(localized: "banishment.feedback.enterDark"))
+                announceThreatArrival()
+                restartScoredSegmentTimer()
             }
         case .darkTower:
+            isCommittingScoredRunCompletion = true
+            if let n = currentThreat?.spokenName {
+                announce(String(format: String(localized: "banishment.feedback.banishedNamed"), n))
+            }
+            RA11yLogger.banishment.info("darkTower banish → completeScoredRun (commit flag set sync) — \(RA11yLogger.startupTimestampTag())")
             Task { await self.completeScoredRun() }
         default:
             break
         }
     }
 
-    func wrongDecoyTapped() {
-        switch phase {
-        case .wardTrap:
-            statusMessage = String(localized: "banishment.feedback.wrong.ward")
-            announce(String(localized: "banishment.feedback.wrong.ward"))
-        case .tower, .darkTower:
-            mistakes += 1
-            statusMessage = String(localized: "banishment.feedback.wrong.decoy")
-            announce(String(localized: "a11y.level.mistake"))
-            if let session {
-                Task { try? await session.recordMistake() }
-            }
-        default:
-            break
-        }
-    }
-
     func handleViewDisappear() {
-        cancelPendingAnnouncementTask()
-        stopTimer()
+        stopScoredCountdown()
         coordinator?.stopMonitoring()
+        if isCommittingScoredRunCompletion {
+            RA11yLogger.banishment.debug("handleViewDisappear: skip abandon (session completing) — \(RA11yLogger.startupTimestampTag())")
+            return
+        }
         guard let session else { return }
+        RA11yLogger.banishment.info("handleViewDisappear: abandon phase=\(String(describing: self.phase)) — \(RA11yLogger.startupTimestampTag())")
         Task { await session.abandon() }
     }
 
@@ -224,59 +254,39 @@ final class BanishmentQuestViewModel {
         announce(String(format: format, threat.spokenName))
     }
 
-    private func announceBanishedThenEncounterArrival() {
-        announce(String(localized: "banishment.feedback.banished"))
-        scheduleAnnouncement(afterSeconds: 0.85) { [weak self] in
-            self?.announceThreatArrival()
-        }
-    }
-
-    private func announceEnterDarkThenEncounterArrival() {
-        announce(String(localized: "banishment.feedback.enterDark"))
-        scheduleAnnouncement(afterSeconds: 1.2) { [weak self] in
-            self?.announceThreatArrival()
-        }
-    }
-
-    private func cancelPendingAnnouncementTask() {
-        pendingAnnouncementTask?.cancel()
-        pendingAnnouncementTask = nil
-    }
-
-    /// Schedules a MainActor announcement after a delay so VoiceOver does not truncate the prior line.
-    private func scheduleAnnouncement(afterSeconds delay: TimeInterval, _ body: @escaping @MainActor () -> Void) {
-        cancelPendingAnnouncementTask()
-        pendingAnnouncementTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled else { return }
-            body()
-            pendingAnnouncementTask = nil
-        }
-    }
-
     private func completeScoredRun() async {
-        stopTimer()
-        guard let session else { return }
+        /// Commit flag is set synchronously in ``performBanishEscape()`` (dark) before this `Task` is created.
+        defer { isCommittingScoredRunCompletion = false }
+        RA11yLogger.banishment.info("completeScoredRun begin — \(RA11yLogger.startupTimestampTag())")
+        stopScoredCountdown()
+        guard let session else {
+            RA11yLogger.banishment.error("completeScoredRun: no session — \(RA11yLogger.startupTimestampTag())")
+            return
+        }
         coordinator?.stopMonitoring()
         do {
             try await session.complete()
             if case .completed(let result) = await session.state {
                 completedResult = result
+                RA11yLogger.banishment.info("completeScoredRun success rank=\(result.rank.displayText) time=\(result.timeSeconds) — \(RA11yLogger.startupTimestampTag())")
+            } else {
+                RA11yLogger.banishment.error("completeScoredRun: state not completed after success — \(RA11yLogger.startupTimestampTag())")
             }
         } catch {
-            RA11yLogger.gameSession.error("Banishment complete failed: \(error.localizedDescription)")
+            let desc = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+            RA11yLogger.banishment.error("completeScoredRun failed: \(desc) — \(RA11yLogger.startupTimestampTag())")
         }
     }
 
     private func handleTimeout() async {
-        cancelPendingAnnouncementTask()
         guard let session else { return }
         timedOut = true
-        stopTimer()
+        stopScoredCountdown()
         coordinator?.stopMonitoring()
         await session.abandon()
         announce(String(localized: "banishment.timeout"))
-        let elapsed = Self.scoredDuration
+        let start = scoredSessionStart ?? Date()
+        let elapsed = min(Date().timeIntervalSince(start), Self.scoredActTotalCap + 0.01)
         completedResult = GameResult(
             gameID: "the-banishment",
             rank: .failed,
@@ -285,17 +295,48 @@ final class BanishmentQuestViewModel {
         )
     }
 
-    private func startScoredTimer() {
+    /// Resets the visible countdown to the current phase’s **segment** budget and starts a new segment clock.
+    private func restartScoredSegmentTimer() {
+        switch phase {
+        case .tower, .darkTower:
+            let dur = segmentDurationForCurrentPhase
+            timeRemaining = dur
+            segmentDeadlineStart = Date()
+        default:
+            timeRemaining = 0
+            segmentDeadlineStart = nil
+        }
+    }
+
+    private var segmentDurationForCurrentPhase: Double {
+        switch phase {
+        case .tower(let i):
+            guard i >= 0, i < Self.towerSegmentSeconds.count else { return 0 }
+            return Self.towerSegmentSeconds[i]
+        case .darkTower:
+            return Self.darkSegmentSeconds
+        default:
+            return 0
+        }
+    }
+
+    private func startScoredCountdown() {
         timerTask?.cancel()
-        let total = Self.scoredDuration
         timerTask = Task { @MainActor [weak self] in
-            let startDate = Date()
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard let self, !Task.isCancelled else { return }
-                let elapsed = Date().timeIntervalSince(startDate)
-                self.timeRemaining = max(0, total - elapsed)
-                if self.timeRemaining <= 0 {
+                switch self.phase {
+                case .tower, .darkTower:
+                    break
+                default:
+                    continue
+                }
+                guard self.segmentDurationForCurrentPhase > 0, let start = self.segmentDeadlineStart else { continue }
+                let dur = self.segmentDurationForCurrentPhase
+                let rem = max(0, dur - Date().timeIntervalSince(start))
+                self.timeRemaining = rem
+                if rem <= 0 {
                     await self.handleTimeout()
                     break
                 }
@@ -303,7 +344,7 @@ final class BanishmentQuestViewModel {
         }
     }
 
-    private func stopTimer() {
+    private func stopScoredCountdown() {
         timerTask?.cancel()
         timerTask = nil
     }
@@ -314,9 +355,8 @@ final class BanishmentQuestViewModel {
                 try? await Task.sleep(for: .milliseconds(200))
                 guard let self, !Task.isCancelled else { return }
                 if coordinator.voiceOverDisabledMidGame {
-                    self.cancelPendingAnnouncementTask()
                     self.voiceOverDisabledMidGame = true
-                    self.stopTimer()
+                    self.stopScoredCountdown()
                     return
                 }
             }
@@ -510,8 +550,7 @@ struct iOSBanishmentQuestView: View {
             threat: viewModel.currentThreat,
             showsHint: viewModel.showsTrapHint,
             isLightsOff: viewModel.isLightsOffPhase,
-            onEscape: { viewModel.performBanishEscape() },
-            onWrongDecoy: { viewModel.wrongDecoyTapped() }
+            onEscape: { viewModel.performBanishEscape() }
         )
         .id(viewModel.currentThreat?.id ?? "banishment.trap.nil")
     }
@@ -555,11 +594,6 @@ struct iOSBanishmentQuestView: View {
 
 /// Full-screen trap presented like a **popup encounter** (card animates in; VO announces arrival).
 ///
-/// The **“false seal”** button is a deliberate wrong path: it records a lesson beat (ward
-/// feedback or scored **mistake**) if the player double-taps a plausible but incorrect control
-/// instead of using **escape** / the two-finger scrub. Keep it for transfer to real
-/// “tap everything” habits under stress.
-///
 /// Expects the hosting screen to hide the system navigation bar during traps so the
 /// VoiceOver scrub is not handled as a navigation “back” pop.
 ///
@@ -571,7 +605,6 @@ private struct BanishmentTrapOverlay: View {
     let showsHint: Bool
     let isLightsOff: Bool
     let onEscape: () -> Void
-    let onWrongDecoy: () -> Void
 
     @State private var encounterPresents: Bool = false
 
@@ -585,7 +618,6 @@ private struct BanishmentTrapOverlay: View {
                 if let threat {
                     threatPortrait(for: threat)
                     encounterCard(for: threat)
-                    decoyButton
                 }
             }
             .padding(RA11ySpacing.xl)
@@ -617,14 +649,15 @@ private struct BanishmentTrapOverlay: View {
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .multilineTextAlignment(.center)
-            let headline = String(
-                format: String(localized: "banishment.trap.creatureAppears"),
-                threat.spokenName
+            Text(
+                String(
+                    format: String(localized: "banishment.trap.creatureAppears"),
+                    threat.spokenName
+                )
             )
-            Text(headline)
-                .font(.ra11yTitle)
-                .bold()
-                .multilineTextAlignment(.center)
+            .font(.ra11yTitle)
+            .bold()
+            .multilineTextAlignment(.center)
             if showsHint {
                 Text(String(localized: "banishment.trap.hint"))
                     .font(.ra11yBody)
@@ -646,18 +679,6 @@ private struct BanishmentTrapOverlay: View {
                 ? String(localized: "banishment.a11y.lightsOffTrapHint")
                 : String(localized: "banishment.trap.escape.hint")
         )
-        .accessibilityAction(.escape, onEscape)
-    }
-
-    private var decoyButton: some View {
-        Button(String(localized: "banishment.trap.decoyButton")) {
-            onWrongDecoy()
-        }
-        .buttonStyle(.bordered)
-        .offset(y: encounterPresents ? 0 : 12)
-        .opacity(encounterPresents ? 1 : 0)
-        .accessibilityIdentifier("banishment.decoy")
-        .accessibilityHint(String(localized: "banishment.trap.decoy.hint"))
         .accessibilityAction(.escape, onEscape)
     }
 

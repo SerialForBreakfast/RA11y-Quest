@@ -346,6 +346,8 @@ Current structure (as of 2026-04-19)
 |   |-- Snapfile
 |   `-- report.xml
 |-- memlog
+|   |-- MagicTap-Brainstorming.md
+|   |-- MagicTap-BardsInterrupt-Tasks.md
 |   |-- archive
 |   |   `-- GameSpec-ActivateDoubleTap.txt
 |   |-- requirements

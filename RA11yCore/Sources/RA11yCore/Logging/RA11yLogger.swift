@@ -42,6 +42,9 @@ public enum RA11yLogger {
     /// Game session lifecycle transitions (start, pause, complete, abandon).
     public static let gameSession = Logger(subsystem: subsystem, category: "gameSession")
 
+    /// The Banishment quest: phase, VO pipeline, and completion (filter in Console: category:banishment).
+    public static let banishment = Logger(subsystem: subsystem, category: "banishment")
+
     /// Score evaluation and best-result comparisons.
     public static let scoring = Logger(subsystem: subsystem, category: "scoring")
 

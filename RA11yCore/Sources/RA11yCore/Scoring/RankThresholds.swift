@@ -119,10 +119,11 @@ public extension RankThresholds {
         okMaxTime:          60, okMaxMistakes:      5
     )
 
-    /// Thresholds for The Banishment (`the-banishment`) — timed gauntlet (tower + Lights Off).
+    /// Thresholds for The Banishment (`the-banishment`) — one scored `GameSession` (tower + dark).
     ///
-    /// Greybox tuning: one continuous scored session after the practice ward; `timeoutSeconds`
-    /// must match the iOS playfield countdown for The Banishment.
+    /// iOS uses **per-segment** Enchanter-style countdowns (three tower threats + one dark) whose
+    /// budgets **sum** to `timeoutSeconds`; a timeout uses wall elapsed since session start, capped
+    /// by this value for rank evaluation.
     static let banishment = RankThresholds(
         timeoutSeconds:     55,
         perfectMaxTime:     14, perfectMaxMistakes: 0,
