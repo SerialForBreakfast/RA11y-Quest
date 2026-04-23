@@ -184,6 +184,23 @@ result as a single announcement on screen load.
 
 ---
 
+### The Banishment
+
+**Skill taught:** VoiceOver two-finger scrub (Z) / escape to dismiss modal traps.
+
+Deterministic captures: prologue, practice ward with Z hint, timed tower first beat (frozen HUD), and sample result. (`testScreenshots_Banishment` in `RA11y_iOSScreenshots.swift`.)
+
+| Prologue | Practice trap | Timed tower | Result |
+|:---:|:---:|:---:|:---:|
+| ![](docs/screenshots/en-US/iPhone_17/13_BanishmentPrologue.png) | ![](docs/screenshots/en-US/iPhone_17/14_BanishmentWardTrap.png) | ![](docs/screenshots/en-US/iPhone_17/15_BanishmentTower.png) | ![](docs/screenshots/en-US/iPhone_17/16_BanishmentResult.png) |
+| *iPhone 17* | *iPhone 17* | *iPhone 17* | *iPhone 17* |
+
+Run `bundle exec fastlane ios screenshots` (without `SNAPSHOT_DEVICES`) to refresh **iPhone_large**, **iPhone_small**, and **iPad** folders as well.
+
+**Banishment catalog gate:** `bash utility/validate_banishment_assets.sh` (also runs at the start of the Fastlane screenshots lane). Full matrix and Definition of Done: `memlog/requirements/Design/BanishmentAssetRequirements-Checklist.txt`. **Refresh art:** from mockups run `python3 utility/import_banishment_mockups_to_assets.py`. From **LLM-generated** `banishment_*_gen.png` files, run `python3 utility/ingest_llm_banishment_pngs.py --source-dir <folder>`. (Procedural placeholder script is deprecated — see `utility/generate_banishment_shippable_art.py`.)
+
+---
+
 ## Requirements
 
 - Xcode 26+ (macOS Tahoe)

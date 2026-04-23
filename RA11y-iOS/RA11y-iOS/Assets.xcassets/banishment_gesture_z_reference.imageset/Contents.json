@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "banishment_gesture_z_reference.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

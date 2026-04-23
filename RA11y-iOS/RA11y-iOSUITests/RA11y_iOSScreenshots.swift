@@ -25,6 +25,10 @@
 //  | 10_DungeonL1          | dungeonFirstAttempt  | dungeon.firstAttempt |
 //  | 11_DungeonResult      | dungeonResult        | gameResult.root      |
 //  | 12_ResonanceMockup    | resonanceMockup      | resonance.mockup.root  |
+//  | 13_BanishmentPrologue | banishmentPrologue   | banishment.prologue    |
+//  | 14_BanishmentWardTrap | banishmentWardTrap   | banishment.trap.root   |
+//  | 15_BanishmentTower    | banishmentTower      | banishment.trap.root   |
+//  | 16_BanishmentResult   | banishmentResult     | gameResult.root        |
 //
 //  ## Navigation Strategy
 //  Screenshot capture now uses deterministic app-level scene bootstrapping:
@@ -109,6 +113,20 @@ final class RA11y_iOSScreenshots: XCTestCase {
     func testScreenshots_ResonanceMockup() {
         let app = XCUIApplication()
         captureScene("resonanceMockup", fileName: "12_ResonanceMockup", anchorIdentifier: "resonance.mockup.root", in: app)
+    }
+
+    // MARK: - Pass 6: The Banishment
+
+    /// Captures Banishment lesson, practice trap, timed beat, and result using deterministic scene boots.
+    ///
+    /// - Concurrency: `@MainActor` — XCUIApplication interactions require the main thread.
+    @MainActor
+    func testScreenshots_Banishment() {
+        let app = XCUIApplication()
+        captureScene("banishmentPrologue", fileName: "13_BanishmentPrologue", anchorIdentifier: "banishment.prologue", in: app)
+        captureScene("banishmentWardTrap", fileName: "14_BanishmentWardTrap", anchorIdentifier: "banishment.trap.root", in: app)
+        captureScene("banishmentTower", fileName: "15_BanishmentTower", anchorIdentifier: "banishment.trap.root", in: app)
+        captureScene("banishmentResult", fileName: "16_BanishmentResult", anchorIdentifier: "gameResult.root", in: app)
     }
 
     // MARK: - Private

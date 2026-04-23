@@ -13,9 +13,16 @@ So that assets are consistent, accessible, and shippable.
 Checklist
 =========
 
+Banishment (The Banishment) — exception
+----------------------------------------
+- Use **painterly flat fantasy** per ``DesignTicket-BanishmentPromptSheet.txt`` (torchlit stone, amber / slate),
+  not strict flat-vector — still require clean silhouettes and no embedded text.
+- Hub ``banishment_hub_icon``: **1376×768 RGBA**; match readability of ``dungeon_hub_icon`` at list size.
+
 A) Style Consistency
 --------------------
-- Flat vector look (no painterly textures).
+- Flat vector look (no painterly textures), **except** Banishment and other tickets that
+  explicitly specify painterly RA11y fantasy.
 - Clean edges; consistent stroke/shape language across assets.
 - Bold silhouettes; readable when scaled down.
 - No embedded text, letters, numbers, logos, or watermarks.

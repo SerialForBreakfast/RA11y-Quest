@@ -218,7 +218,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Z-scrub to end the ambush."
+            "value" : "Z-scrub to banish the creature."
           }
         }
       }
@@ -234,23 +234,23 @@
       }
     },
     "banishment.a11y.trapCombined" : {
-      "comment" : "VO label for the encounter card; keep short.",
+      "comment" : "VO label for the encounter card; keep short. Parameter: creature spokenName.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wild %@. Z-scrub to banish."
+            "value" : "%@ bars your way. Z-scrub to banish."
           }
         }
       }
     },
     "banishment.a11y.trapLightsOffCombined" : {
-      "comment" : "VO label for the encounter card when Lights Off hides on-screen scrub copy.",
+      "comment" : "VO label for the encounter card when Lights Off hides on-screen scrub copy. Parameter: creature spokenName.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wild %@ in the dark. Z-scrub to banish."
+            "value" : "%@ in the dark. Z-scrub to banish."
           }
         }
       }
@@ -271,7 +271,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@, gone."
+            "value" : "%@ banished."
           }
         }
       }
@@ -324,7 +324,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leaves this quest and returns to the tavern. Use the two-finger scrub on the encounter card to end the ambush."
+            "value" : "Leaves this quest and returns to the tavern. Use the two-finger Z scrub on the encounter to banish the creature."
           }
         }
       }
@@ -384,7 +384,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceOver’s escape gesture is a two-finger Z scribble. It closes sheets, alerts, and other traps when focus feels stuck. Practice on a calm ward first, then run the timed tower."
+            "value" : "VoiceOver’s escape gesture is a two-finger Z scribble. It dismisses sheets, alerts, and other blocking UI when focus feels stuck—the same motion banishes foes in this trial. Practice on the ward first, then run the timed tower."
           }
         }
       }
@@ -424,7 +424,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The dungeon falls silent. Every trap broke."
+            "value" : "The dungeon falls silent. Every foe banished."
           }
         }
       }
@@ -444,57 +444,62 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "They fled. The ward holds."
+            "value" : "Banished. The path is yours."
           }
         }
       }
     },
-    "banishment.threat.dark.spoken" : {
+    "banishment.threat.dragon.spoken" : {
+      "comment" : "Spoken name for the dark-tower finale creature (VoiceOver).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umbral wraith"
+            "value" : "Dragon"
           }
         }
       }
     },
-    "banishment.threat.golem.spoken" : {
+    "banishment.threat.goblin.spoken" : {
+      "comment" : "Spoken name for the practice-ward creature (VoiceOver).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stone golem"
+            "value" : "Goblin"
           }
         }
       }
     },
-    "banishment.threat.rat.spoken" : {
+    "banishment.threat.orc.spoken" : {
+      "comment" : "Spoken name for a tower encounter (VoiceOver).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shadow rat"
+            "value" : "Orc"
           }
         }
       }
     },
-    "banishment.threat.ward.spoken" : {
+    "banishment.threat.skeleton.spoken" : {
+      "comment" : "Spoken name for a tower encounter (VoiceOver).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shadow rat"
+            "value" : "Skeleton"
           }
         }
       }
     },
-    "banishment.threat.wisp.spoken" : {
+    "banishment.threat.troll.spoken" : {
+      "comment" : "Spoken name for a tower encounter (VoiceOver).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Venomous wisp"
+            "value" : "Troll"
           }
         }
       }
@@ -510,12 +515,12 @@
       }
     },
     "banishment.trap.creatureAppears" : {
-      "comment" : "Main headline for an encounter; reads like a popup or RPG ambush. Parameter is the creature’s spokenName.",
+      "comment" : "Main headline for an encounter. Parameter is the creature’s spokenName (capitalized, e.g. Goblin).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A wild %@ appears!"
+            "value" : "%@ bars your way."
           }
         }
       }
@@ -551,16 +556,6 @@
         }
       }
     },
-    "banishment.ward.cleared" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The ward is clear."
-          }
-        }
-      }
-    },
     "banishment.ward.continueGauntlet" : {
       "localizations" : {
         "en" : {
@@ -572,11 +567,12 @@
       }
     },
     "banishment.ward.intermission.title" : {
+      "comment" : "Intermission headline after practice ward. Parameter: practice creature spokenName.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The first trap is gone."
+            "value" : "%@ banished. On to the tower."
           }
         }
       }
@@ -636,7 +632,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You will practice the two-finger Z scrub—the same escape gesture that closes sheets and alerts when VoiceOver feels stuck."
+            "value" : "You will practice the two-finger Z scrub on dungeon foes—the same escape gesture that closes sheets and alerts when VoiceOver feels stuck."
           }
         }
       }
@@ -1584,7 +1580,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Third quest: when a trap blocks the way, draw the two-finger Z scrub to banish it—then survive the timed gauntlet in the dark."
+            "value" : "Third quest: when a foe bars your path, draw the two-finger Z scrub to banish it—then survive the timed gauntlet in the dark."
           }
         }
       }
@@ -1907,7 +1903,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You used VoiceOver’s two-finger scrub (Z-shape) to dismiss traps—the system escape that clears modals, sheets, and many stuck states."
+            "value" : "You used VoiceOver’s two-finger scrub (Z-shape) to banish foes in the trial—the same system escape that clears modals, sheets, and stuck focus in real apps."
           }
         }
       }

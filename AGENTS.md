@@ -119,7 +119,8 @@ artefacts, use directories inside the project:
 | Purpose | Location |
 |---|---|
 | Design docs, specs, ADRs | `memlog/` |
-| Mockup HTML files | `memlog/requirements/Design/Mockups-v2/` |
+| UX mockup PNGs (Phase 3) | `memlog/requirements/Design/MockupScreens/` |
+| Mockup HTML (optional only) | `memlog/requirements/Design/Mockups-v2/` |
 | Generated assets (pre-import) | `memlog/requirements/Design/Assets/` |
 | Build and test output | `build_results/` |
 | Utility scripts | `utility/` |
@@ -132,6 +133,62 @@ cannot be done inside the project, ask the user before proceeding.
 
 This rule exists to ensure the repository is the single source of truth
 and that agent actions are fully auditable via git.
+
+---
+
+## Illustrated quest assets — authorship (mandatory)
+
+This applies to **narrative / game illustration** in `Assets.xcassets`: backgrounds,
+creatures, props, ward rings, hub thumbnails, illustrated VFX, and any PNG meant
+to read as **designed art** in a quest.
+
+### MUST — where creative pixels come from
+
+- **LLM image generation** in a directed session (same class of tool used to
+  produce Phase 3 mockups), **or**
+- **Human** illustration / commissioned export / hand-painted PNGs that follow
+  the Phase 4 prompt sheet.
+
+The authoring agent or artist is responsible for style, composition, and
+readability. That work is **not** replaceable by geometry, gradients, or
+noise in a script.
+
+### MUST NOT — script-synthesized “art”
+
+Agents and contributors MUST **not** ship or recommend shipping quest art that
+was **created by code** for production use, including:
+
+- Procedural drawing (e.g. Pillow `ImageDraw`, synthetic blobs, vectoroids
+  passed off as creatures).
+- Gradient-only or mathematically generated backgrounds presented as final
+  illustrated masters.
+- New “procedural shippable art” generators for quests.
+
+Historical files such as `utility/banishment_procedural_placeholder.py` are
+**legacy reference only**. Do **not** use them to refresh production assets or
+suggest them as the primary path.
+
+### ALLOWED — mechanical pipeline only
+
+Scripts may **validate**, **normalize**, or **fit pixels** that already exist
+in an authored PNG. Examples: `utility/qa_*` checks, `utility/ensure_png_rgba.py`,
+`utility/remove_white_background.py`, and `utility/ingest_llm_banishment_pngs.py`
+(resize/fit **pre-generated** exports into catalog dimensions). These tools MUST
+**not** invent imagery.
+
+**Mockup cropping** (`utility/import_banishment_mockups_to_assets.py`) may be
+used only as a **bootstrap or emergency** path when LLM/human masters are not
+yet available; it is **not** the preferred long-term source of illustrated
+catalog art. Prefer regenerating assets from the Phase 4 prompt sheet via LLM or
+human export, then ingest.
+
+### Agent behavior
+
+When a task asks for new or updated quest art, the agent MUST produce or direct
+**authored** imagery (LLM image tool in Cursor, or explicit handoff to a human
+artist). The agent MUST NOT substitute procedural Python art and MUST NOT
+present script-drawn placeholders as the solution to “make it look like the
+mockups.”
 
 ---
 
@@ -181,9 +238,15 @@ script unless ALL of the following are true:
 2. An explicit interpreter version is already confirmed present on the host
 3. The user explicitly approves the use of that language for the task
 
-Existing project scripts that already use Python are grandfathered:
+Existing project scripts that already use Python are grandfathered **for
+mechanical pipeline work only** (never for synthesizing illustrated quest art;
+see **Illustrated quest assets — authorship** above):
+
 - `utility/remove_white_background.py` — approved, do not rewrite
 - `utility/ensure_png_rgba.py` — batch RGBA normalization for `Assets.xcassets` composited art (uses edge logic from `remove_white_background.py`)
+- `utility/qa_banishment_png_assets.py`, `utility/qa_crystal_resonance_png_assets.py` — validation only
+- `utility/ingest_llm_banishment_pngs.py` — fit pre-authored LLM/human PNGs into catalog sizes
+- `utility/import_banishment_mockups_to_assets.py` — bootstrap crop from mockups only; not the preferred authorship path
 - `utility/build_and_test.sh` — shell, already compliant
 
 ### For New Automation

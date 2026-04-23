@@ -56,6 +56,16 @@ struct iOSScreenshotRootView: View {
             )
         case .resonanceMockup:
             iOSDungeonResonanceMockupView()
+        case .banishmentPrologue, .banishmentWardTrap, .banishmentTower:
+            iOSBanishmentQuestView(storage: storage, screenshotScene: scene)
+        case .banishmentResult:
+            iOSGameResultView(
+                presenter: GameResultPresenter(result: banishmentResult),
+                gameKind: .banishment,
+                gameSpecificAnnouncement: String(localized: "banishment.results.skilled"),
+                onPlayAgain: {},
+                onReturnToHub: {}
+            )
         }
     }
 
@@ -75,6 +85,16 @@ struct iOSScreenshotRootView: View {
             gameID: "scroll-hunt",
             rank: .perfect,
             timeSeconds: 18.7,
+            mistakes: 0
+        )
+    }
+
+    /// Sample Banishment (`the-banishment`) result for deterministic screenshot capture.
+    private var banishmentResult: GameResult {
+        GameResult(
+            gameID: "the-banishment",
+            rank: .good,
+            timeSeconds: 41.2,
             mistakes: 0
         )
     }

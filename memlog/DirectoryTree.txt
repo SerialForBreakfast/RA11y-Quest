@@ -360,17 +360,21 @@ Current structure (as of 2026-04-19)
 |   |   |   |   |-- rogue
 |   |   |   |   `-- simon
 |   |   |   |-- Mockups-v2
+|   |   |   |   |-- banishment_mockup.html
 |   |   |   |   `-- dungeon_resonance_mockup.html
+|   |   |   |-- BanishmentAssetPipeline.txt
 |   |   |   |-- DesignProcess.md
 |   |   |   |-- DesignTicket-AssetDeliveryNaming.txt
 |   |   |   |-- DesignTicket-AssetListDefinition.txt
 |   |   |   |-- DesignTicket-AssetReviewChecklist.txt
+|   |   |   |-- DesignTicket-BanishmentPromptSheet.txt
 |   |   |   |-- DesignTicket-DungeonResonancePromptSheet.txt
 |   |   |   |-- DesignTicket-FirstRunEntry.txt
 |   |   |   |-- DesignTicket-PromptSheet.txt
 |   |   |   |-- DungeonResonanceAssetPipeline.txt
 |   |   |   `-- QuestConcept-Banishment.txt
 |   |   |-- GameRules-MVP.txt
+|   |   |-- GameSpec-ArcanistsTower.txt
 |   |   |-- GameSpec-FindAndFocus.txt
 |   |   |-- GameSpec-ScrollHunt.txt
 |   |   |-- LightsOffMode-Decisions.txt
@@ -389,6 +393,8 @@ Current structure (as of 2026-04-19)
 |   |   |-- ADR-0001-Concurrency-Strategy.md
 |   |   |-- ADR-0002-AI-Assisted-Screenshot-Validation.md
 |   |   |-- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+|   |   |-- ADR-0004-ArcanistsTower-Rotor-Interaction.md
+|   |   |-- ArcanistsTower.txt
 |   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md
 |   |   |-- AccessibilityFeatureGamification.md

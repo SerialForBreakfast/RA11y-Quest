@@ -6,7 +6,7 @@ import RA11yCore
 
 // MARK: - Banishment phase
 
-/// High-level progression for The Banishment (greybox: SF Symbols, escape-first).
+/// High-level progression for The Banishment (creature art: asset catalog or SF Symbol fallback; escape-first).
 enum BanishmentPhase: Equatable {
     case prologue
     /// Practice trap — two-finger scrub only; hints visible.
@@ -21,10 +21,13 @@ enum BanishmentPhase: Equatable {
 
 // MARK: - Threat model (placeholder art)
 
-/// Single “creature” beat — SF Symbol until catalog art ships.
+/// Single creature beat — raster from ``iOSBanishmentArt`` when the imageset exists, else SF Symbol greybox.
 struct BanishmentThreat: Identifiable, Equatable {
     let id: String
+    /// SF Symbol name used when ``catalogImageName`` is missing from the asset catalog.
     let symbolName: String
+    /// Asset catalog imageset name (see ``iOSBanishmentArt``); must match `DesignTicket-BanishmentPromptSheet`.
+    let catalogImageName: String
     /// Spoken name for VoiceOver (plain language).
     let spokenName: String
 }
@@ -56,6 +59,8 @@ final class BanishmentQuestViewModel {
     private(set) var timedOut: Bool = false
     private(set) var completedResult: GameResult?
     private(set) var voiceOverDisabledMidGame: Bool = false
+    /// Increments on every successful escape banish so the view can flash ``iOSBanishmentArt.flareEscape`` (creature-agnostic).
+    private(set) var banishFlareTick: Int = 0
 
     private var session: GameSession?
     private var coordinator: GameSessionCoordinator?
@@ -70,22 +75,45 @@ final class BanishmentQuestViewModel {
 
     private let storage: any StorageComponent
 
+    /// When set, the view model skips live session/timer setup and renders a frozen phase for ``iOSScreenshotScene`` capture.
+    private let screenshotScene: iOSScreenshotScene?
+
     private static let wardThreat = BanishmentThreat(
-        id: "ward_rat",
-        symbolName: "hare.fill",
-        spokenName: String(localized: "banishment.threat.ward.spoken")
+        id: "ward_goblin",
+        symbolName: "figure.run",
+        catalogImageName: iOSBanishmentArt.threatGoblin,
+        spokenName: String(localized: "banishment.threat.goblin.spoken")
     )
 
+    /// Spoken name of the practice-ward creature — used in intermission copy (`%@ banished`).
+    var wardPracticeSpokenName: String { Self.wardThreat.spokenName }
+
     private static let towerThreats: [BanishmentThreat] = [
-        BanishmentThreat(id: "tower_rat", symbolName: "hare.fill", spokenName: String(localized: "banishment.threat.rat.spoken")),
-        BanishmentThreat(id: "tower_golem", symbolName: "shield.lefthalf.filled", spokenName: String(localized: "banishment.threat.golem.spoken")),
-        BanishmentThreat(id: "tower_wisp", symbolName: "sparkles", spokenName: String(localized: "banishment.threat.wisp.spoken")),
+        BanishmentThreat(
+            id: "tower_skeleton",
+            symbolName: "skull.fill",
+            catalogImageName: iOSBanishmentArt.threatSkeleton,
+            spokenName: String(localized: "banishment.threat.skeleton.spoken")
+        ),
+        BanishmentThreat(
+            id: "tower_orc",
+            symbolName: "shield.lefthalf.filled",
+            catalogImageName: iOSBanishmentArt.threatOrc,
+            spokenName: String(localized: "banishment.threat.orc.spoken")
+        ),
+        BanishmentThreat(
+            id: "tower_troll",
+            symbolName: "hammer.fill",
+            catalogImageName: iOSBanishmentArt.threatTroll,
+            spokenName: String(localized: "banishment.threat.troll.spoken")
+        ),
     ]
 
     private static let darkThreat = BanishmentThreat(
-        id: "dark_shade",
-        symbolName: "moon.stars.fill",
-        spokenName: String(localized: "banishment.threat.dark.spoken")
+        id: "dark_dragon",
+        symbolName: "flame.fill",
+        catalogImageName: iOSBanishmentArt.threatDragon,
+        spokenName: String(localized: "banishment.threat.dragon.spoken")
     )
 
     /// Per-encounter segment lengths (seconds) for the scored act. Must sum to ``RankThresholds/banishment`` `timeoutSeconds`.
@@ -96,8 +124,17 @@ final class BanishmentQuestViewModel {
         Self.towerSegmentSeconds.reduce(0, +) + Self.darkSegmentSeconds
     }
 
-    init(storage: any StorageComponent) {
+    /// Creates the Banishment view model.
+    ///
+    /// - Parameters:
+    ///   - storage: Persistence for scored runs.
+    ///   - screenshotScene: Optional deterministic phase for fastlane screenshot automation (no ``GameSession``).
+    init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
         self.storage = storage
+        self.screenshotScene = screenshotScene
+        if let screenshotScene {
+            applyScreenshotScene(screenshotScene)
+        }
     }
 
     var isLightsOffPhase: Bool {
@@ -137,7 +174,8 @@ final class BanishmentQuestViewModel {
 
     func continueAfterWard() {
         phase = .wardIntermission
-        statusMessage = String(localized: "banishment.ward.cleared")
+        // Intermission title uses `banishment.ward.intermission.title` (`%@ banished. …`); keep status line empty to avoid duplicate copy.
+        statusMessage = nil
     }
 
     /// Starts the scored session + countdown after the player leaves the ward.
@@ -196,6 +234,7 @@ final class BanishmentQuestViewModel {
         }
         switch phase {
         case .wardTrap:
+            banishFlareTick += 1
             let done = currentThreat
             if let name = done?.spokenName {
                 announce(String(format: String(localized: "banishment.feedback.banishedNamed"), name))
@@ -204,6 +243,7 @@ final class BanishmentQuestViewModel {
             }
             continueAfterWard()
         case .tower(let index):
+            banishFlareTick += 1
             let banished = currentThreat
             if index + 1 < Self.towerThreats.count {
                 phase = .tower(index + 1)
@@ -222,6 +262,7 @@ final class BanishmentQuestViewModel {
                 restartScoredSegmentTimer()
             }
         case .darkTower:
+            banishFlareTick += 1
             isCommittingScoredRunCompletion = true
             if let n = currentThreat?.spokenName {
                 announce(String(format: String(localized: "banishment.feedback.banishedNamed"), n))
@@ -366,6 +407,37 @@ final class BanishmentQuestViewModel {
     private func announce(_ message: String) {
         UIAccessibility.post(notification: .announcement, argument: message)
     }
+
+    /// Forces a stable phase and HUD for `-screenshotScene` launches (no async session work).
+    private func applyScreenshotScene(_ scene: iOSScreenshotScene) {
+        stopScoredCountdown()
+        session = nil
+        coordinator = nil
+        scoredSessionStart = nil
+        segmentDeadlineStart = nil
+        mistakes = 0
+        timedOut = false
+        completedResult = nil
+        statusMessage = nil
+        voiceOverDisabledMidGame = false
+        isCommittingScoredRunCompletion = false
+        banishFlareTick = 0
+
+        switch scene {
+        case .banishmentPrologue:
+            phase = .prologue
+            timeRemaining = 0
+        case .banishmentWardTrap:
+            phase = .wardTrap
+            timeRemaining = 0
+        case .banishmentTower:
+            phase = .tower(0)
+            timeRemaining = 12
+        default:
+            phase = .prologue
+            timeRemaining = 0
+        }
+    }
 }
 
 // MARK: - iOSBanishmentQuestView
@@ -379,16 +451,25 @@ final class BanishmentQuestViewModel {
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
+///
+/// **Mockup bootstrap:** Landscape PNGs from ``utility/import_banishment_mockups_to_assets`` are detected and skipped
+/// for full-bleed backgrounds and trap rasters so UI does not paint a device frame inside the real device.
 struct iOSBanishmentQuestView: View {
 
     @State private var viewModel: BanishmentQuestViewModel
     @Environment(iOSAppRouter.self) private var router
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Opacity for creature-agnostic ``iOSBanishmentArt.flareEscape`` (driven by ``BanishmentQuestViewModel/banishFlareTick``).
+    @State private var banishFlareOpacity: Double = 0
 
     private let storage: any StorageComponent
 
-    init(storage: any StorageComponent) {
+    /// - Parameter screenshotScene: When non-`nil`, renders a deterministic phase for fastlane (see ``iOSScreenshotRootView``).
+    init(storage: any StorageComponent, screenshotScene: iOSScreenshotScene? = nil) {
         self.storage = storage
-        _viewModel = State(initialValue: BanishmentQuestViewModel(storage: storage))
+        _viewModel = State(initialValue: BanishmentQuestViewModel(storage: storage, screenshotScene: screenshotScene))
     }
 
     var body: some View {
@@ -399,6 +480,7 @@ struct iOSBanishmentQuestView: View {
                 trapOverlay
                 trapLeaveQuestControl
             }
+            banishFlareOverlay
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -411,6 +493,9 @@ struct iOSBanishmentQuestView: View {
             if disabled {
                 router.push(.voiceOverInterstitial(kind: .banishment))
             }
+        }
+        .onChange(of: viewModel.banishFlareTick) { _, _ in
+            playBanishFlareFeedback()
         }
         .onDisappear { viewModel.handleViewDisappear() }
     }
@@ -427,17 +512,154 @@ struct iOSBanishmentQuestView: View {
     @ViewBuilder
     private var background: some View {
         if viewModel.isLightsOffPhase {
-            Color.black.ignoresSafeArea()
-        } else {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.08, green: 0.06, blue: 0.12),
-                    Color(red: 0.05, green: 0.04, blue: 0.08),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            ZStack {
+                Color.black
+                if Self.shouldUseRasterBackground(named: iOSBanishmentArt.towerBackground) {
+                    Image(iOSBanishmentArt.towerBackground)
+                        .resizable()
+                        .scaledToFill()
+                        .accessibilityHidden(true)
+                        .opacity(0.14)
+                }
+            }
             .ignoresSafeArea()
+        } else if Self.useWardSceneBackground(for: viewModel.phase) {
+            banishmentSceneBackground(assetName: iOSBanishmentArt.wardBackground)
+        } else {
+            banishmentSceneBackground(assetName: iOSBanishmentArt.towerBackground)
+        }
+    }
+
+    /// Practice and intermission use the ward master; timed gauntlet uses the tower master (`BanishmentAssetPipeline`).
+    private static func useWardSceneBackground(for phase: BanishmentPhase) -> Bool {
+        switch phase {
+        case .prologue, .wardTrap, .wardIntermission: return true
+        case .tower, .darkTower: return false
+        }
+    }
+
+    @ViewBuilder
+    private func banishmentSceneBackground(assetName: String) -> some View {
+        if Self.shouldUseRasterBackground(named: assetName) {
+            Image(assetName)
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
+                .clipped()
+        } else {
+            banishmentFallbackGradient
+        }
+    }
+
+    private var banishmentFallbackGradient: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.08, green: 0.06, blue: 0.12),
+                Color(red: 0.05, green: 0.04, blue: 0.08),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
+
+    /// Portrait masters read as *taller-than-wide*; landscape phone mockups with device frames fail this check
+    /// and fall back to ``banishmentFallbackGradient`` until replaced with portrait masters (see asset pipeline).
+    ///
+    /// **Screenshot automation:** Uses the same policy as interactive play so Fastlane captures match App Store art.
+    private static func shouldUseRasterBackground(named name: String) -> Bool {
+        guard let image = UIImage(named: name) else { return false }
+        return isPortraitOrSquareFullBleedCandidate(image)
+    }
+
+    /// `true` when catalog PNGs are safe to composite (final art). Mockup-derived sprites are usually landscape.
+    ///
+    /// **Screenshot automation:** Same as ``shouldUseRasterBackground(named:)`` — trap ring, creatures, and flare
+    /// render in UI tests when assets pass aspect-ratio heuristics.
+    private static func shouldUseRasterTrapDecorations() -> Bool {
+        if !isPortraitOrSquareFullBleedCandidate(UIImage(named: iOSBanishmentArt.wardBackground)) { return false }
+        if !isPortraitOrSquareFullBleedCandidate(UIImage(named: iOSBanishmentArt.towerBackground)) { return false }
+        let threatKeys = [
+            iOSBanishmentArt.threatGoblin,
+            iOSBanishmentArt.threatSkeleton,
+            iOSBanishmentArt.threatOrc,
+            iOSBanishmentArt.threatTroll,
+            iOSBanishmentArt.threatDragon,
+        ]
+        for key in threatKeys {
+            if let im = UIImage(named: key), !isLikelyCreatureSpriteRaster(im) { return false }
+        }
+        if let ring = UIImage(named: iOSBanishmentArt.wardRing), !isLikelySquareSpriteRaster(ring) { return false }
+        if let flare = UIImage(named: iOSBanishmentArt.flareEscape), !isLikelySquareSpriteRaster(flare) { return false }
+        return true
+    }
+
+    private static func isPortraitOrSquareFullBleedCandidate(_ image: UIImage?) -> Bool {
+        guard let image else { return true }
+        let w = image.size.width
+        let h = image.size.height
+        guard h > 1 else { return true }
+        return w <= h * 1.08
+    }
+
+    private static func isLikelyCreatureSpriteRaster(_ image: UIImage) -> Bool {
+        let w = image.size.width
+        let h = image.size.height
+        guard h > 1 else { return false }
+        return w <= h * 1.25
+    }
+
+    private static func isLikelySquareSpriteRaster(_ image: UIImage) -> Bool {
+        let w = image.size.width
+        let h = image.size.height
+        guard h > 1 else { return false }
+        let ratio = max(w, h) / min(w, h)
+        return ratio <= 1.35
+    }
+
+    @ViewBuilder
+    private var banishFlareOverlay: some View {
+        if Self.shouldUseRasterTrapDecorations(),
+           UIImage(named: iOSBanishmentArt.flareEscape) != nil
+        {
+            Image(iOSBanishmentArt.flareEscape)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: Self.banishFlarePoints, height: Self.banishFlarePoints)
+                .blendMode(.screen)
+                .opacity(banishFlareOpacity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
+    /// Centered banish burst; see ``BanishmentAssetPipeline`` escape flare sizing.
+    private static let banishFlarePoints: CGFloat = 220
+
+    private func playBanishFlareFeedback() {
+        guard Self.shouldUseRasterTrapDecorations(),
+              UIImage(named: iOSBanishmentArt.flareEscape) != nil
+        else { return }
+        if accessibilityReduceMotion {
+            banishFlareOpacity = 0.95
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
+                banishFlareOpacity = 0
+            }
+            return
+        }
+        banishFlareOpacity = 0
+        withAnimation(.easeOut(duration: 0.12)) {
+            banishFlareOpacity = 1
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(220))
+            withAnimation(.easeIn(duration: 0.18)) {
+                banishFlareOpacity = 0
+            }
         }
     }
 
@@ -461,27 +683,36 @@ struct iOSBanishmentQuestView: View {
 
     private var prologueBody: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: RA11ySpacing.lg) {
-                Label(String(localized: "banishment.prologue.kicker"), systemImage: "hand.draw.fill")
-                    .font(.ra11yCaption)
-                    .foregroundStyle(.secondary)
-                Text(String(localized: "banishment.prologue.title"))
-                    .font(.ra11yTitle)
-                    .bold()
-                Text(String(localized: "banishment.prologue.body"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
-                Button(String(localized: "banishment.prologue.begin")) {
-                    viewModel.beginTrial()
+            HStack {
+                Spacer(minLength: 0)
+                VStack(alignment: .leading, spacing: RA11ySpacing.lg) {
+                    Label(String(localized: "banishment.prologue.kicker"), systemImage: "hand.draw.fill")
+                        .font(.ra11yCaption)
+                        .foregroundStyle(.secondary)
+                    Text(String(localized: "banishment.prologue.title"))
+                        .font(.ra11yTitle)
+                        .bold()
+                    Text(String(localized: "banishment.prologue.body"))
+                        .font(.ra11yBody)
+                        .foregroundStyle(.secondary)
+                    Button(String(localized: "banishment.prologue.begin")) {
+                        viewModel.beginTrial()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("banishment.beginTrial")
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .accessibilityIdentifier("banishment.beginTrial")
+                .padding(RA11ySpacing.xl)
+                .frame(maxWidth: prologueColumnMaxWidth, alignment: .leading)
+                Spacer(minLength: 0)
             }
-            .padding(RA11ySpacing.lg)
-            .frame(maxWidth: 560)
-            .frame(maxWidth: .infinity)
+            .padding(.vertical, RA11ySpacing.lg)
         }
+    }
+
+    /// iPad / regular width uses a wider lesson column so screenshots and Dynamic Type do not hug the left edge.
+    private var prologueColumnMaxWidth: CGFloat {
+        horizontalSizeClass == .regular ? 620 : 560
     }
 
     private var wardIntermissionBody: some View {
@@ -490,7 +721,7 @@ struct iOSBanishmentQuestView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(Color.ra11yAccent)
                 .accessibilityHidden(true)
-            Text(String(localized: "banishment.ward.intermission.title"))
+            Text(String(format: String(localized: "banishment.ward.intermission.title"), viewModel.wardPracticeSpokenName))
                 .font(.ra11yHeadline)
                 .multilineTextAlignment(.center)
             if let statusMessage = viewModel.statusMessage {
@@ -514,22 +745,27 @@ struct iOSBanishmentQuestView: View {
         VStack(spacing: RA11ySpacing.md) {
             if viewModel.showsTimedHUD {
                 HStack {
-                    Label {
-                        Text(String(localized: "banishment.hud.timeRemaining"))
-                    } icon: {
-                        Image(systemName: "timer")
+                    Spacer(minLength: 0)
+                    HStack {
+                        Label {
+                            Text(String(localized: "banishment.hud.timeRemaining"))
+                        } icon: {
+                            Image(systemName: "timer")
+                        }
+                        .font(.ra11yCaption)
+                        Spacer()
+                        Text(String(format: "%.0f", viewModel.timeRemaining))
+                            .font(.ra11yHeadline)
+                            .monospacedDigit()
+                            .accessibilityLabel(
+                                String(format: String(localized: "banishment.a11y.secondsLeft"), Int(ceil(viewModel.timeRemaining)))
+                            )
                     }
-                    .font(.ra11yCaption)
-                    Spacer()
-                    Text(String(format: "%.0f", viewModel.timeRemaining))
-                        .font(.ra11yHeadline)
-                        .monospacedDigit()
-                        .accessibilityLabel(
-                            String(format: String(localized: "banishment.a11y.secondsLeft"), Int(ceil(viewModel.timeRemaining)))
-                        )
+                    .padding(RA11ySpacing.md)
+                    .frame(maxWidth: scoredHUDMaxWidth)
+                    .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
+                    Spacer(minLength: 0)
                 }
-                .padding(RA11ySpacing.md)
-                .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
                 .padding(.horizontal, RA11ySpacing.lg)
                 .accessibilityElement(children: .combine)
             }
@@ -545,11 +781,17 @@ struct iOSBanishmentQuestView: View {
         .padding(.top, RA11ySpacing.md)
     }
 
+    /// Caps timer strip width on tablet so it does not stretch edge-to-edge in screenshots.
+    private var scoredHUDMaxWidth: CGFloat {
+        horizontalSizeClass == .regular ? 560 : .infinity
+    }
+
     private var trapOverlay: some View {
         BanishmentTrapOverlay(
             threat: viewModel.currentThreat,
             showsHint: viewModel.showsTrapHint,
             isLightsOff: viewModel.isLightsOffPhase,
+            useRasterDecorations: Self.shouldUseRasterTrapDecorations(),
             onEscape: { viewModel.performBanishEscape() }
         )
         .id(viewModel.currentThreat?.id ?? "banishment.trap.nil")
@@ -604,7 +846,12 @@ private struct BanishmentTrapOverlay: View {
     let threat: BanishmentThreat?
     let showsHint: Bool
     let isLightsOff: Bool
+    /// When `false`, skip ward ring and creature catalog PNGs (e.g. landscape mockup crops that fail sprite heuristics).
+    let useRasterDecorations: Bool
     let onEscape: () -> Void
+
+    /// Drives ``wardRingPoints`` / playfield caps — ``BanishmentAssetPipeline`` (340 pt ring on regular width).
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var encounterPresents: Bool = false
 
@@ -616,7 +863,7 @@ private struct BanishmentTrapOverlay: View {
 
             VStack(spacing: RA11ySpacing.xl) {
                 if let threat {
-                    threatPortrait(for: threat)
+                    encounterStack(for: threat)
                     encounterCard(for: threat)
                 }
             }
@@ -631,15 +878,112 @@ private struct BanishmentTrapOverlay: View {
         }
     }
 
+    /// Ward ring (if imported), optional Z-stroke (practice only), and creature — see ``BanishmentAssetPipeline`` layer stack.
+    @ViewBuilder
+    private func encounterStack(for threat: BanishmentThreat) -> some View {
+        ZStack {
+            banishmentWardRing
+            if showsHint, !isLightsOff {
+                BanishmentZGestureShape()
+                    .stroke(
+                        Color.ra11yAccent.opacity(0.92),
+                        style: StrokeStyle(lineWidth: Self.zGestureLineWidth, lineCap: .round, lineJoin: .round)
+                    )
+                    .shadow(color: Color.ra11yAccent.opacity(0.45), radius: 6, y: 2)
+                    .frame(width: zGestureWidth, height: zGestureHeight)
+                    .accessibilityHidden(true)
+                    .allowsHitTesting(false)
+            }
+            threatPortrait(for: threat)
+        }
+        .frame(width: playfieldClusterWidth, height: playfieldClusterHeight)
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private var banishmentWardRing: some View {
+        if useRasterDecorations, UIImage(named: iOSBanishmentArt.wardRing) != nil {
+            Image(iOSBanishmentArt.wardRing)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: wardRingPoints, height: wardRingPoints)
+                .opacity(isLightsOff ? 0.34 : 0.92)
+                .accessibilityHidden(true)
+                .allowsHitTesting(false)
+        }
+    }
+
     @ViewBuilder
     private func threatPortrait(for threat: BanishmentThreat) -> some View {
-        Image(systemName: threat.symbolName)
-            .font(.system(size: 72))
-            .foregroundStyle(isLightsOff ? Color.white.opacity(0.85) : Color.ra11yAccent)
-            .accessibilityHidden(true)
-            .scaleEffect(encounterPresents ? 1 : 0.88)
-            .opacity(encounterPresents ? 1 : 0)
+        Group {
+            if useRasterDecorations,
+               let raster = threatRasterName(for: threat),
+               UIImage(named: raster) != nil
+            {
+                Image(raster)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: threatPortraitPoints(for: threat), height: threatPortraitPoints(for: threat))
+                    .opacity(isLightsOff ? 0.88 : 1)
+            } else {
+                Image(systemName: threat.symbolName)
+                    .font(.system(size: 72))
+                    .foregroundStyle(isLightsOff ? Color.white.opacity(0.85) : Color.ra11yAccent)
+            }
+        }
+        .accessibilityHidden(true)
+        .scaleEffect(encounterPresents ? 1 : 0.88)
+        .opacity(encounterPresents ? 1 : 0)
     }
+
+    /// Lights Off: prefer creature art; if missing, optional ``iOSBanishmentArt/darkAnchor``; else SF Symbol.
+    private func threatRasterName(for threat: BanishmentThreat) -> String? {
+        if UIImage(named: threat.catalogImageName) != nil {
+            return threat.catalogImageName
+        }
+        if isLightsOff, UIImage(named: iOSBanishmentArt.darkAnchor) != nil {
+            return iOSBanishmentArt.darkAnchor
+        }
+        return nil
+    }
+
+    private func threatPortraitPoints(for threat: BanishmentThreat) -> CGFloat {
+        let base: CGFloat = {
+            if isLightsOff { return Self.catalogPortraitDarkPoints }
+            switch threat.id {
+            case "ward_goblin": return Self.catalogPortraitGoblinPoints
+            case "tower_troll": return Self.catalogPortraitLargePoints
+            default: return Self.catalogPortraitPoints
+            }
+        }()
+        return isRegularWidthLayout ? base * Self.catalogPortraitPadScale : base
+    }
+
+    /// iPhone compact width; iPad / regular uses ``BanishmentAssetPipeline`` cap.
+    private var isRegularWidthLayout: Bool { horizontalSizeClass == .regular }
+
+    private var wardRingPoints: CGFloat { isRegularWidthLayout ? 340 : 280 }
+
+    private var playfieldClusterWidth: CGFloat { isRegularWidthLayout ? 340 : 300 }
+
+    private var playfieldClusterHeight: CGFloat { isRegularWidthLayout ? 332 : 292 }
+
+    private var zGestureWidth: CGFloat { isRegularWidthLayout ? 192 : 168 }
+
+    private var zGestureHeight: CGFloat { isRegularWidthLayout ? 124 : 108 }
+
+    private static let zGestureLineWidth: CGFloat = 8
+
+    /// Default catalog creature size (~72 pt SF Symbol weight); see ``BanishmentAssetPipeline``.
+    private static let catalogPortraitPoints: CGFloat = 104
+    private static let catalogPortraitGoblinPoints: CGFloat = 100
+    private static let catalogPortraitLargePoints: CGFloat = 120
+    private static let catalogPortraitDarkPoints: CGFloat = 96
+    /// Slight bump when ``horizontalSizeClass`` is ``UserInterfaceSizeClass/regular`` (iPad-style width).
+    private static let catalogPortraitPadScale: CGFloat = 1.08
 
     @ViewBuilder
     private func encounterCard(for threat: BanishmentThreat) -> some View {
@@ -698,6 +1042,22 @@ private struct BanishmentTrapOverlay: View {
             return "\(base) \(String(localized: "banishment.trap.hint"))"
         }
         return base
+    }
+}
+
+// MARK: - Z gesture (code-drawn)
+
+/// Two-finger scrub path hint for the practice ward only — matches ``BanishmentAssetPipeline`` (no raster required).
+private struct BanishmentZGestureShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let w = rect.width
+        let h = rect.height
+        p.move(to: CGPoint(x: w * 0.06, y: h * 0.22))
+        p.addLine(to: CGPoint(x: w * 0.94, y: h * 0.22))
+        p.addLine(to: CGPoint(x: w * 0.10, y: h * 0.78))
+        p.addLine(to: CGPoint(x: w * 0.94, y: h * 0.78))
+        return p
     }
 }
 

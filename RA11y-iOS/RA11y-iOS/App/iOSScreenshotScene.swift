@@ -42,6 +42,18 @@ enum iOSScreenshotScene: String, CaseIterable {
     /// Crystal Resonance v2 design mockup (preview-only surface; deterministic capture).
     case resonanceMockup = "resonanceMockup"
 
+    /// The Banishment — prologue (lesson copy + begin trial).
+    case banishmentPrologue = "banishmentPrologue"
+
+    /// The Banishment — practice ward trap (goblin, Z hint visible).
+    case banishmentWardTrap = "banishmentWardTrap"
+
+    /// The Banishment — timed tower first beat (skeleton, HUD frozen for capture).
+    case banishmentTower = "banishmentTower"
+
+    /// The Banishment — sample result screen.
+    case banishmentResult = "banishmentResult"
+
     /// Process argument name used to request a specific screenshot scene.
     static let launchArgument = "-screenshotScene"
 
@@ -71,6 +83,10 @@ enum iOSScreenshotScene: String, CaseIterable {
         case .dungeonFirstAttempt: return "10_DungeonL1"
         case .dungeonResult: return "11_DungeonResult"
         case .resonanceMockup: return "12_ResonanceMockup"
+        case .banishmentPrologue: return "13_BanishmentPrologue"
+        case .banishmentWardTrap: return "14_BanishmentWardTrap"
+        case .banishmentTower: return "15_BanishmentTower"
+        case .banishmentResult: return "16_BanishmentResult"
         }
     }
 
@@ -99,6 +115,12 @@ enum iOSScreenshotScene: String, CaseIterable {
             return "dungeon.firstAttempt"
         case .resonanceMockup:
             return "resonance.mockup.root"
+        case .banishmentPrologue:
+            return "banishment.prologue"
+        case .banishmentWardTrap, .banishmentTower:
+            return "banishment.trap.root"
+        case .banishmentResult:
+            return "gameResult.root"
         }
     }
 }

@@ -1,0 +1,117 @@
+RA11y — The Banishment: Image Asset Generation & Import Plan
+==============================================================
+Date: 2026-04-22 (rev 2026-04-22)
+Owner: Design / Engineering
+Related:
+  DesignTicket-BanishmentPromptSheet.txt  (full prompts, one asset per section)
+  Banishment-ImageGen-PromptTemplate.txt  (global prepend + tool negatives)
+  BanishmentAssetPipeline.txt             (SwiftUI stack, sizes, accessibility)
+  DesignProcess.md Phase 4–5
+  DesignTicket-AssetReviewChecklist.txt
+  utility/qa_banishment_png_assets.py
+  utility/import_banishment_mockups_to_assets.py  (canonical — MockupScreens → catalog sizes)
+  utility/banishment_procedural_placeholder.py      (legacy greybox — not mockup fidelity)
+  utility/generate_banishment_shippable_art.py     (deprecated stub — prints import instructions)
+  utility/remove_white_background.py
+  utility/ensure_png_rgba.py
+  iOSBanishmentArt.swift                  (catalog string constants)
+
+Purpose
+-------
+Single checklist from **first generation** through **catalog import** and **QA**,
+without opening Xcode for layout work. Follow order below to minimize rework
+(backgrounds before compositing sprites).
+
+Principles
+----------
+- **One generation = one PNG** (no sheets, no multi-asset canvases).
+- **Sprites = RGBA** with real transparency; **backgrounds = opaque** RGB (or RGBA fully opaque).
+- Names in the catalog must match ``iOSBanishmentArt`` / the prompt sheet **exactly**.
+- Art is **decorative**; do not bake UI, timers, or instructional text into PNGs.
+
+Generation order (recommended)
+------------------------------
+1. **banishment_ward_bg** — calibrate palette and contrast for practice; use as comp backdrop for ward ring + goblin.
+2. **banishment_tower_bg** — timed tower (not practice); slightly heavier mood; Lights Off may use a faint crop.
+3. **banishment_hub_icon** — **1376×768** RGBA quest card (same habit as ``dungeon_hub_icon``); can run in parallel once palette reads.
+4. **banishment_ward_ring** — check on **both** backgrounds + black (Lights Off).
+5. **banishment_threat_goblin** — smallest silhouette; must read at ~90–120 pt.
+6. **banishment_threat_skeleton** — distinct from goblin.
+7. **banishment_threat_orc** — distinct broad shape.
+8. **banishment_threat_troll** — largest tower mass.
+9. **banishment_threat_dragon** — reads when mostly darkened; simple silhouette.
+10. **banishment_flare_escape** — **creature-agnostic** abstract burst only (see prompt sheet).
+11. **banishment_dark_anchor** — *optional*; only if dragon is too busy for Lights Off.
+12. **banishment_gesture_z_reference** — *optional*; app prefers **code-drawn** Z path; skip unless art direction insists.
+
+Staging before Xcode
+--------------------
+**From approved mockups (matches design intent):** from repo root::
+
+  python3 utility/import_banishment_mockups_to_assets.py
+
+Update ``memlog/requirements/Design/MockupScreens/banishment_iphone_*.png`` when art revises,
+then re-run the importer. Emergency greybox only::
+
+  BANISHMENT_USE_PROCEDURAL_ART=1 python3 utility/banishment_procedural_placeholder.py
+
+Hand-painted or tool exports (no device frame) may also land under (team choice)::
+
+  memlog/requirements/Design/Assets/banishment/
+
+Use filenames that match the final imageset stem, e.g. ``banishment_threat_goblin.png``.
+
+Post-processing
+---------------
+- If a tool exports a **white** or **grey mat** on sprites:  
+  ``python3 utility/remove_white_background.py --allow-large --fuzz 20 --in-place <path>``  
+  (sprites only; never on ``*_bg``.)
+- Normalize mode if needed: ``python3 utility/ensure_png_rgba.py`` (see script docstring).
+- Subjective pass: ``DesignTicket-AssetReviewChecklist.txt`` (style, contrast, no embedded text).
+
+Import into Assets.xcassets (CLI-friendly)
+------------------------------------------
+**Primary path:** ``python3 utility/import_banishment_mockups_to_assets.py`` writes portrait
+masters (2048×4096), 1024² sprites, and the hub card from
+``memlog/requirements/Design/MockupScreens/banishment_iphone_*.png`` (inner LCD crop + cover-fit).
+When replacing mockups with frame-free illustrated exports, either update the importer or copy
+PNGs into the existing ``*.imageset`` folders manually, then run ``utility/qa_banishment_png_assets.py``.
+
+For each asset (manual or final import):
+
+1. Create folder::
+     RA11y-iOS/RA11y-iOS/Assets.xcassets/<stem>.imageset/
+2. Copy PNG as ``<stem>.png`` (or match ``filename`` in Contents.json).
+3. Add ``Contents.json`` (universal 1x), same pattern as existing dungeon imagesets::
+
+     {
+       "images" : [ { "filename" : "<stem>.png", "idiom" : "universal", "scale" : "1x" } ],
+       "info" : { "author" : "xcode", "version" : 1 }
+     }
+
+The RA11y-iOS target uses a **synchronized root**; new imagesets under
+``RA11y-iOS/RA11y-iOS/`` are picked up without editing ``project.pbxproj``.
+
+Automated QA
+------------
+From repo root::
+
+  python3 utility/qa_banishment_png_assets.py
+
+While the catalog is still empty or partial::
+
+  python3 utility/qa_banishment_png_assets.py --allow-missing
+
+Use **without** ``--allow-missing`` before merging a PR that claims Banishment art is complete.
+
+SwiftUI wiring (after catalog)
+------------------------------
+- Replace SF Symbol portraits with ``Image(iOSBanishmentArt.threatGoblin)`` (etc.) when
+  ``UIImage(named:) != nil``, or always use asset name strings from ``iOSBanishmentArt``.
+- Layer order and sizing: **BanishmentAssetPipeline.txt**.
+- Re-run **device VoiceOver** escape checklist from QuestConcept-Banishment.txt.
+
+Revision history
+================
+- 2026-04-21: Final art design lock — hub icon in generation order, tower vs ward clarified.
+- 2026-04-22: Initial execution plan + QA script reference + import steps.
