@@ -590,7 +590,6 @@ struct iOSBanishmentQuestView: View {
         for key in threatKeys {
             if let im = UIImage(named: key), !isLikelyCreatureSpriteRaster(im) { return false }
         }
-        if let ring = UIImage(named: iOSBanishmentArt.wardRing), !isLikelySquareSpriteRaster(ring) { return false }
         if let flare = UIImage(named: iOSBanishmentArt.flareEscape), !isLikelySquareSpriteRaster(flare) { return false }
         return true
     }
@@ -668,7 +667,6 @@ struct iOSBanishmentQuestView: View {
         switch viewModel.phase {
         case .prologue:
             prologueBody
-                .accessibilityIdentifier("banishment.prologue")
         case .wardTrap:
             Color.clear
                 .accessibilityHidden(true)
@@ -683,31 +681,93 @@ struct iOSBanishmentQuestView: View {
 
     private var prologueBody: some View {
         ScrollView {
-            HStack {
-                Spacer(minLength: 0)
-                VStack(alignment: .leading, spacing: RA11ySpacing.lg) {
-                    Label(String(localized: "banishment.prologue.kicker"), systemImage: "hand.draw.fill")
-                        .font(.ra11yCaption)
-                        .foregroundStyle(.secondary)
-                    Text(String(localized: "banishment.prologue.title"))
-                        .font(.ra11yTitle)
-                        .bold()
-                    Text(String(localized: "banishment.prologue.body"))
-                        .font(.ra11yBody)
-                        .foregroundStyle(.secondary)
-                    Button(String(localized: "banishment.prologue.begin")) {
-                        viewModel.beginTrial()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .accessibilityIdentifier("banishment.beginTrial")
+            VStack(alignment: .center, spacing: RA11ySpacing.lg) {
+                Label(String(localized: "banishment.prologue.kicker"), systemImage: "hand.draw.fill")
+                    .font(.ra11yCaption)
+                    .foregroundStyle(.secondary)
+                    .labelStyle(.titleAndIcon)
+                    .accessibilityIdentifier("banishment.prologue.kicker")
+                Text(String(localized: "banishment.prologue.title"))
+                    .font(.ra11yTitle)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("banishment.prologue.title")
+                    .accessibilityAddTraits(.isHeader)
+                Text(String(localized: "banishment.prologue.body"))
+                    .font(.ra11yBody)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("banishment.prologue.body")
+                prologueGestureIllustration
+                Text(String(localized: "banishment.prologue.instructions"))
+                    .font(.ra11yBody)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("banishment.prologue.instructions")
+                Text(String(localized: "banishment.prologue.swipeExplainer"))
+                    .font(.ra11yBody)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("banishment.prologue.swipeExplainer")
+                    .accessibilityLabel(String(localized: "banishment.prologue.swipeExplainer.a11y"))
+                Button(String(localized: "banishment.prologue.begin")) {
+                    viewModel.beginTrial()
                 }
-                .padding(RA11ySpacing.xl)
-                .frame(maxWidth: prologueColumnMaxWidth, alignment: .leading)
-                Spacer(minLength: 0)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .frame(maxWidth: .infinity)
+                .accessibilityIdentifier("banishment.beginTrial")
+                .accessibilityHint(String(localized: "banishment.prologue.begin.a11yHint"))
             }
+            .padding(RA11ySpacing.xl)
+            .frame(maxWidth: prologueColumnMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, RA11ySpacing.lg)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("banishment.prologue")
+    }
+
+    /// Large Z reference from ``iOSBanishmentArt/gestureZReference`` (lesson-only, mockup-style golden trail + nodes); falls back to a vector hint if the catalog image is missing.
+    ///
+    /// The catalog PNG is authored with a dark matte; ``View/blendMode`` ``BlendMode/screen`` composits it over the ward background without a visible rectangle.
+    @ViewBuilder
+    private var prologueGestureIllustration: some View {
+        Group {
+            if UIImage(named: iOSBanishmentArt.gestureZReference) != nil {
+                // Raster uses a near-black matte (generator-friendly); screen blend drops the matte so the golden trail reads like the mockup overlay on the ward master.
+                Image(iOSBanishmentArt.gestureZReference)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(maxWidth: horizontalSizeClass == .regular ? 340 : 300)
+                    .blendMode(.screen)
+                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+            } else {
+                prologueZGestureFallback
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// Matches mockup stroke weight when raster art is not yet imported.
+    private var prologueZGestureFallback: some View {
+        ZStack {
+            BanishmentZGestureShape()
+                .stroke(
+                    Color.black.opacity(0.5),
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round)
+                )
+            BanishmentZGestureShape()
+                .stroke(
+                    Color.ra11yAccent.opacity(0.98),
+                    style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
+                )
+                .shadow(color: Color.ra11yAccent.opacity(0.55), radius: 10, y: 3)
+        }
+        .frame(width: 280, height: 150)
     }
 
     /// iPad / regular width uses a wider lesson column so screenshots and Dynamic Type do not hug the left edge.
@@ -790,11 +850,26 @@ struct iOSBanishmentQuestView: View {
         BanishmentTrapOverlay(
             threat: viewModel.currentThreat,
             showsHint: viewModel.showsTrapHint,
+            trapKicker: banishmentTrapKicker,
             isLightsOff: viewModel.isLightsOffPhase,
             useRasterDecorations: Self.shouldUseRasterTrapDecorations(),
             onEscape: { viewModel.performBanishEscape() }
         )
         .id(viewModel.currentThreat?.id ?? "banishment.trap.nil")
+    }
+
+    /// Short kicker above the trap headline — practice shows binding-ward context; tower beats stay terse.
+    private var banishmentTrapKicker: String {
+        switch viewModel.phase {
+        case .wardTrap:
+            return String(localized: "banishment.trap.kicker.practice")
+        case .tower:
+            return String(localized: "banishment.trap.kicker.tower")
+        case .darkTower:
+            return String(localized: "banishment.trap.kicker.dark")
+        default:
+            return String(localized: "banishment.trap.encounterKicker")
+        }
     }
 
     /// Explicit exit while the trap hides the system bar (see type-level VoiceOver note).
@@ -845,78 +920,61 @@ struct iOSBanishmentQuestView: View {
 private struct BanishmentTrapOverlay: View {
     let threat: BanishmentThreat?
     let showsHint: Bool
+    /// Uppercase-style kicker (Practice / Tower / Dark) above the encounter headline.
+    let trapKicker: String
     let isLightsOff: Bool
-    /// When `false`, skip ward ring and creature catalog PNGs (e.g. landscape mockup crops that fail sprite heuristics).
+    /// When `false`, skip creature catalog PNGs (e.g. landscape mockup crops that fail sprite heuristics).
     let useRasterDecorations: Bool
     let onEscape: () -> Void
 
-    /// Drives ``wardRingPoints`` / playfield caps — ``BanishmentAssetPipeline`` (340 pt ring on regular width).
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var encounterPresents: Bool = false
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(isLightsOff ? 0.92 : 0.78)
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
+        GeometryReader { geo in
+            let layout = BanishmentTrapPlayfieldLayout(
+                containerSize: geo.size,
+                isRegularWidthLayout: horizontalSizeClass == .regular
+            )
+            ZStack {
+                Color.black.opacity(isLightsOff ? 0.92 : 0.78)
+                    .ignoresSafeArea()
+                    .accessibilityHidden(true)
 
-            VStack(spacing: RA11ySpacing.xl) {
-                if let threat {
-                    encounterStack(for: threat)
-                    encounterCard(for: threat)
+                VStack(spacing: RA11ySpacing.xl) {
+                    if let threat {
+                        encounterStack(for: threat, layout: layout)
+                        encounterCard(for: threat)
+                    }
                 }
+                .padding(RA11ySpacing.xl)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            .padding(RA11ySpacing.xl)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityAction(.escape, onEscape)
-        .accessibilityIdentifier("banishment.trap.root")
-        .onAppear(perform: playEncounterEntrance)
-        .onChange(of: threat?.id) { _, _ in
-            playEncounterEntrance()
+            .accessibilityElement(children: .contain)
+            .accessibilityAction(.escape, onEscape)
+            .accessibilityIdentifier("banishment.trap.root")
+            .onAppear(perform: playEncounterEntrance)
+            .onChange(of: threat?.id) { _, _ in
+                playEncounterEntrance()
+            }
         }
     }
 
-    /// Ward ring (if imported), optional Z-stroke (practice only), and creature — see ``BanishmentAssetPipeline`` layer stack.
+    /// Hero creature only — Z gesture and ward ring are **prologue-only** until art direction revisits compositing.
     @ViewBuilder
-    private func encounterStack(for threat: BanishmentThreat) -> some View {
+    private func encounterStack(for threat: BanishmentThreat, layout: BanishmentTrapPlayfieldLayout) -> some View {
         ZStack {
-            banishmentWardRing
-            if showsHint, !isLightsOff {
-                BanishmentZGestureShape()
-                    .stroke(
-                        Color.ra11yAccent.opacity(0.92),
-                        style: StrokeStyle(lineWidth: Self.zGestureLineWidth, lineCap: .round, lineJoin: .round)
-                    )
-                    .shadow(color: Color.ra11yAccent.opacity(0.45), radius: 6, y: 2)
-                    .frame(width: zGestureWidth, height: zGestureHeight)
-                    .accessibilityHidden(true)
-                    .allowsHitTesting(false)
-            }
-            threatPortrait(for: threat)
+            threatPortrait(for: threat, layout: layout)
         }
-        .frame(width: playfieldClusterWidth, height: playfieldClusterHeight)
+        .frame(width: layout.clusterWidth, height: layout.clusterHeight)
         .accessibilityHidden(true)
         .allowsHitTesting(false)
     }
 
     @ViewBuilder
-    private var banishmentWardRing: some View {
-        if useRasterDecorations, UIImage(named: iOSBanishmentArt.wardRing) != nil {
-            Image(iOSBanishmentArt.wardRing)
-                .resizable()
-                .interpolation(.high)
-                .scaledToFit()
-                .frame(width: wardRingPoints, height: wardRingPoints)
-                .opacity(isLightsOff ? 0.34 : 0.92)
-                .accessibilityHidden(true)
-                .allowsHitTesting(false)
-        }
-    }
-
-    @ViewBuilder
-    private func threatPortrait(for threat: BanishmentThreat) -> some View {
+    private func threatPortrait(for threat: BanishmentThreat, layout: BanishmentTrapPlayfieldLayout) -> some View {
+        let diameter = layout.portraitDiameter(for: threat, isLightsOff: isLightsOff)
         Group {
             if useRasterDecorations,
                let raster = threatRasterName(for: threat),
@@ -926,11 +984,11 @@ private struct BanishmentTrapOverlay: View {
                     .resizable()
                     .interpolation(.high)
                     .scaledToFit()
-                    .frame(width: threatPortraitPoints(for: threat), height: threatPortraitPoints(for: threat))
+                    .frame(width: diameter, height: diameter)
                     .opacity(isLightsOff ? 0.88 : 1)
             } else {
                 Image(systemName: threat.symbolName)
-                    .font(.system(size: 72))
+                    .font(.system(size: layout.symbolPointSize))
                     .foregroundStyle(isLightsOff ? Color.white.opacity(0.85) : Color.ra11yAccent)
             }
         }
@@ -950,49 +1008,15 @@ private struct BanishmentTrapOverlay: View {
         return nil
     }
 
-    private func threatPortraitPoints(for threat: BanishmentThreat) -> CGFloat {
-        let base: CGFloat = {
-            if isLightsOff { return Self.catalogPortraitDarkPoints }
-            switch threat.id {
-            case "ward_goblin": return Self.catalogPortraitGoblinPoints
-            case "tower_troll": return Self.catalogPortraitLargePoints
-            default: return Self.catalogPortraitPoints
-            }
-        }()
-        return isRegularWidthLayout ? base * Self.catalogPortraitPadScale : base
-    }
-
-    /// iPhone compact width; iPad / regular uses ``BanishmentAssetPipeline`` cap.
-    private var isRegularWidthLayout: Bool { horizontalSizeClass == .regular }
-
-    private var wardRingPoints: CGFloat { isRegularWidthLayout ? 340 : 280 }
-
-    private var playfieldClusterWidth: CGFloat { isRegularWidthLayout ? 340 : 300 }
-
-    private var playfieldClusterHeight: CGFloat { isRegularWidthLayout ? 332 : 292 }
-
-    private var zGestureWidth: CGFloat { isRegularWidthLayout ? 192 : 168 }
-
-    private var zGestureHeight: CGFloat { isRegularWidthLayout ? 124 : 108 }
-
-    private static let zGestureLineWidth: CGFloat = 8
-
-    /// Default catalog creature size (~72 pt SF Symbol weight); see ``BanishmentAssetPipeline``.
-    private static let catalogPortraitPoints: CGFloat = 104
-    private static let catalogPortraitGoblinPoints: CGFloat = 100
-    private static let catalogPortraitLargePoints: CGFloat = 120
-    private static let catalogPortraitDarkPoints: CGFloat = 96
-    /// Slight bump when ``horizontalSizeClass`` is ``UserInterfaceSizeClass/regular`` (iPad-style width).
-    private static let catalogPortraitPadScale: CGFloat = 1.08
-
     @ViewBuilder
     private func encounterCard(for threat: BanishmentThreat) -> some View {
         VStack(spacing: RA11ySpacing.sm) {
-            Text(String(localized: "banishment.trap.encounterKicker"))
+            Text(trapKicker)
                 .font(.ra11yCaption)
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
-                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityHidden(true)
             Text(
                 String(
                     format: String(localized: "banishment.trap.creatureAppears"),
@@ -1045,9 +1069,43 @@ private struct BanishmentTrapOverlay: View {
     }
 }
 
+// MARK: - Trap playfield layout
+
+/// Sizes the creature cluster from the live trap container so foes stay **large** on phone and iPad without hard-coded caps.
+private struct BanishmentTrapPlayfieldLayout {
+    let clusterWidth: CGFloat
+    let clusterHeight: CGFloat
+    let basePortraitDiameter: CGFloat
+    let symbolPointSize: CGFloat
+
+    init(containerSize: CGSize, isRegularWidthLayout: Bool) {
+        let horizontalInset = RA11ySpacing.xl * 2
+        let verticalReserve: CGFloat = 300
+        let maxW = max(0, containerSize.width - horizontalInset)
+        let maxClusterH = max(160, containerSize.height - verticalReserve - RA11ySpacing.xl * 2)
+        let widthCap: CGFloat = isRegularWidthLayout ? 560 : 480
+        clusterWidth = min(maxW * 0.98, widthCap)
+        clusterHeight = min(clusterWidth * 0.98, maxClusterH * 0.95)
+        basePortraitDiameter = min(clusterWidth, clusterHeight) * 0.9
+        symbolPointSize = min(clusterWidth, clusterHeight) * 0.28
+    }
+
+    func portraitDiameter(for threat: BanishmentThreat, isLightsOff: Bool) -> CGFloat {
+        let scale: CGFloat = {
+            if isLightsOff { return 0.92 }
+            switch threat.id {
+            case "ward_goblin": return 0.94
+            case "tower_troll": return 1
+            default: return 0.97
+            }
+        }()
+        return basePortraitDiameter * scale
+    }
+}
+
 // MARK: - Z gesture (code-drawn)
 
-/// Two-finger scrub path hint for the practice ward only — matches ``BanishmentAssetPipeline`` (no raster required).
+/// Prologue-only vector fallback when ``iOSBanishmentArt/gestureZReference`` is absent.
 private struct BanishmentZGestureShape: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()

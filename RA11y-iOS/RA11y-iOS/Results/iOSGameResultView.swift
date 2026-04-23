@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import RA11yCore
 
 // MARK: - iOSGameResultView
@@ -22,6 +23,10 @@ import RA11yCore
 ///
 /// ## Dynamic Type
 /// All text uses semantic font styles from `RA11yFont`; layout scrolls at largest sizes.
+///
+/// ## Theming
+/// Uses each quest’s primary environment art as a full-bleed backdrop with a dark scrim so rank copy
+/// stays legible over busy paintings (Enchanter shelf, Dungeon descent, Banishment tower).
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -53,31 +58,74 @@ struct iOSGameResultView: View {
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            ScrollView {
-                VStack(spacing: RA11ySpacing.xl) {
-                    resultSummary
-                    if let gameSpecificAnnouncement {
-                        Text(gameSpecificAnnouncement)
-                            .font(.ra11yBody)
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, RA11ySpacing.base)
+        ZStack {
+            questResultAmbientBackground
+                .ignoresSafeArea()
+            LinearGradient(
+                stops: [
+                    .init(color: .black.opacity(0.38), location: 0),
+                    .init(color: .black.opacity(0.62), location: 0.45),
+                    .init(color: .black.opacity(0.82), location: 1),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(spacing: RA11ySpacing.xl) {
+                        resultSummary
+                        if let gameSpecificAnnouncement {
+                            Text(gameSpecificAnnouncement)
+                                .font(.ra11yBody)
+                                .multilineTextAlignment(.center)
+                                .foregroundStyle(Color.white.opacity(0.88))
+                                .padding(.horizontal, RA11ySpacing.base)
+                                .padding(.vertical, RA11ySpacing.sm)
+                                .frame(maxWidth: .infinity)
+                                .background(.black.opacity(0.22), in: RoundedRectangle(cornerRadius: RA11yRadius.card))
+                        }
+                        skillTransferCard
+                        actionButtons
                     }
-                    skillTransferCard
-                    actionButtons
+                    .padding(RA11ySpacing.base)
+                    .frame(width: geo.size.width)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(RA11ySpacing.base)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: .infinity)
+                .scrollContentBackground(.hidden)
+                .clipped()
             }
-            .clipped()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .preferredColorScheme(.dark)
         .navigationTitle(String(localized: "result.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .accessibilityIdentifier("gameResult.root")
+    }
+
+    /// Full-bleed quest art; falls back to ``Color/ra11yGameFallbackBackground`` when an imageset is missing.
+    @ViewBuilder
+    private var questResultAmbientBackground: some View {
+        let name = questResultBackgroundAssetName
+        if UIImage(named: name) != nil {
+            Image(name)
+                .resizable()
+                .scaledToFill()
+        } else {
+            Color.ra11yGameFallbackBackground
+        }
+    }
+
+    private var questResultBackgroundAssetName: String {
+        switch gameKind {
+        case .findAndFocus: return "enchanter_tower_shelf_bg"
+        case .scrollHunt: return "dungeon_descent_bg"
+        case .banishment: return iOSBanishmentArt.towerBackground
+        }
     }
 
     // MARK: - Subviews
@@ -88,21 +136,28 @@ struct iOSGameResultView: View {
         VStack(spacing: RA11ySpacing.md) {
             Image(systemName: presenter.result.rank.symbolName)
                 .font(.system(size: 72))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.white)
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
                 .accessibilityHidden(true)
 
             Text(presenter.result.rank.displayText)
                 .font(.ra11yLargeTitle)
                 .bold()
+                .foregroundStyle(Color.white)
+                .shadow(color: .black.opacity(0.45), radius: 4, y: 2)
 
             VStack(spacing: RA11ySpacing.xs) {
                 Text(presenter.formattedTime)
                     .font(.ra11yHeadline)
+                    .foregroundStyle(Color.white.opacity(0.95))
                 Text(presenter.formattedMistakes)
                     .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.white.opacity(0.78))
             }
         }
+        .padding(RA11ySpacing.base)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(presenter.accessibilityAnnouncement)
     }

@@ -374,7 +374,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter the Ward"
+            "value" : "Continue to the Tower"
+          }
+        }
+      }
+    },
+    "banishment.prologue.begin.a11yHint" : {
+      "comment" : "VoiceOver hint for the prologue primary button.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begins the Banishment lesson: a guided practice encounter first, then the timed tower climb."
           }
         }
       }
@@ -405,6 +416,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Mark of Z"
+          }
+        }
+      }
+    },
+    "banishment.prologue.instructions" : {
+      "comment" : "Visible step list on the Banishment prologue; VoiceOver can swipe element by element.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How this lesson runs:\n• Practice ward — banish the goblin with VoiceOver’s escape scrub (the same Z you reviewed above).\n• Tower — banish each enemy before the timer expires.\n• Dark tower — the screen is nearly black; rely on VoiceOver and what you memorized."
+          }
+        }
+      }
+    },
+    "banishment.prologue.swipeExplainer" : {
+      "comment" : "Visible copy on the Banishment prologue; pairs with the Z illustration.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On each trap, use VoiceOver’s two-finger scrub: draw a Z on the screen—top left to top right, down to the lower left, then across to the lower right—to banish."
+          }
+        }
+      }
+    },
+    "banishment.prologue.swipeExplainer.a11y" : {
+      "comment" : "VoiceOver label for banishment.prologue.swipeExplainer (can be fuller than on-screen text).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe gesture lesson. With VoiceOver on, place two fingers on the screen and draw a Z: move to the top left, drag to the top right, diagonally to the lower left, then horizontally to the lower right. This is the escape scrub—it dismisses blocking UI and banishes creatures in this quest."
           }
         }
       }
@@ -521,6 +565,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ bars your way."
+          }
+        }
+      }
+    },
+    "banishment.trap.kicker.practice" : {
+      "comment" : "Trap card kicker during practice ward (binding seal present).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice ward"
+          }
+        }
+      }
+    },
+    "banishment.trap.kicker.tower" : {
+      "comment" : "Trap card kicker during timed tower beats.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tower"
+          }
+        }
+      }
+    },
+    "banishment.trap.kicker.dark" : {
+      "comment" : "Trap card kicker during Lights Off finale.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark ascent"
           }
         }
       }

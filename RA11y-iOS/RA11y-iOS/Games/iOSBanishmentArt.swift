@@ -31,8 +31,9 @@ enum iOSBanishmentArt {
 
     // MARK: Compositing (transparent)
 
+    /// Ward binding ring raster — **not shown in UI** until art direction re-enables it; pipeline may still ship the asset.
     static let wardRing = "banishment_ward_ring"
-    /// Optional; app prefers a code-drawn Z path — see pipeline.
+    /// Prologue Z illustration (golden particle trail + nodes, mockup-aligned). Raster uses a dark matte; ``iOSBanishmentQuestView`` composites with screen blend.
     static let gestureZReference = "banishment_gesture_z_reference"
 
     // MARK: Threats (transparent)
