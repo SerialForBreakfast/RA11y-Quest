@@ -146,19 +146,6 @@
       "severityOverrides": {}
     },
     {
-      "id": "resonanceMockup",
-      "filename": "12_ResonanceMockup.png",
-      "devices": [
-        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
-        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
-        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
-      ],
-      "text": { "required": [], "optional": [], "forbidden": [] },
-      "role": "play",
-      "pedagogyRole": "practice",
-      "severityOverrides": {}
-    },
-    {
       "id": "banishmentPrologue",
       "filename": "13_BanishmentPrologue.png",
       "devices": [

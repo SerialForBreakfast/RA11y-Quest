@@ -712,10 +712,11 @@ struct iOSBanishmentQuestView: View {
                 .accessibilityIdentifier("banishment.beginTrial")
                 .accessibilityHint(String(localized: "banishment.prologue.begin.a11yHint"))
             }
-            .padding(RA11ySpacing.xl)
+            .padding(.horizontal, RA11ySpacing.lg)
+            .padding(.vertical, RA11ySpacing.md)
             .frame(maxWidth: prologueColumnMaxWidth)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, RA11ySpacing.lg)
+            .padding(.vertical, RA11ySpacing.sm)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("banishment.prologue")
@@ -751,7 +752,7 @@ struct iOSBanishmentQuestView: View {
 
     /// iPad / regular width uses a wider lesson column so screenshots and Dynamic Type do not hug the left edge.
     private var prologueColumnMaxWidth: CGFloat {
-        horizontalSizeClass == .regular ? 620 : 560
+        horizontalSizeClass == .regular ? 600 : 560
     }
 
     private var wardIntermissionBody: some View {

@@ -65,18 +65,20 @@ struct iOSGameResultView: View {
             QuestPaintReadableScrim()
                 .ignoresSafeArea()
             GeometryReader { geo in
-                let hPad = QuestPaintContentMetrics.scrollHorizontalPadding(
+                let hPad = QuestPaintContentMetrics.horizontalPadding(
+                    role: .lesson,
                     containerWidth: geo.size.width,
                     horizontalSizeClass: horizontalSizeClass,
                     gameKind: gameKind
                 )
-                let colW = QuestPaintContentMetrics.readingColumnMaxWidth(
+                let colW = QuestPaintContentMetrics.contentMaxWidth(
+                    role: .lesson,
                     containerWidth: geo.size.width,
                     horizontalSizeClass: horizontalSizeClass,
                     horizontalPadding: hPad
                 )
                 ScrollView {
-                    VStack(spacing: RA11ySpacing.xl) {
+                    VStack(spacing: RA11ySpacing.md) {
                         resultSummary
                         if let gameSpecificAnnouncement {
                             Text(gameSpecificAnnouncement)
@@ -96,7 +98,8 @@ struct iOSGameResultView: View {
                     }
                     .frame(maxWidth: colW, alignment: .center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, RA11ySpacing.base)
+                    .padding(.top, RA11ySpacing.sm)
+                    .padding(.bottom, RA11ySpacing.md)
                 }
                 .padding(.horizontal, hPad)
                 .scrollContentBackground(.hidden)
@@ -116,9 +119,9 @@ struct iOSGameResultView: View {
     /// Rank icon, rank label, time, and mistake count.
     /// Grouped as a single VoiceOver element with the full announcement string.
     private var resultSummary: some View {
-        VStack(spacing: RA11ySpacing.md) {
+        VStack(spacing: RA11ySpacing.sm) {
             Image(systemName: presenter.result.rank.symbolName)
-                .font(.system(size: 72))
+                .font(.system(size: 54))
                 .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
                 .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
                 .accessibilityHidden(true)
@@ -136,7 +139,7 @@ struct iOSGameResultView: View {
                     .questPaintReadableText(.materialCardMeta)
             }
         }
-        .padding(RA11ySpacing.base)
+        .padding(RA11ySpacing.md)
         .frame(maxWidth: .infinity)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
         .accessibilityElement(children: .combine)
@@ -175,7 +178,7 @@ struct iOSGameResultView: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(RA11ySpacing.base)
+        .padding(RA11ySpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
         .accessibilityElement(children: .combine)

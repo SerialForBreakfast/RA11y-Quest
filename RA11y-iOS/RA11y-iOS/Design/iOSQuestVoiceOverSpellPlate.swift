@@ -53,7 +53,7 @@ struct QuestVoiceOverGestureSpellPlate: View {
                         .resizable()
                         .interpolation(.high)
                         .scaledToFit()
-                        .frame(maxWidth: 300)
+                        .frame(maxWidth: 220)
                         .shadow(color: .black.opacity(0.35), radius: 14, y: 5)
                         .accessibilityHidden(true)
                 } else if let catalogArtFallback {

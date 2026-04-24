@@ -14,7 +14,6 @@ UI_TEST_IDS    = [
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_FirstRun",
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Enchanter",
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Dungeon",
-  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_ResonanceMockup",
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Banishment",
 ].freeze
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze

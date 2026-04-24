@@ -870,15 +870,13 @@ private struct DungeonPrologueView: View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
                 dmNarrationCard
-                lessonCard
-                gestureGuide
                 QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
                 practiceZone
                 beginButton
             }
             .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .padding(.vertical, RA11ySpacing.md)
+            .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
             .frame(maxWidth: .infinity, alignment: .center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -905,35 +903,6 @@ private struct DungeonPrologueView: View {
         )
     }
 
-    private var lessonCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Text(String(localized: "dungeon.explain.lesson.heading"))
-                .questPaintReadableText(.materialCardTitle)
-                .accessibilityAddTraits(.isHeader)
-
-            Text(String(localized: "dungeon.explain.lesson.body"))
-                .questPaintReadableText(.materialCardBody)
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(.white.opacity(0.15), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "dungeon.a11y.explain.lesson"))
-    }
-
-    private var gestureGuide: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            DungeonGestureRow(symbol: "hand.point.right.fill", label: String(localized: "dungeon.explain.gesture.swipe1"))
-            DungeonGestureRow(symbol: "hand.draw.fill",        label: String(localized: "dungeon.explain.gesture.swipe3"))
-            DungeonGestureRow(symbol: "hand.draw.fill",        label: String(localized: "dungeon.explain.gesture.swipe3u"))
-        }
-        .accessibilityHidden(true)
-    }
-
     private var practiceZone: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
             Text(String(localized: "dungeon.explain.practice_tip"))
@@ -941,16 +910,16 @@ private struct DungeonPrologueView: View {
 
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-                    ForEach(0..<14, id: \.self) { index in
+                    ForEach(0..<8, id: \.self) { index in
                         Text(String(format: String(localized: "dungeon.explain.practice.step"), index + 1))
                             .questPaintReadableText(.bodySupporting)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 2)
                     }
                 }
                 .padding(RA11ySpacing.sm)
             }
-            .frame(minHeight: 200, maxHeight: 280)
+            .frame(minHeight: 96, maxHeight: 130)
             .background(Color.black.opacity(0.35), in: .rect(cornerRadius: RA11yRadius.card))
             .overlay(
                 RoundedRectangle(cornerRadius: RA11yRadius.card)
@@ -968,7 +937,7 @@ private struct DungeonPrologueView: View {
                     .questPaintReadableText(.captionGold)
             }
         }
-        .padding(RA11ySpacing.base)
+        .padding(RA11ySpacing.md)
         .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
         .accessibilityIdentifier("dungeon.prologue.practiceSection")
     }

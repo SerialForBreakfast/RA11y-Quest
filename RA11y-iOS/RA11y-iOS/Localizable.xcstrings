@@ -374,7 +374,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Continue to the Tower"
+            "value" : "Begin Quest"
           }
         }
       }
@@ -385,7 +385,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Begins the Banishment lesson: a guided practice encounter first, then the timed tower climb."
+            "value" : "Starts practice, then the timed tower."
           }
         }
       }
@@ -395,7 +395,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceOver’s escape gesture is a two-finger Z scribble. It dismisses sheets, alerts, and other blocking UI when focus feels stuck—the same motion banishes foes in this trial. Practice with the goblin first, then run the timed tower."
+            "value" : "Learn VoiceOver’s two-finger escape scrub. It dismisses blocking UI in apps and banishes traps in this quest."
           }
         }
       }
@@ -426,7 +426,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How this lesson runs:\n• Practice ward — banish the goblin with VoiceOver’s escape scrub (the same Z you reviewed above).\n• Tower — banish each enemy before the timer expires.\n• Dark tower — the screen is nearly black; rely on VoiceOver and what you memorized."
+            "value" : "Practice once, then climb the timed tower."
           }
         }
       }
@@ -437,7 +437,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On each trap, use VoiceOver’s two-finger scrub: draw a Z on the screen—top left to top right, down to the lower left, then across to the lower right—to banish."
+            "value" : "Draw a Z with two fingers to escape a trap."
           }
         }
       }
@@ -2101,7 +2101,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You practiced three-finger scroll with focus on Glyph stream."
+            "value" : "You practiced three-finger scrolling on the Glyph stream."
           }
         }
       }
@@ -2111,7 +2111,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reminder: three-finger scroll on the glyph stream while VoiceOver stayed on Glyph stream."
+            "value" : "Reminder: keep VoiceOver on the Glyph stream, then three-finger scroll."
           }
         }
       }
@@ -2131,7 +2131,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You practiced the escape scrub: draw a Z with two fingers to banish and to dismiss blocking UI elsewhere."
+            "value" : "Draw a Z with two fingers to escape."
           }
         }
       }
@@ -2141,7 +2141,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reminder: Banishment trained the two-finger Z-shaped scrub used for escape in this quest and for modals in real apps."
+            "value" : "Reminder: the two-finger Z scrub escapes traps and dismisses blocking UI."
           }
         }
       }
@@ -2151,7 +2151,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You used VoiceOver’s two-finger scrub (Z-shape) to banish foes in the trial—the same system escape that clears modals, sheets, and stuck focus in real apps."
+            "value" : "You used VoiceOver’s two-finger Z scrub to escape traps."
           }
         }
       }
@@ -2161,7 +2161,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Any time VoiceOver lands inside an alert, pop-up, or full-screen sheet, try the scrub before hunting for a visible close button."
+            "value" : "Use the same scrub to dismiss alerts, sheets, or stuck focus in apps."
           }
         }
       }
@@ -2171,7 +2171,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With VoiceOver on, swipe right to move focus to the next element. Swipe left to go back. Double-tap to activate whatever you're focused on."
+            "value" : "Swipe right or left to move VoiceOver focus. Double-tap to activate."
           }
         }
       }
@@ -2181,7 +2181,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Try it now: open the App Store, swipe through the featured section, and double-tap any app to open it."
+            "value" : "Use the same pattern in any app list, menu, or toolbar."
           }
         }
       }
@@ -2201,7 +2201,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You separated moving focus (one finger) from scrolling the glyph stream (three fingers), aligned the Moonstone with the orb, then sealed."
+            "value" : "You kept focus on the Glyph stream, then used three fingers to scroll."
           }
         }
       }
@@ -2211,7 +2211,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Try it: open Settings, move focus down the list, then three-finger scroll to reveal more rows."
+            "value" : "Use the same split in long lists: one finger moves focus, three fingers scroll."
           }
         }
       }

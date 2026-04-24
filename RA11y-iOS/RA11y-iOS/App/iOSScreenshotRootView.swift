@@ -54,8 +54,6 @@ struct iOSScreenshotRootView: View {
                 onPlayAgain: {},
                 onReturnToHub: {}
             )
-        case .resonanceMockup:
-            iOSDungeonResonanceMockupView()
         case .banishmentPrologue, .banishmentWardTrap, .banishmentTower:
             iOSBanishmentQuestView(storage: storage, screenshotScene: scene)
         case .banishmentResult:

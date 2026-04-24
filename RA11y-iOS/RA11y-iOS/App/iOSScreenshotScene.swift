@@ -39,9 +39,6 @@ enum iOSScreenshotScene: String, CaseIterable {
     /// Shared result screen using Crystal Resonance sample data.
     case dungeonResult = "dungeonResult"
 
-    /// Crystal Resonance v2 design mockup (preview-only surface; deterministic capture).
-    case resonanceMockup = "resonanceMockup"
-
     /// The Banishment — prologue (lesson copy + begin trial).
     case banishmentPrologue = "banishmentPrologue"
 
@@ -82,7 +79,6 @@ enum iOSScreenshotScene: String, CaseIterable {
         case .dungeonPrologue: return "09_DungeonPrologue"
         case .dungeonFirstAttempt: return "10_DungeonL1"
         case .dungeonResult: return "11_DungeonResult"
-        case .resonanceMockup: return "12_ResonanceMockup"
         case .banishmentPrologue: return "13_BanishmentPrologue"
         case .banishmentWardTrap: return "14_BanishmentWardTrap"
         case .banishmentTower: return "15_BanishmentTower"
@@ -113,8 +109,6 @@ enum iOSScreenshotScene: String, CaseIterable {
             return "dungeon.prologue"
         case .dungeonFirstAttempt:
             return "dungeon.firstAttempt"
-        case .resonanceMockup:
-            return "resonance.mockup.root"
         case .banishmentPrologue:
             return "banishment.prologue"
         case .banishmentWardTrap, .banishmentTower:
