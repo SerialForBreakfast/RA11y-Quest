@@ -47,8 +47,9 @@ struct QuestVoiceOverGestureSpellPlate: View {
             .accessibilityHidden(true)
 
             if layout == .prologueLesson {
-                if let catalogArtName, UIImage(named: catalogArtName) != nil {
-                    Image(catalogArtName)
+                if let catalogArtName, let zArt = UIImage(named: catalogArtName) {
+                    Image(uiImage: zArt)
+                        .renderingMode(.original)
                         .resizable()
                         .interpolation(.high)
                         .scaledToFit()
@@ -73,7 +74,7 @@ struct QuestVoiceOverGestureSpellPlate: View {
         .padding(layout == .prologueLesson ? RA11ySpacing.lg : RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .center)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
-        .compositingGroup()
+        // Avoid compositingGroup before shadow — paired with material on dark quest backdrops it can fringe like grey/checkerboard blocks.
         .shadow(color: .black.opacity(0.22), radius: layout == .prologueLesson ? 16 : 8, y: 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)

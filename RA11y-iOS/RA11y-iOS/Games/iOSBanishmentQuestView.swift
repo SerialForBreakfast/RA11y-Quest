@@ -518,6 +518,7 @@ struct iOSBanishmentQuestView: View {
                 Color.black
                 if Self.shouldUseRasterBackground(named: iOSBanishmentArt.towerBackground) {
                     Image(iOSBanishmentArt.towerBackground)
+                        .renderingMode(.original)
                         .resizable()
                         .scaledToFill()
                         .accessibilityHidden(true)
@@ -544,6 +545,7 @@ struct iOSBanishmentQuestView: View {
     private func banishmentSceneBackground(assetName: String) -> some View {
         if Self.shouldUseRasterBackground(named: assetName) {
             Image(assetName)
+                .renderingMode(.original)
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
@@ -619,17 +621,19 @@ struct iOSBanishmentQuestView: View {
         return ratio <= 1.35
     }
 
+    /// Centered banish burst (``banishFlarePoints``); **straight alpha** only — no `.screen` / `.plusLighter`,
+    /// which over the trap stack can read as checkerboard in screenshots.
     @ViewBuilder
     private var banishFlareOverlay: some View {
         if Self.shouldUseRasterTrapDecorations(),
            UIImage(named: iOSBanishmentArt.flareEscape) != nil
         {
             Image(iOSBanishmentArt.flareEscape)
+                .renderingMode(.original)
                 .resizable()
                 .interpolation(.high)
                 .scaledToFit()
                 .frame(width: Self.banishFlarePoints, height: Self.banishFlarePoints)
-                .blendMode(.screen)
                 .opacity(banishFlareOpacity)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .allowsHitTesting(false)
@@ -637,7 +641,7 @@ struct iOSBanishmentQuestView: View {
         }
     }
 
-    /// Centered banish burst; see ``BanishmentAssetPipeline`` escape flare sizing.
+    /// Escape flare diameter in points; align with ``BanishmentAssetPipeline`` when resizing art.
     private static let banishFlarePoints: CGFloat = 220
 
     private func playBanishFlareFeedback() {
@@ -953,9 +957,10 @@ private struct BanishmentTrapOverlay: View {
         Group {
             if useRasterDecorations,
                let raster = threatRasterName(for: threat),
-               UIImage(named: raster) != nil
+               let uiRaster = UIImage(named: raster)
             {
-                Image(raster)
+                Image(uiImage: uiRaster)
+                    .renderingMode(.original)
                     .resizable()
                     .interpolation(.high)
                     .scaledToFit()
@@ -1008,7 +1013,7 @@ private struct BanishmentTrapOverlay: View {
         }
         .padding(RA11ySpacing.lg)
         .background(.thinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
-        .compositingGroup()
+        // Avoid compositingGroup + shadow — on dark trap scrims it can read as grey / transparency artifacts (Crystal shaft note).
         .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
         .offset(y: encounterPresents ? 0 : 22)
         .scaleEffect(encounterPresents ? 1 : 0.94, anchor: .center)

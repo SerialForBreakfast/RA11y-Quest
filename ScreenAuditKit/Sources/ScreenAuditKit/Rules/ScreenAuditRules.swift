@@ -13,6 +13,9 @@ public enum ScreenAuditRuleID: String, Codable, Equatable, Sendable {
 
     /// Screenshot dimensions did not match a device expectation.
     case dimensionMismatch
+
+    /// Screenshot pixels differed from the configured baseline beyond the allowed threshold.
+    case baselineDifferenceExceeded
 }
 
 /// Reference to the source evidence that produced a finding.

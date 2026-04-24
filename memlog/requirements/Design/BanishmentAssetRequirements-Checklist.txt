@@ -79,11 +79,32 @@ Verification commands (Definition of Done for a catalog change)
        — FAIL on missing required set, wrong background size, RGB sprites, or
          backgrounds flatter than `MIN_BG_LUMA_SAMPLE_VARIANCE` in qa script.
        — Optional CI hardening: append `--strict-warnings` (treats WARN as FAIL).
+       — **Limitation:** all OK here does **not** guarantee zero checkerboard in
+         Simulator/Fastlane PNGs — premultiplied / generative halos and SwiftUI
+         layering can still fringe. See “Runtime compositing” below.
   3. `xcodebuild test -workspace RA11y.xcworkspace -scheme RA11y-iOS -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:RA11y-iOSTests/BanishmentArtCatalogTests`
        — or run full `RA11y-iOSTests` target.
   4. `bash utility/validate_screenshot_contract.sh` (screenshot route alignment).
   5. `bundle exec fastlane ios screenshots` — human sign-off on
      `13_`–`16_Banishment*.png` for iPhone_large, iPhone_small, iPad.
+
+Runtime compositing (SwiftUI — must match shipped code)
+-------------------------------------------------------
+  Quest paint checklist §4.1 (“no checkerboard fringes”) depends on **both** PNG QA
+  and these view rules (see `iOSBanishmentQuestView`, `QuestVoiceOverGestureSpellPlate`):
+
+  - Raster catalog art: prefer `Image(uiImage:).renderingMode(.original)` for
+    threats, Z reference, and full-bleed backgrounds (same idea as Crystal
+    `iOSResonanceWideCanvasImage`).
+  - **Do not** use `.blendMode(.screen)` on escape flare (or similar) over
+    layered transparency — use straight alpha; screen blend can read as holes /
+    checkerboard in captures.
+  - **Do not** pair `.compositingGroup()` with `.shadow` on `.thinMaterial` trap /
+    spell cards over dark scrims — can read as grey boxes (Crystal shaft note).
+
+  If fringes remain after the above: re-export sprites with clean alpha,
+  `utility/transparent_edge_dark_matte.py` for edge-connected dark mats, or
+  `utility/remove_white_background.py` for light mats — then re-run step 2.
 
 Iteration: replacing procedural art with illustrated exports
 --------------------------------------------------------------

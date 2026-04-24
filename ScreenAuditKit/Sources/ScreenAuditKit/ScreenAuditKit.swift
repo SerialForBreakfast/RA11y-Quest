@@ -15,7 +15,7 @@ public enum ScreenAuditKit {
         Usage:
           \(executableName) --help
           \(executableName) --version
-          \(executableName) validate --screenshots <dir> --contracts <file> --output <dir>
+          \(executableName) validate --screenshots <dir> --contracts <file> --output <dir> [--baselines <dir>]
 
         Commands:
           validate    Validate screenshots against contracts.
@@ -110,7 +110,8 @@ public struct ScreenAuditCLI {
             let result = try validator.validate(
                 screenshotsDirectory: parsedArguments.screenshotsDirectory,
                 contractFile: parsedArguments.contractFile,
-                outputDirectory: parsedArguments.outputDirectory
+                outputDirectory: parsedArguments.outputDirectory,
+                baselineDirectory: parsedArguments.baselineDirectory
             )
             standardOutput("Evidence report: \(parsedArguments.outputDirectory.appendingPathComponent("evidence.json").path)")
             standardOutput("Findings report: \(parsedArguments.outputDirectory.appendingPathComponent("findings.json").path)")
@@ -143,11 +144,13 @@ private struct ValidateArguments {
     let screenshotsDirectory: URL
     let contractFile: URL
     let outputDirectory: URL
+    let baselineDirectory: URL?
 
     init(arguments: [String]) throws {
         var screenshotsPath: String?
         var contractsPath: String?
         var outputPath: String?
+        var baselinesPath: String?
 
         var index = 0
         while index < arguments.count {
@@ -164,6 +167,8 @@ private struct ValidateArguments {
                 contractsPath = value
             case "--output":
                 outputPath = value
+            case "--baselines":
+                baselinesPath = value
             default:
                 throw ScreenAuditCLIArgumentError.unsupportedFlag(flag)
             }
@@ -183,6 +188,7 @@ private struct ValidateArguments {
         screenshotsDirectory = URL(fileURLWithPath: screenshotsPath)
         contractFile = URL(fileURLWithPath: contractsPath)
         outputDirectory = URL(fileURLWithPath: outputPath)
+        baselineDirectory = baselinesPath.map { URL(fileURLWithPath: $0) }
     }
 }
 

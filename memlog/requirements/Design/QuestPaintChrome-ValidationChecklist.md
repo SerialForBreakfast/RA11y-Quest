@@ -56,7 +56,7 @@ Use this list to iterate across **size classes**, **devices**, and **accessibili
 
 | # | Check | Notes |
 |---|--------|--------|
-| 4.1 | No checkerboard fringes on composited sprites (goblin, skeleton, reticle, flare) | Re-run `utility/validate_banishment_assets.sh` / QA scripts. |
+| 4.1 | No checkerboard fringes on composited sprites (goblin, skeleton, reticle, flare) | Run `utility/validate_banishment_assets.sh` (and `--strict-warnings` if desired). **Also** verify SwiftUI rules in `memlog/requirements/Design/BanishmentAssetRequirements-Checklist.txt` §“Runtime compositing” — PNG QA alone does not catch GPU/fringe symptoms. |
 | 4.2 | Banishment tower trap: golden ward ring removed per product freeze | Code + art aligned. |
 | 4.3 | Z gesture asset: RGBA, transparent exterior matte | `transparent_edge_dark_matte.py` if re-importing. |
 | 4.4 | Enchanter “Lights Off” / timed beat: intentional bg (not accidental solid black) | ☑ Dimmed shelf under blackout; Dungeon L3 shaft uses same pattern. Re-verify in screenshots. |

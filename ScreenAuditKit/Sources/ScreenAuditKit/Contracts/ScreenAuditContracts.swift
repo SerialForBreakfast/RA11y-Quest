@@ -117,6 +117,12 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
     /// Optional pedagogy role used by instructional-copy validators.
     public let pedagogyRole: ScreenAuditPedagogyRole?
 
+    /// Region definitions used by visual rules.
+    public let regions: ScreenAuditRegionSet
+
+    /// Optional baseline comparison expectation.
+    public let baseline: ScreenAuditBaselineExpectation?
+
     /// Rule-level severity overrides for this screen.
     public let severityOverrides: [String: ScreenAuditSeverity]
 
@@ -128,6 +134,8 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
     ///   - text: OCR text expectations.
     ///   - role: Optional screen role.
     ///   - pedagogyRole: Optional pedagogy role.
+    ///   - regions: Region definitions used by visual rules.
+    ///   - baseline: Optional baseline comparison expectation.
     ///   - severityOverrides: Rule-level severity overrides.
     public init(
         id: String,
@@ -136,6 +144,8 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
         text: ScreenAuditTextExpectations = ScreenAuditTextExpectations(),
         role: ScreenAuditScreenRole? = nil,
         pedagogyRole: ScreenAuditPedagogyRole? = nil,
+        regions: ScreenAuditRegionSet = ScreenAuditRegionSet(),
+        baseline: ScreenAuditBaselineExpectation? = nil,
         severityOverrides: [String: ScreenAuditSeverity] = [:]
     ) {
         self.id = id
@@ -144,7 +154,37 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
         self.text = text
         self.role = role
         self.pedagogyRole = pedagogyRole
+        self.regions = regions
+        self.baseline = baseline
         self.severityOverrides = severityOverrides
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case filename
+        case devices
+        case text
+        case role
+        case pedagogyRole
+        case regions
+        case baseline
+        case severityOverrides
+    }
+
+    /// Decodes a screen contract, defaulting newly added optional sections for old fixtures.
+    /// - Parameter decoder: Source decoder.
+    /// - Throws: Decoding errors.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        filename = try container.decode(String.self, forKey: .filename)
+        devices = try container.decodeIfPresent([ScreenAuditDeviceExpectation].self, forKey: .devices) ?? []
+        text = try container.decodeIfPresent(ScreenAuditTextExpectations.self, forKey: .text) ?? ScreenAuditTextExpectations()
+        role = try container.decodeIfPresent(ScreenAuditScreenRole.self, forKey: .role)
+        pedagogyRole = try container.decodeIfPresent(ScreenAuditPedagogyRole.self, forKey: .pedagogyRole)
+        regions = try container.decodeIfPresent(ScreenAuditRegionSet.self, forKey: .regions) ?? ScreenAuditRegionSet()
+        baseline = try container.decodeIfPresent(ScreenAuditBaselineExpectation.self, forKey: .baseline)
+        severityOverrides = try container.decodeIfPresent([String: ScreenAuditSeverity].self, forKey: .severityOverrides) ?? [:]
     }
 
     /// Validates required screen metadata after decoding.
@@ -218,6 +258,78 @@ public struct ScreenAuditTextExpectations: Codable, Equatable, Sendable {
         self.required = required
         self.optional = optional
         self.forbidden = forbidden
+    }
+}
+
+/// Named region rectangle in screenshot pixel coordinates.
+public struct ScreenAuditRegion: Codable, Equatable, Sendable {
+    /// Region name used in findings and reports.
+    public let name: String
+
+    /// Minimum x-coordinate in pixels.
+    public let x: Int
+
+    /// Minimum y-coordinate in pixels.
+    public let y: Int
+
+    /// Region width in pixels.
+    public let width: Int
+
+    /// Region height in pixels.
+    public let height: Int
+
+    /// Creates a named screenshot region.
+    /// - Parameters:
+    ///   - name: Region name used in findings and reports.
+    ///   - x: Minimum x-coordinate in pixels.
+    ///   - y: Minimum y-coordinate in pixels.
+    ///   - width: Region width in pixels.
+    ///   - height: Region height in pixels.
+    public init(name: String, x: Int, y: Int, width: Int, height: Int) {
+        self.name = name
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+    }
+}
+
+/// Region collections available to visual rules.
+public struct ScreenAuditRegionSet: Codable, Equatable, Sendable {
+    /// Regions that should receive stricter visual validation later.
+    public let protected: [ScreenAuditRegion]
+
+    /// Regions ignored by broad visual comparisons.
+    public let ignored: [ScreenAuditRegion]
+
+    /// Creates a region set.
+    /// - Parameters:
+    ///   - protected: Regions that should receive stricter visual validation later.
+    ///   - ignored: Regions ignored by broad visual comparisons.
+    public init(
+        protected: [ScreenAuditRegion] = [],
+        ignored: [ScreenAuditRegion] = []
+    ) {
+        self.protected = protected
+        self.ignored = ignored
+    }
+}
+
+/// Baseline comparison settings for one screen.
+public struct ScreenAuditBaselineExpectation: Codable, Equatable, Sendable {
+    /// Baseline PNG path relative to the configured baseline directory.
+    public let referencePath: String
+
+    /// Maximum allowed mismatched-pixel ratio after ignored regions are removed.
+    public let maxMismatchRatio: Double
+
+    /// Creates a baseline expectation.
+    /// - Parameters:
+    ///   - referencePath: Baseline PNG path relative to the configured baseline directory.
+    ///   - maxMismatchRatio: Maximum allowed mismatched-pixel ratio.
+    public init(referencePath: String, maxMismatchRatio: Double = 0.0) {
+        self.referencePath = referencePath
+        self.maxMismatchRatio = maxMismatchRatio
     }
 }
 

@@ -50,6 +50,7 @@ public struct ScreenAuditValidator {
     private let imageExtractor: ScreenAuditImageEvidenceExtractor
     private let ruleEvaluator: ScreenAuditRuleEvaluator
     private let reportWriter: ScreenAuditReportWriter
+    private let baselineComparator: ScreenAuditBaselineComparator
 
     /// Creates a filesystem validator.
     /// - Parameters:
@@ -59,11 +60,13 @@ public struct ScreenAuditValidator {
     public init(
         imageExtractor: ScreenAuditImageEvidenceExtractor = ScreenAuditImageEvidenceExtractor(),
         ruleEvaluator: ScreenAuditRuleEvaluator = ScreenAuditRuleEvaluator(),
-        reportWriter: ScreenAuditReportWriter = ScreenAuditReportWriter()
+        reportWriter: ScreenAuditReportWriter = ScreenAuditReportWriter(),
+        baselineComparator: ScreenAuditBaselineComparator = ScreenAuditBaselineComparator()
     ) {
         self.imageExtractor = imageExtractor
         self.ruleEvaluator = ruleEvaluator
         self.reportWriter = reportWriter
+        self.baselineComparator = baselineComparator
     }
 
     /// Validates screenshots against a contract file and writes reports.
@@ -75,10 +78,14 @@ public struct ScreenAuditValidator {
     public func validate(
         screenshotsDirectory: URL,
         contractFile: URL,
-        outputDirectory: URL
+        outputDirectory: URL,
+        baselineDirectory: URL? = nil
     ) throws -> ScreenAuditValidationResult {
         try validateExistingDirectory(screenshotsDirectory)
         try validateExistingFile(contractFile)
+        if let baselineDirectory {
+            try validateExistingDirectory(baselineDirectory)
+        }
 
         let contractData: Data
         do {
@@ -101,6 +108,21 @@ public struct ScreenAuditValidator {
             let evidence = try imageExtractor.extractPNG(at: screenshotURL, screenID: screen.id)
             evidenceItems.append(evidence)
             findings.append(contentsOf: ruleEvaluator.evaluate(contract: screen, evidence: evidence))
+            if let baseline = screen.baseline, let baselineDirectory {
+                let baselineURL = baselineDirectory.appendingPathComponent(baseline.referencePath)
+                let diff = try baselineComparator.compare(
+                    screenshotURL: screenshotURL,
+                    baselineURL: baselineURL,
+                    ignoredRegions: screen.regions.ignored
+                )
+                if let finding = baselineComparator.findingIfNeeded(
+                    diff: diff,
+                    contract: screen,
+                    evidence: evidence
+                ) {
+                    findings.append(finding)
+                }
+            }
         }
 
         let evidenceReport = ScreenAuditEvidenceReport(
