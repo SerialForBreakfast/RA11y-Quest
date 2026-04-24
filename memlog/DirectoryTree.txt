@@ -148,6 +148,8 @@ Current structure (as of 2026-04-24)
 |   |   |   |   `-- ScreenAuditReports.swift
 |   |   |   |-- Validation
 |   |   |   |   `-- ScreenAuditValidation.swift
+|   |   |   |-- Visual
+|   |   |   |   `-- ScreenAuditBaselineComparator.swift
 |   |   |   `-- ScreenAuditKit.swift
 |   |   `-- screenaudit
 |   |       `-- main.swift
@@ -159,6 +161,7 @@ Current structure (as of 2026-04-24)
 |   |       |   |-- missing-required-field-contracts.json
 |   |       |   |-- unsupported-schema-contracts.json
 |   |       |   `-- valid-contracts.json
+|   |       |-- ScreenAuditBaselineTests.swift
 |   |       |-- ScreenAuditContractTests.swift
 |   |       |-- ScreenAuditEvidenceTests.swift
 |   |       |-- ScreenAuditKitTests.swift

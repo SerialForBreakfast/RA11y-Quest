@@ -135,8 +135,8 @@ design taste a CI gate.
 
 Tasks:
 
-- SAK-6.1 Define protected, ignored, and critical regions in contracts.
-- SAK-6.2 Implement simple baseline diff metrics.
+- SAK-6.1 Define protected, ignored, and critical regions in contracts. Done.
+- SAK-6.2 Implement simple baseline diff metrics. Done.
 - SAK-6.3 Implement suspicious opaque-border detection for source PNGs.
 - SAK-6.4 Implement rendered matte risk detection in critical regions.
 - SAK-6.5 Implement checkerboard-like pattern warning.
@@ -149,10 +149,22 @@ Acceptance checks:
 
 - Asset symptom rules default to warnings unless contract severity overrides
   make them hard failures.
-- Baseline comparisons support ignored volatile regions.
+- Baseline comparisons support ignored volatile regions. Verified.
 - Overlays are written only to repo-local output paths during RA11y runs.
 - Tests use authored fixtures or mechanical image fixtures, not procedural
   quest art.
+
+Implementation notes:
+
+- Added contract support for protected/ignored visual regions.
+- Added optional baseline expectation with reference path and mismatch threshold.
+- Added `--baselines <dir>` support to `screenaudit validate`.
+- Added deterministic PNG baseline comparison with ignored-region support.
+- Added baseline difference findings, defaulting to warning severity.
+- Added tests with mechanically generated tiny PNG fixtures.
+- Verified `swift test --package-path ScreenAuditKit`.
+- Verified `utility/validate_screen_audit.sh` still passes without baselines for
+  current RA11y screenshot contracts.
 
 ### Milestone E: Flow Validation
 

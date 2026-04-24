@@ -35,11 +35,11 @@ Generation order (recommended)
 2. **banishment_tower_bg** — timed tower (not practice); slightly heavier mood; Lights Off may use a faint crop.
 3. **banishment_hub_icon** — **1376×768** RGBA quest card (same habit as ``dungeon_hub_icon``); can run in parallel once palette reads.
 4. **banishment_ward_ring** — check on **both** backgrounds + black (Lights Off).
-5. **banishment_threat_goblin** — smallest silhouette; must read at ~90–120 pt.
-6. **banishment_threat_skeleton** — distinct from goblin.
-7. **banishment_threat_orc** — distinct broad shape.
-8. **banishment_threat_troll** — largest tower mass.
-9. **banishment_threat_dragon** — reads when mostly darkened; simple silhouette.
+5. **banishment_goblin** — smallest silhouette; must read at ~90–120 pt.
+6. **banishment_skeleton** — distinct from goblin.
+7. **banishment_orc** — distinct broad shape.
+8. **banishment_troll** — largest tower mass.
+9. **banishment_dragon** — reads when mostly darkened; simple silhouette.
 10. **banishment_flare_escape** — **creature-agnostic** abstract burst only (see prompt sheet).
 11. **banishment_dark_anchor** — *optional*; only if dragon is too busy for Lights Off.
 12. **banishment_gesture_z_reference** — *optional*; app prefers **code-drawn** Z path; skip unless art direction insists.
@@ -59,7 +59,7 @@ Hand-painted or tool exports (no device frame) may also land under (team choice)
 
   memlog/requirements/Design/Assets/banishment/
 
-Use filenames that match the final imageset stem, e.g. ``banishment_threat_goblin.png``.
+Use filenames that match the final imageset stem, e.g. ``banishment_goblin.png`` (ingest also accepts legacy ``banishment_threat_*_gen.png`` inputs).
 
 Post-processing
 ---------------
@@ -106,7 +106,7 @@ Use **without** ``--allow-missing`` before merging a PR that claims Banishment a
 
 SwiftUI wiring (after catalog)
 ------------------------------
-- Replace SF Symbol portraits with ``Image(iOSBanishmentArt.threatGoblin)`` (etc.) when
+- Replace SF Symbol portraits with ``Image(iOSBanishmentArt.banishmentGoblin)`` (etc.) when
   ``UIImage(named:) != nil``, or always use asset name strings from ``iOSBanishmentArt``.
 - Layer order and sizing: **BanishmentAssetPipeline.txt**.
 - Re-run **device VoiceOver** escape checklist from QuestConcept-Banishment.txt.

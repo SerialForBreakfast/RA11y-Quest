@@ -15,8 +15,9 @@ import Foundation
 /// **Catalog art:** ``utility/import_banishment_mockups_to_assets.py`` from ``MockupScreens/banishment_iphone_*.png``.
 /// Legacy greybox only: ``utility/banishment_procedural_placeholder.py`` (not mockup fidelity).
 ///
-/// **Sprites** must be **RGBA** (true alpha). Flat RGB mats show as grey boxes on dark UI;
-/// run ``utility/remove_white_background.py`` or re-export with alpha (see pipeline).
+/// **Sprites** must be **RGBA** with real transparency. Opaque grey / checkerboard beds
+/// (alpha=255) read as mats in SwiftUI — run ``utility/transparent_edge_midgrey_matte.py`` /
+/// ``utility/transparent_edge_dark_matte.py`` after import, or re-export with true alpha.
 enum iOSBanishmentArt {
 
     // MARK: Hub (RGBA quest card)
@@ -36,13 +37,16 @@ enum iOSBanishmentArt {
     /// Prologue Z illustration (golden particle trail + nodes, mockup-aligned). PNG is **RGBA** with transparent exterior matte (see ``utility/transparent_edge_dark_matte.py``).
     static let gestureZReference = "banishment_gesture_z_reference"
 
-    // MARK: Threats (transparent)
+    // MARK: Creature encounters (transparent RGBA)
 
-    static let threatGoblin = "banishment_threat_goblin"
-    static let threatSkeleton = "banishment_threat_skeleton"
-    static let threatOrc = "banishment_threat_orc"
-    static let threatTroll = "banishment_threat_troll"
-    static let threatDragon = "banishment_threat_dragon"
+    /// Ward practice creature — imageset ``banishment_goblin``.
+    static let banishmentGoblin = "banishment_goblin"
+    /// First tower encounter — imageset ``banishment_skeleton``.
+    static let banishmentSkeleton = "banishment_skeleton"
+    static let banishmentOrc = "banishment_orc"
+    static let banishmentTroll = "banishment_troll"
+    /// Lights Off / dark tower silhouette — imageset ``banishment_dragon``.
+    static let banishmentDragon = "banishment_dragon"
 
     // MARK: Feedback (transparent)
 

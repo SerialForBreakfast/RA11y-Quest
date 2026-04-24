@@ -146,7 +146,7 @@ Prompt
   background, no hands, no fingers, no arrows, no text, no letters, no numbers,
   no extra objects, painterly flat fantasy style, 1024x1024.
 
-5) banishment_threat_goblin
+5) banishment_goblin
 ---------------------------
 Role
 - Practice ward threat.
@@ -163,7 +163,7 @@ Prompt
   no weapon, centered with generous padding, transparent background, painterly flat
   RA11y fantasy illustration, no text, no letters, no numbers, no UI, 1024x1024.
 
-6) banishment_threat_skeleton
+6) banishment_skeleton
 -----------------------------
 Role
 - Stage 2 tower threat 1.
@@ -179,7 +179,7 @@ Prompt
   centered with generous padding, transparent background, painterly flat RA11y
   fantasy style, no text, no letters, no numbers, no UI, 1024x1024.
 
-7) banishment_threat_orc
+7) banishment_orc
 ------------------------
 Role
 - Stage 2 tower threat 2.
@@ -196,7 +196,7 @@ Prompt
   fantasy style, no weapon crossing the canvas edge, no text, no letters, no
   numbers, no UI, 1024x1024.
 
-8) banishment_threat_troll
+8) banishment_troll
 --------------------------
 Role
 - Stage 2 tower threat 3.
@@ -212,7 +212,7 @@ Prompt
   gore, centered with generous padding, transparent background, painterly flat
   RA11y fantasy illustration, no text, no letters, no numbers, no UI, 1024x1024.
 
-9) banishment_threat_dragon
+9) banishment_dragon
 ---------------------------
 Role
 - Lights Off final threat anchor.

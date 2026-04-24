@@ -81,7 +81,7 @@ final class BanishmentQuestViewModel {
     private static let wardThreat = BanishmentThreat(
         id: "ward_goblin",
         symbolName: "figure.run",
-        catalogImageName: iOSBanishmentArt.threatGoblin,
+        catalogImageName: iOSBanishmentArt.banishmentGoblin,
         spokenName: String(localized: "banishment.threat.goblin.spoken")
     )
 
@@ -92,19 +92,19 @@ final class BanishmentQuestViewModel {
         BanishmentThreat(
             id: "tower_skeleton",
             symbolName: "skull.fill",
-            catalogImageName: iOSBanishmentArt.threatSkeleton,
+            catalogImageName: iOSBanishmentArt.banishmentSkeleton,
             spokenName: String(localized: "banishment.threat.skeleton.spoken")
         ),
         BanishmentThreat(
             id: "tower_orc",
             symbolName: "shield.lefthalf.filled",
-            catalogImageName: iOSBanishmentArt.threatOrc,
+            catalogImageName: iOSBanishmentArt.banishmentOrc,
             spokenName: String(localized: "banishment.threat.orc.spoken")
         ),
         BanishmentThreat(
             id: "tower_troll",
             symbolName: "hammer.fill",
-            catalogImageName: iOSBanishmentArt.threatTroll,
+            catalogImageName: iOSBanishmentArt.banishmentTroll,
             spokenName: String(localized: "banishment.threat.troll.spoken")
         ),
     ]
@@ -112,7 +112,7 @@ final class BanishmentQuestViewModel {
     private static let darkThreat = BanishmentThreat(
         id: "dark_dragon",
         symbolName: "flame.fill",
-        catalogImageName: iOSBanishmentArt.threatDragon,
+        catalogImageName: iOSBanishmentArt.banishmentDragon,
         spokenName: String(localized: "banishment.threat.dragon.spoken")
     )
 
@@ -585,11 +585,11 @@ struct iOSBanishmentQuestView: View {
         if !isPortraitOrSquareFullBleedCandidate(UIImage(named: iOSBanishmentArt.wardBackground)) { return false }
         if !isPortraitOrSquareFullBleedCandidate(UIImage(named: iOSBanishmentArt.towerBackground)) { return false }
         let threatKeys = [
-            iOSBanishmentArt.threatGoblin,
-            iOSBanishmentArt.threatSkeleton,
-            iOSBanishmentArt.threatOrc,
-            iOSBanishmentArt.threatTroll,
-            iOSBanishmentArt.threatDragon,
+            iOSBanishmentArt.banishmentGoblin,
+            iOSBanishmentArt.banishmentSkeleton,
+            iOSBanishmentArt.banishmentOrc,
+            iOSBanishmentArt.banishmentTroll,
+            iOSBanishmentArt.banishmentDragon,
         ]
         for key in threatKeys {
             if let im = UIImage(named: key), !isLikelyCreatureSpriteRaster(im) { return false }

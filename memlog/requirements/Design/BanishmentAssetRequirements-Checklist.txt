@@ -54,11 +54,11 @@ imageset name               | Swift constant (iOSBanishmentArt) | Role        | 
 banishment_ward_bg           | wardBackground                     | background | 2048 × 4096 | generator or illustrated
 banishment_tower_bg          | towerBackground                    | background | 2048 × 4096 | generator or illustrated
 banishment_ward_ring         | wardRing                           | sprite RGBA| 1024 × 1024 | generator or illustrated
-banishment_threat_goblin     | threatGoblin                       | sprite     | 1024 × 1024 | generator or illustrated
-banishment_threat_skeleton   | threatSkeleton                     | sprite     | 1024 × 1024 | generator or illustrated
-banishment_threat_orc        | threatOrc                          | sprite     | 1024 × 1024 | generator or illustrated
-banishment_threat_troll      | threatTroll                        | sprite     | 1024 × 1024 | generator or illustrated
-banishment_threat_dragon     | threatDragon                       | sprite     | 1024 × 1024 | generator or illustrated
+banishment_goblin            | banishmentGoblin                   | sprite     | 1024 × 1024 | generator or illustrated
+banishment_skeleton          | banishmentSkeleton                 | sprite     | 1024 × 1024 | generator or illustrated
+banishment_orc               | banishmentOrc                      | sprite     | 1024 × 1024 | generator or illustrated
+banishment_troll             | banishmentTroll                    | sprite     | 1024 × 1024 | generator or illustrated
+banishment_dragon            | banishmentDragon                   | sprite     | 1024 × 1024 | generator or illustrated
 banishment_flare_escape      | flareEscape                        | sprite     | 1024 × 1024 | generator or illustrated
 banishment_hub_icon          | hubIcon                            | hub RGBA   | 1376 × 768  | generator or illustrated
 
@@ -102,14 +102,20 @@ Runtime compositing (SwiftUI — must match shipped code)
   - **Do not** pair `.compositingGroup()` with `.shadow` on `.thinMaterial` trap /
     spell cards over dark scrims — can read as grey boxes (Crystal shaft note).
 
-  If fringes remain after the above: re-export sprites with clean alpha,
-  `utility/transparent_edge_dark_matte.py` for edge-connected dark mats, or
-  `utility/remove_white_background.py` for light mats — then re-run step 2.
+  If fringes remain after the above: re-export sprites with clean alpha, or run
+  `utility/transparent_edge_midgrey_matte.py` (opaque grey / checkerboard export beds),
+  `utility/transparent_edge_dark_matte.py` (black mats), or
+  `utility/remove_white_background.py` (white mats) — then re-run step 2.
 
 Iteration: replacing procedural art with illustrated exports
 --------------------------------------------------------------
   1. Produce PNGs at the **spec size** above (avoid uncropped phone mockup frames
      as full-bleed backgrounds — use portrait masters).
-  2. Sprites must be **RGBA** with real alpha (see qa script RGB FAIL).
+  2. Sprites must be **RGBA** with real alpha (see qa script RGB FAIL). Exports that
+     bake a grey or B/W checker bed as opaque RGB need mechanical cleanup:
+     ``python3 utility/transparent_edge_midgrey_matte.py --in-place --ground-band 0.26
+     <path/to/banishment_<creature>.png>`` then, for black-framed art (e.g. skeleton),
+     ``python3 utility/transparent_edge_dark_matte.py --in-place …``. Prefer re-export
+     with true alpha when fringes persist.
   3. Drop files into the existing `.imageset` folders (or extend import script).
   4. Re-run steps 2–5 under Verification.

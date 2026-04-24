@@ -168,13 +168,13 @@ def main() -> None:
     write_imageset("banishment_tower_bg", "banishment_tower_bg.png", fit_portrait_master_rgb(sk_i))
 
     write_imageset("banishment_ward_ring", "banishment_ward_ring.png", ward_ring_sprite(ward_i))
-    write_imageset("banishment_threat_goblin", "banishment_threat_goblin.png", creature_sprite_from_beat(ward_i))
-    write_imageset("banishment_threat_skeleton", "banishment_threat_skeleton.png", creature_sprite_from_beat(sk_i))
-    write_imageset("banishment_threat_orc", "banishment_threat_orc.png", creature_sprite_from_beat(orc_i))
-    write_imageset("banishment_threat_troll", "banishment_threat_troll.png", creature_sprite_from_beat(tr_i))
+    write_imageset("banishment_goblin", "banishment_goblin.png", creature_sprite_from_beat(ward_i))
+    write_imageset("banishment_skeleton", "banishment_skeleton.png", creature_sprite_from_beat(sk_i))
+    write_imageset("banishment_orc", "banishment_orc.png", creature_sprite_from_beat(orc_i))
+    write_imageset("banishment_troll", "banishment_troll.png", creature_sprite_from_beat(tr_i))
     write_imageset(
-        "banishment_threat_dragon",
-        "banishment_threat_dragon.png",
+        "banishment_dragon",
+        "banishment_dragon.png",
         creature_sprite_from_beat(dark_i, bottom_card_trim=0.34),
     )
     write_imageset("banishment_flare_escape", "banishment_flare_escape.png", flare_sprite(ban_i))

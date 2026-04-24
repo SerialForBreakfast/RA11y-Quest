@@ -243,6 +243,7 @@ mechanical pipeline work only** (never for synthesizing illustrated quest art;
 see **Illustrated quest assets — authorship** above):
 
 - `utility/remove_white_background.py` — approved, do not rewrite
+- `utility/transparent_edge_dark_matte.py`, `utility/transparent_edge_midgrey_matte.py` — edge flood for black / grey checkerboard export beds on catalog sprites (mechanical cleanup only)
 - `utility/ensure_png_rgba.py` — batch RGBA normalization for `Assets.xcassets` composited art (uses edge logic from `remove_white_background.py`)
 - `utility/qa_banishment_png_assets.py`, `utility/qa_crystal_resonance_png_assets.py` — validation only
 - `utility/ingest_llm_banishment_pngs.py` — fit pre-authored LLM/human PNGs into catalog sizes

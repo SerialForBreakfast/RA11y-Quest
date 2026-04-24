@@ -55,12 +55,22 @@ OPAQUE_BACKGROUND_STEMS: frozenset[str] = frozenset(
     }
 )
 
+# Banishment creature encounter rasters (explicit stems — avoid matching unrelated ``banishment_*`` art).
+BANISHMENT_ENCOUNTER_SPRITE_STEMS: frozenset[str] = frozenset(
+    {
+        "banishment_goblin",
+        "banishment_skeleton",
+        "banishment_orc",
+        "banishment_troll",
+        "banishment_dragon",
+    }
+)
+
 # Imagesets whose PNGs should get **edge** transparency (not just RGBA re-encode).
 EDGE_SPRITE_IMAGESET_PREFIXES: tuple[str, ...] = (
     "banishment_dark_anchor",
     "banishment_flare_escape",
     "banishment_hub_icon",
-    "banishment_threat_",
     "banishment_ward_ring",
     "dungeon_lane_marker_neutral",
     "dungeon_resonance_orb_",
@@ -88,6 +98,8 @@ def wants_edge_sprite(path: Path) -> bool:
     if not parent.endswith(".imageset"):
         return False
     base = parent[: -len(".imageset")]
+    if base in BANISHMENT_ENCOUNTER_SPRITE_STEMS:
+        return True
     for prefix in EDGE_SPRITE_IMAGESET_PREFIXES:
         if base == prefix or base.startswith(prefix):
             return True

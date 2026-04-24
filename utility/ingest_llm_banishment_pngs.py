@@ -7,7 +7,8 @@ Expected filenames in ``--source-dir``::
 
   banishment_ward_bg_gen.png
   banishment_tower_bg_gen.png
-  banishment_threat_{goblin,skeleton,orc,troll,dragon}_gen.png
+  banishment_{goblin,skeleton,orc,troll,dragon}_gen.png
+  (legacy: banishment_threat_<creature>_gen.png still accepted)
   banishment_ward_ring_gen.png
   banishment_flare_escape_gen.png
   banishment_dark_anchor_gen.png
@@ -68,8 +69,18 @@ def main() -> None:
 
     write_png("banishment_ward_bg", fit_rgb(src / "banishment_ward_bg_gen.png", BG_SIZE))
     write_png("banishment_tower_bg", fit_rgb(src / "banishment_tower_bg_gen.png", BG_SIZE))
+
+    def encounter_gen(creature: str) -> Path:
+        preferred = src / f"banishment_{creature}_gen.png"
+        legacy = src / f"banishment_threat_{creature}_gen.png"
+        if preferred.is_file():
+            return preferred
+        if legacy.is_file():
+            return legacy
+        raise SystemExit(f"error: missing {preferred.name} or {legacy.name}")
+
     for creature in ("goblin", "skeleton", "orc", "troll", "dragon"):
-        write_png(f"banishment_threat_{creature}", fit_rgba(src / f"banishment_threat_{creature}_gen.png", SPRITE_SIZE))
+        write_png(f"banishment_{creature}", fit_rgba(encounter_gen(creature), SPRITE_SIZE))
     write_png("banishment_ward_ring", fit_rgba(src / "banishment_ward_ring_gen.png", SPRITE_SIZE))
     write_png("banishment_flare_escape", fit_rgba(src / "banishment_flare_escape_gen.png", SPRITE_SIZE))
     write_png("banishment_dark_anchor", fit_rgba(src / "banishment_dark_anchor_gen.png", SPRITE_SIZE))

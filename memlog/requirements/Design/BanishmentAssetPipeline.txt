@@ -47,7 +47,7 @@ Practice Ward
 3. `banishment_ward_ring`
    - Transparent sprite behind threat.
    - Large center anchor.
-4. `banishment_threat_goblin`
+4. `banishment_goblin`
    - Transparent sprite centered over ring.
 5. Code-drawn Z gesture path
    - Practice only.
@@ -61,9 +61,9 @@ Timed Tower
 2. Code-drawn trap veil
 3. `banishment_ward_ring`
 4. One threat sprite:
-   - `banishment_threat_skeleton`
-   - `banishment_threat_orc`
-   - `banishment_threat_troll`
+   - `banishment_skeleton`
+   - `banishment_orc`
+   - `banishment_troll`
 5. Timer HUD and trap instruction card.
 6. Optional `banishment_flare_escape` during success resolution.
    Success feedback must be **creature-agnostic**: same abstract flare / ring
@@ -75,7 +75,7 @@ Lights Off
 1. Black or near-black code-drawn background.
 2. Optional faint crop of `banishment_tower_bg` at very low opacity.
 3. Small center anchor:
-   - prefer `banishment_threat_dragon`
+   - prefer `banishment_dragon`
    - use `banishment_dark_anchor` if dragon sprite is too visually busy.
 4. No visible Z path.
 5. Timer HUD, if needed, remains readable and grouped for VoiceOver.
@@ -139,11 +139,11 @@ Transparent PNG RGBA:
 
 - `banishment_ward_ring`
 - `banishment_gesture_z_reference`
-- `banishment_threat_goblin`
-- `banishment_threat_skeleton`
-- `banishment_threat_orc`
-- `banishment_threat_troll`
-- `banishment_threat_dragon`
+- `banishment_goblin`
+- `banishment_skeleton`
+- `banishment_orc`
+- `banishment_troll`
+- `banishment_dragon`
 - `banishment_flare_escape`
 - `banishment_dark_anchor`
 
