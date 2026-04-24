@@ -498,6 +498,8 @@ struct iOSBanishmentQuestView: View {
             playBanishFlareFeedback()
         }
         .onDisappear { viewModel.handleViewDisappear() }
+        .preferredColorScheme(.dark)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
     }
 
     private var navigationTitle: String {
@@ -682,33 +684,33 @@ struct iOSBanishmentQuestView: View {
     private var prologueBody: some View {
         ScrollView {
             VStack(alignment: .center, spacing: RA11ySpacing.lg) {
-                Label(String(localized: "banishment.prologue.kicker"), systemImage: "hand.draw.fill")
-                    .font(.ra11yCaption)
-                    .foregroundStyle(.secondary)
-                    .labelStyle(.titleAndIcon)
-                    .accessibilityIdentifier("banishment.prologue.kicker")
+                HStack(spacing: RA11ySpacing.sm) {
+                    Image(systemName: "hand.draw.fill")
+                        .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                    Text(String(localized: "banishment.prologue.kicker"))
+                        .textCase(.uppercase)
+                        .questPaintReadableText(.captionGold)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("banishment.prologue.kicker")
                 Text(String(localized: "banishment.prologue.title"))
-                    .font(.ra11yTitle)
-                    .bold()
                     .multilineTextAlignment(.center)
+                    .questPaintReadableText(.heroTitle)
                     .accessibilityIdentifier("banishment.prologue.title")
                     .accessibilityAddTraits(.isHeader)
                 Text(String(localized: "banishment.prologue.body"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .questPaintReadableText(.bodySupporting)
                     .accessibilityIdentifier("banishment.prologue.body")
                 prologueGestureIllustration
                 Text(String(localized: "banishment.prologue.instructions"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
+                    .questPaintReadableText(.bodyEmphasis)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("banishment.prologue.instructions")
                 Text(String(localized: "banishment.prologue.swipeExplainer"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
+                    .questPaintReadableText(.bodyEmphasis)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("banishment.prologue.swipeExplainer")
                     .accessibilityLabel(String(localized: "banishment.prologue.swipeExplainer.a11y"))
@@ -732,19 +734,17 @@ struct iOSBanishmentQuestView: View {
 
     /// Large Z reference from ``iOSBanishmentArt/gestureZReference`` (lesson-only, mockup-style golden trail + nodes); falls back to a vector hint if the catalog image is missing.
     ///
-    /// The catalog PNG is authored with a dark matte; ``View/blendMode`` ``BlendMode/screen`` composits it over the ward background without a visible rectangle.
+    /// The catalog PNG uses **true alpha** (edge-connected dark matte removed in the ingest utility); no blend hack required.
     @ViewBuilder
     private var prologueGestureIllustration: some View {
         Group {
             if UIImage(named: iOSBanishmentArt.gestureZReference) != nil {
-                // Raster uses a near-black matte (generator-friendly); screen blend drops the matte so the golden trail reads like the mockup overlay on the ward master.
                 Image(iOSBanishmentArt.gestureZReference)
                     .resizable()
                     .interpolation(.high)
                     .scaledToFit()
                     .frame(maxWidth: horizontalSizeClass == .regular ? 340 : 300)
-                    .blendMode(.screen)
-                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+                    .shadow(color: .black.opacity(0.35), radius: 14, y: 5)
             } else {
                 prologueZGestureFallback
             }
@@ -779,16 +779,16 @@ struct iOSBanishmentQuestView: View {
         VStack(spacing: RA11ySpacing.lg) {
             Image(systemName: "door.left.hand.open")
                 .font(.system(size: 56))
-                .foregroundStyle(Color.ra11yAccent)
+                .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
                 .accessibilityHidden(true)
             Text(String(format: String(localized: "banishment.ward.intermission.title"), viewModel.wardPracticeSpokenName))
-                .font(.ra11yHeadline)
                 .multilineTextAlignment(.center)
+                .questPaintReadableText(.sectionTitle)
             if let statusMessage = viewModel.statusMessage {
                 Text(statusMessage)
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .questPaintReadableText(.bodySupporting)
             }
             Button(String(localized: "banishment.ward.continueGauntlet")) {
                 viewModel.beginScoredGauntlet()
@@ -1012,10 +1012,9 @@ private struct BanishmentTrapOverlay: View {
     private func encounterCard(for threat: BanishmentThreat) -> some View {
         VStack(spacing: RA11ySpacing.sm) {
             Text(trapKicker)
-                .font(.ra11yCaption)
-                .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .questPaintReadableText(.captionGold)
                 .accessibilityHidden(true)
             Text(
                 String(
@@ -1023,14 +1022,13 @@ private struct BanishmentTrapOverlay: View {
                     threat.spokenName
                 )
             )
-            .font(.ra11yTitle)
-            .bold()
             .multilineTextAlignment(.center)
+            .font(.system(.title2, design: .serif).weight(.bold))
+            .foregroundStyle(Color.white.opacity(0.96))
             if showsHint {
                 Text(String(localized: "banishment.trap.hint"))
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .questPaintReadableText(.materialCardBody)
             }
         }
         .padding(RA11ySpacing.lg)

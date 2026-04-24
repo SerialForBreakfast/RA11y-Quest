@@ -7,6 +7,10 @@ import RA11yCore
 
 /// Interstitial screen shown when a user attempts to start a game with VoiceOver disabled.
 ///
+/// **Presentation:** Uses the same illustrated quest backdrop as the game the user tapped
+/// (``GameKind/questVoiceOverGateAmbientImageName``) plus ``QuestPaintReadableScrim`` so copy
+/// matches results/prologue legibility on phone and iPad.
+///
 /// ## Flow
 /// 1. Explains that VoiceOver is required.
 /// 2. **Primary CTA: "Ask Siri"** — shows Siri instructions for enabling VoiceOver.
@@ -41,6 +45,7 @@ struct iOSVORequiredView: View {
     // MARK: - Private State
 
     @Environment(iOSAppRouter.self) private var router
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showHelpSheet = false
     /// Set to true when both the deep link and the Settings fallback fail.
     @State private var showManualFallback = false
@@ -48,25 +53,45 @@ struct iOSVORequiredView: View {
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            ScrollView {
-                VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-                    headerSection
-                    ctaSection
-                    if showManualFallback {
-                        manualFallbackSection
+        ZStack {
+            QuestPaintAmbientBackdrop(imageName: kind.questVoiceOverGateAmbientImageName)
+                .ignoresSafeArea()
+            QuestPaintReadableScrim()
+                .ignoresSafeArea()
+            GeometryReader { geo in
+                let hPad = QuestPaintContentMetrics.scrollHorizontalPadding(
+                    containerWidth: geo.size.width,
+                    horizontalSizeClass: horizontalSizeClass,
+                    gameKind: kind
+                )
+                let colW = QuestPaintContentMetrics.readingColumnMaxWidth(
+                    containerWidth: geo.size.width,
+                    horizontalSizeClass: horizontalSizeClass,
+                    horizontalPadding: hPad
+                )
+                ScrollView {
+                    VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                        headerSection
+                        ctaSection
+                        if showManualFallback {
+                            manualFallbackSection
+                        }
                     }
+                    .frame(maxWidth: colW)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, RA11ySpacing.lg)
                 }
-                .padding(RA11ySpacing.base)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, hPad)
+                .scrollContentBackground(.hidden)
+                .clipped()
             }
-            .clipped()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .preferredColorScheme(.dark)
         .navigationTitle(String(localized: "voiceOverRequired.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(String(localized: "voiceOverRequired.returnToHub")) {
@@ -85,19 +110,18 @@ struct iOSVORequiredView: View {
         VStack(spacing: RA11ySpacing.md) {
             Image(systemName: "accessibility")
                 .font(.system(size: 64))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.white.opacity(0.92))
+                .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
                 .accessibilityHidden(true)
 
             Text(String(localized: "voiceOverRequired.title"))
-                .font(.ra11yTitle)
-                .bold()
                 .multilineTextAlignment(.center)
+                .questPaintReadableText(.heroTitle)
                 .accessibilityIdentifier("voRequired.title")
 
             Text(String(localized: "voiceOverRequired.body"))
-                .font(.ra11yBody)
-                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .questPaintReadableText(.bodySupporting)
         }
     }
 
@@ -132,25 +156,24 @@ struct iOSVORequiredView: View {
             HStack(spacing: RA11ySpacing.sm) {
                 Image(systemName: "waveform")
                     .font(.ra11yHeadline)
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
                     .accessibilityHidden(true)
                 Text(String(localized: "voiceOverRequired.siri.heading"))
-                    .font(.ra11ySubheadline)
-                    .fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .questPaintReadableText(.materialCardTitle)
             }
             Text(String(localized: "voiceOverRequired.siri.phrase"))
-                .font(.ra11yBody)
                 .italic()
                 .multilineTextAlignment(.center)
+                .questPaintReadableText(.materialCardBody)
                 .padding(.horizontal, RA11ySpacing.sm)
                 .padding(.vertical, RA11ySpacing.xs)
                 .frame(maxWidth: .infinity)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: RA11yRadius.button))
+                .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: RA11yRadius.button))
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             "\(String(localized: "voiceOverRequired.siri.heading")). \(String(localized: "voiceOverRequired.siri.a11yLabel"))"
@@ -161,10 +184,9 @@ struct iOSVORequiredView: View {
     /// Gives the user a manual path forward without leaving the app.
     private var manualFallbackSection: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Divider()
+            Divider().opacity(0.35)
             Text(String(localized: "voiceOverRequired.settingsFallback"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.materialCardMeta)
         }
         .transition(.opacity)
     }

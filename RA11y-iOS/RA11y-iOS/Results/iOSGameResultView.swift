@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 import RA11yCore
 
 // MARK: - iOSGameResultView
@@ -35,6 +34,7 @@ struct iOSGameResultView: View {
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Properties
 
@@ -59,29 +59,28 @@ struct iOSGameResultView: View {
 
     var body: some View {
         ZStack {
-            questResultAmbientBackground
+            QuestPaintAmbientBackdrop(imageName: gameKind.questResultAmbientImageName)
                 .ignoresSafeArea()
-            LinearGradient(
-                stops: [
-                    .init(color: .black.opacity(0.38), location: 0),
-                    .init(color: .black.opacity(0.62), location: 0.45),
-                    .init(color: .black.opacity(0.82), location: 1),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            .accessibilityHidden(true)
-
+            QuestPaintReadableScrim()
+                .ignoresSafeArea()
             GeometryReader { geo in
+                let hPad = QuestPaintContentMetrics.scrollHorizontalPadding(
+                    containerWidth: geo.size.width,
+                    horizontalSizeClass: horizontalSizeClass,
+                    gameKind: gameKind
+                )
+                let colW = QuestPaintContentMetrics.readingColumnMaxWidth(
+                    containerWidth: geo.size.width,
+                    horizontalSizeClass: horizontalSizeClass,
+                    horizontalPadding: hPad
+                )
                 ScrollView {
                     VStack(spacing: RA11ySpacing.xl) {
                         resultSummary
                         if let gameSpecificAnnouncement {
                             Text(gameSpecificAnnouncement)
-                                .font(.ra11yBody)
                                 .multilineTextAlignment(.center)
-                                .foregroundStyle(Color.white.opacity(0.88))
+                                .questPaintReadableText(.bodyEmphasis)
                                 .padding(.horizontal, RA11ySpacing.base)
                                 .padding(.vertical, RA11ySpacing.sm)
                                 .frame(maxWidth: .infinity)
@@ -90,10 +89,11 @@ struct iOSGameResultView: View {
                         skillTransferCard
                         actionButtons
                     }
-                    .padding(RA11ySpacing.base)
-                    .frame(width: geo.size.width)
+                    .frame(maxWidth: colW)
                     .frame(maxWidth: .infinity)
+                    .padding(.vertical, RA11ySpacing.base)
                 }
+                .padding(.horizontal, hPad)
                 .scrollContentBackground(.hidden)
                 .clipped()
             }
@@ -107,27 +107,6 @@ struct iOSGameResultView: View {
         .accessibilityIdentifier("gameResult.root")
     }
 
-    /// Full-bleed quest art; falls back to ``Color/ra11yGameFallbackBackground`` when an imageset is missing.
-    @ViewBuilder
-    private var questResultAmbientBackground: some View {
-        let name = questResultBackgroundAssetName
-        if UIImage(named: name) != nil {
-            Image(name)
-                .resizable()
-                .scaledToFill()
-        } else {
-            Color.ra11yGameFallbackBackground
-        }
-    }
-
-    private var questResultBackgroundAssetName: String {
-        switch gameKind {
-        case .findAndFocus: return "enchanter_tower_shelf_bg"
-        case .scrollHunt: return "dungeon_descent_bg"
-        case .banishment: return iOSBanishmentArt.towerBackground
-        }
-    }
-
     // MARK: - Subviews
 
     /// Rank icon, rank label, time, and mistake count.
@@ -136,23 +115,20 @@ struct iOSGameResultView: View {
         VStack(spacing: RA11ySpacing.md) {
             Image(systemName: presenter.result.rank.symbolName)
                 .font(.system(size: 72))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
                 .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
                 .accessibilityHidden(true)
 
             Text(presenter.result.rank.displayText)
-                .font(.ra11yLargeTitle)
-                .bold()
-                .foregroundStyle(Color.white)
-                .shadow(color: .black.opacity(0.45), radius: 4, y: 2)
+                .multilineTextAlignment(.center)
+                .questPaintReadableText(.sectionTitle)
 
             VStack(spacing: RA11ySpacing.xs) {
                 Text(presenter.formattedTime)
-                    .font(.ra11yHeadline)
-                    .foregroundStyle(Color.white.opacity(0.95))
+                    .questPaintReadableText(.materialCardBody)
+                    .font(Font.ra11yHeadline)
                 Text(presenter.formattedMistakes)
-                    .font(.ra11yBody)
-                    .foregroundStyle(Color.white.opacity(0.78))
+                    .questPaintReadableText(.materialCardMeta)
             }
         }
         .padding(RA11ySpacing.base)
@@ -169,22 +145,23 @@ struct iOSGameResultView: View {
     /// "I passed the game" → "I know what to do in the App Store."
     private var skillTransferCard: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Label(String(localized: "result.skillTransfer.heading"), systemImage: "lightbulb.fill")
-                .font(.ra11ySubheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .accessibilityAddTraits(.isHeader)
+            Label {
+                Text(String(localized: "result.skillTransfer.heading"))
+                    .questPaintReadableText(.materialCardTitle)
+            } icon: {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+            }
+            .accessibilityAddTraits(.isHeader)
 
-            Divider()
+            Divider().opacity(0.28)
 
             Text(skillTransferBody)
-                .font(.ra11yBody)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.materialCardBody)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text(skillTransferRealWorld)
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.materialCardMeta)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(RA11ySpacing.base)

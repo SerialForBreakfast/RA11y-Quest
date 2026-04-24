@@ -364,7 +364,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Ward"
+            "value" : "Goblin"
           }
         }
       }
@@ -395,7 +395,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceOver’s escape gesture is a two-finger Z scribble. It dismisses sheets, alerts, and other blocking UI when focus feels stuck—the same motion banishes foes in this trial. Practice on the ward first, then run the timed tower."
+            "value" : "VoiceOver’s escape gesture is a two-finger Z scribble. It dismisses sheets, alerts, and other blocking UI when focus feels stuck—the same motion banishes foes in this trial. Practice with the goblin first, then run the timed tower."
           }
         }
       }
@@ -570,12 +570,12 @@
       }
     },
     "banishment.trap.kicker.practice" : {
-      "comment" : "Trap card kicker during practice ward (binding seal present).",
+      "comment" : "Trap card kicker during the goblin practice encounter.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Practice ward"
+            "value" : "Goblin"
           }
         }
       }

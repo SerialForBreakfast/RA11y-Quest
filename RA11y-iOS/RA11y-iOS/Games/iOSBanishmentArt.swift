@@ -33,7 +33,7 @@ enum iOSBanishmentArt {
 
     /// Ward binding ring raster — **not shown in UI** until art direction re-enables it; pipeline may still ship the asset.
     static let wardRing = "banishment_ward_ring"
-    /// Prologue Z illustration (golden particle trail + nodes, mockup-aligned). Raster uses a dark matte; ``iOSBanishmentQuestView`` composites with screen blend.
+    /// Prologue Z illustration (golden particle trail + nodes, mockup-aligned). PNG is **RGBA** with transparent exterior matte (see ``utility/transparent_edge_dark_matte.py``).
     static let gestureZReference = "banishment_gesture_z_reference"
 
     // MARK: Threats (transparent)
