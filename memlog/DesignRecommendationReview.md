@@ -382,3 +382,8 @@ Before accepting a redesigned quest screen:
 ## Recommended First Task
 
 Start with `QuestLayoutRole` plus the iPad hub width fix. That directly addresses the visible screenshot problem while creating the foundation needed for the prologue/result unification work.
+
+## Related engineering artifacts
+
+- **Code ↔ review mapping:** [`memlog/DesignRecommendationCodeMap.md`](DesignRecommendationCodeMap.md) (screenshot routes, metrics call sites, prologue/result file pointers).
+- **Checklist / Phase 1 tickets:** [`memlog/designRefactorTasks.md`](designRefactorTasks.md) — section *Quest UI System Refactor* (UI-1 … UI-11) and **Phase 1 execution tickets** under Task UI-1.

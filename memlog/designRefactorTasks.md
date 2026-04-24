@@ -221,6 +221,23 @@ Design goals:
 - Preserve quest-specific mechanics while unifying surrounding chrome, terminology, and action patterns.
 - Keep screenshot automation deterministic and aligned with `ScreenshotRouteCatalog.md`.
 
+**Code map:** Line-by-line mapping from the design review to Swift files and metrics lives in [`memlog/DesignRecommendationCodeMap.md`](DesignRecommendationCodeMap.md).
+
+### Phase 1 execution tickets (from `DesignRecommendationReview.md` § Implementation Plan Phase 1)
+
+Use these as the **first mergeable slices** before prologue migrations. They correspond to **Task UI-1** and optionally small pilots for **UI-3 / UI-4**.
+
+| ID | Deliverable | Done when |
+|----|--------------|-----------|
+| **P1.1** | Add `QuestLayoutRole` enum (`reading`, `questCardList`, `lesson`, `playfield`, `actions`) in `iOSQuestPaintChrome.swift`. | Compiles; each case has a one-line doc comment describing purpose + iPad vs iPhone intent. |
+| **P1.2** | Add role-aware APIs on `QuestPaintContentMetrics` (e.g. `horizontalPadding(role:containerWidth:sizeClass:gameKind:)` and `contentMaxWidth(role:…)`), encapsulating today’s 640/620 caps for `.reading`. | Existing call sites can keep behavior by passing `.reading` (or thin wrappers delegating to old methods marked deprecated). |
+| **P1.3** | Document target width bands in Quick Help (table: role × compact × regular) matching the review’s §“Introduce layout roles” table. | Xcode quick help shows numbers without hunting `DesignRecommendationReview.md`. |
+| **P1.4** | Define `.questCardList` numeric targets for regular width (**~760–840pt** initial; tune against `01_Hub` iPad screenshot). | Preview or simulator: Enchanter card title does not wrap like a phone column on iPad. |
+| **P1.5** | (Optional same PR as P1.4) Add `QuestPaintScreen` **struct shell** only: parameters for `imageName`, `layoutRole`, `content` builder; applies `QuestPaintAmbientBackdrop` + `QuestPaintReadableScrim` + `preferredColorScheme(.dark)` + role width — **no** call-site migrations yet. | Compiles; doc comment lists VO rules (no extra focusables for backdrop/scrim). |
+| **P1.6** | (Optional pilot **UI-4**) Extract **one** shared `QuestNarrationCard` used from `EnchanterPrologueView.dmNarrationCard` and `DungeonPrologueView.dmNarrationCard` only. | Visual parity on Enchanter + Dungeon prologue screenshots; combined VO labels unchanged. |
+
+**Suggested first PR:** P1.1–P1.4 + **Task UI-2** hub migration using `.questCardList`. Defer P1.5–P1.6 if the PR would grow too large.
+
 ## Task UI-1 — Add quest layout roles and metrics
 
 **Why:** The current shared reading-column metric is too narrow for iPad hub cards and too generic for playfields. Design surfaces need role-specific width and padding rules.
@@ -230,18 +247,18 @@ Design goals:
 - `RA11yCore/Sources/RA11yCore/Design/RA11yTokens.swift` if shared token additions are needed
 
 **Work:**
-- [ ] Add `QuestLayoutRole` with roles for `reading`, `questCardList`, `lesson`, `playfield`, and `actions`.
-- [ ] Replace or extend `QuestPaintContentMetrics` with role-aware width and horizontal padding APIs.
-- [ ] Document iPhone and iPad target widths for each role.
-- [ ] Keep regular-width content centered unless a playfield explicitly needs full bleed.
+- [x] Add `QuestLayoutRole` with roles for `reading`, `questCardList`, `lesson`, `playfield`, and `actions`.
+- [x] Replace or extend `QuestPaintContentMetrics` with role-aware width and horizontal padding APIs.
+- [x] Document iPhone and iPad target widths for each role (enum + `QuestPaintContentMetrics` Quick Help table).
+- [x] Keep regular-width content centered unless a playfield explicitly needs full bleed (centering unchanged; playfield role reserved).
 
 **VoiceOver requirements:**
 - [ ] Document that layout role changes require rechecking VoiceOver order and Dynamic Type.
 - [ ] Ensure role metrics do not cause focusable controls to clip or move off-screen at large Dynamic Type sizes.
 
 **Verify:**
-- [ ] Existing screens compile with the new metrics available.
-- [ ] No screenshot route loses its root accessibility identifier.
+- [x] Existing screens compile with the new metrics available.
+- [x] No screenshot route loses its root accessibility identifier (hub-only migration; other sites still use legacy reading helpers).
 
 ## Task UI-2 — Fix iPad hub card layout using the new role
 
@@ -253,11 +270,11 @@ Design goals:
 - `RA11y-iOS/RA11y-iOS/Hub/iOSQuestCardInfoView.swift`
 
 **Work:**
-- [ ] Move the hub quest list to the `questCardList` layout role.
-- [ ] Increase iPad card width to avoid short stacked title wrapping.
-- [ ] Keep the initial implementation as a single centered list for stable VoiceOver order.
-- [ ] Recheck locked-card opacity, contrast, and readability.
-- [ ] Keep footer actions aligned with the hub content rhythm.
+- [x] Move the hub quest list to the `questCardList` layout role.
+- [x] Increase iPad card width to avoid short stacked title wrapping (**800pt** column vs **620pt** reading).
+- [x] Keep the initial implementation as a single centered list for stable VoiceOver order.
+- [ ] Recheck locked-card opacity, contrast, and readability (manual QA).
+- [x] Keep footer actions aligned with the hub content rhythm (footer unchanged).
 
 **VoiceOver requirements:**
 - [ ] Preserve the custom "Quests" rotor.

@@ -143,7 +143,7 @@ Tasks:
 - SAK-6.6 Implement low-confidence fallback-art warning hook. Done.
 - SAK-6.7 Add overlay report generation for OCR boxes and failed regions. Done.
 - SAK-6.8 Port or wrap RA11y Banishment asset expectations as data-driven rule
-  configuration where practical.
+  configuration where practical. Done.
 
 Acceptance checks:
 
@@ -173,6 +173,8 @@ Implementation notes:
 - Added `lowConfidenceFallbackArt` findings, defaulting to warning severity.
 - Added overlay PNG generation for screens with findings, using configured
   ignored, protected, and critical regions or a full-screen fallback outline.
+- Added RA11y Banishment screen contract metadata for warning-only fallback art
+  confidence review and critical art overlay regions.
 - Added tests with mechanically generated tiny PNG fixtures.
 - Verified `swift test --package-path ScreenAuditKit`.
 - Verified `utility/validate_screen_audit.sh` still passes without baselines for

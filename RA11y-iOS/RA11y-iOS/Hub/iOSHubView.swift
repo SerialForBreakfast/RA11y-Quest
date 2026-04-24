@@ -16,8 +16,8 @@ import RA11yCore
 /// - Layer 1: Content — DM greeting + scrollable quest cards + pinned footer
 ///
 /// ## Adaptive Design
-/// - iPhone (.compact): full-width content minus 16pt horizontal padding
-/// - iPad (.regular): content max width 600pt, centered
+/// - iPhone (.compact): quest card column up to **560pt** inside ``QuestPaintContentMetrics`` (``QuestLayoutRole/questCardList``).
+/// - iPad (.regular): quest card column up to **800pt**, centered — wider than the prose ``QuestLayoutRole/reading`` lane so titles don’t phone-wrap.
 ///
 /// ## VoiceOver State
 /// VoiceOver state is read from `@Environment(\.accessibilityVoiceOverEnabled)`.
@@ -179,12 +179,14 @@ struct iOSHubView: View {
 
     private var contentLayer: some View {
         GeometryReader { geo in
-            let horizontalPad = QuestPaintContentMetrics.scrollHorizontalPadding(
+            let horizontalPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .questCardList,
                 containerWidth: geo.size.width,
                 horizontalSizeClass: sizeClass,
                 gameKind: nil
             )
-            let readingMax = QuestPaintContentMetrics.readingColumnMaxWidth(
+            let hubContentMaxWidth = QuestPaintContentMetrics.contentMaxWidth(
+                role: .questCardList,
                 containerWidth: geo.size.width,
                 horizontalSizeClass: sizeClass,
                 horizontalPadding: horizontalPad
@@ -200,7 +202,7 @@ struct iOSHubView: View {
 
                     questCardList(horizontalPadding: horizontalPad)
                 }
-                .frame(maxWidth: readingMax)
+                .frame(maxWidth: hubContentMaxWidth)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

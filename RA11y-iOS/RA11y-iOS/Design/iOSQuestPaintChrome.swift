@@ -65,37 +65,150 @@ struct QuestPaintReadableScrim: View {
     }
 }
 
-// MARK: - Reading lane metrics
+// MARK: - Layout roles & metrics
+
+/// Adaptive width **role** for quest UI — replaces a single “reading column” for every surface.
+///
+/// ## Width targets (design system)
+///
+/// Use ``QuestPaintContentMetrics/horizontalPadding(role:containerWidth:horizontalSizeClass:gameKind:)`` and
+/// ``QuestPaintContentMetrics/contentMaxWidth(role:containerWidth:horizontalSizeClass:horizontalPadding:)``.
+///
+/// | Role | Compact (typical phone) | Regular (typical iPad) |
+/// |------|-------------------------|-------------------------|
+/// | ``reading`` | Max content **560pt**, padding from centered 560 anchor | Max content **620pt**, padding from 640 anchor |
+/// | ``questCardList`` | Max **560pt** (full width minus padding) | Max **800pt**, wider anchor **840pt** so titles don’t phone-wrap |
+/// | ``lesson`` | Same as reading (until prologue unification) | Same as reading |
+/// | ``playfield`` | Same as reading | Same as reading |
+/// | ``actions`` | Same as reading | Same as reading |
+///
+/// - Note: Changing layout roles can affect VoiceOver reading order and Dynamic Type clipping — re-validate affected screens.
+enum QuestLayoutRole: Equatable, Sendable {
+    /// Comfortable line length for narrative copy, result prose, and the VoiceOver gate — **560pt** max on phone, **620pt** on iPad regular.
+    case reading
+    /// Hub quest board cards (thumbnail + title + goal + rank); **560pt** phone, **800pt** iPad regular so long titles don’t stack like a phone column.
+    case questCardList
+    /// Prologue teaching stacks — currently matches ``reading``; future target **680–760pt** on iPad per design review.
+    case lesson
+    /// Active encounter HUD and playfield chrome — currently matches ``reading``; future **760–1000pt** or full-bleed per mechanic.
+    case playfield
+    /// Primary/secondary CTA stacks — matches ``reading`` until actions get an independent cap tied to parent content.
+    case actions
+}
 
 /// Horizontal metrics for scroll content over full-bleed quest art (phone, iPad, Dungeon result gutters).
+///
+/// Prefer the **role-aware** APIs. Legacy ``scrollHorizontalPadding(containerWidth:horizontalSizeClass:gameKind:)`` and
+/// ``readingColumnMaxWidth(containerWidth:horizontalSizeClass:horizontalPadding:)`` delegate to ``reading``.
 enum QuestPaintContentMetrics {
 
-    /// Outside padding for a scroll column; widens on compact widths and adds ribbon inset for Dungeon results.
-    static func scrollHorizontalPadding(
+    // MARK: - Role-aware API
+
+    /// Horizontal inset so a centered content column matches the layout role’s target width on canvas.
+    ///
+    /// - Parameters:
+    ///   - role: ``QuestLayoutRole`` (hub cards use ``QuestLayoutRole/questCardList``).
+    ///   - containerWidth: Pass ``GeometryProxy/size.width`` (or equivalent).
+    ///   - horizontalSizeClass: From the SwiftUI environment.
+    ///   - gameKind: When ``GameKind/scrollHunt``, adds extra gutter for Dungeon result/readability (reading lineage only).
+    static func horizontalPadding(
+        role: QuestLayoutRole,
         containerWidth: CGFloat,
         horizontalSizeClass: UserInterfaceSizeClass?,
         gameKind: GameKind?
     ) -> CGFloat {
-        let readingCap: CGFloat = horizontalSizeClass == .regular ? 640 : 560
-        let centered = max(0, (containerWidth - readingCap) / 2)
+        let anchor = layoutAnchorWidth(role: role, horizontalSizeClass: horizontalSizeClass)
+        let centered = max(0, (containerWidth - anchor) / 2)
         var pad = max(RA11ySpacing.base, centered)
         if horizontalSizeClass == .regular {
             pad = max(pad, RA11ySpacing.xl)
         }
-        if gameKind == .scrollHunt {
+        if appliesScrollHuntGutter(role: role, gameKind: gameKind) {
             pad += RA11ySpacing.md
         }
         return pad
     }
 
+    /// Maximum width of the content column inside ``horizontalPadding``.
+    static func contentMaxWidth(
+        role: QuestLayoutRole,
+        containerWidth: CGFloat,
+        horizontalSizeClass: UserInterfaceSizeClass?,
+        horizontalPadding: CGFloat
+    ) -> CGFloat {
+        let cap = contentWidthCap(role: role, horizontalSizeClass: horizontalSizeClass)
+        return min(max(containerWidth - horizontalPadding * 2, 0), cap)
+    }
+
+    // MARK: - Legacy (delegates to `.reading`)
+
+    /// Outside padding for a scroll column; widens on compact widths and adds ribbon inset for Dungeon results.
+    ///
+    /// Equivalent to ``horizontalPadding(role:containerWidth:horizontalSizeClass:gameKind:)`` with ``QuestLayoutRole/reading``.
+    static func scrollHorizontalPadding(
+        containerWidth: CGFloat,
+        horizontalSizeClass: UserInterfaceSizeClass?,
+        gameKind: GameKind?
+    ) -> CGFloat {
+        horizontalPadding(
+            role: .reading,
+            containerWidth: containerWidth,
+            horizontalSizeClass: horizontalSizeClass,
+            gameKind: gameKind
+        )
+    }
+
     /// Maximum width of the reading column inside horizontal padding (keeps line length comfortable on iPad).
+    ///
+    /// Equivalent to ``contentMaxWidth(role:containerWidth:horizontalSizeClass:horizontalPadding:)`` with ``QuestLayoutRole/reading``.
     static func readingColumnMaxWidth(
         containerWidth: CGFloat,
         horizontalSizeClass: UserInterfaceSizeClass?,
         horizontalPadding: CGFloat
     ) -> CGFloat {
-        let cap: CGFloat = horizontalSizeClass == .regular ? 620 : 560
-        return min(max(containerWidth - horizontalPadding * 2, 0), cap)
+        contentMaxWidth(
+            role: .reading,
+            containerWidth: containerWidth,
+            horizontalSizeClass: horizontalSizeClass,
+            horizontalPadding: horizontalPadding
+        )
+    }
+
+    // MARK: - Private
+
+    /// Width used only to derive symmetric side padding (center column on wide canvas).
+    private static func layoutAnchorWidth(role: QuestLayoutRole, horizontalSizeClass: UserInterfaceSizeClass?) -> CGFloat {
+        let isRegular = horizontalSizeClass == .regular
+        switch role {
+        case .reading:
+            return isRegular ? 640 : 560
+        case .questCardList:
+            return isRegular ? 840 : 560
+        case .lesson, .playfield, .actions:
+            return isRegular ? 640 : 560
+        }
+    }
+
+    private static func contentWidthCap(role: QuestLayoutRole, horizontalSizeClass: UserInterfaceSizeClass?) -> CGFloat {
+        let isRegular = horizontalSizeClass == .regular
+        switch role {
+        case .reading:
+            return isRegular ? 620 : 560
+        case .questCardList:
+            return isRegular ? 800 : 560
+        case .lesson, .playfield, .actions:
+            return isRegular ? 620 : 560
+        }
+    }
+
+    private static func appliesScrollHuntGutter(role: QuestLayoutRole, gameKind: GameKind?) -> Bool {
+        guard gameKind == .scrollHunt else { return false }
+        switch role {
+        case .reading, .lesson, .actions:
+            return true
+        case .questCardList, .playfield:
+            return false
+        }
     }
 }
 
