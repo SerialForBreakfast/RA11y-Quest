@@ -729,9 +729,14 @@ final class DungeonDescentViewModel {
         }
     }
 
-    /// Posts the game-specific timer threshold announcement for the given phase and percent elapsed.
+    /// Posts the game-specific timer threshold announcement for the given phase and **percent elapsed**.
     ///
-    /// L2 announces only at 50% and 25%; L3 announces at 75%, 50%, and 25%.
+    /// `pct` is the fraction of total time that has **elapsed** (not remaining):
+    /// - `0.25` elapsed → ~75% remains → soft start cue ("Timer running.")
+    /// - `0.50` elapsed → 50% remains → mid-game warning ("Half time left.")
+    /// - `0.75` elapsed → ~25% remains → urgent warning ("One quarter left.")
+    ///
+    /// L2 announces only at 50% and 25% elapsed; L3 announces at all three thresholds.
     private func announceTimerThreshold(for phase: Phase, pct: Double) {
         switch (phase, pct) {
         case (.timed, 0.75):

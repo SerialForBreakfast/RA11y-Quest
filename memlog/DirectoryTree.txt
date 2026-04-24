@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-19)
+Current structure (as of 2026-04-24)
 ---
 
 .
@@ -70,6 +70,7 @@ Current structure (as of 2026-04-19)
 |       |-- RA11y_iOSScreenshots.swift
 |       |-- RA11y_iOSUITests.swift
 |       |-- RA11y_iOSUITestsLaunchTests.swift
+|       |-- ScreenAuditContracts.json
 |       `-- ScreenshotRouteCatalog.md
 |-- RA11y-tvOS
 |   |-- RA11y-tvOS
@@ -134,6 +135,37 @@ Current structure (as of 2026-04-19)
 |   |       |-- TestHelpers.swift
 |   |       `-- VoiceOverTests.swift
 |   `-- Package.swift
+|-- ScreenAuditKit
+|   |-- Sources
+|   |   |-- ScreenAuditKit
+|   |   |   |-- Contracts
+|   |   |   |   `-- ScreenAuditContracts.swift
+|   |   |   |-- Evidence
+|   |   |   |   `-- ScreenAuditEvidence.swift
+|   |   |   |-- Rules
+|   |   |   |   `-- ScreenAuditRules.swift
+|   |   |   |-- Reports
+|   |   |   |   `-- ScreenAuditReports.swift
+|   |   |   |-- Validation
+|   |   |   |   `-- ScreenAuditValidation.swift
+|   |   |   `-- ScreenAuditKit.swift
+|   |   `-- screenaudit
+|   |       `-- main.swift
+|   |-- Tests
+|   |   |-- ScreenAuditCLITests
+|   |   |   `-- ScreenAuditCLITests.swift
+|   |   `-- ScreenAuditKitTests
+|   |       |-- Fixtures
+|   |       |   |-- missing-required-field-contracts.json
+|   |       |   |-- unsupported-schema-contracts.json
+|   |       |   `-- valid-contracts.json
+|   |       |-- ScreenAuditContractTests.swift
+|   |       |-- ScreenAuditEvidenceTests.swift
+|   |       |-- ScreenAuditKitTests.swift
+|   |       `-- ScreenAuditRuleTests.swift
+|   |-- .gitignore
+|   |-- Package.swift
+|   `-- README.md
 |-- build_results
 |   |-- 2026-02-21_09-48-28
 |   |   `-- summary.md
@@ -400,7 +432,8 @@ Current structure (as of 2026-04-19)
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md
 |   |   |-- AccessibilityFeatureGamification.md
 |   |   |-- InitialBrainstorming.txt
-|   |   `-- NativeAccessibility.txt
+|   |   |-- NativeAccessibility.txt
+|   |   `-- ScreenAuditKit-Workstream.md
 |   `-- DirectoryTree.txt
 |-- scripts
 |   `-- extract_screenshots.sh
@@ -413,6 +446,7 @@ Current structure (as of 2026-04-19)
 |   |-- ensure_png_rgba.py
 |   |-- remove_white_background.py
 |   |-- resolve_simulator_udid.jq
+|   |-- validate_screen_audit.sh
 |   `-- validate_screenshot_contract.sh
 |-- AGENTS.md
 |-- Gemfile

@@ -23,6 +23,7 @@ EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
 DERIVED_DATA   = "/tmp/RA11y_screenshots_DerivedData".freeze
 CONTRACT_CHECK = "../utility/validate_screenshot_contract.sh".freeze
 BANISHMENT_ASSET_QA = "../utility/validate_banishment_assets.sh".freeze
+SCREEN_AUDIT_CHECK = "../utility/validate_screen_audit.sh".freeze
 ROUTE_CATALOG  = "../RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md".freeze
 
 # ---------------------------------------------------------------------------
@@ -210,6 +211,11 @@ platform :ios do
   lane :screenshots_quick do
     ENV["SNAPSHOT_DEVICES"] = "iPhone 17" if ENV["SNAPSHOT_DEVICES"].to_s.strip.empty?
     screenshots
+  end
+
+  desc "Validate committed screenshot folders with ScreenAuditKit"
+  lane :screen_audit do
+    sh("bash '#{SCREEN_AUDIT_CHECK}'")
   end
 end
 

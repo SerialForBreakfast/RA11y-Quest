@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "projectName": "RA11y iOS Screenshots",
+  "screens": [
+    {
+      "id": "hub",
+      "filename": "01_Hub.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "entry",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {}
+    },
+    {
+      "id": "voRequired",
+      "filename": "02_VORequired.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {}
+    },
+    {
+      "id": "firstRun",
+      "filename": "03_FirstRun.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "reinforce",
+      "severityOverrides": {}
+    },
+    {
+      "id": "enchanterPrologue",
+      "filename": "04_EnchanterPrologue.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {}
+    },
+    {
+      "id": "enchanterAttempt",
+      "filename": "05_EnchanterAttempt.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "practice",
+      "severityOverrides": {}
+    },
+    {
+      "id": "enchanterRising",
+      "filename": "06_EnchanterRising.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "practice",
+      "severityOverrides": {}
+    },
+    {
+      "id": "enchanterTimed",
+      "filename": "07_EnchanterTimed.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "test",
+      "severityOverrides": {}
+    },
+    {
+      "id": "enchanterResult",
+      "filename": "08_EnchanterResult.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "result",
+      "pedagogyRole": "conclude",
+      "severityOverrides": {}
+    },
+    {
+      "id": "dungeonPrologue",
+      "filename": "09_DungeonPrologue.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {}
+    },
+    {
+      "id": "dungeonFirstAttempt",
+      "filename": "10_DungeonL1.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "practice",
+      "severityOverrides": {}
+    },
+    {
+      "id": "dungeonResult",
+      "filename": "11_DungeonResult.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "result",
+      "pedagogyRole": "conclude",
+      "severityOverrides": {}
+    },
+    {
+      "id": "resonanceMockup",
+      "filename": "12_ResonanceMockup.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "practice",
+      "severityOverrides": {}
+    },
+    {
+      "id": "banishmentPrologue",
+      "filename": "13_BanishmentPrologue.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {}
+    },
+    {
+      "id": "banishmentWardTrap",
+      "filename": "14_BanishmentWardTrap.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "practice",
+      "severityOverrides": {}
+    },
+    {
+      "id": "banishmentTower",
+      "filename": "15_BanishmentTower.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "play",
+      "pedagogyRole": "test",
+      "severityOverrides": {}
+    },
+    {
+      "id": "banishmentResult",
+      "filename": "16_BanishmentResult.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "result",
+      "pedagogyRole": "conclude",
+      "severityOverrides": {}
+    }
+  ]
+}

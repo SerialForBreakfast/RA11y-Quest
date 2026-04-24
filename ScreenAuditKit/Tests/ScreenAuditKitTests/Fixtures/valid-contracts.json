@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "projectName": "Fixture App",
+  "screens": [
+    {
+      "id": "hub",
+      "filename": "01_Hub.png",
+      "devices": [
+        {
+          "label": "iPhone_large",
+          "family": "iPhone",
+          "pixelWidth": 1290,
+          "pixelHeight": 2796,
+          "orientation": "portrait"
+        }
+      ],
+      "text": {
+        "required": [
+          "Quest Board",
+          "Start"
+        ],
+        "optional": [
+          "Progress"
+        ],
+        "forbidden": [
+          "Debug"
+        ]
+      },
+      "role": "entry",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {
+        "requiredTextMissing": "error",
+        "mockupSimilarityLow": "warning"
+      }
+    }
+  ]
+}

@@ -44,6 +44,14 @@ Fails loudly (UI.user_error!) if zero devices succeed.
 
 Fast screenshot pass for iteration: one preferred iPhone device
 
+### ios screen_audit
+
+```sh
+[bundle exec] fastlane ios screen_audit
+```
+
+Validate committed screenshot folders with ScreenAuditKit
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

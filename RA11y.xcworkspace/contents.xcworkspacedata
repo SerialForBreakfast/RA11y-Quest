@@ -7,4 +7,7 @@
    <FileRef
       location = "group:RA11yCore">
    </FileRef>
+   <FileRef
+      location = "group:ScreenAuditKit">
+   </FileRef>
 </Workspace>

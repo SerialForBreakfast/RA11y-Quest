@@ -1,5 +1,7 @@
 # VoiceOver gesture “spell” vocabulary & shared quest chrome
 
+**Copy pass (Apr 2026):** Crystal Resonance / `dungeon.*` strings in `Localizable.xcstrings` were tightened so prologue narration + lesson point to the spell card instead of repeating the full gesture paragraph; hub goal, Basics intro, skill transfer, and `voSpell.*` reminders were shortened in the same pass.
+
 This document formalizes how RA11y teaches VoiceOver gestures using a **consistent fantasy metaphor** (spell plates, ward/shaft/pathfinding kickers, wand and hand SF Symbols, optional golden raster art) and ties it to **reusable SwiftUI** in the iOS target.
 
 **Implementation (code):**

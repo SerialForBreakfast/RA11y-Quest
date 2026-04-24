@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "projectName": "Fixture App",
+  "screens": [
+    {
+      "id": "",
+      "filename": "01_Hub.png",
+      "devices": [],
+      "text": {
+        "required": [],
+        "optional": [],
+        "forbidden": []
+      },
+      "severityOverrides": {}
+    }
+  ]
+}
