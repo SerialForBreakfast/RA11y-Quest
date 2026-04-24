@@ -16,6 +16,18 @@ public enum ScreenAuditRuleID: String, Codable, Equatable, Sendable {
 
     /// Screenshot pixels differed from the configured baseline beyond the allowed threshold.
     case baselineDifferenceExceeded
+
+    /// PNG transparency appears to have a rectangular opaque border around transparent content.
+    case suspiciousOpaqueBorder
+
+    /// Rendered screenshot region appears to contain a large flat matte block.
+    case renderedMatteRisk
+
+    /// Rendered screenshot region appears to contain a checkerboard-like transparency artifact.
+    case checkerboardPatternRisk
+
+    /// Project-supplied fallback art confidence is below the configured threshold.
+    case lowConfidenceFallbackArt
 }
 
 /// Reference to the source evidence that produced a finding.
@@ -98,6 +110,7 @@ public struct ScreenAuditRuleEvaluator {
         findings.append(contentsOf: evaluateRequiredText(contract: contract, evidence: evidence))
         findings.append(contentsOf: evaluateForbiddenText(contract: contract, evidence: evidence))
         findings.append(contentsOf: evaluateDimensions(contract: contract, evidence: evidence))
+        findings.append(contentsOf: evaluateFallbackArt(contract: contract, evidence: evidence))
         return findings
     }
 
@@ -188,8 +201,38 @@ public struct ScreenAuditRuleEvaluator {
         ]
     }
 
+    private func evaluateFallbackArt(
+        contract: ScreenAuditScreenContract,
+        evidence: ScreenAuditScreenshotEvidence
+    ) -> [ScreenAuditFinding] {
+        contract.assets.fallbackArt.compactMap { fallbackArt in
+            guard fallbackArt.confidence < fallbackArt.minimumConfidence else {
+                return nil
+            }
+
+            let confidence = formattedRatio(fallbackArt.confidence)
+            let minimum = formattedRatio(fallbackArt.minimumConfidence)
+
+            return ScreenAuditFinding(
+                ruleID: .lowConfidenceFallbackArt,
+                severity: severity(for: .lowConfidenceFallbackArt, contract: contract, defaultSeverity: .warning),
+                confidence: max(0, min(1, 1 - fallbackArt.confidence)),
+                message: "Fallback art `\(fallbackArt.name)` confidence \(confidence) is below the required \(minimum).",
+                evidence: ScreenAuditEvidenceReference(
+                    screenID: evidence.screenID,
+                    path: evidence.path,
+                    excerpt: fallbackArt.note ?? "Project-supplied fallback art confidence"
+                )
+            )
+        }
+    }
+
     private func containsText(_ needle: String, in haystack: String) -> Bool {
         haystack.range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+    }
+
+    private func formattedRatio(_ ratio: Double) -> String {
+        String(format: "%.2f", ratio)
     }
 
     private func severity(

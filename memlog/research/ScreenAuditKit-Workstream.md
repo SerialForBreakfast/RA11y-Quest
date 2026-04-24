@@ -137,11 +137,11 @@ Tasks:
 
 - SAK-6.1 Define protected, ignored, and critical regions in contracts. Done.
 - SAK-6.2 Implement simple baseline diff metrics. Done.
-- SAK-6.3 Implement suspicious opaque-border detection for source PNGs.
-- SAK-6.4 Implement rendered matte risk detection in critical regions.
-- SAK-6.5 Implement checkerboard-like pattern warning.
-- SAK-6.6 Implement low-confidence fallback-art warning hook.
-- SAK-6.7 Add overlay report generation for OCR boxes and failed regions.
+- SAK-6.3 Implement suspicious opaque-border detection for source PNGs. Done.
+- SAK-6.4 Implement rendered matte risk detection in critical regions. Done.
+- SAK-6.5 Implement checkerboard-like pattern warning. Done.
+- SAK-6.6 Implement low-confidence fallback-art warning hook. Done.
+- SAK-6.7 Add overlay report generation for OCR boxes and failed regions. Done.
 - SAK-6.8 Port or wrap RA11y Banishment asset expectations as data-driven rule
   configuration where practical.
 
@@ -161,6 +161,18 @@ Implementation notes:
 - Added `--baselines <dir>` support to `screenaudit validate`.
 - Added deterministic PNG baseline comparison with ignored-region support.
 - Added baseline difference findings, defaulting to warning severity.
+- Added PNG transparency inspection for suspicious opaque borders around
+  transparent interior pixels.
+- Added `suspiciousOpaqueBorder` findings, defaulting to warning severity.
+- Added critical-region contract support and rendered screenshot matte-risk
+  inspection for flat white, black, or gray blocks.
+- Added `renderedMatteRisk` findings, defaulting to warning severity.
+- Added checkerboard-like region inspection for rendered transparency artifacts.
+- Added `checkerboardPatternRisk` findings, defaulting to warning severity.
+- Added contract-driven fallback art confidence facts.
+- Added `lowConfidenceFallbackArt` findings, defaulting to warning severity.
+- Added overlay PNG generation for screens with findings, using configured
+  ignored, protected, and critical regions or a full-screen fallback outline.
 - Added tests with mechanically generated tiny PNG fixtures.
 - Verified `swift test --package-path ScreenAuditKit`.
 - Verified `utility/validate_screen_audit.sh` still passes without baselines for

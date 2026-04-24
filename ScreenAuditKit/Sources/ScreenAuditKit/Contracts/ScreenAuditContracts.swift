@@ -123,6 +123,9 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
     /// Optional baseline comparison expectation.
     public let baseline: ScreenAuditBaselineExpectation?
 
+    /// Optional asset quality facts supplied by a project-specific pipeline.
+    public let assets: ScreenAuditAssetExpectations
+
     /// Rule-level severity overrides for this screen.
     public let severityOverrides: [String: ScreenAuditSeverity]
 
@@ -136,6 +139,7 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
     ///   - pedagogyRole: Optional pedagogy role.
     ///   - regions: Region definitions used by visual rules.
     ///   - baseline: Optional baseline comparison expectation.
+    ///   - assets: Optional asset quality facts supplied by a project-specific pipeline.
     ///   - severityOverrides: Rule-level severity overrides.
     public init(
         id: String,
@@ -146,6 +150,7 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
         pedagogyRole: ScreenAuditPedagogyRole? = nil,
         regions: ScreenAuditRegionSet = ScreenAuditRegionSet(),
         baseline: ScreenAuditBaselineExpectation? = nil,
+        assets: ScreenAuditAssetExpectations = ScreenAuditAssetExpectations(),
         severityOverrides: [String: ScreenAuditSeverity] = [:]
     ) {
         self.id = id
@@ -156,6 +161,7 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
         self.pedagogyRole = pedagogyRole
         self.regions = regions
         self.baseline = baseline
+        self.assets = assets
         self.severityOverrides = severityOverrides
     }
 
@@ -168,6 +174,7 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
         case pedagogyRole
         case regions
         case baseline
+        case assets
         case severityOverrides
     }
 
@@ -184,6 +191,7 @@ public struct ScreenAuditScreenContract: Codable, Equatable, Sendable {
         pedagogyRole = try container.decodeIfPresent(ScreenAuditPedagogyRole.self, forKey: .pedagogyRole)
         regions = try container.decodeIfPresent(ScreenAuditRegionSet.self, forKey: .regions) ?? ScreenAuditRegionSet()
         baseline = try container.decodeIfPresent(ScreenAuditBaselineExpectation.self, forKey: .baseline)
+        assets = try container.decodeIfPresent(ScreenAuditAssetExpectations.self, forKey: .assets) ?? ScreenAuditAssetExpectations()
         severityOverrides = try container.decodeIfPresent([String: ScreenAuditSeverity].self, forKey: .severityOverrides) ?? [:]
     }
 
@@ -302,16 +310,38 @@ public struct ScreenAuditRegionSet: Codable, Equatable, Sendable {
     /// Regions ignored by broad visual comparisons.
     public let ignored: [ScreenAuditRegion]
 
+    /// Regions that should be inspected for high-signal visual defects.
+    public let critical: [ScreenAuditRegion]
+
     /// Creates a region set.
     /// - Parameters:
     ///   - protected: Regions that should receive stricter visual validation later.
     ///   - ignored: Regions ignored by broad visual comparisons.
+    ///   - critical: Regions that should be inspected for high-signal visual defects.
     public init(
         protected: [ScreenAuditRegion] = [],
-        ignored: [ScreenAuditRegion] = []
+        ignored: [ScreenAuditRegion] = [],
+        critical: [ScreenAuditRegion] = []
     ) {
         self.protected = protected
         self.ignored = ignored
+        self.critical = critical
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case protected
+        case ignored
+        case critical
+    }
+
+    /// Decodes region collections, defaulting omitted collections to empty arrays.
+    /// - Parameter decoder: Source decoder.
+    /// - Throws: Decoding errors.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        protected = try container.decodeIfPresent([ScreenAuditRegion].self, forKey: .protected) ?? []
+        ignored = try container.decodeIfPresent([ScreenAuditRegion].self, forKey: .ignored) ?? []
+        critical = try container.decodeIfPresent([ScreenAuditRegion].self, forKey: .critical) ?? []
     }
 }
 
@@ -330,6 +360,51 @@ public struct ScreenAuditBaselineExpectation: Codable, Equatable, Sendable {
     public init(referencePath: String, maxMismatchRatio: Double = 0.0) {
         self.referencePath = referencePath
         self.maxMismatchRatio = maxMismatchRatio
+    }
+}
+
+/// Asset quality facts supplied by a project-specific art or screenshot pipeline.
+public struct ScreenAuditAssetExpectations: Codable, Equatable, Sendable {
+    /// Fallback-art confidence facts to surface as advisory findings.
+    public let fallbackArt: [ScreenAuditFallbackArtExpectation]
+
+    /// Creates asset quality expectations.
+    /// - Parameter fallbackArt: Fallback-art confidence facts to surface as advisory findings.
+    public init(fallbackArt: [ScreenAuditFallbackArtExpectation] = []) {
+        self.fallbackArt = fallbackArt
+    }
+}
+
+/// Confidence fact for one fallback-art candidate used by a screen.
+public struct ScreenAuditFallbackArtExpectation: Codable, Equatable, Sendable {
+    /// Project-defined asset or region name.
+    public let name: String
+
+    /// Confidence score from the upstream pipeline, from 0.0 to 1.0.
+    public let confidence: Double
+
+    /// Minimum acceptable confidence before a warning is emitted.
+    public let minimumConfidence: Double
+
+    /// Optional project-specific explanation included in finding evidence.
+    public let note: String?
+
+    /// Creates a fallback-art confidence fact.
+    /// - Parameters:
+    ///   - name: Project-defined asset or region name.
+    ///   - confidence: Confidence score from the upstream pipeline, from 0.0 to 1.0.
+    ///   - minimumConfidence: Minimum acceptable confidence before a warning is emitted.
+    ///   - note: Optional project-specific explanation included in finding evidence.
+    public init(
+        name: String,
+        confidence: Double,
+        minimumConfidence: Double = 0.75,
+        note: String? = nil
+    ) {
+        self.name = name
+        self.confidence = confidence
+        self.minimumConfidence = minimumConfidence
+        self.note = note
     }
 }
 

@@ -132,6 +132,15 @@ final class ScreenAuditBaselineTests: XCTestCase {
         XCTAssertEqual(result.findingsReport.findings.count, 1)
         XCTAssertEqual(result.findingsReport.findings.first?.ruleID, .baselineDifferenceExceeded)
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputDirectory.appendingPathComponent("summary.md").path))
+        XCTAssertEqual(result.overlayPaths.count, 1)
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: outputDirectory
+                    .appendingPathComponent("overlays")
+                    .appendingPathComponent("screen-overlay.png")
+                    .path
+            )
+        )
     }
 
     private func makeFixtureDirectory(named name: String) throws -> URL {

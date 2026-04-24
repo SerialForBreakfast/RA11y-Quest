@@ -78,6 +78,57 @@ final class ScreenAuditRuleTests: XCTestCase {
         XCTAssertTrue(findings.isEmpty)
     }
 
+    /// Verifies low-confidence fallback art facts produce advisory findings.
+    func testLowConfidenceFallbackArtProducesFinding() {
+        let contract = ScreenAuditScreenContract(
+            id: "hub",
+            filename: "01_Hub.png",
+            assets: ScreenAuditAssetExpectations(
+                fallbackArt: [
+                    ScreenAuditFallbackArtExpectation(
+                        name: "quest-background",
+                        confidence: 0.42,
+                        minimumConfidence: 0.75,
+                        note: "temporary crop from mockup"
+                    )
+                ]
+            )
+        )
+        let evidence = makeEvidence(transcript: "")
+
+        let findings = ScreenAuditRuleEvaluator().evaluate(contract: contract, evidence: evidence)
+        let finding = findings.first
+
+        XCTAssertEqual(findings.count, 1)
+        XCTAssertEqual(finding?.ruleID, .lowConfidenceFallbackArt)
+        XCTAssertEqual(finding?.severity, .warning)
+        XCTAssertEqual(finding?.confidence ?? -1, 0.58, accuracy: 0.0001)
+        XCTAssertEqual(finding?.message, "Fallback art `quest-background` confidence 0.42 is below the required 0.75.")
+        XCTAssertEqual(finding?.evidence.excerpt, "temporary crop from mockup")
+    }
+
+    /// Verifies fallback art facts at or above threshold do not produce findings.
+    func testHighConfidenceFallbackArtProducesNoFinding() {
+        let contract = ScreenAuditScreenContract(
+            id: "hub",
+            filename: "01_Hub.png",
+            assets: ScreenAuditAssetExpectations(
+                fallbackArt: [
+                    ScreenAuditFallbackArtExpectation(
+                        name: "quest-background",
+                        confidence: 0.91,
+                        minimumConfidence: 0.75
+                    )
+                ]
+            )
+        )
+        let evidence = makeEvidence(transcript: "")
+
+        let findings = ScreenAuditRuleEvaluator().evaluate(contract: contract, evidence: evidence)
+
+        XCTAssertTrue(findings.isEmpty)
+    }
+
     /// Creates a representative screen contract.
     /// - Parameter severityOverrides: Optional rule severity overrides.
     /// - Returns: Screen contract.

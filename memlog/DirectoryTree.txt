@@ -145,11 +145,15 @@ Current structure (as of 2026-04-24)
 |   |   |   |-- Rules
 |   |   |   |   `-- ScreenAuditRules.swift
 |   |   |   |-- Reports
+|   |   |   |   |-- ScreenAuditOverlayRenderer.swift
 |   |   |   |   `-- ScreenAuditReports.swift
 |   |   |   |-- Validation
 |   |   |   |   `-- ScreenAuditValidation.swift
 |   |   |   |-- Visual
-|   |   |   |   `-- ScreenAuditBaselineComparator.swift
+|   |   |   |   |-- ScreenAuditBaselineComparator.swift
+|   |   |   |   |-- ScreenAuditCheckerboardInspector.swift
+|   |   |   |   |-- ScreenAuditRenderedMatteInspector.swift
+|   |   |   |   `-- ScreenAuditTransparencyInspector.swift
 |   |   |   `-- ScreenAuditKit.swift
 |   |   `-- screenaudit
 |   |       `-- main.swift
@@ -162,10 +166,13 @@ Current structure (as of 2026-04-24)
 |   |       |   |-- unsupported-schema-contracts.json
 |   |       |   `-- valid-contracts.json
 |   |       |-- ScreenAuditBaselineTests.swift
+|   |       |-- ScreenAuditCheckerboardTests.swift
 |   |       |-- ScreenAuditContractTests.swift
 |   |       |-- ScreenAuditEvidenceTests.swift
 |   |       |-- ScreenAuditKitTests.swift
-|   |       `-- ScreenAuditRuleTests.swift
+|   |       |-- ScreenAuditRenderedMatteTests.swift
+|   |       |-- ScreenAuditRuleTests.swift
+|   |       `-- ScreenAuditTransparencyTests.swift
 |   |-- .gitignore
 |   |-- Package.swift
 |   `-- README.md
@@ -383,6 +390,7 @@ Current structure (as of 2026-04-24)
 |-- memlog
 |   |-- MagicTap-Brainstorming.md
 |   |-- MagicTap-BardsInterrupt-Tasks.md
+|   |-- DesignRecommendationReview.md
 |   |-- archive
 |   |   `-- GameSpec-ActivateDoubleTap.txt
 |   |-- requirements

@@ -28,6 +28,16 @@
       },
       "role": "entry",
       "pedagogyRole": "introduce",
+      "assets": {
+        "fallbackArt": [
+          {
+            "name": "hero-image",
+            "confidence": 0.92,
+            "minimumConfidence": 0.75,
+            "note": "fixture confidence"
+          }
+        ]
+      },
       "severityOverrides": {
         "requiredTextMissing": "error",
         "mockupSimilarityLow": "warning"

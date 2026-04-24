@@ -19,6 +19,9 @@ final class ScreenAuditContractTests: XCTestCase {
         XCTAssertEqual(screen.pedagogyRole, .introduce)
         XCTAssertEqual(screen.severityOverrides["requiredTextMissing"], .error)
         XCTAssertEqual(screen.text.required, ["Quest Board", "Start"])
+        XCTAssertEqual(screen.assets.fallbackArt.count, 1)
+        XCTAssertEqual(screen.assets.fallbackArt.first?.name, "hero-image")
+        XCTAssertEqual(screen.assets.fallbackArt.first?.confidence, 0.92)
 
         let device = try XCTUnwrap(screen.devices.first)
         XCTAssertEqual(device.label, "iPhone_large")
