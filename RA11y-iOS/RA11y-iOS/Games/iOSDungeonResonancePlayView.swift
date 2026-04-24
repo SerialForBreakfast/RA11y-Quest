@@ -393,9 +393,12 @@ struct iOSDungeonResonancePlayView: View {
 
     private func playfieldContent(height: CGFloat) -> some View {
         ZStack {
-            /// L3 Lights Off: solid playfield (Enchanter-style) so shaft art and hub cannot cue alignment visually.
+            /// L3 Lights Off: near-black with a hint of shaft art so the beat reads as intentional (checklist §4.4).
             if lightsOffMode {
-                Color.black
+                ZStack {
+                    iOSShaftResonanceBackground()
+                    Color.black.opacity(0.92)
+                }
             } else {
                 iOSShaftResonanceBackground()
             }
@@ -669,7 +672,7 @@ struct iOSDungeonResonancePlayView: View {
     private var timeoutBanner: some View {
         VStack(spacing: RA11ySpacing.md) {
             Text(String(localized: "dungeon.timeout"))
-                .font(.ra11yHeadline)
+                .questPaintReadableText(.sectionTitle)
                 .multilineTextAlignment(.center)
             if let onRetry {
                 Button(action: onRetry) {
@@ -686,8 +689,7 @@ struct iOSDungeonResonancePlayView: View {
 
     private func lightsOffFlavorCard(message: String) -> some View {
         Text(message)
-            .font(.ra11ySubheadline)
-            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .questPaintReadableText(.bodySupporting)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(RA11ySpacing.base)
@@ -717,8 +719,7 @@ struct iOSDungeonResonancePlayView: View {
                     ? String(localized: "dungeon.resonance.a11y.orb.locked")
                     : String(localized: "dungeon.target.notReachable")
             )
-            .font(.ra11yCaption)
-            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .questPaintReadableText(.materialCardMeta)
             .frame(maxWidth: .infinity)
         }
     }
@@ -746,8 +747,7 @@ struct iOSDungeonResonancePlayView: View {
                 .accessibilityHidden(true)
 
             Text(objectiveText)
-                .font(.ra11yHeadline)
-                .bold()
+                .questPaintReadableText(.materialCardTitle)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -761,18 +761,15 @@ struct iOSDungeonResonancePlayView: View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
                 Text(String(localized: "dungeon.explain.gesture.swipe3"))
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .questPaintReadableText(.materialCardBody)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(String(localized: "dungeon.explain.gesture.swipe3u"))
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .questPaintReadableText(.materialCardBody)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
-                    .font(.ra11ySubheadline)
-                    .foregroundStyle(Color.ra11yCardSecondaryText)
+                    .questPaintReadableText(.materialCardBody)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -872,8 +869,7 @@ private struct iOSResonanceStatusRow: View {
 
     var body: some View {
         Text(message)
-            .font(.ra11ySubheadline)
-            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .questPaintReadableText(.materialCardMeta)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, RA11ySpacing.xs)
     }

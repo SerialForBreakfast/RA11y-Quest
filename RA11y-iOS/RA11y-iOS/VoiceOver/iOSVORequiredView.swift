@@ -77,13 +77,12 @@ struct iOSVORequiredView: View {
                             manualFallbackSection
                         }
                     }
-                    .frame(maxWidth: colW)
+                    .frame(maxWidth: colW, alignment: .center)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, RA11ySpacing.lg)
                 }
                 .padding(.horizontal, hPad)
                 .scrollContentBackground(.hidden)
-                .clipped()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -117,12 +116,15 @@ struct iOSVORequiredView: View {
             Text(String(localized: "voiceOverRequired.title"))
                 .multilineTextAlignment(.center)
                 .questPaintReadableText(.heroTitle)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .accessibilityIdentifier("voRequired.title")
 
             Text(String(localized: "voiceOverRequired.body"))
                 .multilineTextAlignment(.center)
                 .questPaintReadableText(.bodySupporting)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var ctaSection: some View {
@@ -144,6 +146,7 @@ struct iOSVORequiredView: View {
             .controlSize(.large)
             .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity)
     }
 
     /// Siri shortcut callout — the lowest-friction VoiceOver enablement path for new users.
@@ -159,6 +162,7 @@ struct iOSVORequiredView: View {
                     .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
                     .accessibilityHidden(true)
                 Text(String(localized: "voiceOverRequired.siri.heading"))
+                    .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .questPaintReadableText(.materialCardTitle)
             }
@@ -186,8 +190,11 @@ struct iOSVORequiredView: View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
             Divider().opacity(0.35)
             Text(String(localized: "voiceOverRequired.settingsFallback"))
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .questPaintReadableText(.materialCardMeta)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .transition(.opacity)
     }
 

@@ -79,8 +79,12 @@ struct iOSEnchantersTrialView: View {
         levelContent
             .background {
                 if isLightsOffFinalLevel {
-                    Color.black
-                        .ignoresSafeArea()
+                    /// Final beat: keep a trace of shelf art under heavy blackout (see checklist §4.4 — avoid accidental flat black).
+                    ZStack {
+                        EnchanterBackgroundView()
+                        Color.black.opacity(0.72)
+                    }
+                    .ignoresSafeArea()
                 } else {
                     EnchanterBackgroundView()
                         .ignoresSafeArea()
@@ -813,6 +817,7 @@ private struct EnchanterPrologueView: View {
             enchanterContent {
                 dmNarrationCard
                 lessonCard
+                QuestVoiceOverGestureSpellPlate.linearFocusLesson()
                 gestureGuide
                 beginButton
             }
@@ -849,8 +854,8 @@ private struct EnchanterPrologueView: View {
                 .accessibilityHidden(true)
 
             Text(String(localized: "simon.explain.narration"))
-                .font(.ra11yBody)
                 .italic()
+                .questPaintReadableText(.materialCardBody)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -864,12 +869,11 @@ private struct EnchanterPrologueView: View {
     private var lessonCard: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
             Text(String(localized: "simon.explain.lesson.heading"))
-                .font(.ra11yHeadline)
-                .bold()
+                .questPaintReadableText(.materialCardTitle)
                 .accessibilityAddTraits(.isHeader)
 
             Text(String(localized: "simon.explain.lesson.body"))
-                .font(.ra11yBody)
+                .questPaintReadableText(.materialCardBody)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -984,8 +988,7 @@ private struct EnchanterAttemptView: View {
 
     private var mistakeHUD: some View {
         Text(String(format: String(localized: "simon.hud.mistakes.format"), mistakes))
-            .font(.ra11ySubheadline)
-            .foregroundStyle(.secondary)
+            .questPaintReadableText(.materialCardMeta)
             .frame(maxWidth: .infinity, alignment: .trailing)
             .accessibilityLabel(String(format: String(localized: "simon.a11y.hud.l1"), mistakes))
     }
@@ -1113,7 +1116,7 @@ private struct EnchanterRisingView: View {
     private var timeoutBanner: some View {
         VStack(spacing: RA11ySpacing.md) {
             Text(String(localized: "simon.timeout"))
-                .font(.ra11yHeadline)
+                .questPaintReadableText(.sectionTitle)
                 .multilineTextAlignment(.center)
             Button(action: onRetry) {
                 Text(String(localized: "level.button.retry"))
@@ -1233,8 +1236,7 @@ private struct EnchanterTimedView: View {
     /// Atmospheric copy for the final timed level (torch / darkness).
     private var enchanterLightsOffFlavorBanner: some View {
         Text(String(localized: "enchanter.lightsOff.flavor"))
-            .font(.ra11ySubheadline)
-            .foregroundStyle(Color.ra11yCardSecondaryText)
+            .questPaintReadableText(.bodySupporting)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(RA11ySpacing.base)
@@ -1258,7 +1260,7 @@ private struct EnchanterTimedView: View {
     private var timeoutBanner: some View {
         VStack(spacing: RA11ySpacing.md) {
             Text(String(localized: "simon.timeout"))
-                .font(.ra11yHeadline)
+                .questPaintReadableText(.sectionTitle)
                 .multilineTextAlignment(.center)
             Button(action: onRetry) {
                 Text(String(localized: "level.button.retry"))
@@ -1288,8 +1290,7 @@ private struct EnchanterTimedView: View {
 private func promptCard(title: String, a11yLabel: String, a11yHint: String?) -> some View {
     VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
         Text(title)
-            .font(.ra11yHeadline)
-            .bold()
+            .questPaintReadableText(.materialCardTitle)
     }
     .padding(RA11ySpacing.base)
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1312,8 +1313,7 @@ private func promptCard(title: String, a11yLabel: String, a11yHint: String?) -> 
 /// Status feedback row shown after an activation event.
 private func statusRow(_ message: String) -> some View {
     Text(message)
-        .font(.ra11ySubheadline)
-        .foregroundStyle(Color.ra11yCardSecondaryText)
+        .questPaintReadableText(.materialCardMeta)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, RA11ySpacing.xs)
 }
@@ -1385,7 +1385,7 @@ private struct RelicButton: View {
 
     private var relicLabel: some View {
         Text(relic.displayName)
-            .font(.ra11yHeadline)
+            .questPaintReadableText(.materialCardTitle)
             .frame(maxWidth: .infinity, alignment: isLargeAccessibilitySize ? .center : .leading)
     }
 }
@@ -1442,8 +1442,7 @@ private struct TimerHUD: View {
             .frame(height: baseBarHeight)
 
             Text(String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))))
-                .font(.ra11yCaption)
-                .foregroundStyle(Color.ra11yCardTertiaryText)
+                .questPaintReadableText(.materialCardMeta)
         }
         .accessibilityHidden(true)  // L3 view sets accessibilityLabel on this entire HUD via .accessibilityElement(children: .ignore) at the call site
     }
@@ -1461,8 +1460,7 @@ private struct GestureRow: View {
                 .frame(minWidth: 32, alignment: .leading)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
-                .font(.ra11yBody)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .questPaintReadableText(.bodySupporting)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

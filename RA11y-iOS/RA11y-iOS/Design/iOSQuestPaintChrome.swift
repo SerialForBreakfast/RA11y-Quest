@@ -40,6 +40,8 @@ struct QuestPaintAmbientBackdrop: View {
                 Image(imageName)
                     .resizable()
                     .scaledToFill()
+                    /// Prevents aspect-fill images from expanding the layout proposal when used as a full-bleed backdrop.
+                    .clipped()
             } else {
                 Color.ra11yGameFallbackBackground
             }
@@ -99,7 +101,29 @@ enum QuestPaintContentMetrics {
 
 // MARK: - Mockup-aligned typography (Dynamic Type)
 
-/// Fantasy mockup roles: serif hero lines, warm neutrals, gold captions — all scale with Dynamic Type.
+/// Fantasy mockup roles: serif display lines, warm neutrals, gold captions.
+///
+/// ## VoiceOver
+/// VoiceOver reads the underlying ``Text`` string (and any ``AccessibilityTraits`` you add on the view).
+/// Drop shadows here are **visual-only** and do not affect spoken output. Pair colored captions (``captionGold``)
+/// with explicit wording—not color alone—so meaning is clear when users don’t perceive hue.
+///
+/// Prefer **one logical label per focusable unit**: when you use ``AccessibilityElement`` grouping
+/// (e.g. ``accessibilityElement(children: .combine)``), ensure the combined
+/// ``accessibilityLabel`` includes every string the sighted user needs, in a sensible order.
+///
+/// ## Dynamic Type
+/// Body/meta roles use ``Font/ra11yBody`` / ``Font/ra11ySubheadline`` / ``Font/ra11yCaption`` so they track
+/// the user’s content size. Serif display roles use ``Font/system(_:design:)`` text styles (e.g. ``TextStyle/largeTitle``),
+/// which also scale. Validate at **extra-extra-large** sizes: wrapping, clipping, and navigation bar height.
+///
+/// ## Reduce Transparency / Increase Contrast
+/// ``materialCard*`` roles are meant for ``Material`` surfaces; with **Reduce Transparency** on, materials
+/// become more opaque—re-verify contrast. **Increase Contrast** can flatten perceived separation that shadows
+/// provide; if copy feels thin, bump weight or opacity in a follow-up pass (do not rely on shadow alone for meaning).
+///
+/// **Suitability:** This modifier is appropriate for **styled static copy** on painted or card surfaces. It does not
+/// replace per-screen **hints**, **identifiers**, **actions**, or **heading** traits—you must still add those where product spec requires.
 enum QuestPaintReadableTextRole {
     /// Large serif title over paint (prologue, VO gate).
     case heroTitle
@@ -168,6 +192,9 @@ struct QuestPaintReadableTextModifier: ViewModifier {
 extension View {
 
     /// Applies mockup-derived legibility styling for text over illustrated environments or material cards.
+    ///
+    /// - Note: Does not set VoiceOver labels—keep ``Text`` literals accurate and add
+    ///   ``View/accessibilityHint(_:)-6yw3c`` / grouping at the container when the UX needs it.
     func questPaintReadableText(_ role: QuestPaintReadableTextRole) -> some View {
         modifier(QuestPaintReadableTextModifier(role: role))
     }

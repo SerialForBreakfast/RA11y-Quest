@@ -1975,6 +1975,173 @@
         }
       }
     },
+    "result.gestureReminder.heading" : {
+      "comment" : "Heading above the compact VoiceOver gesture reminder on the shared game result screen.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestures in this quest"
+          }
+        }
+      }
+    },
+    "voSpell.kicker.navigation" : {
+      "comment" : "Uppercase kicker for linear VoiceOver navigation spell cards.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pathfinding"
+          }
+        }
+      }
+    },
+    "voSpell.kicker.scrolling" : {
+      "comment" : "Uppercase kicker for three-finger scroll spell cards.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shaft scroll"
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe to move focus"
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.body" : {
+      "comment" : "Enchanter prologue spell card; teaches one-finger swipes and activation.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With VoiceOver on, swipe right or left with one finger to move to the next or previous item. When you hear the control you want, double-tap anywhere on the screen to activate it."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.a11y" : {
+      "comment" : "VoiceOver label for the linear navigation spell card.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pathfinding spell. Swipe right or left with one finger to move VoiceOver focus item by item. Double-tap to activate the focused control."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.reminder" : {
+      "comment" : "Short reminder on the result screen for Find and Focus.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You practiced linear focus: one-finger next and previous, then double-tap to invoke."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: this quest trained VoiceOver linear navigation—swipe right or left to move between items, double-tap to activate."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Three-finger scroll"
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.body" : {
+      "comment" : "Dungeon prologue spell card for the moonstone lane.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When focus is on a scrollable region, swipe up or down with three fingers to move the content. Use one-finger swipes to move focus; use three fingers to scroll the shaft without leaving the lane."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shaft scroll spell. Three-finger swipes scroll vertically inside the scroll area. One-finger swipes change which element VoiceOver is focused on."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.reminder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You practiced the moonstone lane: three-finger scrolling while keeping focus on the alignment lane."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: Crystal Resonance emphasized three-finger vertical scrolling in a scroll view together with VoiceOver focus on the lane."
+          }
+        }
+      }
+    },
+    "voSpell.zScrub.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two-finger Z scrub"
+          }
+        }
+      }
+    },
+    "voSpell.zScrub.reminder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You practiced the escape scrub: draw a Z with two fingers to banish and to dismiss blocking UI elsewhere."
+          }
+        }
+      }
+    },
+    "voSpell.zScrub.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: Banishment trained the two-finger Z-shaped scrub used for escape in this quest and for modals in real apps."
+          }
+        }
+      }
+    },
     "result.skillTransfer.banishment.body" : {
       "localizations" : {
         "en" : {

@@ -394,6 +394,7 @@ Current structure (as of 2026-04-19)
 |   |   |-- ADR-0002-AI-Assisted-Screenshot-Validation.md
 |   |   |-- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
 |   |   |-- ADR-0004-ArcanistsTower-Rotor-Interaction.md
+|   |   |-- ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md
 |   |   |-- ArcanistsTower.txt
 |   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md

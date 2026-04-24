@@ -867,6 +867,7 @@ private struct DungeonPrologueView: View {
                 dmNarrationCard
                 lessonCard
                 gestureGuide
+                QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
                 practiceZone
                 beginButton
             }
@@ -887,8 +888,8 @@ private struct DungeonPrologueView: View {
                 .accessibilityHidden(true)
 
             Text(String(localized: "dungeon.explain.narration"))
-                .font(.ra11yBody)
                 .italic()
+                .questPaintReadableText(.materialCardBody)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -902,12 +903,11 @@ private struct DungeonPrologueView: View {
     private var lessonCard: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
             Text(String(localized: "dungeon.explain.lesson.heading"))
-                .font(.ra11yHeadline)
-                .bold()
+                .questPaintReadableText(.materialCardTitle)
                 .accessibilityAddTraits(.isHeader)
 
             Text(String(localized: "dungeon.explain.lesson.body"))
-                .font(.ra11yBody)
+                .questPaintReadableText(.materialCardBody)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -932,15 +932,13 @@ private struct DungeonPrologueView: View {
     private var practiceZone: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
             Text(String(localized: "dungeon.explain.practice_tip"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.materialCardMeta)
 
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
                     ForEach(0..<14, id: \.self) { index in
                         Text(String(format: String(localized: "dungeon.explain.practice.step"), index + 1))
-                            .font(.ra11yBody)
-                            .foregroundStyle(Color.ra11yCardSecondaryText)
+                            .questPaintReadableText(.bodySupporting)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 4)
                     }
@@ -962,8 +960,7 @@ private struct DungeonPrologueView: View {
 
             if practiceScrollObserved {
                 Text(String(localized: "dungeon.prologue.practice.ready"))
-                    .font(.ra11yCaption)
-                    .foregroundStyle(Color.ra11yCardTertiaryText)
+                    .questPaintReadableText(.captionGold)
             }
         }
         .padding(RA11ySpacing.base)
@@ -1061,46 +1058,29 @@ struct DungeonTimerHUD: View {
     }
 
     private var timerLabel: some View {
-        Label(
-            String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))),
-            systemImage: "clock"
-        )
-        .font(.ra11ySubheadline)
+        HStack(spacing: RA11ySpacing.xs) {
+            Image(systemName: "clock")
+                .foregroundStyle(Color.white.opacity(0.72))
+            Text(String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))))
+                .questPaintReadableText(.materialCardMeta)
+        }
     }
 
     private var mistakesLabel: some View {
         Text(String(format: String(localized: "dungeon.hud.mistakes.format"), mistakes))
-            .font(.ra11ySubheadline)
-            .foregroundStyle(.secondary)
+            .questPaintReadableText(.materialCardMeta)
     }
 }
 
 // MARK: - DungeonBackgroundView
 
-/// Full-bleed dungeon background with dark overlay for legibility.
-///
-/// Uses an explicit geometry size so `scaledToFill` crops from the center when the view
-/// is used as a navigation-stack background (unbounded proposals otherwise skew the image).
+/// Full-bleed dungeon background: shared quest paint + readable scrim (prologue only).
 private struct DungeonBackgroundView: View {
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                Color.black
-                if let image = UIImage(named: "dungeon_descent_bg") {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
-                        .overlay(Color.black.opacity(0.4))
-                }
-                LinearGradient(
-                    colors: [Color.black.opacity(0.55), Color.black.opacity(0.15), Color.black.opacity(0.55)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
+        ZStack {
+            Color.black
+            QuestPaintAmbientBackdrop(imageName: "dungeon_descent_bg")
+            QuestPaintReadableScrim()
         }
     }
 }
@@ -1119,8 +1099,7 @@ private struct DungeonGestureRow: View {
                 .frame(minWidth: 32, alignment: .leading)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
-                .font(.ra11yBody)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .questPaintReadableText(.bodySupporting)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

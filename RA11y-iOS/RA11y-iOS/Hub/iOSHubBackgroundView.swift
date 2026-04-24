@@ -4,9 +4,8 @@ import SwiftUI
 
 /// Full-bleed atmospheric background for the hub screen.
 ///
-/// Renders an asset image in aspect-fill mode behind a dark gradient overlay.
-/// The gradient guarantees WCAG AA contrast for text at any point on the image,
-/// regardless of how light or dark the underlying region is.
+/// Stacks ``QuestPaintAmbientBackdrop`` with ``QuestPaintReadableScrim`` so hub copy
+/// matches the mockup “quest paint” treatment used on results and VO gates.
 ///
 /// ## Usage
 /// Apply as `.background { iOSHubBackgroundView(assetName:) }` on the content
@@ -32,36 +31,13 @@ struct iOSHubBackgroundView: View {
 
     var body: some View {
         ZStack {
-            // Fallback base color shown when the background image asset is absent
-            // (e.g., before the Design track delivers final art). Deep tavern brown
-            // preserves the D&D atmosphere without relying on the image.
+            // Fallback base color when the catalog image is missing (deep tavern brown).
             Color(red: 0.10, green: 0.07, blue: 0.05)
                 .accessibilityHidden(true)
 
-            // The image is proposed the full screen size (including safe areas) because
-            // of `.ignoresSafeArea()` below. `.scaledToFill()` fills that proposal.
-            // No explicit frame is needed; the ZStack's `.ignoresSafeArea()` anchors the
-            // size correctly when used inside `.background {}`.
-            Image(assetName)
-                .resizable()
-                .scaledToFill()
-                // Clip prevents the fill-scaled image from bleeding outside
-                // the ZStack frame when the asset's aspect ratio doesn't match
-                // the device's screen ratio exactly.
-                .clipped()
-                .accessibilityHidden(true)
+            QuestPaintAmbientBackdrop(imageName: assetName)
 
-            // Top-heavy overlay: darker near the nav bar for title legibility,
-            // lighter toward the bottom so the dark quest card backgrounds dominate.
-            LinearGradient(
-                colors: [
-                    Color.black.opacity(0.55),
-                    Color.black.opacity(0.15)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .accessibilityHidden(true)
+            QuestPaintReadableScrim()
         }
         .ignoresSafeArea()
     }

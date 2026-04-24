@@ -40,19 +40,15 @@ struct iOSQuestCardInfoView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
             Text(title)
-                .font(.ra11yHeadline)
-                .fontWeight(.bold)
-                .foregroundStyle(.primary)
+                .questPaintReadableText(.materialCardTitle)
 
             Text(goal)
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .questPaintReadableText(.materialCardBody)
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(alignment: .center, spacing: RA11ySpacing.sm) {
                 Text(estimatedDuration)
-                    .font(.ra11yCaption)
-                    .foregroundStyle(Color.ra11yCardTertiaryText)
+                    .questPaintReadableText(.materialCardMeta)
 
                 rankChip
             }

@@ -21,11 +21,13 @@ import RA11yCore
 /// on a separate line.
 ///
 /// ## Dynamic Type
-/// All text uses semantic font styles from `RA11yFont`; layout scrolls at largest sizes.
+/// Body copy uses `RA11yFont` where appropriate; rank and headings use ``QuestPaintReadableTextRole``
+/// (serif mockup lane) so Dynamic Type still scales.
 ///
 /// ## Theming
 /// Uses each quest’s primary environment art as a full-bleed backdrop with a dark scrim so rank copy
-/// stays legible over busy paintings (Enchanter shelf, Dungeon descent, Banishment tower).
+/// stays legible over busy paintings (Enchanter shelf, Dungeon descent, Banishment tower). The skill-transfer
+/// card uses an explicit leading ``HStack`` so wrapped copy is not clipped on compact widths (store screenshots).
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
@@ -33,7 +35,6 @@ struct iOSGameResultView: View {
 
     // MARK: - Environment
 
-    @Environment(iOSAppRouter.self) private var router
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Properties
@@ -87,15 +88,18 @@ struct iOSGameResultView: View {
                                 .background(.black.opacity(0.22), in: RoundedRectangle(cornerRadius: RA11yRadius.card))
                         }
                         skillTransferCard
-                        actionButtons
+                        gestureReminderSection
+                        QuestGameResultActionStack(
+                            onPlayAgain: onPlayAgain,
+                            onReturnToHub: onReturnToHub
+                        )
                     }
-                    .frame(maxWidth: colW)
+                    .frame(maxWidth: colW, alignment: .center)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, RA11ySpacing.base)
                 }
                 .padding(.horizontal, hPad)
                 .scrollContentBackground(.hidden)
-                .clipped()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -121,7 +125,8 @@ struct iOSGameResultView: View {
 
             Text(presenter.result.rank.displayText)
                 .multilineTextAlignment(.center)
-                .questPaintReadableText(.sectionTitle)
+                .questPaintReadableText(.heroTitle)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             VStack(spacing: RA11ySpacing.xs) {
                 Text(presenter.formattedTime)
@@ -145,24 +150,30 @@ struct iOSGameResultView: View {
     /// "I passed the game" → "I know what to do in the App Store."
     private var skillTransferCard: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Label {
+            HStack(alignment: .top, spacing: RA11ySpacing.sm) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.title3)
+                    .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                    .accessibilityHidden(true)
                 Text(String(localized: "result.skillTransfer.heading"))
                     .questPaintReadableText(.materialCardTitle)
-            } icon: {
-                Image(systemName: "lightbulb.fill")
-                    .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
 
             Divider().opacity(0.28)
 
             Text(skillTransferBody)
                 .questPaintReadableText(.materialCardBody)
-                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(skillTransferRealWorld)
                 .questPaintReadableText(.materialCardMeta)
-                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -172,6 +183,21 @@ struct iOSGameResultView: View {
             "\(String(localized: "result.skillTransfer.heading")). \(skillTransferBody) \(skillTransferRealWorld)"
         )
         .accessibilityIdentifier("result.skillTransferCard")
+    }
+
+    /// Compact “spell card” echoing the VoiceOver pattern each quest emphasized (linear nav, three-finger scroll, Z scrub).
+    private var gestureReminderSection: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
+            Text(String(localized: "result.gestureReminder.heading"))
+                .textCase(.uppercase)
+                .questPaintReadableText(.captionGold)
+                .tracking(0.35)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+            QuestVoiceOverGestureSpellPlate.resultReminder(for: gameKind)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("result.gestureReminder")
     }
 
     private var skillTransferBody: String {
@@ -196,41 +222,6 @@ struct iOSGameResultView: View {
         }
     }
 
-    /// Action buttons — adapts to Basics sequence context.
-    ///
-    /// In the M4 guided Basics sequence, replaces the normal "Try Again" / "Back to
-    /// Tavern" pair with a single "Continue Basics" button that pops back to
-    /// `iOSBasicsSequenceView`. In standard play the original two buttons are shown.
-    @ViewBuilder
-    private var actionButtons: some View {
-        if router.isInBasicsSequence {
-            Button(String(localized: "basicsSequence.continueBasics")) {
-                router.popForBasicsContinue()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .accessibilityIdentifier("result.continueBasics")
-            .accessibilityHint(String(localized: "basicsSequence.continueBasics.a11yHint"))
-        } else {
-            VStack(spacing: RA11ySpacing.sm) {
-                Button(String(localized: "result.playAgain")) {
-                    onPlayAgain()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .accessibilityIdentifier("result.playAgain")
-                .accessibilityHint(String(localized: "result.a11y.playAgain.hint"))
-
-                Button(String(localized: "result.returnToHub")) {
-                    onReturnToHub()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .accessibilityIdentifier("result.returnToHub")
-                .accessibilityHint(String(localized: "result.a11y.returnToHub.hint"))
-            }
-        }
-    }
 }
 
 // MARK: - Preview
@@ -246,6 +237,7 @@ struct iOSGameResultView: View {
             onPlayAgain: {},
             onReturnToHub: {}
         )
+        .environment(iOSAppRouter())
     }
 }
 
@@ -260,5 +252,6 @@ struct iOSGameResultView: View {
             onPlayAgain: {},
             onReturnToHub: {}
         )
+        .environment(iOSAppRouter())
     }
 }

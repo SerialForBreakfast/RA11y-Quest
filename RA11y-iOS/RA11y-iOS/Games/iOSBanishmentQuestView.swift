@@ -684,15 +684,6 @@ struct iOSBanishmentQuestView: View {
     private var prologueBody: some View {
         ScrollView {
             VStack(alignment: .center, spacing: RA11ySpacing.lg) {
-                HStack(spacing: RA11ySpacing.sm) {
-                    Image(systemName: "hand.draw.fill")
-                        .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
-                    Text(String(localized: "banishment.prologue.kicker"))
-                        .textCase(.uppercase)
-                        .questPaintReadableText(.captionGold)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("banishment.prologue.kicker")
                 Text(String(localized: "banishment.prologue.title"))
                     .multilineTextAlignment(.center)
                     .questPaintReadableText(.heroTitle)
@@ -702,18 +693,12 @@ struct iOSBanishmentQuestView: View {
                     .multilineTextAlignment(.center)
                     .questPaintReadableText(.bodySupporting)
                     .accessibilityIdentifier("banishment.prologue.body")
-                prologueGestureIllustration
                 Text(String(localized: "banishment.prologue.instructions"))
                     .multilineTextAlignment(.center)
                     .questPaintReadableText(.bodyEmphasis)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("banishment.prologue.instructions")
-                Text(String(localized: "banishment.prologue.swipeExplainer"))
-                    .multilineTextAlignment(.center)
-                    .questPaintReadableText(.bodyEmphasis)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("banishment.prologue.swipeExplainer")
-                    .accessibilityLabel(String(localized: "banishment.prologue.swipeExplainer.a11y"))
+                banishmentZScrubSpellPlate
                 Button(String(localized: "banishment.prologue.begin")) {
                     viewModel.beginTrial()
                 }
@@ -732,24 +717,14 @@ struct iOSBanishmentQuestView: View {
         .accessibilityIdentifier("banishment.prologue")
     }
 
-    /// Large Z reference from ``iOSBanishmentArt/gestureZReference`` (lesson-only, mockup-style golden trail + nodes); falls back to a vector hint if the catalog image is missing.
-    ///
-    /// The catalog PNG uses **true alpha** (edge-connected dark matte removed in the ingest utility); no blend hack required.
-    @ViewBuilder
-    private var prologueGestureIllustration: some View {
-        Group {
-            if UIImage(named: iOSBanishmentArt.gestureZReference) != nil {
-                Image(iOSBanishmentArt.gestureZReference)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(maxWidth: horizontalSizeClass == .regular ? 340 : 300)
-                    .shadow(color: .black.opacity(0.35), radius: 14, y: 5)
-            } else {
-                prologueZGestureFallback
-            }
-        }
-        .accessibilityHidden(true)
+    /// Z-scrub “spell card” shared with other quests via ``QuestVoiceOverGestureSpellPlate``; raster or vector fallback.
+    private var banishmentZScrubSpellPlate: some View {
+        let name = iOSBanishmentArt.gestureZReference
+        let fallback: AnyView? = UIImage(named: name) == nil ? AnyView(prologueZGestureFallback) : nil
+        return QuestVoiceOverGestureSpellPlate.banishmentZScrubLesson(
+            catalogArtName: name,
+            catalogArtFallback: fallback
+        )
     }
 
     /// Matches mockup stroke weight when raster art is not yet imported.

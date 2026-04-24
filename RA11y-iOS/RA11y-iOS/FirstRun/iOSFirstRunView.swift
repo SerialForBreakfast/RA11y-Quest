@@ -7,6 +7,9 @@ import RA11yCore
 ///
 /// Presents the entry choice on initial launch and starts the sequence when
 /// launched from the hub or when the user chooses "Start Basics."
+///
+/// Entry and Basics use the same hub tavern art with ``QuestPaintReadableScrim``,
+/// ``QuestPaintReadableText`` roles, and ``QuestPaintContentMetrics`` as the main hub.
 struct iOSFirstRunView: View {
 
     // MARK: - Private Properties
@@ -23,6 +26,7 @@ struct iOSFirstRunView: View {
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Init
 
@@ -57,6 +61,7 @@ struct iOSFirstRunView: View {
         }
         .navigationTitle(String(localized: "firstRun.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
+        .environment(\.colorScheme, .dark)
         .task {
             await handleAutoStartIfNeeded()
         }
@@ -66,18 +71,26 @@ struct iOSFirstRunView: View {
 
     private var entryContent: some View {
         GeometryReader { geo in
+            let horizontalPad = QuestPaintContentMetrics.scrollHorizontalPadding(
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                gameKind: nil
+            )
+            let readingMax = QuestPaintContentMetrics.readingColumnMaxWidth(
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                horizontalPadding: horizontalPad
+            )
             ScrollView {
                 VStack(alignment: .center, spacing: RA11ySpacing.xl) {
                     VStack(spacing: RA11ySpacing.md) {
                         Text(String(localized: "firstRun.title"))
-                            .font(.ra11yTitle)
-                            .bold()
+                            .questPaintReadableText(.heroTitle)
                             .multilineTextAlignment(.center)
                             .accessibilityIdentifier("firstRun.title")
 
                         Text(String(localized: "firstRun.body"))
-                            .font(.ra11yBody)
-                            .foregroundStyle(.secondary)
+                            .questPaintReadableText(.bodySupporting)
                             .multilineTextAlignment(.center)
                     }
 
@@ -99,14 +112,20 @@ struct iOSFirstRunView: View {
                         .accessibilityHint(String(localized: "firstRun.goToHub.a11yHint"))
                     }
                 }
-                .padding(RA11ySpacing.base)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: 560)
+                .padding(.horizontal, horizontalPad)
+                .padding(.vertical, RA11ySpacing.base)
+                .frame(maxWidth: readingMax)
                 .frame(maxWidth: .infinity)
             }
-            .clipped()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            ZStack {
+                Color(red: 0.10, green: 0.07, blue: 0.05)
+                QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
+                QuestPaintReadableScrim()
+            }
+        }
     }
 
     // MARK: - Actions
