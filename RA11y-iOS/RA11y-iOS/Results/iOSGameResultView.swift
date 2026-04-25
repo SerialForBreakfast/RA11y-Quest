@@ -25,17 +25,13 @@ import RA11yCore
 /// (serif mockup lane) so Dynamic Type still scales.
 ///
 /// ## Theming
-/// Uses each quest’s primary environment art as a full-bleed backdrop with a dark scrim so rank copy
-/// stays legible over busy paintings (Enchanter shelf, Dungeon descent, Banishment tower). The skill-transfer
-/// card uses an explicit leading ``HStack`` so wrapped copy is not clipped on compact widths (store screenshots).
+/// Uses ``QuestPaintScreen`` with ``QuestLayoutRole/result`` so Enchanter, Crystal/Dungeon, and Banishment share
+/// the same illustrated scaffold, iPad column width (**660pt** cap regular), and Dungeon ``scrollHunt`` gutter when applicable.
+/// The skill-transfer card uses an explicit leading ``HStack`` so wrapped copy is not clipped on compact widths (store screenshots).
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSGameResultView: View {
-
-    // MARK: - Environment
-
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Properties
 
@@ -59,54 +55,32 @@ struct iOSGameResultView: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack {
-            QuestPaintAmbientBackdrop(imageName: gameKind.questResultAmbientImageName)
-                .ignoresSafeArea()
-            QuestPaintReadableScrim()
-                .ignoresSafeArea()
-            GeometryReader { geo in
-                let hPad = QuestPaintContentMetrics.horizontalPadding(
-                    role: .lesson,
-                    containerWidth: geo.size.width,
-                    horizontalSizeClass: horizontalSizeClass,
-                    gameKind: gameKind
-                )
-                let colW = QuestPaintContentMetrics.contentMaxWidth(
-                    role: .lesson,
-                    containerWidth: geo.size.width,
-                    horizontalSizeClass: horizontalSizeClass,
-                    horizontalPadding: hPad
-                )
-                ScrollView {
-                    VStack(spacing: RA11ySpacing.md) {
-                        resultSummary
-                        if let gameSpecificAnnouncement {
-                            Text(gameSpecificAnnouncement)
-                                .multilineTextAlignment(.center)
-                                .questPaintReadableText(.bodyEmphasis)
-                                .padding(.horizontal, RA11ySpacing.base)
-                                .padding(.vertical, RA11ySpacing.sm)
-                                .frame(maxWidth: .infinity)
-                                .background(.black.opacity(0.22), in: RoundedRectangle(cornerRadius: RA11yRadius.card))
-                        }
-                        skillTransferCard
-                        gestureReminderSection
-                        QuestGameResultActionStack(
-                            onPlayAgain: onPlayAgain,
-                            onReturnToHub: onReturnToHub
-                        )
-                    }
-                    .frame(maxWidth: colW, alignment: .center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, RA11ySpacing.sm)
-                    .padding(.bottom, RA11ySpacing.md)
+        QuestPaintScreen(
+            ambientImageName: gameKind.questResultAmbientImageName,
+            layoutRole: .result,
+            gameKind: gameKind
+        ) {
+            VStack(spacing: RA11ySpacing.lg) {
+                resultSummary
+                if let gameSpecificAnnouncement {
+                    Text(gameSpecificAnnouncement)
+                        .multilineTextAlignment(.center)
+                        .questPaintReadableText(.bodyEmphasis)
+                        .padding(.horizontal, RA11ySpacing.base)
+                        .padding(.vertical, RA11ySpacing.sm)
+                        .frame(maxWidth: .infinity)
+                        .background(.black.opacity(0.22), in: RoundedRectangle(cornerRadius: RA11yRadius.card))
                 }
-                .padding(.horizontal, hPad)
-                .scrollContentBackground(.hidden)
+                skillTransferCard
+                gestureReminderSection
+                QuestGameResultActionStack(
+                    onPlayAgain: onPlayAgain,
+                    onReturnToHub: onReturnToHub
+                )
             }
+            .padding(.top, RA11ySpacing.sm)
+            .padding(.bottom, RA11ySpacing.md)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .preferredColorScheme(.dark)
         .navigationTitle(String(localized: "result.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)

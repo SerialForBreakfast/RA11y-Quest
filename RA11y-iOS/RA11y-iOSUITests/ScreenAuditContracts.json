@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "projectName": "RA11y iOS Screenshots",
+  "assetProvenancePath": "ScreenAuditAssetProvenance.json",
   "screens": [
     {
       "id": "hub",
@@ -158,7 +159,7 @@
       "pedagogyRole": "introduce",
       "regions": {
         "critical": [
-          { "name": "banishment-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532 }
+          { "name": "banishment-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532, "coordinateSpace": { "width": 1170, "height": 2532 } }
         ]
       },
       "assets": {
@@ -167,7 +168,8 @@
             "name": "banishment-prologue-art",
             "confidence": 0.62,
             "minimumConfidence": 0.8,
-            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified."
+            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified.",
+            "provenanceID": "banishment-prologue-art"
           }
         ]
       },
@@ -186,7 +188,7 @@
       "pedagogyRole": "practice",
       "regions": {
         "critical": [
-          { "name": "banishment-ward-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532 }
+          { "name": "banishment-ward-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532, "coordinateSpace": { "width": 1170, "height": 2532 } }
         ]
       },
       "assets": {
@@ -195,7 +197,8 @@
             "name": "banishment-ward-trap-art",
             "confidence": 0.62,
             "minimumConfidence": 0.8,
-            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified."
+            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified.",
+            "provenanceID": "banishment-ward-trap-art"
           }
         ]
       },
@@ -214,7 +217,7 @@
       "pedagogyRole": "test",
       "regions": {
         "critical": [
-          { "name": "banishment-tower-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532 }
+          { "name": "banishment-tower-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532, "coordinateSpace": { "width": 1170, "height": 2532 } }
         ]
       },
       "assets": {
@@ -223,7 +226,8 @@
             "name": "banishment-tower-art",
             "confidence": 0.62,
             "minimumConfidence": 0.8,
-            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified."
+            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified.",
+            "provenanceID": "banishment-tower-art"
           }
         ]
       },
@@ -242,7 +246,7 @@
       "pedagogyRole": "conclude",
       "regions": {
         "critical": [
-          { "name": "banishment-result-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532 }
+          { "name": "banishment-result-art-review", "x": 0, "y": 0, "width": 1170, "height": 2532, "coordinateSpace": { "width": 1170, "height": 2532 } }
         ]
       },
       "assets": {
@@ -251,7 +255,8 @@
             "name": "banishment-result-art",
             "confidence": 0.62,
             "minimumConfidence": 0.8,
-            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified."
+            "note": "Banishment screenshot art is tracked as a high-risk review surface until the authored asset pipeline is fully verified.",
+            "provenanceID": "banishment-result-art"
           }
         ]
       },

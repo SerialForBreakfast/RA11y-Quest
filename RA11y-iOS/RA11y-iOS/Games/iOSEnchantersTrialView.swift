@@ -1495,6 +1495,8 @@ private struct RelicImage: View {
 }
 
 /// Background for The Enchanter's Trial — dark gradient over the tower shelf art.
+///
+/// **VoiceOver:** The stack is `accessibilityHidden` so the catalog filename is not spoken as a label.
 private struct EnchanterBackgroundView: View {
     var body: some View {
         ZStack {
@@ -1507,6 +1509,7 @@ private struct EnchanterBackgroundView: View {
                     .overlay(Color.black.opacity(0.55))
             }
         }
+        .accessibilityHidden(true)
     }
 }
 

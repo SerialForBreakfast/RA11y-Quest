@@ -30,6 +30,9 @@ extension GameKind {
 // MARK: - Backdrop views
 
 /// Illustrated quest environment (Enchanter shelf, Dungeon shaft, Banishment art).
+///
+/// **VoiceOver:** Fully hidden from the accessibility tree. Catalog asset names (e.g. `enchanter_tower_shelf_bg`)
+/// must not be spoken—SwiftUI can otherwise use the image resource name as a default label.
 struct QuestPaintAmbientBackdrop: View {
 
     let imageName: String
@@ -46,6 +49,7 @@ struct QuestPaintAmbientBackdrop: View {
                 Color.ra11yGameFallbackBackground
             }
         }
+        .accessibilityHidden(true)
     }
 }
 
@@ -78,6 +82,7 @@ struct QuestPaintReadableScrim: View {
 /// |------|-------------------------|-------------------------|
 /// | ``reading`` | Max content **560pt**, padding from centered 560 anchor | Max content **620pt**, padding from 640 anchor |
 /// | ``questCardList`` | Max **560pt** (full width minus padding) | Max **800pt**, wider anchor **840pt** so titles don’t phone-wrap |
+/// | ``result`` | Max **560pt** | Max **660pt**, anchor **700pt** (design target **600–680pt** for result prose + skill-transfer cards) |
 /// | ``lesson`` | Same as reading (until prologue unification) | Same as reading |
 /// | ``playfield`` | Same as reading | Same as reading |
 /// | ``actions`` | Same as reading | Same as reading |
@@ -88,6 +93,8 @@ enum QuestLayoutRole: Equatable, Sendable {
     case reading
     /// Hub quest board cards (thumbnail + title + goal + rank); **560pt** phone, **800pt** iPad regular so long titles don’t stack like a phone column.
     case questCardList
+    /// Post-run result stacks (rank summary, skill transfer, gesture reminder, CTAs) — slightly wider than ``reading`` on iPad for card copy.
+    case result
     /// Prologue teaching stacks — currently matches ``reading``; future target **680–760pt** on iPad per design review.
     case lesson
     /// Active encounter HUD and playfield chrome — currently matches ``reading``; future **760–1000pt** or full-bleed per mechanic.
@@ -110,7 +117,7 @@ enum QuestPaintContentMetrics {
     ///   - role: ``QuestLayoutRole`` (hub cards use ``QuestLayoutRole/questCardList``).
     ///   - containerWidth: Pass ``GeometryProxy/size.width`` (or equivalent).
     ///   - horizontalSizeClass: From the SwiftUI environment.
-    ///   - gameKind: When ``GameKind/scrollHunt``, adds extra gutter for Dungeon result/readability (reading lineage only).
+    ///   - gameKind: When ``GameKind/scrollHunt``, adds extra gutter for Dungeon surfaces (``reading``, ``result``, ``lesson``, ``actions``).
     static func horizontalPadding(
         role: QuestLayoutRole,
         containerWidth: CGFloat,
@@ -184,6 +191,8 @@ enum QuestPaintContentMetrics {
             return isRegular ? 640 : 560
         case .questCardList:
             return isRegular ? 840 : 560
+        case .result:
+            return isRegular ? 700 : 560
         case .lesson, .playfield, .actions:
             return isRegular ? 640 : 560
         }
@@ -196,6 +205,8 @@ enum QuestPaintContentMetrics {
             return isRegular ? 620 : 560
         case .questCardList:
             return isRegular ? 800 : 560
+        case .result:
+            return isRegular ? 660 : 560
         case .lesson, .playfield, .actions:
             return isRegular ? 620 : 560
         }
@@ -204,11 +215,84 @@ enum QuestPaintContentMetrics {
     private static func appliesScrollHuntGutter(role: QuestLayoutRole, gameKind: GameKind?) -> Bool {
         guard gameKind == .scrollHunt else { return false }
         switch role {
-        case .reading, .lesson, .actions:
+        case .reading, .result, .lesson, .actions:
             return true
         case .questCardList, .playfield:
             return false
         }
+    }
+}
+
+// MARK: - Illustrated screen scaffold
+
+/// Full-bleed illustrated quest surface: ambient art, readable scrim, dark color scheme, and a single scroll column sized by ``QuestLayoutRole``.
+///
+/// Use this for result screens, the VoiceOver gate, and prologues that share the same “painting + scrim + centered stack” pattern.
+/// Callers supply only the scroll body; horizontal padding and max width follow ``QuestPaintContentMetrics`` for the chosen role.
+///
+/// ## VoiceOver
+/// Backdrop and scrim are decorative (scrim is ``accessibilityHidden``). This scaffold does not introduce extra focus stops.
+/// Attach ``accessibilityIdentifier`` and grouping on content inside ``content`` so screen order stays explicit.
+///
+/// ## Concurrency
+/// A plain `View` with no shared mutable state; safe wherever SwiftUI view builders run (typically ``MainActor`` for UI).
+struct QuestPaintScreen<Content: View>: View {
+
+    /// Asset name passed to ``QuestPaintAmbientBackdrop``.
+    let ambientImageName: String
+
+    /// Column width and padding policy (e.g. ``QuestLayoutRole/result`` for ``iOSGameResultView``, ``QuestLayoutRole/reading`` for ``iOSVORequiredView``).
+    let layoutRole: QuestLayoutRole
+
+    /// When ``GameKind/scrollHunt``, adds the extra horizontal gutter for Dungeon-aligned surfaces (see ``QuestPaintContentMetrics``).
+    var gameKind: GameKind?
+
+    @ViewBuilder private let content: () -> Content
+
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    init(
+        ambientImageName: String,
+        layoutRole: QuestLayoutRole,
+        gameKind: GameKind? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.ambientImageName = ambientImageName
+        self.layoutRole = layoutRole
+        self.gameKind = gameKind
+        self.content = content
+    }
+
+    var body: some View {
+        ZStack {
+            QuestPaintAmbientBackdrop(imageName: ambientImageName)
+                .ignoresSafeArea()
+            QuestPaintReadableScrim()
+                .ignoresSafeArea()
+            GeometryReader { geo in
+                let hPad = QuestPaintContentMetrics.horizontalPadding(
+                    role: layoutRole,
+                    containerWidth: geo.size.width,
+                    horizontalSizeClass: horizontalSizeClass,
+                    gameKind: gameKind
+                )
+                let colW = QuestPaintContentMetrics.contentMaxWidth(
+                    role: layoutRole,
+                    containerWidth: geo.size.width,
+                    horizontalSizeClass: horizontalSizeClass,
+                    horizontalPadding: hPad
+                )
+                ScrollView {
+                    content()
+                        .frame(maxWidth: colW, alignment: .center)
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, hPad)
+                .scrollContentBackground(.hidden)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .preferredColorScheme(.dark)
     }
 }
 

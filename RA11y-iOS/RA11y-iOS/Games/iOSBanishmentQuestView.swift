@@ -15,7 +15,7 @@ enum BanishmentPhase: Equatable {
     case wardIntermission
     /// Timed gauntlet: index 0..<towerThreats.count
     case tower(Int)
-    /// Lights Off–style finale; same escape contract, minimal chrome.
+    /// **Lights Off** finale: same escape contract; visuals blacked out—player must rely on VoiceOver and the scrub.
     case darkTower
 }
 
@@ -34,7 +34,8 @@ struct BanishmentThreat: Identifiable, Equatable {
 
 // MARK: - BanishmentQuestViewModel
 
-/// Drives The Banishment: practice ward, timed tower sequence, Lights Off capstone.
+/// Drives The Banishment: practice ward, timed tower sequence, then **Lights Off** (``BanishmentPhase/darkTower``)
+/// as the final proof-of-knowledge encounter—blackout visuals, same Z-scrub contract.
 ///
 /// **VoiceOver:** The scrub target is the combined instruction block (and the full-screen trap
 /// root) with ``AccessibilityAction/escape``—no decoy / fake buttons.
@@ -507,7 +508,7 @@ struct iOSBanishmentQuestView: View {
         case .prologue: return String(localized: "banishment.nav.prologue")
         case .wardTrap, .wardIntermission: return String(localized: "banishment.nav.ward")
         case .tower: return String(localized: "banishment.nav.tower")
-        case .darkTower: return String(localized: "banishment.nav.dark")
+        case .darkTower: return String(localized: "banishment.nav.lightsOff")
         }
     }
 
@@ -765,6 +766,9 @@ struct iOSBanishmentQuestView: View {
             Text(String(format: String(localized: "banishment.ward.intermission.title"), viewModel.wardPracticeSpokenName))
                 .multilineTextAlignment(.center)
                 .questPaintReadableText(.sectionTitle)
+            Text(String(localized: "banishment.ward.lightsOffPreview"))
+                .multilineTextAlignment(.center)
+                .questPaintReadableText(.bodySupporting)
             if let statusMessage = viewModel.statusMessage {
                 Text(statusMessage)
                     .multilineTextAlignment(.center)
@@ -809,6 +813,9 @@ struct iOSBanishmentQuestView: View {
                 .padding(.horizontal, RA11ySpacing.lg)
                 .accessibilityElement(children: .combine)
             }
+            if case .darkTower = viewModel.phase {
+                banishmentLightsOffProofBanner
+            }
             if let msg = viewModel.statusMessage {
                 Text(msg)
                     .font(.ra11yCaption)
@@ -824,6 +831,30 @@ struct iOSBanishmentQuestView: View {
     /// Caps timer strip width on tablet so it does not stretch edge-to-edge in screenshots.
     private var scoredHUDMaxWidth: CGFloat {
         horizontalSizeClass == .regular ? 560 : .infinity
+    }
+
+    /// **Lights Off (``BanishmentPhase/darkTower``):** Mirrors Crystal Resonance’s `dungeon.lightsOff.flavor` banner—
+    /// names the final “proof of knowledge” beat so players see the mode even when creature art is blacked out.
+    private var banishmentLightsOffProofBanner: some View {
+        HStack(alignment: .top, spacing: RA11ySpacing.sm) {
+            Image(systemName: "moon.stars.fill")
+                .font(.title3)
+                .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                .accessibilityHidden(true)
+            Text(String(localized: "banishment.lightsOff.proofBanner"))
+                .font(Font.ra11ySubheadline)
+                .foregroundStyle(Color.white.opacity(0.92))
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(RA11ySpacing.md)
+        .frame(maxWidth: scoredHUDMaxWidth)
+        .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
+        .padding(.horizontal, RA11ySpacing.lg)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityLabel(String(localized: "banishment.lightsOff.proofBanner.a11y"))
+        .accessibilityIdentifier("banishment.lightsOff.proofBanner")
     }
 
     private var trapOverlay: some View {

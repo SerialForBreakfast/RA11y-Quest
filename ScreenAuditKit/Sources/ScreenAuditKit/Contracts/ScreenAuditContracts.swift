@@ -30,6 +30,9 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
     /// Human-readable project or contract collection name.
     public let projectName: String
 
+    /// Optional asset provenance file path relative to this contract file.
+    public let assetProvenancePath: String?
+
     /// Screen-level contracts that define expected screenshot state.
     public let screens: [ScreenAuditScreenContract]
 
@@ -37,11 +40,13 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
     /// - Parameters:
     ///   - schemaVersion: Schema version declared by the contract file.
     ///   - projectName: Human-readable project or contract collection name.
+    ///   - assetProvenancePath: Optional asset provenance file path relative to this contract file.
     ///   - screens: Screen-level contracts.
     /// - Throws: `ScreenAuditContractError` when required contract metadata is invalid.
     public init(
         schemaVersion: Int,
         projectName: String,
+        assetProvenancePath: String? = nil,
         screens: [ScreenAuditScreenContract]
     ) throws {
         try Self.validateSchemaVersion(schemaVersion)
@@ -49,6 +54,7 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
 
         self.schemaVersion = schemaVersion
         self.projectName = projectName
+        self.assetProvenancePath = assetProvenancePath
         self.screens = screens
     }
 
@@ -286,6 +292,9 @@ public struct ScreenAuditRegion: Codable, Equatable, Sendable {
     /// Region height in pixels.
     public let height: Int
 
+    /// Optional coordinate space used to scale this region to the inspected screenshot.
+    public let coordinateSpace: ScreenAuditCoordinateSpace?
+
     /// Creates a named screenshot region.
     /// - Parameters:
     ///   - name: Region name used in findings and reports.
@@ -293,10 +302,64 @@ public struct ScreenAuditRegion: Codable, Equatable, Sendable {
     ///   - y: Minimum y-coordinate in pixels.
     ///   - width: Region width in pixels.
     ///   - height: Region height in pixels.
-    public init(name: String, x: Int, y: Int, width: Int, height: Int) {
+    ///   - coordinateSpace: Optional coordinate space used to scale this region to the inspected screenshot.
+    public init(
+        name: String,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        coordinateSpace: ScreenAuditCoordinateSpace? = nil
+    ) {
         self.name = name
         self.x = x
         self.y = y
+        self.width = width
+        self.height = height
+        self.coordinateSpace = coordinateSpace
+    }
+
+    /// Returns this region scaled to a screenshot size when a coordinate space is declared.
+    /// - Parameters:
+    ///   - pixelWidth: Target screenshot width.
+    ///   - pixelHeight: Target screenshot height.
+    /// - Returns: Region in target screenshot pixel coordinates.
+    public func scaled(toPixelWidth pixelWidth: Int, pixelHeight: Int) -> ScreenAuditRegion {
+        guard
+            let coordinateSpace,
+            coordinateSpace.width > 0,
+            coordinateSpace.height > 0
+        else {
+            return self
+        }
+
+        let widthScale = Double(pixelWidth) / Double(coordinateSpace.width)
+        let heightScale = Double(pixelHeight) / Double(coordinateSpace.height)
+
+        return ScreenAuditRegion(
+            name: name,
+            x: Int((Double(x) * widthScale).rounded()),
+            y: Int((Double(y) * heightScale).rounded()),
+            width: Int((Double(width) * widthScale).rounded()),
+            height: Int((Double(height) * heightScale).rounded()),
+            coordinateSpace: coordinateSpace
+        )
+    }
+}
+
+/// Pixel coordinate space used for responsive region scaling.
+public struct ScreenAuditCoordinateSpace: Codable, Equatable, Sendable {
+    /// Reference screenshot width.
+    public let width: Int
+
+    /// Reference screenshot height.
+    public let height: Int
+
+    /// Creates a coordinate space.
+    /// - Parameters:
+    ///   - width: Reference screenshot width.
+    ///   - height: Reference screenshot height.
+    public init(width: Int, height: Int) {
         self.width = width
         self.height = height
     }
@@ -389,23 +452,159 @@ public struct ScreenAuditFallbackArtExpectation: Codable, Equatable, Sendable {
     /// Optional project-specific explanation included in finding evidence.
     public let note: String?
 
+    /// Optional identifier for a provenance record that explains this asset.
+    public let provenanceID: String?
+
     /// Creates a fallback-art confidence fact.
     /// - Parameters:
     ///   - name: Project-defined asset or region name.
     ///   - confidence: Confidence score from the upstream pipeline, from 0.0 to 1.0.
     ///   - minimumConfidence: Minimum acceptable confidence before a warning is emitted.
     ///   - note: Optional project-specific explanation included in finding evidence.
+    ///   - provenanceID: Optional identifier for a provenance record that explains this asset.
     public init(
         name: String,
         confidence: Double,
         minimumConfidence: Double = 0.75,
-        note: String? = nil
+        note: String? = nil,
+        provenanceID: String? = nil
     ) {
         self.name = name
         self.confidence = confidence
         self.minimumConfidence = minimumConfidence
         self.note = note
+        self.provenanceID = provenanceID
     }
+}
+
+/// Asset provenance records supplied by a project.
+public struct ScreenAuditAssetProvenanceSet: Codable, Equatable, Sendable {
+    /// Provenance records keyed by project-defined identifiers.
+    public let assets: [ScreenAuditAssetProvenance]
+
+    /// Creates a provenance set.
+    /// - Parameter assets: Provenance records keyed by project-defined identifiers.
+    public init(assets: [ScreenAuditAssetProvenance] = []) {
+        self.assets = assets
+    }
+
+    /// Returns the provenance record for an asset identifier.
+    /// - Parameter id: Asset identifier.
+    /// - Returns: Matching provenance record, when present.
+    public func asset(id: String) -> ScreenAuditAssetProvenance? {
+        assets.first { $0.id == id }
+    }
+}
+
+/// Provenance and review status for a visual asset.
+public struct ScreenAuditAssetProvenance: Codable, Equatable, Sendable {
+    /// Project-defined identifier.
+    public let id: String
+
+    /// Human-readable asset name.
+    public let name: String
+
+    /// Asset source category.
+    public let source: ScreenAuditAssetSource
+
+    /// Review and replacement status.
+    public let authoringStatus: ScreenAuditAssetAuthoringStatus
+
+    /// Source quality category.
+    public let sourceQuality: ScreenAuditAssetSourceQuality
+
+    /// Concrete risks a reviewer should understand.
+    public let knownRisks: [String]
+
+    /// Evidence paths or notes that support the provenance record.
+    public let evidence: [String]
+
+    /// Optional prose note.
+    public let note: String?
+
+    /// Creates an asset provenance record.
+    /// - Parameters:
+    ///   - id: Project-defined identifier.
+    ///   - name: Human-readable asset name.
+    ///   - source: Asset source category.
+    ///   - authoringStatus: Review and replacement status.
+    ///   - sourceQuality: Source quality category.
+    ///   - knownRisks: Concrete risks a reviewer should understand.
+    ///   - evidence: Evidence paths or notes that support the provenance record.
+    ///   - note: Optional prose note.
+    public init(
+        id: String,
+        name: String,
+        source: ScreenAuditAssetSource,
+        authoringStatus: ScreenAuditAssetAuthoringStatus,
+        sourceQuality: ScreenAuditAssetSourceQuality,
+        knownRisks: [String] = [],
+        evidence: [String] = [],
+        note: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.source = source
+        self.authoringStatus = authoringStatus
+        self.sourceQuality = sourceQuality
+        self.knownRisks = knownRisks
+        self.evidence = evidence
+        self.note = note
+    }
+}
+
+/// Source category for a visual asset.
+public enum ScreenAuditAssetSource: String, Codable, Equatable, Sendable {
+    /// Human-created or commissioned art.
+    case humanAuthored
+
+    /// Directed LLM image generation export.
+    case llmAuthored
+
+    /// Cropped from a mockup screenshot.
+    case mockupCrop
+
+    /// Placeholder or temporary art.
+    case placeholder
+
+    /// Generated procedurally or by script.
+    case procedural
+
+    /// Source is unknown.
+    case unknown
+}
+
+/// Review status for a visual asset.
+public enum ScreenAuditAssetAuthoringStatus: String, Codable, Equatable, Sendable {
+    /// Final authored asset.
+    case final
+
+    /// Authored candidate that needs review.
+    case reviewNeeded
+
+    /// Temporary asset that should be replaced.
+    case temporary
+
+    /// Asset status is unknown.
+    case unknown
+}
+
+/// Source quality category for a visual asset.
+public enum ScreenAuditAssetSourceQuality: String, Codable, Equatable, Sendable {
+    /// Production-ready source.
+    case production
+
+    /// Acceptable for review but not final.
+    case review
+
+    /// Bootstrap source used to unblock development.
+    case bootstrap
+
+    /// Known low-quality source.
+    case low
+
+    /// Source quality is unknown.
+    case unknown
 }
 
 /// Broad device family for family-specific expectations.

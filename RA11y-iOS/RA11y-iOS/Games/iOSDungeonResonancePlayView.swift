@@ -71,7 +71,9 @@ private enum iOSResonancePlayAccessibilitySortTier {
 /// activation only when the moonstone aligns with the aim line.
 ///
 /// **VoiceOver:** The scroll lane is a UIKit ``iOSResonanceVoiceOverScrollProxyRepresentable`` (`UIScrollView`)
-/// — a **single** element named “Moonstone alignment lane” for three-finger shaft scrolling. The UIKit
+/// — a **single** focusable “Glyph stream” with **value** and scroll status naming the current glyph
+/// (``dungeon.resonance.item.moonstone`` vs decoy styles) and band so linear navigation still hears
+/// *Moonstone*; three-finger shaft scrolling works as before. The UIKit
 /// proxy restores deterministic VoiceOver landing on entry, while sort priority remains a secondary aid.
 /// Aim/orb alignment and viewport height use scoped `GeometryReader` backgrounds + preference keys
 /// (not a root wrapping `GeometryReader`).
@@ -204,6 +206,14 @@ struct iOSDungeonResonancePlayView: View {
         let selectedName = currentLaneSelectionName
         let bandText = currentAlignmentAnnouncementText
         return "\(selectedName). \(bandText)"
+    }
+
+    /// Scroll proxy hint: Lights Off reiterates that the **value** names the current glyph (including Moonstone).
+    private var scrollContainerAccessibilityHint: String {
+        if lightsOffMode {
+            return String(localized: "dungeon.a11y.scroll.container.hint.lightsOff")
+        }
+        return String(localized: "dungeon.a11y.scroll.container.hint")
     }
 
     /// Row whose **layout** center is nearest the aim line for the current scroll offset (authoritative for scroll status).
@@ -418,7 +428,8 @@ struct iOSDungeonResonancePlayView: View {
                 contentBlockHeight: voiceOverLaneTotalScrollBlockHeight,
                 verticalPadding: 0,
                 accessibilityLabelText: String(localized: "dungeon.a11y.scroll.container"),
-                accessibilityHintText: String(localized: "dungeon.a11y.scroll.container.hint"),
+                accessibilityHintText: scrollContainerAccessibilityHint,
+                accessibilityValueText: currentVoiceOverScrollStatusText,
                 accessibilityScrollStatusText: currentVoiceOverScrollStatusText,
                 desiredContentOffsetY: snappedLaneOffset(for: selectedLaneIndex),
                 onContentOffsetYChanged: handleProxyScrollOffsetChange

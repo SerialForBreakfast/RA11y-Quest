@@ -58,6 +58,8 @@ public struct ScreenAuditValidator {
     private let reportWriter: ScreenAuditReportWriter
     private let baselineComparator: ScreenAuditBaselineComparator
     private let overlayRenderer: ScreenAuditOverlayRenderer
+    private let renderedMatteInspector: ScreenAuditRenderedMatteInspector
+    private let checkerboardInspector: ScreenAuditCheckerboardInspector
 
     /// Creates a filesystem validator.
     /// - Parameters:
@@ -66,18 +68,24 @@ public struct ScreenAuditValidator {
     ///   - reportWriter: Writes validation reports.
     ///   - baselineComparator: Compares screenshots against optional baselines.
     ///   - overlayRenderer: Renders failed-region review overlays.
+    ///   - renderedMatteInspector: Inspects critical regions for matte-like artifacts.
+    ///   - checkerboardInspector: Inspects critical regions for checkerboard-like artifacts.
     public init(
         imageExtractor: ScreenAuditImageEvidenceExtractor = ScreenAuditImageEvidenceExtractor(),
         ruleEvaluator: ScreenAuditRuleEvaluator = ScreenAuditRuleEvaluator(),
         reportWriter: ScreenAuditReportWriter = ScreenAuditReportWriter(),
         baselineComparator: ScreenAuditBaselineComparator = ScreenAuditBaselineComparator(),
-        overlayRenderer: ScreenAuditOverlayRenderer = ScreenAuditOverlayRenderer()
+        overlayRenderer: ScreenAuditOverlayRenderer = ScreenAuditOverlayRenderer(),
+        renderedMatteInspector: ScreenAuditRenderedMatteInspector = ScreenAuditRenderedMatteInspector(),
+        checkerboardInspector: ScreenAuditCheckerboardInspector = ScreenAuditCheckerboardInspector()
     ) {
         self.imageExtractor = imageExtractor
         self.ruleEvaluator = ruleEvaluator
         self.reportWriter = reportWriter
         self.baselineComparator = baselineComparator
         self.overlayRenderer = overlayRenderer
+        self.renderedMatteInspector = renderedMatteInspector
+        self.checkerboardInspector = checkerboardInspector
     }
 
     /// Validates screenshots against a contract file and writes reports.
@@ -106,6 +114,10 @@ public struct ScreenAuditValidator {
         }
 
         let contractSet = try ScreenAuditContractSet.decode(from: contractData)
+        let provenanceSet = try loadProvenanceSet(
+            path: contractSet.assetProvenancePath,
+            contractFile: contractFile
+        )
         var evidenceItems: [ScreenAuditScreenshotEvidence] = []
         var findings: [ScreenAuditFinding] = []
         var overlayInputs: [ScreenAuditOverlayInput] = []
@@ -120,7 +132,14 @@ public struct ScreenAuditValidator {
             let evidence = try imageExtractor.extractPNG(at: screenshotURL, screenID: screen.id)
             evidenceItems.append(evidence)
             let screenFindingStartIndex = findings.count
-            findings.append(contentsOf: ruleEvaluator.evaluate(contract: screen, evidence: evidence))
+            findings.append(contentsOf: ruleEvaluator.evaluate(contract: screen, evidence: evidence, provenanceSet: provenanceSet))
+            findings.append(
+                contentsOf: try evaluateCriticalVisualRules(
+                    screen: screen,
+                    screenshotURL: screenshotURL,
+                    evidence: evidence
+                )
+            )
             if let baseline = screen.baseline, let baselineDirectory {
                 let baselineURL = baselineDirectory.appendingPathComponent(baseline.referencePath)
                 let diff = try baselineComparator.compare(
@@ -137,12 +156,14 @@ public struct ScreenAuditValidator {
                 }
             }
             if findings.count > screenFindingStartIndex {
+                let screenFindings = Array(findings[screenFindingStartIndex..<findings.count])
                 overlayInputs.append(
                     ScreenAuditOverlayInput(
                         screen: screen,
                         screenshotURL: screenshotURL,
                         pixelWidth: evidence.pixelWidth,
-                        pixelHeight: evidence.pixelHeight
+                        pixelHeight: evidence.pixelHeight,
+                        findings: screenFindings
                     )
                 )
             }
@@ -184,18 +205,50 @@ public struct ScreenAuditValidator {
         )
     }
 
+    private func loadProvenanceSet(
+        path: String?,
+        contractFile: URL
+    ) throws -> ScreenAuditAssetProvenanceSet? {
+        guard let path, !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+
+        let provenanceURL = contractFile.deletingLastPathComponent().appendingPathComponent(path)
+        try validateExistingFile(provenanceURL)
+        let data = try Data(contentsOf: provenanceURL)
+        return try JSONDecoder().decode(ScreenAuditAssetProvenanceSet.self, from: data)
+    }
+
     private func writeOverlays(
         inputs: [ScreenAuditOverlayInput],
         outputDirectory: URL
     ) throws -> [String] {
         var paths: [String] = []
+        let encoder = ScreenAuditReportWriter.defaultEncoder()
 
         for input in inputs {
             let outputURL = outputDirectory.appendingPathComponent("\(sanitizedFilename(input.screen.id))-overlay.png")
+            let regions = overlayRegions(for: input)
             try overlayRenderer.render(
                 screenshotURL: input.screenshotURL,
-                regions: overlayRegions(for: input),
+                regions: regions,
                 outputURL: outputURL
+            )
+            let report = ScreenAuditOverlayReport(
+                screenID: input.screen.id,
+                screenshotPath: input.screenshotURL.path,
+                overlayPath: outputURL.path,
+                findings: input.findings,
+                regions: regions
+            )
+            try encoder.encode(report).write(
+                to: outputURL.deletingPathExtension().appendingPathExtension("json"),
+                options: .atomic
+            )
+            try overlayMarkdown(for: report).write(
+                to: outputURL.deletingPathExtension().appendingPathExtension("md"),
+                atomically: true,
+                encoding: .utf8
             )
             paths.append(outputURL.path)
         }
@@ -203,11 +256,50 @@ public struct ScreenAuditValidator {
         return paths
     }
 
+    private func evaluateCriticalVisualRules(
+        screen: ScreenAuditScreenContract,
+        screenshotURL: URL,
+        evidence: ScreenAuditScreenshotEvidence
+    ) throws -> [ScreenAuditFinding] {
+        var visualFindings: [ScreenAuditFinding] = []
+
+        for region in screen.regions.critical {
+            let scaledRegion = region.scaled(toPixelWidth: evidence.pixelWidth, pixelHeight: evidence.pixelHeight)
+            let matteInspection = try renderedMatteInspector.inspect(
+                screenshotURL: screenshotURL,
+                region: scaledRegion
+            )
+            if let matteFinding = renderedMatteInspector.findingIfNeeded(
+                inspection: matteInspection,
+                screenID: screen.id,
+                path: screenshotURL.path,
+                severity: screen.severityOverrides[ScreenAuditRuleID.renderedMatteRisk.rawValue] ?? .warning
+            ) {
+                visualFindings.append(matteFinding)
+            }
+
+            let checkerboardInspection = try checkerboardInspector.inspect(
+                screenshotURL: screenshotURL,
+                region: scaledRegion
+            )
+            if let checkerboardFinding = checkerboardInspector.findingIfNeeded(
+                inspection: checkerboardInspection,
+                screenID: screen.id,
+                path: screenshotURL.path,
+                severity: screen.severityOverrides[ScreenAuditRuleID.checkerboardPatternRisk.rawValue] ?? .warning
+            ) {
+                visualFindings.append(checkerboardFinding)
+            }
+        }
+
+        return visualFindings
+    }
+
     private func overlayRegions(for input: ScreenAuditOverlayInput) -> [ScreenAuditOverlayRegion] {
         var regions: [ScreenAuditOverlayRegion] = []
-        regions.append(contentsOf: input.screen.regions.ignored.map { ScreenAuditOverlayRegion(region: $0, role: .ignored) })
-        regions.append(contentsOf: input.screen.regions.protected.map { ScreenAuditOverlayRegion(region: $0, role: .protected) })
-        regions.append(contentsOf: input.screen.regions.critical.map { ScreenAuditOverlayRegion(region: $0, role: .critical) })
+        regions.append(contentsOf: input.screen.regions.ignored.map { ScreenAuditOverlayRegion(region: scaled($0, input: input), role: .ignored) })
+        regions.append(contentsOf: input.screen.regions.protected.map { ScreenAuditOverlayRegion(region: scaled($0, input: input), role: .protected) })
+        regions.append(contentsOf: input.screen.regions.critical.map { ScreenAuditOverlayRegion(region: scaled($0, input: input), role: .critical) })
 
         if regions.isEmpty {
             regions.append(
@@ -225,6 +317,41 @@ public struct ScreenAuditValidator {
         }
 
         return regions
+    }
+
+    private func scaled(_ region: ScreenAuditRegion, input: ScreenAuditOverlayInput) -> ScreenAuditRegion {
+        region.scaled(toPixelWidth: input.pixelWidth, pixelHeight: input.pixelHeight)
+    }
+
+    private func overlayMarkdown(for report: ScreenAuditOverlayReport) -> String {
+        var lines: [String] = [
+            "# Screen Audit Overlay",
+            "",
+            "- Screen: \(report.screenID)",
+            "- Screenshot: \(report.screenshotPath)",
+            "- Overlay: \(report.overlayPath)",
+            "",
+            "## Findings",
+            "",
+        ]
+
+        for finding in report.findings {
+            lines.append("- \(finding.severity.rawValue) \(finding.ruleID.rawValue): \(finding.message)")
+            lines.append("  Evidence: \(finding.evidence.excerpt)")
+        }
+
+        lines.append("")
+        lines.append("## Regions")
+        lines.append("")
+
+        for region in report.regions {
+            lines.append("- \(region.role.rawValue) \(region.region.name): x \(region.region.x), y \(region.region.y), width \(region.region.width), height \(region.region.height)")
+        }
+
+        lines.append("")
+        lines.append("Legend: red = critical or failure review region, blue = protected region, amber = ignored region.")
+        lines.append("")
+        return lines.joined(separator: "\n")
     }
 
     private func sanitizedFilename(_ value: String) -> String {
@@ -279,4 +406,5 @@ private struct ScreenAuditOverlayInput {
     let screenshotURL: URL
     let pixelWidth: Int
     let pixelHeight: Int
+    let findings: [ScreenAuditFinding]
 }

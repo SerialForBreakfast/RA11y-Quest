@@ -277,11 +277,12 @@
       }
     },
     "banishment.feedback.enterDark" : {
+      "comment" : "Announced when the player leaves the last tower beat and enters Lights Off (darkTower).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Darkness falls."
+            "value" : "Lights Off. Final proof—banish the last threat with VoiceOver and the two-finger Z scrub."
           }
         }
       }
@@ -329,12 +330,46 @@
         }
       }
     },
+    "banishment.lightsOff.proofBanner" : {
+      "comment" : "Visible banner under the timer during Banishment Lights Off (darkTower).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Final proof. Lights are off—use VoiceOver and the two-finger Z scrub to banish the last threat."
+          }
+        }
+      }
+    },
+    "banishment.lightsOff.proofBanner.a11y" : {
+      "comment" : "VoiceOver label for banishment.lightsOff.proofBanner (can match or expand on-screen text).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lights Off, final proof. Creature art is hidden. Use VoiceOver and the two-finger Z scrub to banish the last threat before time runs out."
+          }
+        }
+      }
+    },
     "banishment.nav.dark" : {
+      "comment" : "Legacy title; prefer banishment.nav.lightsOff for the darkTower phase.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dark Tower"
+          }
+        }
+      }
+    },
+    "banishment.nav.lightsOff" : {
+      "comment" : "Navigation title during BanishmentPhase.darkTower (Lights Off beat).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lights Off"
           }
         }
       }
@@ -395,27 +430,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Learn VoiceOver’s two-finger escape scrub. It dismisses blocking UI in apps and banishes traps in this quest."
-          }
-        }
-      }
-    },
-    "banishment.prologue.kicker" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escape gesture"
-          }
-        }
-      }
-    },
-    "banishment.prologue.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Mark of Z"
+            "value" : "Learn VoiceOver’s two-finger escape scrub. It dismisses blocking UI in apps and banishes traps in this quest. The run ends in Lights Off—proof you can do it without sighted cues."
           }
         }
       }
@@ -426,7 +441,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Practice once, then climb the timed tower."
+            "value" : "Practice once, climb the timed tower, then finish in Lights Off—a single blacked-out threat to prove the scrub."
+          }
+        }
+      }
+    },
+    "banishment.prologue.kicker" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escape gesture"
           }
         }
       }
@@ -449,6 +474,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Swipe gesture lesson. With VoiceOver on, place two fingers on the screen and draw a Z: move to the top left, drag to the top right, diagonally to the lower left, then horizontally to the lower right. This is the escape scrub—it dismisses blocking UI and banishes creatures in this quest."
+          }
+        }
+      }
+    },
+    "banishment.prologue.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mark of Z"
           }
         }
       }
@@ -569,39 +604,6 @@
         }
       }
     },
-    "banishment.trap.kicker.practice" : {
-      "comment" : "Trap card kicker during the goblin practice encounter.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Goblin"
-          }
-        }
-      }
-    },
-    "banishment.trap.kicker.tower" : {
-      "comment" : "Trap card kicker during timed tower beats.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tower"
-          }
-        }
-      }
-    },
-    "banishment.trap.kicker.dark" : {
-      "comment" : "Trap card kicker during Lights Off finale.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dark ascent"
-          }
-        }
-      }
-    },
     "banishment.trap.encounterKicker" : {
       "comment" : "Small kicker line above the wild-encounter headline, like a modal title.",
       "localizations" : {
@@ -633,6 +635,39 @@
         }
       }
     },
+    "banishment.trap.kicker.dark" : {
+      "comment" : "Trap card kicker during Lights Off finale.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lights off — final proof"
+          }
+        }
+      }
+    },
+    "banishment.trap.kicker.practice" : {
+      "comment" : "Trap card kicker during the goblin practice encounter.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goblin"
+          }
+        }
+      }
+    },
+    "banishment.trap.kicker.tower" : {
+      "comment" : "Trap card kicker during timed tower beats.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tower"
+          }
+        }
+      }
+    },
     "banishment.ward.continueGauntlet" : {
       "localizations" : {
         "en" : {
@@ -650,6 +685,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ banished. On to the tower."
+          }
+        }
+      }
+    },
+    "banishment.ward.lightsOffPreview" : {
+      "comment" : "Shown under the intermission title before the scored gauntlet; sets expectation for the Lights Off finale.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After three timed tower foes, the last threat is a Lights Off proof—art blacked out, same Z scrub, VoiceOver only."
           }
         }
       }
@@ -709,7 +755,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You will practice the two-finger Z scrub on dungeon foes—the same escape gesture that closes sheets and alerts when VoiceOver feels stuck."
+            "value" : "You will practice the two-finger Z scrub on dungeon foes—the same escape gesture that closes sheets and alerts when VoiceOver feels stuck. The full quest ends in Lights Off as proof you can apply it by ear."
           }
         }
       }
@@ -828,6 +874,7 @@
       }
     },
     "dungeon.a11y.explain.lesson" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -941,6 +988,17 @@
         }
       }
     },
+    "dungeon.a11y.scroll.container.hint.lightsOff" : {
+      "comment" : "L3 Crystal Resonance: visuals are blacked out; the scroll control’s accessibility value names the current glyph and alignment, including Moonstone.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Three-finger scroll to move the stream. The value names the current glyph, including Moonstone, and how close it is to the center."
+          }
+        }
+      }
+    },
     "dungeon.a11y.timer.25pct" : {
       "comment" : "Fires when 25% of time has elapsed (75% remains) — not urgent, just a soft start cue for L3.",
       "localizations" : {
@@ -974,6 +1032,7 @@
       }
     },
     "dungeon.explain.gesture.swipe1" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1004,6 +1063,7 @@
       }
     },
     "dungeon.explain.lesson.body" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1014,6 +1074,7 @@
       }
     },
     "dungeon.explain.lesson.heading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1661,7 +1722,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Third quest: when a foe bars your path, draw the two-finger Z scrub to banish it—then survive the timed gauntlet in the dark."
+            "value" : "Third quest: Z-scrub to banish foes, then clear the tower. Final beat is Lights Off—one blacked-out threat as proof of skill."
           }
         }
       }
@@ -1949,6 +2010,17 @@
         }
       }
     },
+    "result.gestureReminder.heading" : {
+      "comment" : "Heading above the compact VoiceOver gesture reminder on the shared game result screen.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestures in this quest"
+          }
+        }
+      }
+    },
     "result.navigationTitle" : {
       "localizations" : {
         "en" : {
@@ -1979,179 +2051,12 @@
         }
       }
     },
-    "result.gestureReminder.heading" : {
-      "comment" : "Heading above the compact VoiceOver gesture reminder on the shared game result screen.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gestures in this quest"
-          }
-        }
-      }
-    },
-    "voSpell.kicker.navigation" : {
-      "comment" : "Uppercase kicker for linear VoiceOver navigation spell cards.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pathfinding"
-          }
-        }
-      }
-    },
-    "voSpell.kicker.scrolling" : {
-      "comment" : "Uppercase kicker for three-finger scroll spell cards. Matches canonical zone name 'Glyph stream'.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glyph stream"
-          }
-        }
-      }
-    },
-    "voSpell.linearNav.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe to move focus"
-          }
-        }
-      }
-    },
-    "voSpell.linearNav.body" : {
-      "comment" : "Enchanter prologue spell card; teaches one-finger swipes and activation.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One-finger swipe right or left: next or previous item. Double-tap to activate."
-          }
-        }
-      }
-    },
-    "voSpell.linearNav.a11y" : {
-      "comment" : "VoiceOver label for the linear navigation spell card.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pathfinding: one-finger next or previous; double-tap to activate."
-          }
-        }
-      }
-    },
-    "voSpell.linearNav.reminder" : {
-      "comment" : "Short reminder on the result screen for Find and Focus.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You practiced linear navigation and double-tap to activate."
-          }
-        }
-      }
-    },
-    "voSpell.linearNav.reminder.a11y" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminder: linear navigation and double-tap activation."
-          }
-        }
-      }
-    },
-    "voSpell.threeFinger.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Three-finger scroll"
-          }
-        }
-      }
-    },
-    "voSpell.threeFinger.body" : {
-      "comment" : "Dungeon prologue spell card for the glyph stream.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On the glyph stream, three-finger scroll up or down moves the stream. One-finger swipes only move focus."
-          }
-        }
-      }
-    },
-    "voSpell.threeFinger.a11y" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glyph stream: three fingers scroll; one finger changes focus."
-          }
-        }
-      }
-    },
-    "voSpell.threeFinger.reminder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You practiced three-finger scrolling on the Glyph stream."
-          }
-        }
-      }
-    },
-    "voSpell.threeFinger.reminder.a11y" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminder: keep VoiceOver on the Glyph stream, then three-finger scroll."
-          }
-        }
-      }
-    },
-    "voSpell.zScrub.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Two-finger Z scrub"
-          }
-        }
-      }
-    },
-    "voSpell.zScrub.reminder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw a Z with two fingers to escape."
-          }
-        }
-      }
-    },
-    "voSpell.zScrub.reminder.a11y" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminder: the two-finger Z scrub escapes traps and dismisses blocking UI."
-          }
-        }
-      }
-    },
     "result.skillTransfer.banishment.body" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You used VoiceOver’s two-finger Z scrub to escape traps."
+            "value" : "You used VoiceOver’s two-finger Z scrub to escape traps, including the Lights Off proof at the end."
           }
         }
       }
@@ -2917,6 +2822,162 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "VoiceOver is Required"
+          }
+        }
+      }
+    },
+    "voSpell.kicker.navigation" : {
+      "comment" : "Uppercase kicker for linear VoiceOver navigation spell cards.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pathfinding"
+          }
+        }
+      }
+    },
+    "voSpell.kicker.scrolling" : {
+      "comment" : "Uppercase kicker for three-finger scroll spell cards. Matches canonical zone name 'Glyph stream'.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glyph stream"
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.a11y" : {
+      "comment" : "VoiceOver label for the linear navigation spell card.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pathfinding: one-finger next or previous; double-tap to activate."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.body" : {
+      "comment" : "Enchanter prologue spell card; teaches one-finger swipes and activation.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One-finger swipe right or left: next or previous item. Double-tap to activate."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.reminder" : {
+      "comment" : "Short reminder on the result screen for Find and Focus.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You practiced linear navigation and double-tap to activate."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: linear navigation and double-tap activation."
+          }
+        }
+      }
+    },
+    "voSpell.linearNav.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe to move focus"
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glyph stream: three fingers scroll; one finger changes focus."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.body" : {
+      "comment" : "Dungeon prologue spell card for the glyph stream.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the glyph stream, three-finger scroll up or down moves the stream. One-finger swipes only move focus."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.reminder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You practiced three-finger scrolling on the Glyph stream."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: keep VoiceOver on the Glyph stream, then three-finger scroll."
+          }
+        }
+      }
+    },
+    "voSpell.threeFinger.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Three-finger scroll"
+          }
+        }
+      }
+    },
+    "voSpell.zScrub.reminder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw a Z with two fingers to escape."
+          }
+        }
+      }
+    },
+    "voSpell.zScrub.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: the two-finger Z scrub escapes traps and dismisses blocking UI."
+          }
+        }
+      }
+    },
+    "voSpell.zScrub.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two-finger Z scrub"
           }
         }
       }

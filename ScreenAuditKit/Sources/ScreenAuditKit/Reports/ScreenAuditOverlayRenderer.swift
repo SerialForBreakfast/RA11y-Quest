@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreText
 import Foundation
 import ImageIO
 
@@ -29,13 +30,67 @@ public struct ScreenAuditOverlayRegion: Codable, Equatable, Sendable {
     /// Overlay role used to choose a deterministic stroke color.
     public let role: ScreenAuditOverlayRegionRole
 
+    /// Short label drawn near the region and included in sidecar output.
+    public let label: String
+
     /// Creates an overlay region annotation.
     /// - Parameters:
     ///   - region: Region rectangle in screenshot pixel coordinates.
     ///   - role: Overlay role used to choose a deterministic stroke color.
-    public init(region: ScreenAuditRegion, role: ScreenAuditOverlayRegionRole) {
+    ///   - label: Short label drawn near the region and included in sidecar output.
+    public init(
+        region: ScreenAuditRegion,
+        role: ScreenAuditOverlayRegionRole,
+        label: String? = nil
+    ) {
         self.region = region
         self.role = role
+        self.label = label ?? "\(role.rawValue): \(region.name)"
+    }
+}
+
+/// Machine-readable explanation for one overlay artifact.
+public struct ScreenAuditOverlayReport: Codable, Equatable, Sendable {
+    /// Report schema version.
+    public let reportVersion: Int
+
+    /// Screen identifier represented by the overlay.
+    public let screenID: String
+
+    /// Source screenshot path.
+    public let screenshotPath: String
+
+    /// Overlay PNG path.
+    public let overlayPath: String
+
+    /// Findings that caused this overlay to be written.
+    public let findings: [ScreenAuditFinding]
+
+    /// Region annotations drawn onto the overlay.
+    public let regions: [ScreenAuditOverlayRegion]
+
+    /// Creates an overlay report.
+    /// - Parameters:
+    ///   - reportVersion: Report schema version.
+    ///   - screenID: Screen identifier represented by the overlay.
+    ///   - screenshotPath: Source screenshot path.
+    ///   - overlayPath: Overlay PNG path.
+    ///   - findings: Findings that caused this overlay to be written.
+    ///   - regions: Region annotations drawn onto the overlay.
+    public init(
+        reportVersion: Int = 1,
+        screenID: String,
+        screenshotPath: String,
+        overlayPath: String,
+        findings: [ScreenAuditFinding],
+        regions: [ScreenAuditOverlayRegion]
+    ) {
+        self.reportVersion = reportVersion
+        self.screenID = screenID
+        self.screenshotPath = screenshotPath
+        self.overlayPath = overlayPath
+        self.findings = findings
+        self.regions = regions
     }
 }
 
@@ -139,6 +194,46 @@ public struct ScreenAuditOverlayRenderer {
         context.setStrokeColor(red: color.red, green: color.green, blue: color.blue, alpha: 0.95)
         context.setLineWidth(CGFloat(max(2, min(width, height) / 120)))
         context.stroke(rect)
+
+        drawLabel(
+            overlayRegion.label,
+            color: color,
+            x: rect.minX + 8,
+            y: max(8, rect.minY + 8),
+            maxWidth: CGFloat(width) - rect.minX - 16,
+            in: context
+        )
+    }
+
+    private func drawLabel(
+        _ label: String,
+        color: ScreenAuditOverlayColor,
+        x: CGFloat,
+        y: CGFloat,
+        maxWidth: CGFloat,
+        in context: CGContext
+    ) {
+        let fontSize: CGFloat = 18
+        let labelHeight: CGFloat = 30
+        let labelWidth = min(maxWidth, max(120, CGFloat(label.count * 10)))
+        let background = CGRect(x: x, y: y, width: labelWidth, height: labelHeight)
+
+        context.setFillColor(red: 0, green: 0, blue: 0, alpha: 0.72)
+        context.fill(background)
+
+        let attributes: [CFString: Any] = [
+            kCTFontAttributeName: CTFontCreateWithName("Helvetica-Bold" as CFString, fontSize, nil),
+            kCTForegroundColorAttributeName: CGColor(red: color.red, green: color.green, blue: color.blue, alpha: 1)
+        ]
+        let attributed = CFAttributedStringCreate(nil, label as CFString, attributes as CFDictionary)
+        guard let attributed else {
+            return
+        }
+        let line = CTLineCreateWithAttributedString(attributed)
+
+        context.textMatrix = .identity
+        context.textPosition = CGPoint(x: x + 6, y: y + 21)
+        CTLineDraw(line, context)
     }
 }
 

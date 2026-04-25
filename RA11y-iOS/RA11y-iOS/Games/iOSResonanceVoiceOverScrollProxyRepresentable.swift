@@ -232,6 +232,10 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
 
     var accessibilityLabelText: String
     var accessibilityHintText: String
+    /// Spoken with the label when this scroll view is focused, and updated as the stream moves (glyph + band).
+    /// Matches ``accessibilityScrollStatusText`` so linear VoiceOver navigation hears “Moonstone” / decoy names, not
+    /// only during three-finger scroll status callbacks.
+    var accessibilityValueText: String
     var accessibilityScrollStatusText: String?
     var desiredContentOffsetY: CGFloat
 
@@ -306,6 +310,7 @@ struct iOSResonanceVoiceOverScrollProxyRepresentable: UIViewRepresentable {
         scrollView.accessibilityIdentifier = "dungeon.resonance.scrollLane"
         scrollView.accessibilityLabel = accessibilityLabelText
         scrollView.accessibilityHint = accessibilityHintText
+        scrollView.accessibilityValue = accessibilityValueText
         scrollView.accessibilityRespondsToUserInteraction = true
     }
 }

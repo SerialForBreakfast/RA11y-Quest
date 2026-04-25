@@ -7,9 +7,8 @@ import RA11yCore
 
 /// Interstitial screen shown when a user attempts to start a game with VoiceOver disabled.
 ///
-/// **Presentation:** Uses the same illustrated quest backdrop as the game the user tapped
-/// (``GameKind/questVoiceOverGateAmbientImageName``) plus ``QuestPaintReadableScrim`` so copy
-/// matches results/prologue legibility on phone and iPad.
+/// **Presentation:** Uses ``QuestPaintScreen`` with ``QuestLayoutRole/reading`` and the same ambient asset as the
+/// tapped game (``GameKind/questVoiceOverGateAmbientImageName``) so copy matches result/prologue legibility on phone and iPad.
 ///
 /// ## Flow
 /// 1. Explains that VoiceOver is required.
@@ -45,7 +44,6 @@ struct iOSVORequiredView: View {
     // MARK: - Private State
 
     @Environment(iOSAppRouter.self) private var router
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showHelpSheet = false
     /// Set to true when both the deep link and the Settings fallback fail.
     @State private var showManualFallback = false
@@ -53,40 +51,20 @@ struct iOSVORequiredView: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack {
-            QuestPaintAmbientBackdrop(imageName: kind.questVoiceOverGateAmbientImageName)
-                .ignoresSafeArea()
-            QuestPaintReadableScrim()
-                .ignoresSafeArea()
-            GeometryReader { geo in
-                let hPad = QuestPaintContentMetrics.scrollHorizontalPadding(
-                    containerWidth: geo.size.width,
-                    horizontalSizeClass: horizontalSizeClass,
-                    gameKind: kind
-                )
-                let colW = QuestPaintContentMetrics.readingColumnMaxWidth(
-                    containerWidth: geo.size.width,
-                    horizontalSizeClass: horizontalSizeClass,
-                    horizontalPadding: hPad
-                )
-                ScrollView {
-                    VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-                        headerSection
-                        ctaSection
-                        if showManualFallback {
-                            manualFallbackSection
-                        }
-                    }
-                    .frame(maxWidth: colW, alignment: .center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, RA11ySpacing.lg)
+        QuestPaintScreen(
+            ambientImageName: kind.questVoiceOverGateAmbientImageName,
+            layoutRole: .reading,
+            gameKind: kind
+        ) {
+            VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                headerSection
+                ctaSection
+                if showManualFallback {
+                    manualFallbackSection
                 }
-                .padding(.horizontal, hPad)
-                .scrollContentBackground(.hidden)
             }
+            .padding(.vertical, RA11ySpacing.lg)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .preferredColorScheme(.dark)
         .navigationTitle(String(localized: "voiceOverRequired.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)

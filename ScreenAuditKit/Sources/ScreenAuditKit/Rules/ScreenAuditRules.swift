@@ -104,13 +104,14 @@ public struct ScreenAuditRuleEvaluator {
     /// - Returns: Findings produced by supported rules.
     public func evaluate(
         contract: ScreenAuditScreenContract,
-        evidence: ScreenAuditScreenshotEvidence
+        evidence: ScreenAuditScreenshotEvidence,
+        provenanceSet: ScreenAuditAssetProvenanceSet? = nil
     ) -> [ScreenAuditFinding] {
         var findings: [ScreenAuditFinding] = []
         findings.append(contentsOf: evaluateRequiredText(contract: contract, evidence: evidence))
         findings.append(contentsOf: evaluateForbiddenText(contract: contract, evidence: evidence))
         findings.append(contentsOf: evaluateDimensions(contract: contract, evidence: evidence))
-        findings.append(contentsOf: evaluateFallbackArt(contract: contract, evidence: evidence))
+        findings.append(contentsOf: evaluateFallbackArt(contract: contract, evidence: evidence, provenanceSet: provenanceSet))
         return findings
     }
 
@@ -203,28 +204,42 @@ public struct ScreenAuditRuleEvaluator {
 
     private func evaluateFallbackArt(
         contract: ScreenAuditScreenContract,
-        evidence: ScreenAuditScreenshotEvidence
+        evidence: ScreenAuditScreenshotEvidence,
+        provenanceSet: ScreenAuditAssetProvenanceSet?
     ) -> [ScreenAuditFinding] {
-        contract.assets.fallbackArt.compactMap { fallbackArt in
+        var findings: [ScreenAuditFinding] = []
+
+        for fallbackArt in contract.assets.fallbackArt {
             guard fallbackArt.confidence < fallbackArt.minimumConfidence else {
-                return nil
+                continue
             }
 
             let confidence = formattedRatio(fallbackArt.confidence)
             let minimum = formattedRatio(fallbackArt.minimumConfidence)
+            let provenance = provenanceSet.flatMap {
+                $0.asset(id: fallbackArt.provenanceID ?? fallbackArt.name)
+            }
+            let messageSuffix: String
+            if let provenance {
+                messageSuffix = " Provenance: \(provenanceDescription(provenance))."
+            } else {
+                messageSuffix = ""
+            }
 
-            return ScreenAuditFinding(
+            findings.append(ScreenAuditFinding(
                 ruleID: .lowConfidenceFallbackArt,
                 severity: severity(for: .lowConfidenceFallbackArt, contract: contract, defaultSeverity: .warning),
                 confidence: max(0, min(1, 1 - fallbackArt.confidence)),
-                message: "Fallback art `\(fallbackArt.name)` confidence \(confidence) is below the required \(minimum).",
+                message: "Fallback art `\(fallbackArt.name)` confidence \(confidence) is below the required \(minimum).\(messageSuffix)",
                 evidence: ScreenAuditEvidenceReference(
                     screenID: evidence.screenID,
                     path: evidence.path,
-                    excerpt: fallbackArt.note ?? "Project-supplied fallback art confidence"
+                    excerpt: fallbackEvidence(fallbackArt: fallbackArt, provenance: provenance)
                 )
-            )
+            ))
         }
+
+        return findings
     }
 
     private func containsText(_ needle: String, in haystack: String) -> Bool {
@@ -233,6 +248,37 @@ public struct ScreenAuditRuleEvaluator {
 
     private func formattedRatio(_ ratio: Double) -> String {
         String(format: "%.2f", ratio)
+    }
+
+    private func provenanceDescription(_ provenance: ScreenAuditAssetProvenance) -> String {
+        "\(provenance.source.rawValue), \(provenance.authoringStatus.rawValue), \(provenance.sourceQuality.rawValue)"
+    }
+
+    private func fallbackEvidence(
+        fallbackArt: ScreenAuditFallbackArtExpectation,
+        provenance: ScreenAuditAssetProvenance?
+    ) -> String {
+        var parts: [String] = []
+        if let note = fallbackArt.note {
+            parts.append(note)
+        }
+        if let provenance {
+            parts.append("source=\(provenance.source.rawValue)")
+            parts.append("status=\(provenance.authoringStatus.rawValue)")
+            parts.append("quality=\(provenance.sourceQuality.rawValue)")
+            if !provenance.knownRisks.isEmpty {
+                let risks = provenance.knownRisks.joined(separator: ", ")
+                parts.append("risks=\(risks)")
+            }
+            if !provenance.evidence.isEmpty {
+                let evidence = provenance.evidence.joined(separator: ", ")
+                parts.append("evidence=\(evidence)")
+            }
+            if let note = provenance.note {
+                parts.append(note)
+            }
+        }
+        return parts.isEmpty ? "Project-supplied fallback art confidence" : parts.joined(separator: " | ")
     }
 
     private func severity(

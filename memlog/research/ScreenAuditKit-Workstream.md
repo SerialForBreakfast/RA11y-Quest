@@ -175,6 +175,8 @@ Implementation notes:
   ignored, protected, and critical regions or a full-screen fallback outline.
 - Added RA11y Banishment screen contract metadata for warning-only fallback art
   confidence review and critical art overlay regions.
+- Added RA11y asset provenance metadata so fallback-art warnings explain source,
+  authoring status, source quality, known risks, and supporting evidence.
 - Added tests with mechanically generated tiny PNG fixtures.
 - Verified `swift test --package-path ScreenAuditKit`.
 - Verified `utility/validate_screen_audit.sh` still passes without baselines for

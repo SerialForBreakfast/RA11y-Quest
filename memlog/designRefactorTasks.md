@@ -229,7 +229,7 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 
 | ID | Deliverable | Done when |
 |----|--------------|-----------|
-| **P1.1** | Add `QuestLayoutRole` enum (`reading`, `questCardList`, `lesson`, `playfield`, `actions`) in `iOSQuestPaintChrome.swift`. | Compiles; each case has a one-line doc comment describing purpose + iPad vs iPhone intent. |
+| **P1.1** | Add `QuestLayoutRole` enum (`reading`, `questCardList`, `result`, `lesson`, `playfield`, `actions`) in `iOSQuestPaintChrome.swift`. | Compiles; each case has a one-line doc comment describing purpose + iPad vs iPhone intent. |
 | **P1.2** | Add role-aware APIs on `QuestPaintContentMetrics` (e.g. `horizontalPadding(role:containerWidth:sizeClass:gameKind:)` and `contentMaxWidth(role:…)`), encapsulating today’s 640/620 caps for `.reading`. | Existing call sites can keep behavior by passing `.reading` (or thin wrappers delegating to old methods marked deprecated). |
 | **P1.3** | Document target width bands in Quick Help (table: role × compact × regular) matching the review’s §“Introduce layout roles” table. | Xcode quick help shows numbers without hunting `DesignRecommendationReview.md`. |
 | **P1.4** | Define `.questCardList` numeric targets for regular width (**~760–840pt** initial; tune against `01_Hub` iPad screenshot). | Preview or simulator: Enchanter card title does not wrap like a phone column on iPad. |
@@ -247,7 +247,7 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - `RA11yCore/Sources/RA11yCore/Design/RA11yTokens.swift` if shared token additions are needed
 
 **Work:**
-- [x] Add `QuestLayoutRole` with roles for `reading`, `questCardList`, `lesson`, `playfield`, and `actions`.
+- [x] Add `QuestLayoutRole` with roles for `reading`, `questCardList`, `result`, `lesson`, `playfield`, and `actions`.
 - [x] Replace or extend `QuestPaintContentMetrics` with role-aware width and horizontal padding APIs.
 - [x] Document iPhone and iPad target widths for each role (enum + `QuestPaintContentMetrics` Quick Help table).
 - [x] Keep regular-width content centered unless a playfield explicitly needs full bleed (centering unchanged; playfield role reserved).
@@ -296,19 +296,19 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - Existing quest screens as call sites after the scaffold lands
 
 **Work:**
-- [ ] Add a reusable `QuestPaintScreen` or equivalent scaffold for illustrated quest surfaces.
-- [ ] Centralize full-bleed background art, readable scrim, dark color scheme, safe-area handling, vertical padding, and role-based content width.
-- [ ] Support scroll content and fixed action areas without forcing every screen into one layout.
-- [ ] Keep quest-specific art selected by the caller.
+- [x] Add a reusable `QuestPaintScreen` or equivalent scaffold for illustrated quest surfaces.
+- [x] Centralize full-bleed background art, readable scrim, dark color scheme, and role-based scroll column width (per-call-site vertical padding stays on inner content for now).
+- [ ] Support scroll content and fixed action areas without forcing every screen into one layout (fixed chrome variant TBD).
+- [x] Keep quest-specific art selected by the caller.
 
 **VoiceOver requirements:**
-- [ ] Scaffold must not introduce extra focusable elements for background, scrim, or layout containers.
-- [ ] Scaffold should preserve caller-defined root accessibility identifiers.
-- [ ] Document expected screen order for content hosted inside the scaffold.
+- [x] Scaffold must not introduce extra focusable elements for background, scrim, or layout containers.
+- [x] Scaffold should preserve caller-defined root accessibility identifiers.
+- [x] Document expected screen order for content hosted inside the scaffold (see `QuestPaintScreen` Quick Help).
 
 **Verify:**
-- [ ] A small pilot call site compiles and preserves screenshot capture behavior.
-- [ ] Decorative art remains hidden from accessibility.
+- [x] Pilot call sites: `iOSGameResultView`, `iOSVORequiredView` compile; screenshot routes unchanged at identifier level.
+- [x] Decorative art remains hidden from accessibility (scrim; backdrop unchanged from prior pattern).
 
 ## Task UI-4 — Create shared prologue components
 
@@ -442,8 +442,8 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - `RA11y-iOS/RA11y-iOS/Design/iOSQuestStandardActions.swift`
 
 **Work:**
-- [ ] Move result layout to role-aware metrics.
-- [ ] Ensure summary, skill transfer, gesture reminder, and action stack align to the same content width.
+- [x] Move result layout to role-aware metrics (`QuestLayoutRole/result` + `QuestPaintScreen`; Dungeon keeps `scrollHunt` gutter).
+- [x] Ensure summary, skill transfer, gesture reminder, and action stack align to the same content width.
 - [ ] Keep `Try Again` and `Back to Tavern` consistent across all quest results.
 
 **VoiceOver requirements:**

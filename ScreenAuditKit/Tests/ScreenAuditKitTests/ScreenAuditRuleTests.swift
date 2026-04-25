@@ -95,16 +95,35 @@ final class ScreenAuditRuleTests: XCTestCase {
             )
         )
         let evidence = makeEvidence(transcript: "")
+        let provenanceSet = ScreenAuditAssetProvenanceSet(
+            assets: [
+                ScreenAuditAssetProvenance(
+                    id: "quest-background",
+                    name: "Quest Background",
+                    source: .mockupCrop,
+                    authoringStatus: .temporary,
+                    sourceQuality: .bootstrap,
+                    knownRisks: ["croppedFromScreenshot"]
+                )
+            ]
+        )
 
-        let findings = ScreenAuditRuleEvaluator().evaluate(contract: contract, evidence: evidence)
+        let findings = ScreenAuditRuleEvaluator().evaluate(
+            contract: contract,
+            evidence: evidence,
+            provenanceSet: provenanceSet
+        )
         let finding = findings.first
 
         XCTAssertEqual(findings.count, 1)
         XCTAssertEqual(finding?.ruleID, .lowConfidenceFallbackArt)
         XCTAssertEqual(finding?.severity, .warning)
         XCTAssertEqual(finding?.confidence ?? -1, 0.58, accuracy: 0.0001)
-        XCTAssertEqual(finding?.message, "Fallback art `quest-background` confidence 0.42 is below the required 0.75.")
-        XCTAssertEqual(finding?.evidence.excerpt, "temporary crop from mockup")
+        XCTAssertEqual(finding?.message, "Fallback art `quest-background` confidence 0.42 is below the required 0.75. Provenance: mockupCrop, temporary, bootstrap.")
+        XCTAssertEqual(
+            finding?.evidence.excerpt,
+            "temporary crop from mockup | source=mockupCrop | status=temporary | quality=bootstrap | risks=croppedFromScreenshot"
+        )
     }
 
     /// Verifies fallback art facts at or above threshold do not produce findings.
