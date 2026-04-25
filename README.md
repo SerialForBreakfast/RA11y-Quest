@@ -21,7 +21,7 @@ and audio replace visual cues entirely.
 |---|---|---|
 | The Enchanter's Trial | Swipe to navigate focus; double-tap to activate | The screen is linear — walk through it one element at a time |
 | Crystal Resonance | Three-finger scroll | One finger navigates; three fingers move the world |
-| The Banishment *(in design)* | Two-finger scrub to dismiss | Any time VoiceOver traps you, the Mark of Z banishes it |
+| The Banishment | Two-finger scrub to dismiss | Any time VoiceOver traps you, the Mark of Z banishes it |
 
 Each quest follows a three-stage arc: untimed guided practice, scored timed
 trial, then a Lights Off stage relying entirely on VoiceOver, haptics, and audio.
@@ -32,6 +32,12 @@ trial, then a Lights Off stage relying entirely on VoiceOver, haptics, and audio
 
 Screenshots are captured automatically via `bundle exec fastlane screenshots`
 and committed to `docs/screenshots/`.
+
+Design consistency is tracked through the current quest UI workstream in
+`memlog/designRefactorTasks.md`. The active UI direction is the shared
+QuestPaint system: illustrated full-screen quest surfaces, reusable readable
+text treatment, standard action placement, and deterministic screenshot routes
+for iPhone small, iPhone large, and iPad.
 
 ---
 
@@ -188,7 +194,12 @@ result as a single announcement on screen load.
 
 **Skill taught:** VoiceOver two-finger scrub (Z) / escape to dismiss modal traps.
 
-Deterministic captures: prologue, practice ward with Z hint, timed tower first beat (frozen HUD), and sample result. (`testScreenshots_Banishment` in `RA11y_iOSScreenshots.swift`.)
+The Banishment now uses the current QuestPaint UI direction: authored fantasy
+art, readable painted text panels, a practice trap that responds to the escape
+action, a timed tower beat, and a result screen that reinforces the real-world
+escape gesture. Deterministic captures cover the prologue, practice ward with Z
+hint, timed tower first beat, and sample result.
+(`testScreenshots_Banishment` in `RA11y_iOSScreenshots.swift`.)
 
 | Prologue | Practice trap | Timed tower | Result |
 |:---:|:---:|:---:|:---:|
@@ -197,7 +208,17 @@ Deterministic captures: prologue, practice ward with Z hint, timed tower first b
 
 Run `bundle exec fastlane ios screenshots` (without `SNAPSHOT_DEVICES`) to refresh **iPhone_large**, **iPhone_small**, and **iPad** folders as well.
 
-**Banishment catalog gate:** `bash utility/validate_banishment_assets.sh` (also runs at the start of the Fastlane screenshots lane). Full matrix and Definition of Done: `memlog/requirements/Design/BanishmentAssetRequirements-Checklist.txt`. **Refresh art:** from mockups run `python3 utility/import_banishment_mockups_to_assets.py`. From **LLM-generated** `banishment_*_gen.png` files, run `python3 utility/ingest_llm_banishment_pngs.py --source-dir <folder>`. (Procedural placeholder script is deprecated — see `utility/generate_banishment_shippable_art.py`.)
+**Banishment catalog gate:** `bash utility/validate_banishment_assets.sh`
+validates required catalog entries before screenshots. Full matrix and
+Definition of Done:
+`memlog/requirements/Design/BanishmentAssetRequirements-Checklist.txt`.
+
+**Screen audit gate:** `bash utility/validate_screen_audit.sh` validates the
+captured screenshots through `ScreenAuditKit`, writes JSON/Markdown reports to
+`build_results/screen-audit/`, and emits overlay artifacts for review-only
+design findings. Banishment screenshot warnings currently use
+`RA11y-iOS/RA11y-iOSUITests/ScreenAuditAssetProvenance.json` to explain asset
+source, authoring status, source quality, known risks, and evidence.
 
 ---
 
@@ -235,6 +256,9 @@ RA11y-AccessibilityGamification/
 │   │   ├── Storage/               StorageComponent protocol + UserDefaults impl
 │   │   └── VoiceOver/             VoiceOverStateProvider protocol + stub
 │   └── Tests/RA11yCoreTests/
+├── ScreenAuditKit/                Local SPM package for screenshot validation
+│   ├── Sources/ScreenAuditKit/    Contracts, evidence, rules, reports
+│   └── Sources/screenaudit/       CLI used by local/Fastlane audit commands
 ├── utility/
 │   └── build_and_test.sh          Build and test script (see below)
 ├── build_results/                 Script output — gitignored
@@ -297,7 +321,19 @@ utility/build_and_test.sh --help
 
 ```bash
 swift test --package-path RA11yCore
+swift test --package-path ScreenAuditKit
 ```
+
+### Screenshot and design audit
+
+```bash
+bash utility/validate_screen_audit.sh
+bundle exec fastlane ios screen_audit
+```
+
+The screen audit package is intentionally generic. RA11y provides the app-specific
+contracts in `RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json` and asset
+provenance in `RA11y-iOS/RA11y-iOSUITests/ScreenAuditAssetProvenance.json`.
 
 ---
 
@@ -346,8 +382,9 @@ higher bar than most apps:
 | M3 | Hub UI — quest board, D&D theming, all device sizes | Done |
 | M4 | First-run basics sequence | Done |
 | M5 | The Enchanter's Trial | Done |
-| M6 | Crystal Resonance (Dungeon Descent v2) | In Design |
-| M7 | The Banishment | In Design |
-| M8 | Full accessibility audit | Pending |
+| M6 | Crystal Resonance / Dungeon Descent refinement | In Progress |
+| M7 | The Banishment | Review / Audit |
+| M8 | ScreenAuditKit screenshot and design audit workflow | In Progress |
 
-See `memlog/requirements/TicketBreakdown.txt` for the full ticket breakdown.
+Current UI and design consistency tasks live in `memlog/designRefactorTasks.md`.
+Screen audit package tasks live in `memlog/research/ScreenAuditKit-Workstream.md`.
