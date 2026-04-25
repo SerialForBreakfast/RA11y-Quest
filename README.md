@@ -33,6 +33,11 @@ trial, then a Lights Off stage relying entirely on VoiceOver, haptics, and audio
 Screenshots are captured automatically via `bundle exec fastlane screenshots`
 and committed to `docs/screenshots/`.
 
+README previews should reference stable generated output folders:
+`docs/screenshots/en-US/iPhone_large/` for phone previews and
+`docs/screenshots/en-US/iPad/` for tablet previews. Avoid simulator-name folders
+such as `iPhone_17` in documentation, because those can drift as Xcode changes.
+
 Design consistency is tracked through the current quest UI workstream in
 `memlog/designRefactorTasks.md`. The active UI direction is the shared
 QuestPaint system: illustrated full-screen quest surfaces, reusable readable
@@ -52,14 +57,14 @@ VoiceOver quick-reference sheet for players who need a reminder.
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/en-US/iPhone_17/01_Hub.png" width="200" alt="Hub on iPhone 17 — three quest cards on the board">
+      <img src="docs/screenshots/en-US/iPhone_large/01_Hub.png" width="200" alt="Hub on iPhone large — three quest cards on the board">
     </td>
     <td align="center">
       <img src="docs/screenshots/en-US/iPad/01_Hub.png" width="300" alt="Hub on iPad — quest board with wider layout">
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
@@ -90,14 +95,14 @@ cannot proceed until they have read (or listened to) the objective.
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/en-US/iPhone_17/04_EnchanterPrologue.png" width="200" alt="Enchanter's Trial — prologue lesson card">
+      <img src="docs/screenshots/en-US/iPhone_large/04_EnchanterPrologue.png" width="200" alt="Enchanter's Trial — prologue lesson card">
     </td>
     <td align="center">
       <img src="docs/screenshots/en-US/iPad/04_EnchanterPrologue.png" width="300" alt="Enchanter's Trial prologue on iPad">
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
@@ -112,14 +117,14 @@ attempt. Goal: build confidence — "I can do this."
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/en-US/iPhone_17/05_EnchanterAttempt.png" width="200" alt="Enchanter's Trial — first attempt, three relics, no timer">
+      <img src="docs/screenshots/en-US/iPhone_large/05_EnchanterAttempt.png" width="200" alt="Enchanter's Trial — first attempt, three relics, no timer">
     </td>
     <td align="center">
       <img src="docs/screenshots/en-US/iPad/05_EnchanterAttempt.png" width="300" alt="Enchanter's Trial first attempt on iPad">
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
@@ -134,14 +139,14 @@ must listen carefully — two items sound nearly identical.
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/en-US/iPhone_17/06_EnchanterRising.png" width="200" alt="Enchanter's Trial — rising challenge, six relics, soft timer">
+      <img src="docs/screenshots/en-US/iPhone_large/06_EnchanterRising.png" width="200" alt="Enchanter's Trial — rising challenge, six relics, soft timer">
     </td>
     <td align="center">
       <img src="docs/screenshots/en-US/iPad/06_EnchanterRising.png" width="300" alt="Enchanter's Trial rising challenge on iPad">
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
@@ -155,14 +160,14 @@ Legendary, Skilled, Novice, or Defeated. This is the only scored stage.
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/en-US/iPhone_17/07_EnchanterTimed.png" width="200" alt="Enchanter's Trial — timed trial, eight relics, hard 20-second timer">
+      <img src="docs/screenshots/en-US/iPhone_large/07_EnchanterTimed.png" width="200" alt="Enchanter's Trial — timed trial, eight relics, hard 20-second timer">
     </td>
     <td align="center">
       <img src="docs/screenshots/en-US/iPad/07_EnchanterTimed.png" width="300" alt="Enchanter's Trial timed trial on iPad">
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
@@ -176,14 +181,14 @@ result as a single announcement on screen load.
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/en-US/iPhone_17/08_EnchanterResult.png" width="200" alt="Enchanter's Trial — result screen showing rank and score">
+      <img src="docs/screenshots/en-US/iPhone_large/08_EnchanterResult.png" width="200" alt="Enchanter's Trial — result screen showing rank and score">
     </td>
     <td align="center">
       <img src="docs/screenshots/en-US/iPad/08_EnchanterResult.png" width="300" alt="Enchanter's Trial result screen on iPad">
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>iPhone 17</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
     <td align="center"><sub>iPad</sub></td>
   </tr>
 </table>
@@ -201,10 +206,38 @@ escape gesture. Deterministic captures cover the prologue, practice ward with Z
 hint, timed tower first beat, and sample result.
 (`testScreenshots_Banishment` in `RA11y_iOSScreenshots.swift`.)
 
-| Prologue | Practice trap | Timed tower | Result |
-|:---:|:---:|:---:|:---:|
-| ![](docs/screenshots/en-US/iPhone_17/13_BanishmentPrologue.png) | ![](docs/screenshots/en-US/iPhone_17/14_BanishmentWardTrap.png) | ![](docs/screenshots/en-US/iPhone_17/15_BanishmentTower.png) | ![](docs/screenshots/en-US/iPhone_17/16_BanishmentResult.png) |
-| *iPhone 17* | *iPhone 17* | *iPhone 17* | *iPhone 17* |
+The README previews use the committed UI-test screenshot outputs from
+`docs/screenshots/en-US/iPhone_large/`, so refreshing screenshots updates the
+source images for this table without hand-maintained mockups.
+
+<table>
+  <tr>
+    <th>Prologue</th>
+    <th>Practice trap</th>
+    <th>Timed tower</th>
+    <th>Result</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_large/13_BanishmentPrologue.png" width="180" alt="Banishment prologue generated by screenshot UI tests">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_large/14_BanishmentWardTrap.png" width="180" alt="Banishment practice trap generated by screenshot UI tests">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_large/15_BanishmentTower.png" width="180" alt="Banishment timed tower generated by screenshot UI tests">
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/en-US/iPhone_large/16_BanishmentResult.png" width="180" alt="Banishment result generated by screenshot UI tests">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>iPhone large</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
+    <td align="center"><sub>iPhone large</sub></td>
+  </tr>
+</table>
 
 Run `bundle exec fastlane ios screenshots` (without `SNAPSHOT_DEVICES`) to refresh **iPhone_large**, **iPhone_small**, and **iPad** folders as well.
 
@@ -300,7 +333,7 @@ utility/build_and_test.sh --only-core
 utility/build_and_test.sh --only-ios
 
 # Prefer a specific simulator (auto-detected from simctl if omitted)
-utility/build_and_test.sh --sim "iPhone 17"
+utility/build_and_test.sh --sim "iPhone large"
 
 # Clean before build
 utility/build_and_test.sh --clean
