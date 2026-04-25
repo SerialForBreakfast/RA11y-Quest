@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-19)
+Current structure (as of 2026-04-24)
 ---
 
 .
@@ -70,6 +70,8 @@ Current structure (as of 2026-04-19)
 |       |-- RA11y_iOSScreenshots.swift
 |       |-- RA11y_iOSUITests.swift
 |       |-- RA11y_iOSUITestsLaunchTests.swift
+|       |-- ScreenAuditAssetProvenance.json
+|       |-- ScreenAuditContracts.json
 |       `-- ScreenshotRouteCatalog.md
 |-- RA11y-tvOS
 |   |-- RA11y-tvOS
@@ -134,6 +136,47 @@ Current structure (as of 2026-04-19)
 |   |       |-- TestHelpers.swift
 |   |       `-- VoiceOverTests.swift
 |   `-- Package.swift
+|-- ScreenAuditKit
+|   |-- Sources
+|   |   |-- ScreenAuditKit
+|   |   |   |-- Contracts
+|   |   |   |   `-- ScreenAuditContracts.swift
+|   |   |   |-- Evidence
+|   |   |   |   `-- ScreenAuditEvidence.swift
+|   |   |   |-- Rules
+|   |   |   |   `-- ScreenAuditRules.swift
+|   |   |   |-- Reports
+|   |   |   |   |-- ScreenAuditOverlayRenderer.swift
+|   |   |   |   `-- ScreenAuditReports.swift
+|   |   |   |-- Validation
+|   |   |   |   `-- ScreenAuditValidation.swift
+|   |   |   |-- Visual
+|   |   |   |   |-- ScreenAuditBaselineComparator.swift
+|   |   |   |   |-- ScreenAuditCheckerboardInspector.swift
+|   |   |   |   |-- ScreenAuditRenderedMatteInspector.swift
+|   |   |   |   `-- ScreenAuditTransparencyInspector.swift
+|   |   |   `-- ScreenAuditKit.swift
+|   |   `-- screenaudit
+|   |       `-- main.swift
+|   |-- Tests
+|   |   |-- ScreenAuditCLITests
+|   |   |   `-- ScreenAuditCLITests.swift
+|   |   `-- ScreenAuditKitTests
+|   |       |-- Fixtures
+|   |       |   |-- missing-required-field-contracts.json
+|   |       |   |-- unsupported-schema-contracts.json
+|   |       |   `-- valid-contracts.json
+|   |       |-- ScreenAuditBaselineTests.swift
+|   |       |-- ScreenAuditCheckerboardTests.swift
+|   |       |-- ScreenAuditContractTests.swift
+|   |       |-- ScreenAuditEvidenceTests.swift
+|   |       |-- ScreenAuditKitTests.swift
+|   |       |-- ScreenAuditRenderedMatteTests.swift
+|   |       |-- ScreenAuditRuleTests.swift
+|   |       `-- ScreenAuditTransparencyTests.swift
+|   |-- .gitignore
+|   |-- Package.swift
+|   `-- README.md
 |-- build_results
 |   |-- 2026-02-21_09-48-28
 |   |   `-- summary.md
@@ -346,6 +389,9 @@ Current structure (as of 2026-04-19)
 |   |-- Snapfile
 |   `-- report.xml
 |-- memlog
+|   |-- MagicTap-Brainstorming.md
+|   |-- MagicTap-BardsInterrupt-Tasks.md
+|   |-- DesignRecommendationReview.md
 |   |-- archive
 |   |   `-- GameSpec-ActivateDoubleTap.txt
 |   |-- requirements
@@ -358,17 +404,21 @@ Current structure (as of 2026-04-19)
 |   |   |   |   |-- rogue
 |   |   |   |   `-- simon
 |   |   |   |-- Mockups-v2
+|   |   |   |   |-- banishment_mockup.html
 |   |   |   |   `-- dungeon_resonance_mockup.html
+|   |   |   |-- BanishmentAssetPipeline.txt
 |   |   |   |-- DesignProcess.md
 |   |   |   |-- DesignTicket-AssetDeliveryNaming.txt
 |   |   |   |-- DesignTicket-AssetListDefinition.txt
 |   |   |   |-- DesignTicket-AssetReviewChecklist.txt
+|   |   |   |-- DesignTicket-BanishmentPromptSheet.txt
 |   |   |   |-- DesignTicket-DungeonResonancePromptSheet.txt
 |   |   |   |-- DesignTicket-FirstRunEntry.txt
 |   |   |   |-- DesignTicket-PromptSheet.txt
 |   |   |   |-- DungeonResonanceAssetPipeline.txt
 |   |   |   `-- QuestConcept-Banishment.txt
 |   |   |-- GameRules-MVP.txt
+|   |   |-- GameSpec-ArcanistsTower.txt
 |   |   |-- GameSpec-FindAndFocus.txt
 |   |   |-- GameSpec-ScrollHunt.txt
 |   |   |-- LightsOffMode-Decisions.txt
@@ -387,11 +437,15 @@ Current structure (as of 2026-04-19)
 |   |   |-- ADR-0001-Concurrency-Strategy.md
 |   |   |-- ADR-0002-AI-Assisted-Screenshot-Validation.md
 |   |   |-- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
+|   |   |-- ADR-0004-ArcanistsTower-Rotor-Interaction.md
+|   |   |-- ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md
+|   |   |-- ArcanistsTower.txt
 |   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md
 |   |   |-- AccessibilityFeatureGamification.md
 |   |   |-- InitialBrainstorming.txt
-|   |   `-- NativeAccessibility.txt
+|   |   |-- NativeAccessibility.txt
+|   |   `-- ScreenAuditKit-Workstream.md
 |   `-- DirectoryTree.txt
 |-- scripts
 |   `-- extract_screenshots.sh
@@ -404,6 +458,7 @@ Current structure (as of 2026-04-19)
 |   |-- ensure_png_rgba.py
 |   |-- remove_white_background.py
 |   |-- resolve_simulator_udid.jq
+|   |-- validate_screen_audit.sh
 |   `-- validate_screenshot_contract.sh
 |-- AGENTS.md
 |-- Gemfile

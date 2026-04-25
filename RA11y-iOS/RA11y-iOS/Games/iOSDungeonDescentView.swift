@@ -729,9 +729,14 @@ final class DungeonDescentViewModel {
         }
     }
 
-    /// Posts the game-specific timer threshold announcement for the given phase and percent elapsed.
+    /// Posts the game-specific timer threshold announcement for the given phase and **percent elapsed**.
     ///
-    /// L2 announces only at 50% and 25%; L3 announces at 75%, 50%, and 25%.
+    /// `pct` is the fraction of total time that has **elapsed** (not remaining):
+    /// - `0.25` elapsed → ~75% remains → soft start cue ("Timer running.")
+    /// - `0.50` elapsed → 50% remains → mid-game warning ("Half time left.")
+    /// - `0.75` elapsed → ~25% remains → urgent warning ("One quarter left.")
+    ///
+    /// L2 announces only at 50% and 25% elapsed; L3 announces at all three thresholds.
     private func announceTimerThreshold(for phase: Phase, pct: Double) {
         switch (phase, pct) {
         case (.timed, 0.75):
@@ -865,14 +870,13 @@ private struct DungeonPrologueView: View {
         ScrollView(.vertical) {
             VStack(spacing: RA11ySpacing.lg) {
                 dmNarrationCard
-                lessonCard
-                gestureGuide
+                QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
                 practiceZone
                 beginButton
             }
             .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.lg)
-            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .padding(.vertical, RA11ySpacing.md)
+            .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
             .frame(maxWidth: .infinity, alignment: .center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -887,8 +891,8 @@ private struct DungeonPrologueView: View {
                 .accessibilityHidden(true)
 
             Text(String(localized: "dungeon.explain.narration"))
-                .font(.ra11yBody)
                 .italic()
+                .questPaintReadableText(.materialCardBody)
         }
         .padding(RA11ySpacing.base)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -899,55 +903,23 @@ private struct DungeonPrologueView: View {
         )
     }
 
-    private var lessonCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Text(String(localized: "dungeon.explain.lesson.heading"))
-                .font(.ra11yHeadline)
-                .bold()
-                .accessibilityAddTraits(.isHeader)
-
-            Text(String(localized: "dungeon.explain.lesson.body"))
-                .font(.ra11yBody)
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(.white.opacity(0.15), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "dungeon.a11y.explain.lesson"))
-    }
-
-    private var gestureGuide: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            DungeonGestureRow(symbol: "hand.point.right.fill", label: String(localized: "dungeon.explain.gesture.swipe1"))
-            DungeonGestureRow(symbol: "hand.draw.fill",        label: String(localized: "dungeon.explain.gesture.swipe3"))
-            DungeonGestureRow(symbol: "hand.draw.fill",        label: String(localized: "dungeon.explain.gesture.swipe3u"))
-        }
-        .accessibilityHidden(true)
-    }
-
     private var practiceZone: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
             Text(String(localized: "dungeon.explain.practice_tip"))
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.materialCardMeta)
 
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-                    ForEach(0..<14, id: \.self) { index in
+                    ForEach(0..<8, id: \.self) { index in
                         Text(String(format: String(localized: "dungeon.explain.practice.step"), index + 1))
-                            .font(.ra11yBody)
-                            .foregroundStyle(Color.ra11yCardSecondaryText)
+                            .questPaintReadableText(.bodySupporting)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 2)
                     }
                 }
                 .padding(RA11ySpacing.sm)
             }
-            .frame(minHeight: 200, maxHeight: 280)
+            .frame(minHeight: 96, maxHeight: 130)
             .background(Color.black.opacity(0.35), in: .rect(cornerRadius: RA11yRadius.card))
             .overlay(
                 RoundedRectangle(cornerRadius: RA11yRadius.card)
@@ -962,11 +934,10 @@ private struct DungeonPrologueView: View {
 
             if practiceScrollObserved {
                 Text(String(localized: "dungeon.prologue.practice.ready"))
-                    .font(.ra11yCaption)
-                    .foregroundStyle(Color.ra11yCardTertiaryText)
+                    .questPaintReadableText(.captionGold)
             }
         }
-        .padding(RA11ySpacing.base)
+        .padding(RA11ySpacing.md)
         .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
         .accessibilityIdentifier("dungeon.prologue.practiceSection")
     }
@@ -1061,46 +1032,29 @@ struct DungeonTimerHUD: View {
     }
 
     private var timerLabel: some View {
-        Label(
-            String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))),
-            systemImage: "clock"
-        )
-        .font(.ra11ySubheadline)
+        HStack(spacing: RA11ySpacing.xs) {
+            Image(systemName: "clock")
+                .foregroundStyle(Color.white.opacity(0.72))
+            Text(String(format: String(localized: "hud.timer.format"), Int(ceil(timeRemaining))))
+                .questPaintReadableText(.materialCardMeta)
+        }
     }
 
     private var mistakesLabel: some View {
         Text(String(format: String(localized: "dungeon.hud.mistakes.format"), mistakes))
-            .font(.ra11ySubheadline)
-            .foregroundStyle(.secondary)
+            .questPaintReadableText(.materialCardMeta)
     }
 }
 
 // MARK: - DungeonBackgroundView
 
-/// Full-bleed dungeon background with dark overlay for legibility.
-///
-/// Uses an explicit geometry size so `scaledToFill` crops from the center when the view
-/// is used as a navigation-stack background (unbounded proposals otherwise skew the image).
+/// Full-bleed dungeon background: shared quest paint + readable scrim (prologue only).
 private struct DungeonBackgroundView: View {
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                Color.black
-                if let image = UIImage(named: "dungeon_descent_bg") {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
-                        .overlay(Color.black.opacity(0.4))
-                }
-                LinearGradient(
-                    colors: [Color.black.opacity(0.55), Color.black.opacity(0.15), Color.black.opacity(0.55)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
+        ZStack {
+            Color.black
+            QuestPaintAmbientBackdrop(imageName: "dungeon_descent_bg")
+            QuestPaintReadableScrim()
         }
     }
 }
@@ -1119,8 +1073,7 @@ private struct DungeonGestureRow: View {
                 .frame(minWidth: 32, alignment: .leading)
                 .foregroundStyle(Color.ra11yCardTertiaryText)
             Text(label)
-                .font(.ra11yBody)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .questPaintReadableText(.bodySupporting)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

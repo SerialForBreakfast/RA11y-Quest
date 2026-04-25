@@ -22,7 +22,10 @@ This file is the single source of truth for screenshot coverage in the iOS UI te
 | `09_DungeonPrologue` | `testScreenshots_Dungeon` | `-uiTesting -screenshotScene dungeonPrologue` | `dungeonPrologue` | `dungeon.prologue` | Direct scene boot |
 | `10_DungeonL1` | `testScreenshots_Dungeon` | `-uiTesting -screenshotScene dungeonFirstAttempt` | `dungeonFirstAttempt` | `dungeon.firstAttempt` | Direct scene boot |
 | `11_DungeonResult` | `testScreenshots_Dungeon` | `-uiTesting -screenshotScene dungeonResult` | `dungeonResult` | `gameResult.root` | Direct scene boot |
-| `12_ResonanceMockup` | `testScreenshots_ResonanceMockup` | `-uiTesting -screenshotScene resonanceMockup` | `resonanceMockup` | `resonance.mockup.root` | Direct scene boot |
+| `13_BanishmentPrologue` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentPrologue` | `banishmentPrologue` | `banishment.prologue` | Direct scene boot |
+| `14_BanishmentWardTrap` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentWardTrap` | `banishmentWardTrap` | `banishment.trap.root` | Direct scene boot |
+| `15_BanishmentTower` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentTower` | `banishmentTower` | `banishment.trap.root` | Direct scene boot |
+| `16_BanishmentResult` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentResult` | `banishmentResult` | `gameResult.root` | Direct scene boot |
 
 Screens `09`–`11` use legacy **`Dungeon*`** file basenames and `dungeon*` scene IDs for contract stability; in-app they present **Crystal Resonance** (Scroll Hunt).
 

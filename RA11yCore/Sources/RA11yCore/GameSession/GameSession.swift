@@ -123,7 +123,9 @@ public actor GameSession {
     /// This method is `async` because it `await`s the cross-actor storage call.
     public func complete(at date: Date = Date()) async throws {
         guard state == .running else {
-            throw GameSessionError.invalidTransition(current: "\(state)", requested: "complete")
+            let desc = String(describing: self.state)
+            RA11yLogger.gameSession.error("Session complete rejected — \(self.gameID) state=\(desc, privacy: .public)")
+            throw GameSessionError.invalidTransition(current: desc, requested: "complete")
         }
         let elapsed = _elapsedTime(at: date)
         let rank    = thresholds.evaluate(timeSeconds: elapsed, mistakes: mistakeCount)
@@ -140,9 +142,13 @@ public actor GameSession {
     /// ## Concurrency
     /// Marked `async` for uniform call-site ergonomics with `complete()` at the view/coordinator layer.
     public func abandon() async {
-        guard state == .running || state == .paused else { return }
+        let prior = self.state
+        guard state == .running || state == .paused else {
+            RA11yLogger.gameSession.debug("Session abandon no-op — \(self.gameID) state=\(String(describing: prior), privacy: .public)")
+            return
+        }
         state = .abandoned
-        RA11yLogger.gameSession.info("Session abandoned — \(self.gameID)")
+        RA11yLogger.gameSession.info("Session abandoned — \(self.gameID) (was running or paused)")
     }
 
     /// Records a mistake. Only valid while `.running`.

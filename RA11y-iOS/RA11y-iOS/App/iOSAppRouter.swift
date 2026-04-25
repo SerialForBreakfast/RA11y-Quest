@@ -94,7 +94,7 @@ final class iOSAppRouter {
     ///
     /// - Parameter route: The destination to navigate to.
     func push(_ route: AppRoute) {
-        RA11yLogger.navigation.debug("Push → \(String(describing: route))")
+        RA11yLogger.navigation.debug("Push → \(String(describing: route)) — \(RA11yLogger.startupTimestampTag())")
         path.append(route)
     }
 

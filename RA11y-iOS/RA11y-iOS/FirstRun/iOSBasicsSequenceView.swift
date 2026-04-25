@@ -39,6 +39,7 @@ struct iOSBasicsSequenceView: View {
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Init
 
@@ -53,20 +54,37 @@ struct iOSBasicsSequenceView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let horizontalPad = QuestPaintContentMetrics.scrollHorizontalPadding(
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                gameKind: nil
+            )
+            let readingMax = QuestPaintContentMetrics.readingColumnMaxWidth(
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                horizontalPadding: horizontalPad
+            )
             ScrollView {
                 VStack(alignment: .center, spacing: RA11ySpacing.xl) {
                     headerSection
                     currentStepCard
                     beginButton
                 }
-                .padding(RA11ySpacing.base)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: 600)
+                .padding(.horizontal, horizontalPad)
+                .padding(.vertical, RA11ySpacing.base)
+                .frame(maxWidth: readingMax)
                 .frame(maxWidth: .infinity)
             }
-            .clipped()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .environment(\.colorScheme, .dark)
+        .background {
+            ZStack {
+                Color(red: 0.10, green: 0.07, blue: 0.05)
+                QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
+                QuestPaintReadableScrim()
+            }
+        }
         .onAppear {
             handleReappear()
         }
@@ -77,13 +95,11 @@ struct iOSBasicsSequenceView: View {
     private var headerSection: some View {
         VStack(spacing: RA11ySpacing.sm) {
             Text(String(localized: "basicsSequence.title"))
-                .font(.ra11yTitle)
-                .bold()
+                .questPaintReadableText(.heroTitle)
                 .multilineTextAlignment(.center)
 
             Text(stepProgressText)
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.bodySupporting)
                 .multilineTextAlignment(.center)
         }
     }
@@ -92,23 +108,19 @@ struct iOSBasicsSequenceView: View {
         VStack(alignment: .leading, spacing: RA11ySpacing.md) {
             // Skill badge
             Text(skillBadgeText)
-                .font(.ra11yCaption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.captionGold)
                 .textCase(.uppercase)
                 .tracking(0.5)
                 .accessibilityHidden(true)
 
             // Skill title
             Text(skillTitle)
-                .font(.ra11yHeadline)
-                .bold()
+                .questPaintReadableText(.materialCardTitle)
                 .multilineTextAlignment(.leading)
 
             // Skill intro body
             Text(skillIntro)
-                .font(.ra11yBody)
-                .foregroundStyle(.secondary)
+                .questPaintReadableText(.materialCardBody)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -118,10 +130,10 @@ struct iOSBasicsSequenceView: View {
             // Game name
             Label {
                 Text(LocalizedStringKey(currentDefinition.titleKey))
-                    .font(.ra11ySubheadline)
+                    .questPaintReadableText(.materialCardMeta)
             } icon: {
                 Image(systemName: "gamecontroller.fill")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.white.opacity(0.55))
             }
         }
         .padding(RA11ySpacing.lg)

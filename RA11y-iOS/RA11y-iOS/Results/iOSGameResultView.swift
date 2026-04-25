@@ -21,15 +21,17 @@ import RA11yCore
 /// on a separate line.
 ///
 /// ## Dynamic Type
-/// All text uses semantic font styles from `RA11yFont`; layout scrolls at largest sizes.
+/// Body copy uses `RA11yFont` where appropriate; rank and headings use ``QuestPaintReadableTextRole``
+/// (serif mockup lane) so Dynamic Type still scales.
+///
+/// ## Theming
+/// Uses ``QuestPaintScreen`` with ``QuestLayoutRole/result`` so Enchanter, Crystal/Dungeon, and Banishment share
+/// the same illustrated scaffold, iPad column width (**660pt** cap regular), and Dungeon ``scrollHunt`` gutter when applicable.
+/// The skill-transfer card uses an explicit leading ``HStack`` so wrapped copy is not clipped on compact widths (store screenshots).
 ///
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSGameResultView: View {
-
-    // MARK: - Environment
-
-    @Environment(iOSAppRouter.self) private var router
 
     // MARK: - Properties
 
@@ -53,30 +55,36 @@ struct iOSGameResultView: View {
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            ScrollView {
-                VStack(spacing: RA11ySpacing.xl) {
-                    resultSummary
-                    if let gameSpecificAnnouncement {
-                        Text(gameSpecificAnnouncement)
-                            .font(.ra11yBody)
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, RA11ySpacing.base)
-                    }
-                    skillTransferCard
-                    actionButtons
+        QuestPaintScreen(
+            ambientImageName: gameKind.questResultAmbientImageName,
+            layoutRole: .result,
+            gameKind: gameKind
+        ) {
+            VStack(spacing: RA11ySpacing.lg) {
+                resultSummary
+                if let gameSpecificAnnouncement {
+                    Text(gameSpecificAnnouncement)
+                        .multilineTextAlignment(.center)
+                        .questPaintReadableText(.bodyEmphasis)
+                        .padding(.horizontal, RA11ySpacing.base)
+                        .padding(.vertical, RA11ySpacing.sm)
+                        .frame(maxWidth: .infinity)
+                        .background(.black.opacity(0.22), in: RoundedRectangle(cornerRadius: RA11yRadius.card))
                 }
-                .padding(RA11ySpacing.base)
-                .frame(width: geo.size.width)
-                .frame(maxWidth: .infinity)
+                skillTransferCard
+                gestureReminderSection
+                QuestGameResultActionStack(
+                    onPlayAgain: onPlayAgain,
+                    onReturnToHub: onReturnToHub
+                )
             }
-            .clipped()
+            .padding(.top, RA11ySpacing.sm)
+            .padding(.bottom, RA11ySpacing.md)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(String(localized: "result.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .accessibilityIdentifier("gameResult.root")
     }
 
@@ -85,24 +93,29 @@ struct iOSGameResultView: View {
     /// Rank icon, rank label, time, and mistake count.
     /// Grouped as a single VoiceOver element with the full announcement string.
     private var resultSummary: some View {
-        VStack(spacing: RA11ySpacing.md) {
+        VStack(spacing: RA11ySpacing.sm) {
             Image(systemName: presenter.result.rank.symbolName)
-                .font(.system(size: 72))
-                .foregroundStyle(.primary)
+                .font(.system(size: 54))
+                .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
                 .accessibilityHidden(true)
 
             Text(presenter.result.rank.displayText)
-                .font(.ra11yLargeTitle)
-                .bold()
+                .multilineTextAlignment(.center)
+                .questPaintReadableText(.heroTitle)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             VStack(spacing: RA11ySpacing.xs) {
                 Text(presenter.formattedTime)
-                    .font(.ra11yHeadline)
+                    .questPaintReadableText(.materialCardBody)
+                    .font(Font.ra11yHeadline)
                 Text(presenter.formattedMistakes)
-                    .font(.ra11yBody)
-                    .foregroundStyle(.secondary)
+                    .questPaintReadableText(.materialCardMeta)
             }
         }
+        .padding(RA11ySpacing.md)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(presenter.accessibilityAnnouncement)
     }
@@ -114,25 +127,32 @@ struct iOSGameResultView: View {
     /// "I passed the game" → "I know what to do in the App Store."
     private var skillTransferCard: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Label(String(localized: "result.skillTransfer.heading"), systemImage: "lightbulb.fill")
-                .font(.ra11ySubheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .accessibilityAddTraits(.isHeader)
+            HStack(alignment: .top, spacing: RA11ySpacing.sm) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.title3)
+                    .foregroundStyle(Color(red: 0.92, green: 0.72, blue: 0.38))
+                    .accessibilityHidden(true)
+                Text(String(localized: "result.skillTransfer.heading"))
+                    .questPaintReadableText(.materialCardTitle)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
 
-            Divider()
+            Divider().opacity(0.28)
 
             Text(skillTransferBody)
-                .font(.ra11yBody)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                .questPaintReadableText(.materialCardBody)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(skillTransferRealWorld)
-                .font(.ra11ySubheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                .questPaintReadableText(.materialCardMeta)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(RA11ySpacing.base)
+        .padding(RA11ySpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: RA11yRadius.card))
         .accessibilityElement(children: .combine)
@@ -140,6 +160,21 @@ struct iOSGameResultView: View {
             "\(String(localized: "result.skillTransfer.heading")). \(skillTransferBody) \(skillTransferRealWorld)"
         )
         .accessibilityIdentifier("result.skillTransferCard")
+    }
+
+    /// Compact “spell card” echoing the VoiceOver pattern each quest emphasized (linear nav, three-finger scroll, Z scrub).
+    private var gestureReminderSection: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
+            Text(String(localized: "result.gestureReminder.heading"))
+                .textCase(.uppercase)
+                .questPaintReadableText(.captionGold)
+                .tracking(0.35)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+            QuestVoiceOverGestureSpellPlate.resultReminder(for: gameKind)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("result.gestureReminder")
     }
 
     private var skillTransferBody: String {
@@ -164,41 +199,6 @@ struct iOSGameResultView: View {
         }
     }
 
-    /// Action buttons — adapts to Basics sequence context.
-    ///
-    /// In the M4 guided Basics sequence, replaces the normal "Try Again" / "Back to
-    /// Tavern" pair with a single "Continue Basics" button that pops back to
-    /// `iOSBasicsSequenceView`. In standard play the original two buttons are shown.
-    @ViewBuilder
-    private var actionButtons: some View {
-        if router.isInBasicsSequence {
-            Button(String(localized: "basicsSequence.continueBasics")) {
-                router.popForBasicsContinue()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .accessibilityIdentifier("result.continueBasics")
-            .accessibilityHint(String(localized: "basicsSequence.continueBasics.a11yHint"))
-        } else {
-            VStack(spacing: RA11ySpacing.sm) {
-                Button(String(localized: "result.playAgain")) {
-                    onPlayAgain()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .accessibilityIdentifier("result.playAgain")
-                .accessibilityHint(String(localized: "result.a11y.playAgain.hint"))
-
-                Button(String(localized: "result.returnToHub")) {
-                    onReturnToHub()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .accessibilityIdentifier("result.returnToHub")
-                .accessibilityHint(String(localized: "result.a11y.returnToHub.hint"))
-            }
-        }
-    }
 }
 
 // MARK: - Preview
@@ -214,6 +214,7 @@ struct iOSGameResultView: View {
             onPlayAgain: {},
             onReturnToHub: {}
         )
+        .environment(iOSAppRouter())
     }
 }
 
@@ -228,5 +229,6 @@ struct iOSGameResultView: View {
             onPlayAgain: {},
             onReturnToHub: {}
         )
+        .environment(iOSAppRouter())
     }
 }

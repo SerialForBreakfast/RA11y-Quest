@@ -1,0 +1,524 @@
+RA11y - Accessibility Training Gamification
+Game Spec - The Arcanist's Tower
+
+Date: 2026-04-22
+Status: Draft
+Related:
+  memlog/research/ArcanistsTower.txt
+  memlog/research/ADR-0004-ArcanistsTower-Rotor-Interaction.md
+
+Game ID
+=======
+arcanists_tower
+
+Canonical Name
+==============
+The Arcanist's Tower
+
+Skill
+=====
+VoiceOver rotor: two-finger twist to select a navigation or adjustment mode,
+then use swipes according to that setting.
+
+One-Sentence Lesson
+===================
+When a screen has a kind of thing you need, use the rotor to make swipes jump to
+or adjust that kind of thing.
+
+Prerequisites
+=============
+- Enchanter's Trial
+- Crystal Resonance
+- The Banishment
+
+Downstream Skills
+=================
+- Efficient document and web navigation.
+- Form and value adjustment.
+- Advanced rotor modes and custom rotors.
+
+Design Constraint: Wrong Rotor Detection
+========================================
+The game does not detect or punish rotor selection directly.
+
+Rotor mastery is inferred from observable outcomes:
+
+- correct heading activated
+- correct link activated
+- correct adjustable value fired
+- mistake events avoided
+- room completed within time
+
+If the player uses an inefficient rotor setting, the natural penalty is time
+lost. Feedback must describe the room outcome, not the rotor selection.
+
+Do not use copy such as "wrong rotor." Use room-specific copy such as "That is
+not the chapter" or "That rune is a trap."
+
+Stage Structure
+===============
+
+Stage 1 — Practice: The Arcanist Speaks
+---------------------------------------
+
+Timer:
+- none
+
+Rank:
+- none
+
+Purpose:
+- Introduce the rotor as the spell wheel.
+- Teach Headings, Links, and Adjustable once each.
+
+Sequence:
+1. Prologue lesson card.
+2. Guided Codex room: Headings.
+3. Guided Tome room: Links.
+4. Guided Archery room: Adjustable.
+5. Continue to Trial.
+
+Hints:
+- visible and spoken
+- setting names explicit
+
+Success:
+- all three practice rooms completed
+
+Failure:
+- no failure state; wrong actions teach and retry
+
+Stage 2 — Trial: The Shifting Tower
+-----------------------------------
+
+Timer:
+- 75 seconds initial tuning value
+
+Rank:
+- awarded
+
+Purpose:
+- Test rotor setting recognition under time pressure.
+
+Sequence:
+- 5 randomized rounds.
+- Round pool: Codex, Tome, Archery.
+- Every run includes at least one of each discipline.
+- Avoid the same discipline more than twice in a row.
+
+Hints:
+- no explicit rotor setting names
+- room cues identify the semantic need
+
+Success:
+- complete all rounds before timeout
+
+Failure:
+- timeout before all rounds complete
+
+Stage 3 — Lights Off: The Blind Observatory
+-------------------------------------------
+
+Timer:
+- 90 seconds initial tuning value
+
+Rank:
+- awarded separately or as advanced result, final storage model TBD
+
+Purpose:
+- Prove the rotor skill with reduced visual support.
+
+Sequence:
+- same round model as Stage 2
+- darkened visuals
+- VoiceOver, haptics, and audio carry full room identity
+
+Hints:
+- no visible rotor-setting instruction
+- short room cue announcements
+
+Success:
+- complete all rounds before timeout
+
+Failure:
+- timeout before all rounds complete
+
+Discipline 1: The Codex Floor
+=============================
+
+Rotor Setting
+-------------
+Headings.
+
+Challenge
+---------
+Find the named chapter heading in a dense codex page.
+
+Practice Configuration
+----------------------
+- 3 headings
+- literal target
+- no timer
+- wrong heading: instructional announcement only
+
+Trial Configuration
+-------------------
+- 8 headings
+- near-similar headings included
+- wrong heading: +1 mistake
+
+Lights Off Configuration
+------------------------
+- same accessibility tree
+- visual text dimmed
+- VoiceOver heading labels remain complete
+
+Required Semantics
+------------------
+- Each chapter title has heading trait.
+- Body text remains accessible.
+- Target heading is activatable.
+
+Candidate Headings
+------------------
+- Chapter of Ash
+- Chapter of Cinders
+- The Iron Compact
+- The Iron Accord
+- Verse of Flame
+- Verse of Ember
+- The Sapphire Oath
+- The Sapphire Path
+- Index of Moons
+- Index of Stars
+- The Silent Gate
+- The Sealed Gate
+
+Success Copy
+------------
+Correct chapter. The Codex opens.
+
+Wrong Action Copy
+-----------------
+That is not the chapter. The tower steals time.
+
+Discipline 2: The Tome Floor
+============================
+
+Rotor Setting
+-------------
+Links.
+
+Challenge
+---------
+Find and activate the named rune-link inside dense tome prose.
+
+Practice Configuration
+----------------------
+- 3 links
+- distinct names
+- no traps
+- no timer
+
+Trial Configuration
+-------------------
+- 6 links
+- near-similar labels included
+- wrong link: +1 mistake
+
+Lights Off Configuration
+------------------------
+- visual rune glow reduced
+- link labels and hints carry all meaning
+
+Required Semantics
+------------------
+- Rune targets use link semantics.
+- Surrounding prose remains accessible.
+- Each rune has hint: "Double-tap to invoke this rune."
+
+Candidate Runes
+---------------
+- Seal of Binding
+- Seal of Bonding
+- Ember Rune
+- Ember Mark
+- Shadow Glyph
+- Shadow Sign
+- Rune of Passage
+- Rune of Passing
+- Mirror Sigil
+- Mirror Seal
+- Ward of Dawn
+- Ward of Dusk
+
+Success Copy
+------------
+Correct rune. The tome releases its seal.
+
+Wrong Action Copy
+-----------------
+A trap springs. Shadows close in.
+
+Discipline 3: The Archery Floor
+===============================
+
+Rotor Setting
+-------------
+Adjustable.
+
+Challenge
+---------
+Set magical bow draw weight to the required value, then fire.
+
+Practice Configuration
+----------------------
+- 1 arrow
+- required value: 5 of 10
+- tolerance: ±2
+- no timer
+
+Trial Configuration
+-------------------
+- 3 arrows
+- values:
+  - 5 of 10, tolerance ±1
+  - 7 of 10, exact
+  - 8 of 12, exact
+- wrong shot: +1 mistake
+
+Lights Off Configuration
+------------------------
+- bow visuals suppressed
+- value announcement and haptics carry state
+
+Required Semantics
+------------------
+- Draw weight element exposes adjustable behavior.
+- Label: Draw weight.
+- Value: [n] of [max].
+- Hint: Swipe up or down to adjust. Double-tap to fire.
+
+Success Copy
+------------
+The arrow strikes true. One seal breaks.
+
+Undershoot Copy
+---------------
+The arrow falls short. Draw more.
+
+Overshoot Copy
+--------------
+Too much force. Ease the draw.
+
+Scoring
+=======
+
+Practice
+--------
+- no rank
+- mistakes are not persisted
+
+Trial
+-----
+Initial timer:
+- 75 seconds
+
+Legendary:
+- complete all rounds
+- 0 mistakes
+- at least 25% time remaining
+
+Skilled:
+- complete all rounds
+- 0-2 mistakes
+
+Novice:
+- complete all rounds
+- 3+ mistakes
+
+Defeated:
+- timer expires before all rounds complete
+
+Lights Off
+----------
+Initial timer:
+- 90 seconds
+
+Rank rules:
+- same as Trial unless playtesting shows separate thresholds are needed
+
+Mistake Rules
+=============
+
+Counts as mistake:
+- wrong heading activated
+- wrong link activated
+- arrow fired under or over required value
+
+Does not count as mistake:
+- selecting an inefficient rotor setting
+- swiping through body text
+- taking time to explore
+- duplicate action during cooldown
+
+Cooldown:
+- wrong-action cooldown should be short, target 800-1200 ms
+- do not block exploration longer than the feedback cue
+
+VoiceOver Announcement Schedule
+===============================
+
+Prologue:
+- screenChanged to lesson card
+- optional announcement of Arcanist intro after layout settles
+
+Practice room entry:
+- announce room cue and explicitly name rotor setting
+
+Trial room entry:
+- announce room cue only, not rotor setting
+
+Lights Off room entry:
+- announce room cue and target, no visual reliance
+
+Timer:
+- 50% elapsed
+- 25% elapsed
+- 10 seconds remaining
+- 5-4-3-2-1 countdown
+
+Success:
+- immediate
+
+Wrong action:
+- immediate and rate-limited
+
+Haptic Schedule
+===============
+
+Practice:
+- success only, light
+
+Trial:
+- room shift: soft tick
+- wrong action: warning pulse
+- correct activation: alignment snap
+- exact adjustable hit: crisp success pulse
+
+Lights Off:
+- room shift: stronger cue
+- wrong action: warning pulse
+- success: strong snap
+- timer low: sparse warning ticks
+
+Audio Cue Schedule
+==================
+
+Codex:
+- page turn / parchment
+
+Tome:
+- rune chime / magical hum
+
+Archery:
+- bowstring tension
+
+Success:
+- tower chime / gate opening
+
+Wrong action:
+- muted/dissonant cue
+
+Audio must not mask VoiceOver during timing-critical moments.
+
+Lights Off Specification
+========================
+
+Visuals:
+- dark tower background
+- minimal discipline anchor
+- no visual-only target information
+
+Accessibility:
+- same semantic elements as Trial
+- VoiceOver labels complete
+- haptics/audio identify room type and feedback result
+
+Completion:
+- same as Trial
+
+Asset References
+================
+
+Design artifacts to create after greybox rotor semantics are proven:
+
+- memlog/requirements/Design/Mockups-v2/arcanists_tower_mockup.html
+- memlog/requirements/Design/DesignTicket-ArcanistsTowerPromptSheet.txt
+- memlog/requirements/Design/ArcanistsTowerAssetPipeline.txt
+
+Initial asset candidates:
+
+- arcanist_tower_bg
+- arcanist_portrait
+- arcanist_spell_wheel_diagram
+- arcanist_codex_bg
+- arcanist_tome_bg
+- arcanist_archery_bg
+- arcanist_bow
+- arcanist_target_lock
+- arcanist_success_flare
+- arcanist_lights_off_anchor
+
+Implementation Notes
+====================
+
+Suggested Swift files:
+
+- RA11y-iOS/RA11y-iOS/Games/iOSArcanistsTowerView.swift
+- RA11y-iOS/RA11y-iOS/Games/iOSArcanistsTowerComponents.swift
+- RA11y-iOS/RA11y-iOS/Games/iOSArcanistsTowerArt.swift
+
+Suggested model types:
+
+- ArcanistsTowerPhase
+- TowerDiscipline
+- TowerRound
+- TowerRoundState
+- TowerOutcome
+
+Testing Requirements
+====================
+
+Unit tests:
+- round generation includes all disciplines
+- wrong heading/link/shot increments mistakes
+- timeout produces failed result
+- rank thresholds resolve correctly
+- deterministic screenshot states can be forced
+
+Device VoiceOver tests:
+- Headings rotor jumps chapter headings
+- Links rotor jumps rune links
+- Adjustable rotor changes draw weight
+- quest is completable in Practice
+- quest is completable in Trial
+- Lights Off carries enough information without visuals
+
+Simulator/UI tests:
+- launch routing
+- static accessibility identifiers
+- screenshot states
+- no final assertion that real rotor gestures worked
+
+Open Decisions
+==============
+
+1. Whether Trial and Lights Off store separate results or share one game result.
+2. Whether archery fire action is a separate Button or custom action on the adjustable element.
+3. Final timers after device calibration.
+4. Whether Form Controls and Characters become post-v1 expansion floors.
+
+Revision History
+================
+2026-04-22: Initial GameSpec from refined GDD and ADR-0004.

@@ -1,7 +1,7 @@
 RA11y — Quest Design Process
 =============================
 
-Date: 2026-04-19
+Date: 2026-04-19 (revised 2026-04-23 — asset authorship policy)
 Owner: Product / Design / Engineering
 Status: Canonical
 
@@ -105,62 +105,94 @@ File as:
 Phase 3 — UX Mockup
 ====================
 
-Build an interactive HTML mockup before any SwiftUI is written. The mockup
-exists to validate layout, state transitions, and the visual logic of the
-mechanic. It is not a prototype — it is a design communication tool.
+Produce **static screen mockups as PNG files** to validate layout, hierarchy,
+and visual direction before final SwiftUI or asset generation. **No local web
+server is required.** PNGs are the primary design communication artifact; they
+are easy to drop into reviews, Figma, or Messages and to version in git.
 
-Setup
------
-  - All mockup files live inside the project:
-      memlog/requirements/Design/Mockups-v2/
+Storage
+-------
+  - All mockup PNGs live inside the project:
+      memlog/requirements/Design/MockupScreens/
   - NEVER write mockup files outside the project directory.
-  - The preview server is configured in .claude/launch.json:
-      python3 -m http.server 7331 --directory memlog/requirements/Design/Mockups-v2
-  - Access at: http://localhost:7331/[mockup-filename].html
+  - Naming (examples):
+      [quest]_iphone_[state]_v01.png
+      e.g. banishment_iphone_ward_v01.png, banishment_iphone_dark_v02.png
+  - Bump version suffix (`_v02`, `_v03`, …) when iterating; keep old versions
+    until the team agrees to delete them.
 
-Mockup structure requirements
-------------------------------
-  - iPhone shell at 390px width (standard iPhone frame)
-  - State tabs for every named state (e.g. Far / Warm / Near / Locked)
-  - All state content driven from a JS data object — no static HTML content
-    that diverges from the data source. Call setState() on DOMContentLoaded.
-  - CSS custom properties for state-specific visual variables (colours, glow,
-    opacity) so state transitions are a single class swap on the phone element
-  - A description card below the phone listing the feedback model for each state:
-    orb/visual behaviour, haptic, audio, VoiceOver announcement
-  - Edge fades on scrollable play areas to imply content above/below viewport
+Requirements
+------------
+  - **Target:** iPhone portrait frame at a sensible pixel size (e.g. 1170×2532
+    for reference, or 390pt-wide logical equivalents exported at 3×).
+  - **Coverage:** at least one PNG per **named gameplay state** that matters
+    for art and layout (e.g. practice / timed / Lights Off / success), or as
+    agreed in the QuestConcept.
+  - **Feedback:** Optional: a short bullet list in the Phase 4 prompt sheet or
+    QuestConcept (not required on the PNG itself) describing VO / haptic / audio
+    for that screen.
 
 Component identification
 ------------------------
-While building the mockup, identify every distinct visual element and note:
+While producing mockups, identify every distinct visual element and note:
   - Is it a generated image asset or code-drawn?
   - Does it have transparent background or opaque?
   - What is its layer order (back to front)?
-  - Does it animate or change per state?
   - What is its approximate point size on device?
 
 This list becomes the asset definition in Phase 4.
 
-Iteration rule
---------------
-Iterate until all named states look correct and distinct. Verify each state
-by screenshot before signing off. The mockup is complete when:
-  - Every state is visually distinguishable at a glance
-  - Fixed elements (orb, reticle) are clearly different from moving elements
-    (targets, decoys) in both shape and colour
-  - The Lights Off state reads correctly using only the centre anchor
-  - The locked / success state is unambiguous
+Sign-off
+--------
+Iteration continues until stakeholders agree the PNG set matches the mechanic.
+The mockup set is complete when:
+  - Every required state is visually distinguishable at a glance
+  - Fixed vs moving elements (where relevant) read clearly
+  - The Lights Off state reads correctly using only the centre anchor (if applicable)
+  - Success / failure framing is unambiguous
 
-File as:
-  memlog/requirements/Design/Mockups-v2/[quest_name]_mockup.html
+Optional — HTML exploratory mockups
+-------------------------------------
+Interactive HTML under `memlog/requirements/Design/Mockups-v2/` is **optional**
+only when a designer explicitly wants in-browser state tabs. It is **not** a
+required Phase 3 deliverable and does **not** replace PNG mockups in
+`MockupScreens/`.
 
 ---
 
 Phase 4 — Asset Definition
 ===========================
 
-After the mockup is stable, define every generated image asset in a prompt sheet
-and a pipeline doc.
+After the PNG mockup set is stable, define every generated image asset in a
+prompt sheet and a pipeline doc.
+
+Authorship rule (mandatory — 2026-04-23)
+----------------------------------------
+**Illustrated catalog art MUST NOT be created by procedural scripts** (code that
+draws or synthesizes pixels: gradients-only “masters,” geometric creatures,
+Pillow paint ops, or similar). That path has repeatedly produced frustration and
+does not match mockup quality.
+
+**Allowed sources of creative pixels:**
+
+1. **LLM image generation** in a guided session (same capability class used to
+   produce Phase 3 mockups), following this phase’s prompt sheet — **or**
+2. **Human** illustration / export (Figma, Procreate, commissioned art) against
+   the same prompt sheet.
+
+**Allowed automation after the fact:** QA (`utility/qa_*.py`), alpha cleanup
+(`remove_white_background`, `ensure_png_rgba`), and **ingest** utilities that
+only resize or fit **already-authored** PNGs into `Assets.xcassets` dimensions
+(e.g. `utility/ingest_llm_banishment_pngs.py`). These tools MUST NOT invent new
+imagery.
+
+**Bootstrap exception:** Cropping static mockups into catalog slices
+(`utility/import_banishment_mockups_to_assets.py`) is permitted only as a
+short-term bridge when masters do not yet exist. It is **not** the preferred
+delivery path once LLM/human exports to spec are available.
+
+Repository policy for agents and contributors: root **`AGENTS.md`** section
+*Illustrated quest assets — authorship (mandatory)*.
 
 Naming convention
 -----------------
@@ -244,10 +276,27 @@ File pipeline doc as:
 Phase 5 — Asset Generation & Import
 =====================================
 
-Generate
---------
-  - Use the prompt sheet. One generation per asset. Never batch.
+Generate (creative work)
+------------------------
+  - **Author** each asset with **LLM image generation** (directed session) or
+    **human** export. Use the Phase 4 prompt sheet: one generation per asset,
+    one clear subject per file. Never batch unrelated sprites onto one canvas.
+  - **Do not** use Python or shell to **paint** or procedurally compose shipping
+    art. Do not revive “procedural placeholder” generators as the production
+    pipeline.
+  - Store pre-import exports under the project (e.g.
+    `memlog/requirements/Design/Assets/<quest>/` or the agreed ingest folder)
+    so git history stays auditable.
   - Review every output against the QC checklist before accepting.
+
+Import (mechanical work)
+------------------------
+  - Resize or fit **authored** PNGs into catalog dimensions using approved ingest
+    helpers (see root `AGENTS.md`), **or** place files manually.
+  - Each imageset: universal 1x PNG, `Contents.json` with a `filename` entry per
+    image.
+  - Add @2x / @3x only when sharpness is visibly inadequate; do not rename the
+    1x slot when adding higher-resolution variants.
 
 QC checklist (from DesignTicket-AssetReviewChecklist.txt)
 ----------------------------------------------------------
@@ -288,13 +337,6 @@ Background removal
 
   Review edges after processing — check for fringing at subject boundary.
 
-Xcode import
-------------
-  - Place each PNG in Assets.xcassets as a universal imageset (single 1x PNG)
-  - Verify Contents.json has "filename" key for every image entry
-  - Add @2x / @3x only when sharpness is visibly inadequate; do not rename
-    the 1x slot when adding higher-resolution variants
-
 Asset registry test
 -------------------
   After import, verify every required asset name resolves from the bundle:
@@ -318,6 +360,12 @@ Automated PNG QA (Crystal Resonance lane / hub art)
   **Image generation** (what to ask DALL·E, Midjourney, Firefly, etc.) is
   documented in ``CrystalResonance-ImageGen-PromptTemplate.txt`` — not here.
   After assets exist, this Python QA validates files on disk (RGB vs RGBA, etc.).
+
+  **The Banishment:** generation order and import steps —
+  ``memlog/requirements/Design/Banishment-ImageGen-ExecutionPlan.txt``;
+  prepend text in ``Banishment-ImageGen-PromptTemplate.txt``; on-disk QA —
+  ``python3 utility/qa_banishment_png_assets.py`` (``--allow-missing`` while art
+  is partial).
 
   **Engineering note:** opaque SwiftUI back-plates behind every lane PNG were
   tried to hide checkerboard; they **regressed** other hub art. Prefer fixing
@@ -489,7 +537,8 @@ Artefact Checklist (per quest)
 Phase 0   QuestConcept-[Name].txt
 Phase 1   ADR-[NNNN]-[Name].md
 Phase 2   GameSpec-[Name].txt
-Phase 3   Mockups-v2/[name]_mockup.html
+Phase 3   MockupScreens/[quest]_iphone_[state]_vNN.png (required)
+          Mockups-v2/*.html (optional exploratory only)
 Phase 4   DesignTicket-[Name]PromptSheet.txt
           [Name]AssetPipeline.txt
           (Crystal Resonance: CrystalResonance-ImageGen-PromptTemplate.txt)
@@ -510,6 +559,9 @@ Phase 8   VoiceOver walkthrough complete
 
 Revision History
 ================
+2026-04-22  Phase 3: Primary UX mockups are **PNG files** in
+            ``memlog/requirements/Design/MockupScreens/``; no server required.
+            HTML under ``Mockups-v2/`` is optional exploratory only.
 2026-04-21  Phase 5: ``utility/qa_crystal_resonance_png_assets.py`` for on-disk
             PNG checks; ``CrystalResonance-ImageGen-PromptTemplate.txt`` for
             generative **image** prompts (separate from QA).

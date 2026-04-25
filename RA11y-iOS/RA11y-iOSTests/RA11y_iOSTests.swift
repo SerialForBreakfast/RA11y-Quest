@@ -1,5 +1,6 @@
 import SwiftUI
 import Testing
+import UIKit
 import RA11yCore
 @testable import RA11y_iOS
 
@@ -126,6 +127,36 @@ struct FirstRunRoutingTests {
 
         let route = await router.resolveInitialRoute(using: storage)
         #expect(route == .firstRun(mode: .entry))
+    }
+}
+
+// MARK: - Banishment asset catalog
+
+/// Ensures Banishment imagesets resolve from the app bundle (paired with ``utility/qa_banishment_png_assets.py``).
+@MainActor
+struct BanishmentArtCatalogTests {
+
+    /// Every ``iOSBanishmentArt`` name must load via ``UIImage(named:in:compatibleWith:)`` using the app bundle.
+    @Test func banishmentArtImagesResolveInAppBundle() {
+        let bundle = Bundle(for: RA11yIOSAssetBundleProbe.self)
+        let names = [
+            iOSBanishmentArt.hubIcon,
+            iOSBanishmentArt.wardBackground,
+            iOSBanishmentArt.towerBackground,
+            iOSBanishmentArt.wardRing,
+            iOSBanishmentArt.gestureZReference,
+            iOSBanishmentArt.banishmentGoblin,
+            iOSBanishmentArt.banishmentSkeleton,
+            iOSBanishmentArt.banishmentOrc,
+            iOSBanishmentArt.banishmentTroll,
+            iOSBanishmentArt.banishmentDragon,
+            iOSBanishmentArt.flareEscape,
+            iOSBanishmentArt.darkAnchor,
+        ]
+        for name in names {
+            let image = UIImage(named: name, in: bundle, compatibleWith: nil)
+            #expect(image != nil, "Missing Banishment asset: \(name) (sync with BanishmentAssetRequirements-Checklist.txt)")
+        }
     }
 }
 

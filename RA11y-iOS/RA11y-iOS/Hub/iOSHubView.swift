@@ -12,12 +12,12 @@ import RA11yCore
 /// reflects best results from storage without requiring an app relaunch.
 ///
 /// ## Layout (ZStack)
-/// - Layer 0: `iOSHubBackgroundView` — full-bleed image + gradient; `ignoresSafeArea`
+/// - Layer 0: `iOSHubBackgroundView` — full-bleed ``QuestPaintAmbientBackdrop`` + ``QuestPaintReadableScrim``; `ignoresSafeArea`
 /// - Layer 1: Content — DM greeting + scrollable quest cards + pinned footer
 ///
 /// ## Adaptive Design
-/// - iPhone (.compact): full-width content minus 16pt horizontal padding
-/// - iPad (.regular): content max width 600pt, centered
+/// - iPhone (.compact): quest card column up to **560pt** inside ``QuestPaintContentMetrics`` (``QuestLayoutRole/questCardList``).
+/// - iPad (.regular): quest card column up to **800pt**, centered — wider than the prose ``QuestLayoutRole/reading`` lane so titles don’t phone-wrap.
 ///
 /// ## VoiceOver State
 /// VoiceOver state is read from `@Environment(\.accessibilityVoiceOverEnabled)`.
@@ -91,19 +91,15 @@ struct iOSHubView: View {
     private var hubOrientationBanner: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
             Text(String(localized: "hub.orientation.scrollTitle"))
-                .font(.ra11yCaption)
-                .fontWeight(.semibold)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .questPaintReadableText(.captionGold)
                 .accessibilityAddTraits(.isHeader)
 
             Text(String(localized: "hub.orientation.scrollBody"))
-                .font(.ra11yCaption)
-                .foregroundStyle(Color.ra11yCardTertiaryText)
+                .questPaintReadableText(.bodySupporting)
 
             if voiceOverEnabled {
                 Text(String(localized: "hub.orientation.voActivation"))
-                    .font(.ra11yCaption)
-                    .foregroundStyle(Color.ra11yCardTertiaryText)
+                    .questPaintReadableText(.bodySupporting)
             }
         }
         .padding(RA11ySpacing.md)
@@ -125,14 +121,6 @@ struct iOSHubView: View {
             return "\(scroll) \(vo)"
         }
         return scroll
-    }
-
-    private var contentMaxWidth: CGFloat {
-        sizeClass == .regular ? 600 : .infinity
-    }
-
-    private var cardHorizontalPadding: CGFloat {
-        sizeClass == .regular ? RA11ySpacing.lg : RA11ySpacing.md
     }
 
     private var cardSpacing: CGFloat {
@@ -190,69 +178,71 @@ struct iOSHubView: View {
     // MARK: - Content Layer
 
     private var contentLayer: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: 0) {
-                hubOrientationBanner
-                    .padding(.horizontal, cardHorizontalPadding)
-                    .padding(.top, RA11ySpacing.sm)
-
-                iOSHubDMGreetingView()
-                    .padding(.top, RA11ySpacing.sm)
-
-                questCardList
-            }
-            .frame(maxWidth: contentMaxWidth)
-            .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .safeAreaInset(edge: .bottom) {
-            iOSHubFooterView(
-                showHelpAffordance: !voiceOverEnabled,
-                onVoiceOverBasics: navigateToBasics,
-                onEnableVoiceOver: { showHelpSheet = true }
+        GeometryReader { geo in
+            let horizontalPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .questCardList,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                gameKind: nil
             )
-        }
-        // The hub always renders on a fixed dark background (hub scene image +
-        // dark gradient overlay). Force dark color scheme here so ALL semantic
-        // adaptive colors in the hub's content tree — `.primary`, `.secondary`,
-        // nav bar title, footer material, DM greeting — resolve to white-based values
-        // in both light mode and dark mode.
-        .environment(\.colorScheme, .dark)
-        // MARK: VoiceOver Accessibility
-        // Custom "Quests" rotor — lets VoiceOver users jump directly between quest
-        // cards by rotating through the rotor to "Quests" and swiping up/down.
-        // Each entry's `prepare` closure sets `focusedCard`, which is bound to
-        // the card via `.accessibilityFocused` in `questCardList`.
-        .accessibilityRotor(String(localized: "hub.a11y.rotor.quests")) {
-            ForEach(GameCatalog.all) { game in
-                AccessibilityRotorEntry(
-                    LocalizedStringKey(game.titleKey),
-                    id: game.id,
-                    prepare: { focusedCard = game.kind }
+            let hubContentMaxWidth = QuestPaintContentMetrics.contentMaxWidth(
+                role: .questCardList,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                horizontalPadding: horizontalPad
+            )
+            ScrollView(.vertical) {
+                VStack(spacing: 0) {
+                    hubOrientationBanner
+                        .padding(.horizontal, horizontalPad)
+                        .padding(.top, RA11ySpacing.sm)
+
+                    iOSHubDMGreetingView()
+                        .padding(.top, RA11ySpacing.sm)
+
+                    questCardList(horizontalPadding: horizontalPad)
+                }
+                .frame(maxWidth: hubContentMaxWidth)
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .bottom) {
+                iOSHubFooterView(
+                    showHelpAffordance: !voiceOverEnabled,
+                    onVoiceOverBasics: navigateToBasics,
+                    onEnableVoiceOver: { showHelpSheet = true }
                 )
             }
-        }
-        // When VoiceOver is enabled while the hub is visible, move focus to the
-        // first quest card after a brief settle delay. This prevents users from
-        // being stranded at the top of the UI after toggling VO on.
-        .onChange(of: voiceOverEnabled) { _, isEnabled in
-            guard isEnabled else { return }
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(600))
-                focusedCard = GameCatalog.all.first?.kind
+            // The hub always renders on painted art + scrim. Force dark semantics so
+            // `.primary` / `.secondary` on footer materials and controls resolve predictably.
+            .environment(\.colorScheme, .dark)
+            // MARK: VoiceOver Accessibility
+            .accessibilityRotor(String(localized: "hub.a11y.rotor.quests")) {
+                ForEach(GameCatalog.all) { game in
+                    AccessibilityRotorEntry(
+                        LocalizedStringKey(game.titleKey),
+                        id: game.id,
+                        prepare: { focusedCard = game.kind }
+                    )
+                }
             }
-        }
-        // Post a screenChanged notification when the hub first appears with VO on.
-        // Passing `nil` lets VoiceOver focus the first element naturally (nav title).
-        .onAppear {
-            guard voiceOverEnabled else { return }
-            UIAccessibility.post(notification: .screenChanged, argument: nil)
+            .onChange(of: voiceOverEnabled) { _, isEnabled in
+                guard isEnabled else { return }
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(600))
+                    focusedCard = GameCatalog.all.first?.kind
+                }
+            }
+            .onAppear {
+                guard voiceOverEnabled else { return }
+                UIAccessibility.post(notification: .screenChanged, argument: nil)
+            }
         }
     }
 
     // MARK: - Quest Cards
 
-    private var questCardList: some View {
+    private func questCardList(horizontalPadding: CGFloat) -> some View {
         LazyVStack(spacing: cardSpacing) {
             ForEach(GameCatalog.all) { game in
                 iOSQuestCardView(
@@ -261,10 +251,7 @@ struct iOSHubView: View {
                     prerequisiteTitle: prerequisiteTitle(for: game),
                     onTap: { startGame(game) }
                 )
-                .padding(.horizontal, cardHorizontalPadding)
-                // Binds this card to the shared AccessibilityFocusState.
-                // Setting `focusedCard = game.kind` from the rotor or the
-                // VO-enable handler moves VoiceOver focus here.
+                .padding(.horizontal, horizontalPadding)
                 .accessibilityFocused($focusedCard, equals: game.kind)
             }
         }

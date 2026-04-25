@@ -6,7 +6,6 @@ RA11y.xcworkspace/xcuserdata/josephmccraw.xcuserdatad/UserInterfaceState.xcusers
 **/Assets.xcassets/**/*.png.bak.*
 
 # Fastlane
-/fastlane/screenshots
 /fastlane/test_output
 /fastlane/report.xml
 /vendor/bundle

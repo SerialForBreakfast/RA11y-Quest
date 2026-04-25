@@ -14,13 +14,15 @@ UI_TEST_IDS    = [
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_FirstRun",
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Enchanter",
   "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Dungeon",
-  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_ResonanceMockup",
+  "RA11y-iOSUITests/RA11y_iOSScreenshots/testScreenshots_Banishment",
 ].freeze
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
 DOCS_BASE      = "../docs/screenshots/en-US".freeze
 EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
 DERIVED_DATA   = "/tmp/RA11y_screenshots_DerivedData".freeze
 CONTRACT_CHECK = "../utility/validate_screenshot_contract.sh".freeze
+BANISHMENT_ASSET_QA = "../utility/validate_banishment_assets.sh".freeze
+SCREEN_AUDIT_CHECK = "../utility/validate_screen_audit.sh".freeze
 ROUTE_CATALOG  = "../RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md".freeze
 
 # ---------------------------------------------------------------------------
@@ -35,10 +37,12 @@ ROUTE_CATALOG  = "../RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md".freez
 # ---------------------------------------------------------------------------
 
 # Per-family fallback hierarchy (prefix-matched, newest first within each tier).
-# iPhone 16e added for iPhone_small; iPhone SE (3rd generation) is a stable small-form fallback.
+# iPhone 16e / 17e are small-width devices that remain valid xcodebuild destinations on current SDKs;
+# iPhone SE can appear in simctl but not in -destination when its runtime is absent — avoid for CI/screenshots.
 SIM_PREFS = {
   "iPhone" => [
     "iPhone 17",
+    "iPhone 17e",
     "iPhone 16 Pro",
     "iPhone 16",
     "iPhone 16e",
@@ -84,6 +88,8 @@ platform :ios do
 
     # Contract guard: fail fast if test allowlist, route catalog, and UI test methods drift.
     sh("bash '#{CONTRACT_CHECK}'")
+    # Banishment catalog: dimensions, alpha, and flatness (see BanishmentAssetRequirements-Checklist.txt).
+    sh("bash '#{BANISHMENT_ASSET_QA}'")
 
     sh("rm -rf '#{OUTPUT_BASE}' && mkdir -p '#{OUTPUT_BASE}'")
     sh("rm -rf '#{DERIVED_DATA}'")
@@ -105,7 +111,17 @@ platform :ios do
     seen_udids = []
 
     screenshot_device_specs.each do |spec|
-      udid = resolve_simulator_udid(family: spec[:family], preferred: spec[:preferred])
+      # Per-label state + preferred slug + exclusion: (1) iPhone_large vs iPhone_small must not share one UDID.
+      # (2) Persisted UDIDs must not survive a change of `preferred` (e.g. SE removed from Xcode destinations).
+      pref_slug = spec[:preferred].to_s.gsub(/[^a-zA-Z0-9]/, "")
+      pref_slug = "default" if pref_slug.empty?
+      state_key = "screenshot_device_#{spec[:label].gsub(/[^a-zA-Z0-9_]/, '_')}_#{pref_slug}"
+      udid = resolve_simulator_udid(
+        family: spec[:family],
+        preferred: spec[:preferred],
+        excluded_udids: seen_udids,
+        state_key: state_key
+      )
 
       if seen_udids.include?(udid)
         UI.important("[simulator] Skipping duplicate: #{spec[:label]} resolved to same UDID as a prior device")
@@ -195,6 +211,11 @@ platform :ios do
     ENV["SNAPSHOT_DEVICES"] = "iPhone 17" if ENV["SNAPSHOT_DEVICES"].to_s.strip.empty?
     screenshots
   end
+
+  desc "Validate committed screenshot folders with ScreenAuditKit"
+  lane :screen_audit do
+    sh("bash '#{SCREEN_AUDIT_CHECK}'")
+  end
 end
 
 # ---------------------------------------------------------------------------
@@ -214,17 +235,20 @@ end
 # Calls UI.user_error! if no simulator of the requested family is found at all,
 # listing all available simulators to help the user diagnose the problem.
 #
-# @param family    [String] "iPhone" or "iPad"
-# @param preferred [String] preferred device name (exact match attempted first)
-# @return          [String] UDID of the resolved simulator
-def resolve_simulator_udid(family:, preferred: "")
+# @param family           [String] "iPhone" or "iPad"
+# @param preferred        [String] preferred device name (exact match attempted first)
+# @param excluded_udids   [Array<String>] UDIDs that must not be chosen (e.g. already used this lane)
+# @param state_key        [String, nil] persist/reuse file basename under ~/.ra11y; default `last_simulator_<family>`
+# @return                 [String] UDID of the resolved simulator
+def resolve_simulator_udid(family:, preferred: "", excluded_udids: [], state_key: nil)
   require "json"
   require "fileutils"
 
   state_dir = ENV["RA11Y_SIMULATOR_STATE_DIR"].to_s.strip
   state_dir = File.join(Dir.home, ".ra11y") if state_dir.empty?
   FileUtils.mkdir_p(state_dir)
-  state_file = File.join(state_dir, "last_simulator_#{family}.udid")
+  basename = state_key.to_s.strip.empty? ? "last_simulator_#{family}" : state_key
+  state_file = File.join(state_dir, "#{basename}.udid")
 
   raw = nil
   2.times do |i|
@@ -255,21 +279,29 @@ def resolve_simulator_udid(family:, preferred: "")
     devices.select { |d| d["isAvailable"] && d["name"].include?(family) }
   end
 
+  unless excluded_udids.nil? || excluded_udids.empty?
+    available.reject! { |d| excluded_udids.include?(d["udid"]) }
+  end
+
   if available.empty?
     all_names = data.fetch("devices", {})
                     .flat_map { |_, ds| ds.select { |d| d["isAvailable"] }.map { |d| d["name"] } }
                     .sort.uniq
+    extra = ""
+    unless excluded_udids.nil? || excluded_udids.empty?
+      extra = "\n(After excluding UDIDs already used in this lane: #{excluded_udids.join(', ')}.)"
+    end
     UI.user_error!(
-      "No available #{family} simulator found.\n" \
+      "No available #{family} simulator found.#{extra}\n" \
       "All available simulators: #{all_names.join(', ')}\n" \
       "Open Simulator.app or check Xcode → Settings → Platforms."
     )
   end
 
-  # 0. Reuse last-working UDID if that device is still available.
+  # 0. Reuse last-working UDID if that device is still available (and not excluded).
   if File.file?(state_file)
     persisted = File.read(state_file).strip
-    if !persisted.empty?
+    if !persisted.empty? && !(excluded_udids || []).include?(persisted)
       match = available.find { |d| d["udid"] == persisted && d["name"].include?(family) }
       if match
         UI.message("[simulator] Reusing last-working UDID from #{state_file}: #{match['name']} (#{match['udid'][0..7]}...)")
@@ -356,8 +388,8 @@ def screenshot_device_specs
   else
     [
       { label: "iPhone_large", family: "iPhone", preferred: "iPhone 17" },
-      # iPhone SE (3rd generation) preferred for small form; 16e can fail xcresulttool export.
-      { label: "iPhone_small", family: "iPhone", preferred: "iPhone SE (3rd generation)" },
+      # Small width: prefer 16e (reliable -destination match). SE often appears in simctl but not in xcodebuild destinations.
+      { label: "iPhone_small", family: "iPhone", preferred: "iPhone 16e" },
       { label: "iPad",         family: "iPad",   preferred: "iPad" },
     ]
   end

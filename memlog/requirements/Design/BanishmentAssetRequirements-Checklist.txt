@@ -1,0 +1,121 @@
+Banishment — Asset requirements, traceability, and verification
+================================================================
+Date: 2026-04-23
+Status: Living checklist (update in the same commit as catalog or Swift changes)
+
+Purpose
+-------
+Make Banishment art **accountable**: every required file is listed, authored
+(LLM or human per Phase 4–5), ingested mechanically, integrated under known Swift
+names, and verified by automation before screenshots ship.
+
+**Authorship:** Root `AGENTS.md` — *Illustrated quest assets — authorship (mandatory)*.
+Do not use procedural scripts to paint shipping art; use LLM/human pixels, then
+`utility/ingest_llm_banishment_pngs.py` or manual catalog placement.
+
+Process diagnosis (why progress felt stuck)
+------------------------------------------
+- The design docs were sound; **execution gaps** were:
+  1. **No automated gate** before screenshots / release that failed on bad PNGs.
+  2. **Procedural placeholders** could be technically valid but visually empty
+     (tiny compressed masters) — humans read that as “broken asset”.
+  3. **Illustrated exports** (mockups / ImageGen) are a separate phase from
+     “greybox procedural” — the repo did not enforce “replace placeholders”
+     as a milestone.
+  4. **Prologue** has no catalog illustration in `iOSBanishmentArt` — mockups
+     that show a hero frame are **not yet modeled** in SwiftUI.
+
+Single source of truth (update order)
+-------------------------------------
+When adding or renaming an asset, touch **all** of these in one commit:
+
+  1. `RA11y-iOS/RA11y-iOS/Games/iOSBanishmentArt.swift` — string constants
+  2. `utility/qa_banishment_png_assets.py` — `BANISHMENT_REQUIRED` / `OPTIONAL`
+  3. `RA11y-iOS/RA11y-iOS/Assets.xcassets/<name>.imageset/` — PNG + Contents.json
+  4. `memlog/requirements/Design/BanishmentAssetPipeline.txt` — layer stack text
+  5. `RA11y-iOS/RA11y-iOSTests/RA11y_iOSTests.swift` — `BanishmentArtCatalogTests`
+  6. This checklist — matrix row + notes
+
+Authoritative references
+------------------------
+  - Layer composition: `BanishmentAssetPipeline.txt`
+  - Prompts / export intent: `DesignTicket-BanishmentPromptSheet.txt`,
+    `Banishment-ImageGen-ExecutionPlan.txt`, `Banishment-ImageGen-PromptTemplate.txt`
+  - Phase-3 mockups (reference only): `memlog/requirements/Design/MockupScreens/`
+  - Mockup → catalog: `utility/import_banishment_mockups_to_assets.py`
+  - **LLM / image-export → catalog:** save `banishment_*_gen.png` into Cursor `assets/` (or any folder), then
+    `python3 utility/ingest_llm_banishment_pngs.py --source-dir <that folder>`
+  - Legacy procedural greybox only: `utility/banishment_procedural_placeholder.py`
+
+Required asset matrix
+---------------------
+imageset name               | Swift constant (iOSBanishmentArt) | Role        | Spec size   | Primary creation path
+-----------------------------|------------------------------------|------------|-------------|---------------------------
+banishment_ward_bg           | wardBackground                     | background | 2048 × 4096 | generator or illustrated
+banishment_tower_bg          | towerBackground                    | background | 2048 × 4096 | generator or illustrated
+banishment_ward_ring         | wardRing                           | sprite RGBA| 1024 × 1024 | generator or illustrated
+banishment_goblin            | banishmentGoblin                   | sprite     | 1024 × 1024 | generator or illustrated
+banishment_skeleton          | banishmentSkeleton                 | sprite     | 1024 × 1024 | generator or illustrated
+banishment_orc               | banishmentOrc                      | sprite     | 1024 × 1024 | generator or illustrated
+banishment_troll             | banishmentTroll                    | sprite     | 1024 × 1024 | generator or illustrated
+banishment_dragon            | banishmentDragon                   | sprite     | 1024 × 1024 | generator or illustrated
+banishment_flare_escape      | flareEscape                        | sprite     | 1024 × 1024 | generator or illustrated
+banishment_hub_icon          | hubIcon                            | hub RGBA   | 1376 × 768  | generator or illustrated
+
+Optional (pipeline)
+-------------------
+banishment_gesture_z_reference | gestureZReference              | sprite     | 1024 × 1024 | generator (reference only)
+banishment_dark_anchor         | darkAnchor                     | sprite     | 1024 × 1024 | generator or illustrated
+
+Deferred / not in catalog yet
+-----------------------------
+  - Prologue hero / key art (no `iOSBanishmentArt` constant; mockups may imply one).
+  - Any “final” illustrated master not exported through the ticket dimensions.
+
+Verification commands (Definition of Done for a catalog change)
+----------------------------------------------------------------
+  1. Refresh PNGs: `python3 utility/import_banishment_mockups_to_assets.py` (or replace mockups in `MockupScreens/` first).
+  2. `bash utility/validate_banishment_assets.sh`
+       — FAIL on missing required set, wrong background size, RGB sprites, or
+         backgrounds flatter than `MIN_BG_LUMA_SAMPLE_VARIANCE` in qa script.
+       — Optional CI hardening: append `--strict-warnings` (treats WARN as FAIL).
+       — **Limitation:** all OK here does **not** guarantee zero checkerboard in
+         Simulator/Fastlane PNGs — premultiplied / generative halos and SwiftUI
+         layering can still fringe. See “Runtime compositing” below.
+  3. `xcodebuild test -workspace RA11y.xcworkspace -scheme RA11y-iOS -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:RA11y-iOSTests/BanishmentArtCatalogTests`
+       — or run full `RA11y-iOSTests` target.
+  4. `bash utility/validate_screenshot_contract.sh` (screenshot route alignment).
+  5. `bundle exec fastlane ios screenshots` — human sign-off on
+     `13_`–`16_Banishment*.png` for iPhone_large, iPhone_small, iPad.
+
+Runtime compositing (SwiftUI — must match shipped code)
+-------------------------------------------------------
+  Quest paint checklist §4.1 (“no checkerboard fringes”) depends on **both** PNG QA
+  and these view rules (see `iOSBanishmentQuestView`, `QuestVoiceOverGestureSpellPlate`):
+
+  - Raster catalog art: prefer `Image(uiImage:).renderingMode(.original)` for
+    threats, Z reference, and full-bleed backgrounds (same idea as Crystal
+    `iOSResonanceWideCanvasImage`).
+  - **Do not** use `.blendMode(.screen)` on escape flare (or similar) over
+    layered transparency — use straight alpha; screen blend can read as holes /
+    checkerboard in captures.
+  - **Do not** pair `.compositingGroup()` with `.shadow` on `.thinMaterial` trap /
+    spell cards over dark scrims — can read as grey boxes (Crystal shaft note).
+
+  If fringes remain after the above: re-export sprites with clean alpha, or run
+  `utility/transparent_edge_midgrey_matte.py` (opaque grey / checkerboard export beds),
+  `utility/transparent_edge_dark_matte.py` (black mats), or
+  `utility/remove_white_background.py` (white mats) — then re-run step 2.
+
+Iteration: replacing procedural art with illustrated exports
+--------------------------------------------------------------
+  1. Produce PNGs at the **spec size** above (avoid uncropped phone mockup frames
+     as full-bleed backgrounds — use portrait masters).
+  2. Sprites must be **RGBA** with real alpha (see qa script RGB FAIL). Exports that
+     bake a grey or B/W checker bed as opaque RGB need mechanical cleanup:
+     ``python3 utility/transparent_edge_midgrey_matte.py --in-place --ground-band 0.26
+     <path/to/banishment_<creature>.png>`` then, for black-framed art (e.g. skeleton),
+     ``python3 utility/transparent_edge_dark_matte.py --in-place …``. Prefer re-export
+     with true alpha when fringes persist.
+  3. Drop files into the existing `.imageset` folders (or extend import script).
+  4. Re-run steps 2–5 under Verification.

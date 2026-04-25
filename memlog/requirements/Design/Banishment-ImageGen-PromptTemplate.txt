@@ -1,0 +1,38 @@
+The Banishment — generative image prompt template (RA11y)
+==========================================================
+Date: 2026-04-22
+Purpose: Prepend this block when using LLMs or diffusion tools for **initial**
+Banishment PNGs. **One generation = one asset.** Full per-asset paragraphs live in
+``DesignTicket-BanishmentPromptSheet.txt`` — copy the matching section after this
+prepend.
+
+Execution order and import: ``Banishment-ImageGen-ExecutionPlan.txt``.
+
+----------------------------------------------------------------------
+GLOBAL — prepend to EVERY Banishment generation
+----------------------------------------------------------------------
+Style: Painterly flat fantasy, torchlit stone dungeon, warm amber light, dark umber
+and slate shadows, subtle gold magical accents. High contrast, readable at small
+size on phone. **One subject only** (for sprites) or **environment only** (for
+backgrounds), centered in frame.
+
+Output:
+- **Sprites / effects:** PNG **RGBA**, true transparency outside the subject—no
+  white, grey, or checkerboard mat.
+- **Hub thumbnail** (``banishment_hub_icon``): **1376×768** PNG **RGBA**, same as other RA11y quest hub cards.
+- **Backgrounds:** opaque illustration, **no transparency**; no characters,
+  creatures, UI, or readable text.
+
+Forbidden: letters, numbers, logos, watermarks, UI chrome, sprite sheets,
+multi-object collages, baked Z-gesture paths on backgrounds.
+
+Negative hints (when the tool supports them): white background, parchment mat,
+full-canvas vignette fog, separate drop-shadow layer, film grain in alpha.
+
+----------------------------------------------------------------------
+After generation (humans — do not paste into image models)
+----------------------------------------------------------------------
+1. QC: ``DesignTicket-AssetReviewChecklist.txt``
+2. Fix mats: ``utility/remove_white_background.py`` (sprites only)
+3. Import: ``Banishment-ImageGen-ExecutionPlan.txt``
+4. Verify: ``python3 utility/qa_banishment_png_assets.py``

@@ -9,6 +9,7 @@ For this repository, **read and follow** the root **`AGENTS.md`** file. It takes
 
 - Prohibited commands and simulator safety  
 - Filesystem boundaries and where to write artefacts  
+- **Illustrated quest assets** — LLM/human authorship only; no procedural script-generated shipping art (`AGENTS.md`)  
 - **Scripting / shell policy** (bash, Unix CLI, Swift & Xcode only for improvised commands; no ad-hoc Python/Ruby/Node one-liners)  
 - Build/test patterns (`utility/build_and_test.sh`, etc.)  
 - iOS/macOS project conventions noted there  

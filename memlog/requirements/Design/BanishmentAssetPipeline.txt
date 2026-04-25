@@ -1,0 +1,209 @@
+RA11y - The Banishment Asset Pipeline
+=====================================
+
+Date: 2026-04-22
+Related:
+  QuestConcept-Banishment.txt
+  DesignTicket-BanishmentPromptSheet.txt
+  Banishment-ImageGen-ExecutionPlan.txt
+  Banishment-ImageGen-PromptTemplate.txt
+  utility/qa_banishment_png_assets.py
+  utility/import_banishment_mockups_to_assets.py  (canonical — from MockupScreens)
+  utility/banishment_procedural_placeholder.py     (legacy greybox only)
+  iOSBanishmentArt.swift  (includes ``hubIcon`` → ``banishment_hub_icon``)
+  MockupScreens/ (Phase 3 PNG mockups; canonical per DesignProcess.md)
+  Mockups-v2/banishment_mockup.html (optional HTML only)
+
+Purpose
+=======
+Describe how final Banishment PNGs should compose in SwiftUI without changing
+the greybox-proven accessibility escape contract.
+
+Important constraint: art is decorative and atmospheric. The gameplay mechanic
+is still VoiceOver escape / two-finger scrub. Adding final art must not introduce
+new focus stops, hidden rectangles, or button-like targets.
+
+Catalog Location
+================
+All images should live under:
+
+  RA11y-iOS/RA11y-iOS/Assets.xcassets/
+
+Use one universal imageset per asset for the first pass. Add @2x / @3x only if
+large-device sharpness is visibly inadequate.
+
+Layer Stack (Back to Front)
+===========================
+
+Practice Ward
+-------------
+1. `banishment_ward_bg`
+   - Opaque full-screen background.
+   - `.scaledToFill()` and clipped.
+   - Safe center area reserved for overlay.
+2. Code-drawn trap veil
+   - Black overlay around 70-80% opacity.
+   - No image needed.
+3. `banishment_ward_ring`
+   - Transparent sprite behind threat.
+   - Large center anchor.
+4. `banishment_goblin`
+   - Transparent sprite centered over ring.
+5. Code-drawn Z gesture path
+   - Practice only.
+   - Prefer SwiftUI Shape over raster so it can animate and hide cleanly.
+6. Instruction card and leave-quest control
+   - SwiftUI text and controls only.
+
+Timed Tower
+-----------
+1. `banishment_tower_bg`
+2. Code-drawn trap veil
+3. `banishment_ward_ring`
+4. One threat sprite:
+   - `banishment_skeleton`
+   - `banishment_orc`
+   - `banishment_troll`
+5. Timer HUD and trap instruction card.
+6. Optional `banishment_flare_escape` during success resolution.
+   Success feedback must be **creature-agnostic**: same abstract flare / ring
+   break / copy for every encounter—no goblin-, dragon-, or skeleton-specific
+   art on the success beat. Phase 3 reference: `MockupScreens/banishment_iphone_banished_v03.png`.
+
+Lights Off
+----------
+1. Black or near-black code-drawn background.
+2. Optional faint crop of `banishment_tower_bg` at very low opacity.
+3. Small center anchor:
+   - prefer `banishment_dragon`
+   - use `banishment_dark_anchor` if dragon sprite is too visually busy.
+4. No visible Z path.
+5. Timer HUD, if needed, remains readable and grouped for VoiceOver.
+
+Runtime Sizing (SwiftUI Points)
+===============================
+
+Backgrounds
+-----------
+- Fill viewport with `.scaledToFill()`.
+- Accept edge crop on iPhone and iPad.
+- Keep visual noise low around center and bottom card region.
+
+Ward Ring
+---------
+- Base: 250-300 pt square on iPhone.
+- iPad: cap at 340 pt.
+- `allowsHitTesting(false)`.
+- `accessibilityHidden(true)`.
+
+Threat Sprites
+--------------
+- Practice goblin: 90-120 pt tall.
+- Skeleton/orc/troll: 110-150 pt tall.
+- Dragon/dark anchor: 80-130 pt tall, depending on Lights Off readability.
+- Use `@ScaledMetric(relativeTo: .title)` for Dynamic Type adjacency, but clamp to
+  avoid covering the instruction card.
+- `allowsHitTesting(false)`.
+- `accessibilityHidden(true)`.
+
+Escape Flare
+------------
+- Base: 190-240 pt square.
+- Use `.opacity`, `.scaleEffect`, and `.blendMode(.screen)` if it does not create
+  contrast issues.
+- Respect Reduce Motion: use opacity-only or skip animated scale.
+
+Gesture Z Path
+==============
+Prefer code-drawn:
+
+- SwiftUI `Path` or `Shape`.
+- Stroke color: warm gold.
+- Width: 7-10 pt.
+- Soft glow via shadow.
+- Practice stage only.
+- Hidden in timed and Lights Off stages unless a brief reminder is explicitly needed.
+
+`banishment_gesture_z_reference` is optional reference art only. Do not require it
+for the core implementation.
+
+Transparency Rules
+==================
+
+Opaque:
+
+- `banishment_tower_bg`
+- `banishment_ward_bg`
+
+Transparent PNG RGBA:
+
+- `banishment_ward_ring`
+- `banishment_gesture_z_reference`
+- `banishment_goblin`
+- `banishment_skeleton`
+- `banishment_orc`
+- `banishment_troll`
+- `banishment_dragon`
+- `banishment_flare_escape`
+- `banishment_dark_anchor`
+
+No transparent asset may contain a checkerboard, white matte, black matte, or
+semi-opaque rectangular plate. Review over black and over `banishment_tower_bg`.
+
+Accessibility Contract
+======================
+
+Final art must preserve the current greybox contract:
+
+- Trap root owns `.accessibilityAction(.escape)`.
+- Encounter card also supports `.accessibilityAction(.escape)`.
+- Decorative images remain `.accessibilityHidden(true)`.
+- No threat sprite is focusable.
+- No generated image contains text that VoiceOver cannot read.
+- The leave-quest affordance remains explicit while the system nav bar is hidden.
+
+If adding art requires adding new SwiftUI containers, audit the VoiceOver order
+again on device. Do not ship unnamed focusable rectangles.
+
+iPad Layout Notes
+=================
+
+- Cap the trap cluster width around 560 pt.
+- Keep the threat/ring centered in the viewport, not in a wider content column.
+- Instruction card should cap around 560-620 pt and remain below the threat.
+- Leave-quest affordance stays top-left.
+
+Lights Off Notes
+================
+
+- Do not use an image mask for darkness unless there is a clear reason.
+- Prefer code-drawn radial gradient and opacity.
+- The center threat anchor remains visible enough for low-vision orientation.
+- VoiceOver, haptics, and audio carry the actual gameplay state.
+
+Naming Stability
+================
+
+Prompt filenames should become imageset names exactly. If implementation chooses
+different names, update all of these in the same change:
+
+- DesignTicket-BanishmentPromptSheet.txt
+- BanishmentAssetPipeline.txt
+- Swift asset constants
+- Asset catalog imageset names
+- Asset registry tests
+
+QA Checklist
+============
+
+- **Traceability:** ``memlog/requirements/Design/BanishmentAssetRequirements-Checklist.txt`` (matrix + DoD).
+- Run ``bash utility/validate_banishment_assets.sh`` after import (wraps the QA script; use ``--allow-missing`` only during WIP).
+- Run ``python3 utility/qa_banishment_png_assets.py`` directly when debugging; CI / Fastlane uses the shell wrapper.
+- Build with all new images in asset catalog.
+- Verify every image resolves with `UIImage(named:)` — ``RA11y_iOSTests/BanishmentArtCatalogTests`` (names in ``iOSBanishmentArt``).
+- Check practice, tower, Lights Off, and success states.
+- Test largest Dynamic Type: card remains readable and not covered by threat.
+- Test Increase Contrast: threat and card remain distinct.
+- Test Reduce Transparency: material card fallback remains readable.
+- Test Reduce Motion: flare and entrance effects do not rely on motion.
+- Device VoiceOver: two-finger scrub still dismisses trap from documented focus points.

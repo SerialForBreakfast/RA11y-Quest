@@ -1,0 +1,72 @@
+{
+  "assets": [
+    {
+      "id": "banishment-prologue-art",
+      "name": "Banishment Prologue Art",
+      "source": "mockupCrop",
+      "authoringStatus": "temporary",
+      "sourceQuality": "bootstrap",
+      "knownRisks": [
+        "croppedFromScreenshot",
+        "notMasterAsset",
+        "needsAuthoredExportVerification"
+      ],
+      "evidence": [
+        "RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json",
+        "docs/screenshots/en-US/*/13_BanishmentPrologue.png"
+      ],
+      "note": "Tracked as review-only until the Banishment art source can be tied back to final authored PNG masters."
+    },
+    {
+      "id": "banishment-ward-trap-art",
+      "name": "Banishment Ward Trap Art",
+      "source": "mockupCrop",
+      "authoringStatus": "temporary",
+      "sourceQuality": "bootstrap",
+      "knownRisks": [
+        "croppedFromScreenshot",
+        "notMasterAsset",
+        "needsAuthoredExportVerification"
+      ],
+      "evidence": [
+        "RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json",
+        "docs/screenshots/en-US/*/14_BanishmentWardTrap.png"
+      ],
+      "note": "Tracked as review-only until the Banishment art source can be tied back to final authored PNG masters."
+    },
+    {
+      "id": "banishment-tower-art",
+      "name": "Banishment Tower Art",
+      "source": "mockupCrop",
+      "authoringStatus": "temporary",
+      "sourceQuality": "bootstrap",
+      "knownRisks": [
+        "croppedFromScreenshot",
+        "notMasterAsset",
+        "needsAuthoredExportVerification"
+      ],
+      "evidence": [
+        "RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json",
+        "docs/screenshots/en-US/*/15_BanishmentTower.png"
+      ],
+      "note": "Tracked as review-only until the Banishment art source can be tied back to final authored PNG masters."
+    },
+    {
+      "id": "banishment-result-art",
+      "name": "Banishment Result Art",
+      "source": "mockupCrop",
+      "authoringStatus": "temporary",
+      "sourceQuality": "bootstrap",
+      "knownRisks": [
+        "croppedFromScreenshot",
+        "notMasterAsset",
+        "needsAuthoredExportVerification"
+      ],
+      "evidence": [
+        "RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json",
+        "docs/screenshots/en-US/*/16_BanishmentResult.png"
+      ],
+      "note": "Tracked as review-only until the Banishment art source can be tied back to final authored PNG masters."
+    }
+  ]
+}

@@ -184,8 +184,7 @@ struct iOSQuestCardView: View {
     private var lockedInfoColumn: some View {
         VStack(alignment: .leading, spacing: RA11ySpacing.xs) {
             Text(String(localized: String.LocalizationValue(game.titleKey)))
-                .font(.ra11yHeadline)
-                .foregroundStyle(Color.ra11yCardSecondaryText)
+                .questPaintReadableText(.materialCardTitle)
             if let prerequisiteTitle {
                 Text(
                     String(
@@ -193,8 +192,7 @@ struct iOSQuestCardView: View {
                         prerequisiteTitle
                     )
                 )
-                .font(.ra11ySubheadline)
-                .foregroundStyle(Color.ra11yCardTertiaryText)
+                .questPaintReadableText(.materialCardMeta)
                 .fixedSize(horizontal: false, vertical: true)
             }
         }

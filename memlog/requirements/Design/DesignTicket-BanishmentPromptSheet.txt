@@ -1,0 +1,302 @@
+RA11y - Design Ticket
+The Banishment Prompt Sheet
+
+Date: 2026-04-22 (design lock 2026-04-21)
+Owner: Product / Design (Requirements)
+Status: Final — ready for final PNG generation (replace mockup bootstrap in catalog)
+Related:
+  memlog/requirements/Design/QuestConcept-Banishment.txt
+  memlog/requirements/Design/MockupScreens/ (Phase 3 PNG mockups; DesignProcess.md)
+  memlog/requirements/Design/Mockups-v2/banishment_mockup.html (optional HTML)
+  memlog/requirements/Design/BanishmentAssetPipeline.txt
+  memlog/requirements/Design/Banishment-ImageGen-ExecutionPlan.txt
+  memlog/requirements/Design/Banishment-ImageGen-PromptTemplate.txt
+  utility/qa_banishment_png_assets.py
+  RA11y-iOS/RA11y-iOS/Games/iOSBanishmentArt.swift
+
+User Story
+==========
+As a designer and developer
+I want single-asset prompts for The Banishment
+So that final art can replace the current SF Symbol greybox without changing the
+escape gesture contract or introducing decorative VoiceOver clutter.
+
+Design Intent
+=============
+The Banishment teaches VoiceOver's two-finger scrub escape gesture. The screen
+should feel like a trap encounter that blocks the path until dismissed. Art must
+support the core lesson: a creature-like threat appears, the scene becomes trapped,
+and the user draws the two-finger Z scrub to banish it.
+
+The art must not imply that a visible button needs to be tapped. The primary
+action is the platform escape gesture, not a control inside the card.
+
+Global Style Constraints (Include in EVERY prompt)
+==================================================
+- painterly flat fantasy illustration consistent with existing RA11y mockups
+- same world as the hub, Enchanter, Rogue, and Crystal Resonance mockups: torchlit
+  stone, warm amber light, dark umbers, muted slate blues, golden magical highlights
+- high contrast, readable on phone and tablet
+- simple large shapes first; controlled detail second
+- no text, no letters, no numbers
+- no watermark, no logo, no UI chrome baked into the art
+- avoid collage layouts and avoid multiple objects in one canvas
+- one asset only per generation
+- preserve clean edges and clear silhouette at small sizes
+
+Implementation / Export Conventions
+===================================
+- Transparent sprites: 1024x1024 PNG RGBA, centered subject, generous padding.
+- Backgrounds: non-transparent portrait master, 2048x4096 preferred (2:1). App uses
+  ``.scaledToFill()``; keep the focal “trap” zone in the **center 60%** vertically
+  so iPhone and iPad crops stay calm behind the veil + card.
+- Hub thumbnail ``banishment_hub_icon``: **1376×768** PNG **RGBA**, same canvas and
+  export habit as ``dungeon_hub_icon`` / ``enchanter_hub_icon`` (wide quest-card
+  illustration, true transparency outside the art bed if applicable).
+- Effects: transparent 1024x1024 PNG RGBA, soft edges, no hard rectangular mats.
+- Do not generate sprite sheets, contact sheets, or multi-variation layouts.
+- Do not bake the Z gesture into backgrounds. The Z path is code-drawn during practice.
+- Do not bake UI cards, timers, labels, buttons, or VoiceOver instructions into art.
+
+Gameplay Scope Assumptions
+==========================
+- Current implementation is intentionally greybox-first with SF Symbols.
+- Final art should replace the threat portrait and background layers without changing
+  the trap overlay's accessibility structure.
+- Stage 1 uses a ward creature, Stage 2 uses tower threats, Stage 3 uses a dark
+  final threat.
+- Only one threat sprite is visible at a time.
+
+Asset Set
+=========
+
+1) banishment_tower_bg
+----------------------
+Role
+- Non-transparent gameplay background for **timed tower** trap states (and compositing
+  reference for darker moods). **Not** used for Stage 1 practice — that is
+  ``banishment_ward_bg``. Swift may show a **faint** crop of this asset under Lights Off.
+
+Requirements
+- non-transparent background
+- portrait-first composition for iPhone and iPad safe cropping
+- readable center area where the threat, ward ring, and instruction card will layer
+- slightly heavier / more confined than the ward background
+- no characters, no creature, no UI, no text
+- should work under a dark trap veil
+
+Prompt
+- Painterly flat fantasy background of a narrow stone tower chamber and stairwell,
+  torchlit arches, old ward markings carved into stone, warm amber light against
+  muted slate-blue shadows, darker edges, calm readable center area for a trap
+  encounter overlay, same world as RA11y hub and dungeon mockups, no characters,
+  no creatures, no UI, no text, no symbols that look like letters, portrait master
+  composition, high contrast but not noisy, 2048x4096.
+
+2) banishment_ward_bg
+---------------------
+Role
+- Softer practice-stage background for Stage 1.
+
+Requirements
+- non-transparent background
+- less threatening than tower background
+- visual path or doorway may imply blocked progress
+- no creature and no UI
+
+Prompt
+- Painterly flat fantasy background of a torchlit stone ward gate inside a dungeon
+  tower, a quiet blocked doorway, carved stone frame, faint golden protective glow,
+  warm amber light, muted slate-blue shadows, calm center-safe composition for a
+  tutorial trap overlay, no characters, no creatures, no UI, no text, no readable
+  letters or numbers, no logos, portrait master composition, 2048x4096.
+
+3) banishment_ward_ring
+-----------------------
+Role
+- Transparent magical trap ring behind the creature.
+
+Requirements
+- transparent background
+- centered circular or oval ring
+- should feel like a magical boundary, not a target button
+- must read over dark and warm backgrounds
+
+Prompt
+- Single magical ward ring, ancient fantasy trap circle made from warm gold light
+  and faint violet cracks, handcrafted arcane style, centered, generous padding,
+  transparent background, no text, no letters, no numbers, no extra objects, no UI,
+  painterly flat fantasy illustration, readable silhouette, 1024x1024.
+
+4) banishment_gesture_z_reference
+---------------------------------
+Role
+- Optional visual reference for the Z scrub path. Prefer code-drawn path in app;
+  use this only if design wants a painterly stroke.
+
+Requirements
+- transparent background
+- a single Z-shaped magical trail only
+- no hands, no fingers, no arrows, no text
+- should be hidden in Lights Off
+
+Prompt
+- Single Z-shaped magical trail stroke, warm golden arcane light with soft ember
+  particles, clean continuous path, centered with generous padding, transparent
+  background, no hands, no fingers, no arrows, no text, no letters, no numbers,
+  no extra objects, painterly flat fantasy style, 1024x1024.
+
+5) banishment_goblin
+---------------------------
+Role
+- Practice ward threat.
+
+Requirements
+- transparent background
+- readable creature silhouette at 72-120 pt
+- mildly mischievous, not too scary
+- must not include weapons crossing outside the frame
+
+Prompt
+- Single small goblin-like ward creature made of smoky shadow and amber sparks,
+  mischievous fantasy silhouette, hunched posture, large readable shape, no gore,
+  no weapon, centered with generous padding, transparent background, painterly flat
+  RA11y fantasy illustration, no text, no letters, no numbers, no UI, 1024x1024.
+
+6) banishment_skeleton
+-----------------------------
+Role
+- Stage 2 tower threat 1.
+
+Requirements
+- transparent background
+- distinct silhouette from goblin, orc, troll, and dragon
+- readable at small and medium sizes
+
+Prompt
+- Single skeletal tower wraith, ancient bone-and-shadow creature with faint violet
+  fire in the chest, upright readable silhouette, fantasy but not horror-gore,
+  centered with generous padding, transparent background, painterly flat RA11y
+  fantasy style, no text, no letters, no numbers, no UI, 1024x1024.
+
+7) banishment_orc
+------------------------
+Role
+- Stage 2 tower threat 2.
+
+Requirements
+- transparent background
+- broad shield-like silhouette
+- no detailed violence or gore
+
+Prompt
+- Single orc-like tower guard spirit, broad armored silhouette, heavy shoulders,
+  smoky green-violet shadow edges, warm torch rim light, fantasy encounter creature,
+  centered with generous padding, transparent background, painterly flat RA11y
+  fantasy style, no weapon crossing the canvas edge, no text, no letters, no
+  numbers, no UI, 1024x1024.
+
+8) banishment_troll
+--------------------------
+Role
+- Stage 2 tower threat 3.
+
+Requirements
+- transparent background
+- largest tower silhouette, bulky and slow
+- must remain distinct by shape alone
+
+Prompt
+- Single troll-like stonebound tower brute, bulky rocky silhouette, glowing cracks,
+  warm amber rim light, muted blue shadow planes, fantasy encounter creature, no
+  gore, centered with generous padding, transparent background, painterly flat
+  RA11y fantasy illustration, no text, no letters, no numbers, no UI, 1024x1024.
+
+9) banishment_dragon
+---------------------------
+Role
+- Lights Off final threat anchor.
+
+Requirements
+- transparent background
+- should read even when mostly darkened
+- simple silhouette: head, horns, wings or coiled neck, not full complex scene
+
+Prompt
+- Single shadow dragon apparition, simplified readable silhouette with horned head
+  and folded wing shape, dark violet smoke body, pale ember eyes, subtle green-gold
+  rim light, fantasy encounter creature, centered with generous padding, transparent
+  background, no text, no letters, no numbers, no UI, no full background scene,
+  painterly flat RA11y style, 1024x1024.
+
+10) banishment_flare_escape
+---------------------------
+Role
+- Success burst when scrub escape lands.
+
+Requirements
+- transparent background
+- short magical banish flare, not an explosion
+- should compose over threat and ward ring
+- soft alpha edges, no rectangular mat
+- **creature-agnostic:** no skull, wings, claws, eyes, or any readable monster
+  shape—only abstract light, sparks, and dissolving arcane energy so the same
+  asset works after goblin, skeleton, orc, troll, or dragon
+
+Prompt
+- Single magical banishment flare, compact burst of warm gold and white arcane
+  light with violet smoke dissolving outward, elegant and non-strobing, centered,
+  generous padding, transparent background, no text, no symbols, no creatures,
+  no faces, no UI, painterly flat fantasy illustration, 1024x1024.
+
+11) banishment_dark_anchor
+--------------------------
+Role
+- Optional Lights Off center anchor if final dragon sprite is too detailed.
+
+Requirements
+- transparent background
+- minimal glowing mark or silhouette
+- must be readable with almost no surrounding visuals
+
+Prompt
+- Single minimal dark tower anchor glyph, a small glowing ward fracture shaped
+  like a broken magical seal, warm gold core with green-violet smoke edge, centered,
+  generous padding, transparent background, no text, no letters, no numbers, no
+  extra objects, painterly flat fantasy style, readable at 48 pt, 1024x1024.
+
+12) banishment_hub_icon
+-----------------------
+Role
+- Quest board thumbnail for **The Banishment** (``GameDefinition`` / ``iOSQuestThumbnailView``).
+
+Requirements
+- transparent PNG RGBA (match existing hub icons)
+- **1376×768** canvas, same family as ``dungeon_hub_icon``, ``enchanter_hub_icon``
+- readable at small list size; bold silhouette and magical “ward / banish” read
+- no text, no UI chrome, no full iPhone device frame
+
+Prompt
+- Wide painterly flat fantasy quest card illustration for a banishment lesson,
+  magical golden ward ring fragment and faint violet smoke, torchlit stone dungeon
+  mood, warm amber and slate shadows, single clear focal emblem or creature
+  silhouette suggestion (not a full trap scene), generous breathing room,
+  transparent background outside the illustrated bed if needed, no text, no letters,
+  no numbers, no logos, no UI, 1376x768, RGBA.
+
+Quality Control Checklist
+=========================
+- Transparent assets must be PNG RGBA with real alpha, not checkerboard or white mats.
+- Backgrounds must be opaque and must not contain creatures, UI cards, or gesture lines.
+- Threat silhouettes must be distinct by shape, not color alone.
+- No embedded text, digits, logos, symbols meant as UI text, or multi-object sheets.
+- Subjects must be centered with generous padding and no clipped glow.
+- Review every sprite over `banishment_tower_bg` and over black for Lights Off.
+- After import: ``python3 utility/qa_banishment_png_assets.py`` (use ``--allow-missing`` only while art is partial).
+
+Revision History
+================
+- 2026-04-21: Design lock — tower vs ward roles clarified, hub icon spec (1376×768),
+  background focal-zone note, status Final.
+- 2026-04-22: Linked execution plan, prompt template stub, QA script, and ``iOSBanishmentArt``.
+- 2026-04-22: Initial Banishment prompt sheet from greybox UI and design process.
