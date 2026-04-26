@@ -17,6 +17,16 @@ one VoiceOver behaviour that trips up new users, taught through three stages:
 an untimed practice, a scored timed trial, and a Lights Off stage where haptics
 and audio replace visual cues entirely.
 
+**First run (product target):** The planned onboarding order starts with **First
+Spell: Magic Tap** (platform two-finger double-tap, taught as a full-screen
+practice—**not** a hub quest with rank). That step precedes the Enchanter →
+Crystal Resonance → Banishment path. Authoritative spec:
+[`memlog/requirements/GameSpec-MagicTapFirstSpell.txt`](memlog/requirements/GameSpec-MagicTapFirstSpell.txt);
+UI states and copy:
+[`memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt`](memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt).
+Until implementation lands (see the GameSpec workstream), the in-app first-run
+entry may still present the previous “Start Basics” flow.
+
 | Quest | VoiceOver Skill | One-line lesson |
 |---|---|---|
 | The Enchanter's Trial | Swipe to navigate focus; double-tap to activate | The screen is linear — walk through it one element at a time |

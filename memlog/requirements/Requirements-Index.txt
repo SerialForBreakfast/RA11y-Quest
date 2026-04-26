@@ -3,7 +3,7 @@ RA11y - Requirements Index
 memlog/requirements/
 
 Keep this index updated when adding or moving requirement documents.
-Last updated: 2026-04-19
+Last updated: 2026-04-26
 
 Phase 1 — Capture (Historical)
 -------------------------------
@@ -14,6 +14,8 @@ Phase 1 — Capture (Historical)
 
 Active Game Specs
 -----------------
+- GameSpec-MagicTapFirstSpell.txt  First-run Magic Tap onboarding; teaches the
+                                   user's first spell before the Basics quests.
 - GameSpec-FindAndFocus.txt      The Enchanter's Trial — swipe to navigate, double-tap to activate.
 - GameSpec-ScrollHunt.txt        Dungeon Descent room-list mechanic (SUPERSEDED by Crystal Resonance /
                                  ADR-0003; retained as reference for current shipped implementation).
@@ -27,6 +29,12 @@ Archived Game Specs
 New Quest Concepts
 ------------------
 - Design/QuestConcept-Banishment.txt   The Banishment — two-finger scrub dismiss gesture.
+
+Research / conditional quests
+-----------------------------
+- ../MagicTap-BardsInterrupt-Tasks.md     Bard's Interrupt: optional post-onboarding
+                                          Magic Tap quest; conditional on added transfer
+                                          value (First Spell in first run is primary).
 
 Spikes
 ------
@@ -54,6 +62,10 @@ Design Tickets (active)
 - Design/DesignTicket-DungeonResonancePromptSheet.txt  Crystal Resonance v2 asset prompts.
 - Design/DungeonResonanceAssetPipeline.txt       Layer stack, sizing, and transparency rules for Crystal Resonance.
 - Design/DesignTicket-FirstRunEntry.txt          First-run entry UX ticket.
+- Design/DesignTicket-MagicTapFirstSpell.txt     First-run Magic Tap UI wireframes and states.
+- Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+                                                 Ready-screen Phase 3 mockup prompt; current export
+                                                 `magictap_firstspell_iphone_ready_v06.png`.
 
 Advanced modes (design guidance)
 --------------------------------

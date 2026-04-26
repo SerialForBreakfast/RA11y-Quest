@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-24)
+Current structure (as of 2026-04-26)
 ---
 
 .
@@ -414,12 +414,23 @@ Current structure (as of 2026-04-24)
 |   |   |   |-- DesignTicket-BanishmentPromptSheet.txt
 |   |   |   |-- DesignTicket-DungeonResonancePromptSheet.txt
 |   |   |   |-- DesignTicket-FirstRunEntry.txt
+|   |   |   |-- DesignTicket-MagicTapFirstSpell.txt
+|   |   |   |-- DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+|   |   |   |-- MockupScreens
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v02.png
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v03.png
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v04.png
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v05.png
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v06.png
+|   |   |   |   |-- magictap_firstspell_spellbook_reference.png
+|   |   |   |   `-- banishment_iphone_*.png, etc. (see folder)
 |   |   |   |-- DesignTicket-PromptSheet.txt
 |   |   |   |-- DungeonResonanceAssetPipeline.txt
 |   |   |   `-- QuestConcept-Banishment.txt
 |   |   |-- GameRules-MVP.txt
 |   |   |-- GameSpec-ArcanistsTower.txt
 |   |   |-- GameSpec-FindAndFocus.txt
+|   |   |-- GameSpec-MagicTapFirstSpell.txt
 |   |   |-- GameSpec-ScrollHunt.txt
 |   |   |-- LightsOffMode-Decisions.txt
 |   |   |-- LightsOffMode-QAChecklist.txt
@@ -466,3 +477,8 @@ Current structure (as of 2026-04-24)
 `-- README.md
 
 119 directories, 276 files
+
+Planned first-run (see memlog/requirements/GameSpec-MagicTapFirstSpell.txt)
+------------------------------------------------------------------------
+- `RA11y-iOS/RA11y-iOS/FirstRun/iOSMagicTapFirstSpellView.swift` — full-screen
+  Magic Tap practice; not yet in the tree until implemented.

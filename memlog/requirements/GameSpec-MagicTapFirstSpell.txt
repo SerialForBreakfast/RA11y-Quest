@@ -1,0 +1,305 @@
+GameSpec - Magic Tap First Spell
+================================
+
+Date: 2026-04-26
+Status: Draft for first-run workstream
+Owner: RA11y product/design/implementation
+
+Purpose
+-------
+
+Teach Magic Tap as the player's first VoiceOver "spell" during the first-run
+experience, before the existing Basics quest sequence.
+
+Magic Tap is the platform gesture: a two-finger double-tap. RA11y should keep
+that language visible and spoken so the skill transfers to real apps. The
+fantasy wrapper may call it a spell, but the product lesson is:
+
+  Magic Tap performs the obvious primary action for the current context.
+
+This first-spell experience may replace the need for a later Magic Tap quest.
+Once the user has completed first run, a dedicated Magic Tap quest should only
+survive if it teaches substantial additional VoiceOver transfer value. A quest
+that only becomes timing accuracy against audio cues is likely not strong enough
+to justify a curriculum slot over other high-value VoiceOver tools.
+
+Product Decision
+----------------
+
+Add a non-quest first step to first run:
+
+1. First Spell: Magic Tap
+2. The Enchanter's Trial: Find and focus
+3. Crystal Resonance: Scroll
+4. The Banishment: Escape/scrub
+
+The first-spell step should not initially be a full `GameKind` quest with
+scoring, rank thresholds, or game result routing. It is an onboarding surface
+that teaches and confirms one core gesture.
+
+A later "Bard's Interrupt" or Magic Tap mastery quest is conditional. It should
+not proceed just because Magic Tap is important; First Spell already establishes
+that. The later quest must add a distinct learning outcome such as:
+
+- Applying Magic Tap across multiple real-world contexts: media, calls, capture,
+  dictation, and current primary app action.
+- Understanding that Magic Tap changes meaning by app state, not by which button
+  has focus.
+- Recovering from uncertainty: deciding when Magic Tap is appropriate and when
+  another VoiceOver gesture is better.
+- Combining Magic Tap with navigation, escape, rotor, or focused activation in a
+  way that reflects real app use.
+
+If the later concept remains mostly "interrupt the cue at the right time," it
+should be parked or retired in favor of more prescient VoiceOver accessibility
+tools.
+
+First-Run Flow
+--------------
+
+The first run should become a "learn your first spell" path instead of a generic
+"start basics" path.
+
+Flow:
+
+1. App launches.
+2. If Basics was completed or dismissed, route to hub.
+3. Otherwise show first-run entry.
+4. Entry primary CTA starts First Spell.
+5. If VoiceOver is disabled, show a first-spell VoiceOver enablement gate.
+6. If VoiceOver is enabled, show the Magic Tap First Spell screen.
+7. User performs Magic Tap: two-finger double-tap.
+8. The spell succeeds and reveals "Continue Basics."
+9. Continue Basics enters the existing guided quest sequence.
+
+The entry flow should preserve the existing "Go to Hub" escape hatch. Dismissing
+to hub should keep its current behavior: mark Basics dismissed so the app does
+not trap the player in onboarding.
+
+VoiceOver Enablement Flow
+-------------------------
+
+Magic Tap requires VoiceOver. A user who has never used VoiceOver may not know
+how to turn it on, so the enablement screen must keep the current low-friction
+Siri path.
+
+Required behavior:
+
+- If VoiceOver is off, the primary first-run CTA routes to a VoiceOver gate.
+- The gate copy is first-spell-specific, not game-specific.
+- Siri remains the most prominent instruction:
+
+  Say: "Hey Siri, turn on VoiceOver."
+
+- The Settings button remains available.
+- The help sheet remains available.
+- Returning from Settings should let the user try the first-spell start again.
+
+Implementation implication:
+
+The current `iOSVORequiredView` is keyed by `GameKind`. First Spell is not a
+`GameKind`, so the app needs either:
+
+- A new `VoiceOverGateContext.firstSpell` route/model, or
+- A dedicated `iOSFirstSpellVoiceOverRequiredView`.
+
+Prefer the context model if it keeps copy, ambient art, and future gates in one
+place without forcing every gated experience to pretend it is a quest.
+
+Core Interaction
+----------------
+
+The first-spell screen is a full-screen practice surface. It should receive Magic
+Tap at the scene level, not through a normal visible Button.
+
+Rules:
+
+- Always say both "Magic Tap" and "two-finger double-tap" in first exposure copy.
+- Do not teach Magic Tap as "activate the focused button."
+- Do not require VoiceOver focus to be on one special element.
+- Do not make a normal one-finger double-tap path count as spell success.
+- Provide a help fallback, but the completion action must be real Magic Tap.
+- Simulator screenshots may render deterministic states, but must not claim to
+  validate actual Magic Tap delivery.
+
+Primary State Model
+-------------------
+
+Recommended first implementation states:
+
+- `intro`: Player sees what the first spell is and how to perform it.
+- `ready`: The spell surface is active and waiting for Magic Tap.
+- `cast`: Magic Tap was received; show immediate success feedback.
+- `complete`: Success copy is stable and "Continue Basics" is available.
+- `help`: Optional inline help or sheet if the player is stuck.
+
+This can start as view-local state. If additional telemetry, retry tracking, or
+save-state restoration becomes necessary, move it into a small model.
+
+Copy Principles
+---------------
+
+Use direct transfer language:
+
+- "Magic Tap is a two-finger double-tap."
+- "Magic Tap casts the obvious action now."
+- "Magic Tap to enter the Tavern."
+- "Spell learned. Magic Tap opened the Tavern."
+
+Avoid:
+
+- "Tap the button with two fingers."
+- "Double-tap the focused item."
+- "Perform the spell gesture" without also naming Magic Tap.
+- Any copy that implies Magic Tap is interchangeable with regular activation.
+
+UI Screen Inventory
+-------------------
+
+See `memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt` for visual
+layout, wireframes, art direction, copy blocks, and accessibility notes.
+
+Ready screen: use **one** instruction text block (single material panel), not
+multiple A/B/C cards, so the UI stresses **one** activation: Magic Tap on the
+scene—not several separate “steps.”
+
+Implementation Workstream
+-------------------------
+
+Phase 1 - Product and design contract
+
+- Approve this GameSpec as the first-run Magic Tap direction.
+- Add the matching design ticket and keep it linked from Requirements-Index.
+- Decide the final public title: recommended "First Spell: Magic Tap."
+- Mark `MagicTap-BardsInterrupt-Tasks.md` as conditional research, not an
+  assumed follow-up.
+
+Acceptance criteria:
+
+- The first-run curriculum order is explicit.
+- The later Magic Tap quest is explicitly optional and must prove added value
+  beyond first-run onboarding.
+- The design ticket names each screen state and copy requirement.
+
+Phase 2 - Routing and gate model
+
+- Add a first-spell route or first-run step before `iOSBasicsSequenceView`.
+- Add a VoiceOver gate context that is not tied to `GameKind`.
+- Update first-run entry to start First Spell instead of directly starting the
+  first quest.
+- Preserve the hub dismissal escape hatch.
+
+Acceptance criteria:
+
+- First launch routes to first-spell entry before existing Basics quests.
+- VoiceOver-off state routes to first-spell enablement copy.
+- VoiceOver-on state routes to the Magic Tap practice surface.
+- Existing quest start gating still works for hub quest cards.
+
+Phase 3 - Magic Tap substrate spike
+
+- Identify whether SwiftUI `.accessibilityAction(.magicTap)` is reliable for a
+  full-screen onboarding surface.
+- Test focus positions: title, body copy, illustration, help control, and root
+  surface.
+- If SwiftUI is unreliable, add a minimal UIKit-backed accessibility container
+  that implements Magic Tap for the scene.
+
+Acceptance criteria:
+
+- A real device/manual VoiceOver test confirms Magic Tap delivery.
+- One handler owns the first-spell completion path.
+- UI tests do not pretend simulator automation validates the gesture.
+
+Phase 4 - Build first-spell UI
+
+- Add `iOSMagicTapFirstSpellView` under `RA11y-iOS/RA11y-iOS/FirstRun/`.
+- Use current QuestPaint UI direction: authored fantasy art, readable painted
+  text surfaces, deterministic layout, and strong Dynamic Type behavior.
+- Use existing token systems (`RA11ySpacing`, `RA11yRadius`, QuestPaint text
+  styles) instead of introducing a new visual system.
+- Add accessibility labels and hints for every interactive control.
+- Hide decorative imagery from accessibility.
+
+Acceptance criteria:
+
+- The first-spell screen is usable with VoiceOver on.
+- The screen has no button-like fake target for the Magic Tap itself.
+- Completion reveals one clear Continue Basics action.
+- Copy remains readable across expected phone and iPad layouts.
+
+Phase 5 - Persistence and Basics integration
+
+- Decide whether First Spell completion is part of the existing Basics
+  completion flag or needs its own flag.
+- Recommended first pass: do not persist a separate flag; completion only gates
+  progression during the active first-run sequence.
+- If users can leave mid-sequence and resume later, add a small persisted
+  first-spell flag through `StorageComponent`.
+
+Acceptance criteria:
+
+- Completing First Spell advances to existing Basics.
+- Completing all Basics still calls `markBasicsCompleted()`.
+- Dismissing first run still calls `markBasicsDismissed()`.
+
+Phase 6 - Screenshots and ScreenAudit
+
+- Add deterministic screenshot scenes for first-spell entry, VoiceOver gate,
+  ready state, and success state if the screens are intended for README/docs.
+- Update the screenshot contract set in the same change:
+  - `iOSScreenshotScene.swift`
+  - `ScreenshotRouteCatalog.md`
+  - `RA11y_iOSScreenshots.swift`
+  - `fastlane/Fastfile`
+  - `ScreenAuditContracts.json`
+- Add ScreenAudit semantic expectations that verify visible Magic Tap copy and
+  first-spell state labels, not just pixel overlays.
+
+Acceptance criteria:
+
+- README/docs can reference generated screenshots rather than stale manual
+  captures.
+- ScreenAudit reports explain what state is being checked and why.
+- Screenshot tests can render ready/success states without requiring real Magic
+  Tap input.
+
+Phase 7 - Testing
+
+- Add unit coverage for any new route/gate decision model.
+- Add UI screenshot coverage for deterministic first-spell states.
+- Add a manual QA checklist for real VoiceOver Magic Tap delivery on device.
+- Run the full project validation after implementation.
+
+Acceptance criteria:
+
+- Route and gate logic is covered by automated tests.
+- Screenshot coverage is deterministic.
+- Manual QA clearly distinguishes "real Magic Tap delivery" from simulator
+  screenshot rendering.
+
+Risks and Open Questions
+------------------------
+
+- SwiftUI Magic Tap routing may attach to the focused element rather than the
+  desired scene container. The spike must answer this before we rely on it.
+- Users with VoiceOver disabled need a clear way back from Settings after Siri
+  or manual enablement. Current flow likely handles this as retry-on-return, but
+  it should be tested.
+- A separate persisted first-spell completion flag may be useful later, but it
+  adds storage surface area. Start without it unless resume behavior requires it.
+- If First Spell becomes a full quest later, decide whether it should receive a
+  `GameKind` and result screen or remain onboarding-only.
+
+Definition of Done
+------------------
+
+- First-run entry presents First Spell as the default path.
+- VoiceOver-off users receive first-spell-specific enablement guidance.
+- VoiceOver-on users can complete First Spell with Magic Tap: two-finger
+  double-tap.
+- Completion advances to the existing Basics sequence.
+- Documentation, screenshots, ScreenAudit contracts, and fastlane allowlists are
+  updated if screenshot-covered routes change.
+- Bard's Interrupt remains documented as conditional research and may be retired
+  if it does not add meaningful transfer value beyond First Spell.

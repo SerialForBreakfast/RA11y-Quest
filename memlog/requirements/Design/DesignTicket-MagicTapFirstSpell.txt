@@ -1,0 +1,263 @@
+TICKET-DESIGN-MAGICTAP-001 - First Spell: Magic Tap First-Run UI
+================================================================
+
+Date: 2026-04-26
+Status: Draft
+Related spec: memlog/requirements/GameSpec-MagicTapFirstSpell.txt
+
+Objective
+---------
+
+Design the first-run UI that teaches Magic Tap as the player's first spell. The
+experience must feel like QuestPaint, must be readable with VoiceOver and large
+text, and must clearly teach:
+
+  Magic Tap is a two-finger double-tap that performs the obvious primary action.
+
+Screen 1 - First-Run Entry
+--------------------------
+
+Purpose:
+
+- Reframe first launch around learning the first spell.
+- Keep the path understandable before VoiceOver is enabled.
+- Preserve "Go to Hub" as a non-trapping escape hatch.
+
+Wireframe:
+
+  +--------------------------------------------------+
+  | authored tavern / mentor backdrop                |
+  | readable paint scrim                             |
+  |                                                  |
+  |              Learn your first spell              |
+  |                                                  |
+  |  Magic Tap is a two-finger double-tap. It        |
+  |  performs the main action now.                   |
+  |                                                  |
+  |              [ Start First Spell ]               |
+  |                 [ Go to Hub ]                    |
+  |                                                  |
+  +--------------------------------------------------+
+
+Primary copy:
+
+- Title: "Learn your first spell"
+- Body: "Magic Tap is a two-finger double-tap. It performs the main action now."
+- Primary CTA: "Start First Spell"
+- Secondary CTA: "Go to Hub"
+
+Accessibility:
+
+- Primary CTA label: "Start First Spell"
+- Primary CTA hint: "Checks VoiceOver and begins the Magic Tap lesson."
+- Secondary CTA hint: "Skips the first-run lesson and opens the quest hub."
+
+Screen 2 - VoiceOver Enablement Gate
+------------------------------------
+
+Purpose:
+
+- Explain that VoiceOver must be on before Magic Tap can be practiced.
+- Keep Siri as the lowest-friction enablement path.
+- Avoid game-specific copy because First Spell is not a normal quest.
+
+Wireframe:
+
+  +--------------------------------------------------+
+  | authored first-spell backdrop                    |
+  | readable paint scrim                             |
+  |                                                  |
+  |                 VoiceOver Required               |
+  |                                                  |
+  |  To learn Magic Tap, turn on VoiceOver first.    |
+  |                                                  |
+  |  Ask Siri                                        |
+  |  "Hey Siri, turn on VoiceOver."                  |
+  |                                                  |
+  |        [ Open Accessibility Settings ]           |
+  |        [ How to Enable VoiceOver ]               |
+  |                                                  |
+  |  toolbar: Return to Hub                          |
+  +--------------------------------------------------+
+
+Primary copy:
+
+- Title: "VoiceOver Required"
+- Body: "To learn Magic Tap, turn on VoiceOver first."
+- Siri heading: "Ask Siri"
+- Siri phrase: "\"Hey Siri, turn on VoiceOver.\""
+
+Accessibility:
+
+- Siri callout combines heading and phrase into one element.
+- Settings button hint explains that it opens iOS Accessibility settings.
+- Help button presents the existing VoiceOver help sheet.
+
+Screen 3 - First Spell Ready
+----------------------------
+
+Purpose:
+
+- Give the user a stable practice surface.
+- Make the Magic Tap action obvious without turning it into a fake button.
+- Allow VoiceOver focus to land on normal content while the root surface owns
+  the Magic Tap action.
+
+Wireframe:
+
+  +--------------------------------------------------+
+  | authored spellbook / tavern table backdrop       |
+  | readable paint scrim                             |
+  |                                                  |
+  |              First Spell: Magic Tap   (nav)      |
+  |                                                  |
+  |      [ painted spell ring / open spellbook ]     |
+  |                                                  |
+  |  +----------------------------------------------+|
+  |  | ONE text block (single material panel):     ||
+  |  | Two-finger double-tap anywhere on this     ||
+  |  | screen. Magic Tap casts the obvious         ||
+  |  | action now. Magic Tap to enter the Tavern.  ||
+  |  +----------------------------------------------+|
+  |                                                  |
+  |                    [ Help ]                      |
+  +--------------------------------------------------+
+
+Primary copy (single block — one affordance, one activation):
+
+- Navigation title: "First Spell: Magic Tap"
+- Body (one combined block, not A/B/C cards): the short lines above as
+  continuous readable copy inside **one** frosted/dark panel with one gold
+  border—emphasizes a single action to perform.
+- Help CTA: "Help"
+
+Visual notes:
+
+- The center art should imply a spell is ready to be cast, not a button waiting
+  to be activated.
+- **Instruction area:** one panel only; all copy in **one** text block. Do not
+  use three card stacks or A/B/C styling—avoid different font sizes or colors
+  per line that imply multiple separate steps. One body style + spacing reads as
+  one activation.
+- Use authored fantasy art. Do not create procedural placeholder art for the
+  final UI.
+- Avoid a large rectangular target that visually trains "press this."
+
+Accessibility:
+
+- The root scene should expose the Magic Tap action.
+- Root label should summarize the state: "First Spell: Magic Tap. Ready to enter the Tavern."
+- Root hint should say: "Perform Magic Tap, a two-finger double-tap, to enter the
+  Tavern."
+- Help remains a normal button and does not count as completion.
+
+Screen 4 - Success / Continue Basics
+------------------------------------
+
+Purpose:
+
+- Confirm the gesture worked.
+- Reinforce real-world transfer.
+- Move the user into existing VoiceOver Basics.
+
+Wireframe:
+
+  +--------------------------------------------------+
+  | authored spell resolves / warm tavern backdrop   |
+  | readable paint scrim                             |
+  |                                                  |
+  |                    Spell learned                 |
+  |                                                  |
+  |      Magic Tap opened the Tavern.                |
+  |      In other apps, Magic Tap performs the       |
+  |      main action for the moment.                 |
+  |                                                  |
+  |                 [ Continue Basics ]              |
+  +--------------------------------------------------+
+
+Primary copy:
+
+- Title: "Spell learned"
+- Body: "Magic Tap opened the Tavern. In other apps, Magic Tap performs the
+  main action for the moment."
+- CTA: "Continue Basics"
+
+Accessibility:
+
+- Continue CTA hint: "Starts the guided VoiceOver Basics quests."
+- Success state should announce once, then allow normal exploration.
+
+Screen 5 - Help State
+---------------------
+
+Purpose:
+
+- Help users who are stuck without counting fallback button activation as Magic
+  Tap success.
+
+Wireframe:
+
+  +--------------------------------------------------+
+  | Help                                             |
+  |                                                  |
+  |  Magic Tap is a two-finger double-tap.           |
+  |  Keep two fingers slightly apart, tap twice,     |
+  |  and lift.                                      |
+  |                                                  |
+  |  If VoiceOver is not speaking, return and turn   |
+  |  on VoiceOver first.                             |
+  |                                                  |
+  |                 [ Back to Spell ]                |
+  +--------------------------------------------------+
+
+Accessibility:
+
+- Help can be a sheet or inline panel.
+- It must not include a "mark complete" button in the first implementation.
+- QA can use a debug-only completion hook if needed, but production UI should
+  require Magic Tap.
+
+Responsive Layout Notes
+-----------------------
+
+- Phone portrait is the primary target.
+- iPad should keep the reading column constrained using existing QuestPaint
+  metrics.
+- Dynamic Type must wrap cleanly without hiding the CTA.
+- The ready and success states should use stable vertical structure so
+  screenshots and ScreenAudit comparisons remain deterministic.
+
+ScreenAudit Expectations
+------------------------
+
+When screenshot coverage is added, contracts should verify:
+
+- First-run entry contains "Learn your first spell."
+- VO gate contains "VoiceOver Required" and the Siri phrase.
+- Ready state: **one** instruction panel containing "First Spell" copy,
+  "two-finger double-tap", and **"Magic Tap to enter the Tavern."**
+- Success state contains "Spell learned" and "Continue Basics."
+- Overlays should identify checked regions and explain failures in terms of
+  missing semantic anchors, contrast/readability, or stale state.
+
+Image generation: Ready state first
+-----------------------------------
+
+**Ready** (Screen 3) is the reference for visual language. Generate it before
+other states; derive Entry, gate, success, and help from the same QuestPaint
+tokens. See:
+
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+
+Target filename for the current approved Ready mockup:
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v06.png
+  (v06: closing line "Magic Tap to enter the Tavern."; v05: "Spell ready…";
+  v04–v03: earlier)
+
+Implementation Notes
+--------------------
+
+- Prefer adding a dedicated `iOSMagicTapFirstSpellView` under FirstRun.
+- Prefer a `VoiceOverGateContext` model over forcing First Spell into `GameKind`.
+- Use current QuestPaint styles and authored art direction.
+- Keep the actual Magic Tap handler separate from the Help and Continue buttons.

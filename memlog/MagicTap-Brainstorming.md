@@ -2,6 +2,16 @@
 
 Date: 2026-04-21
 
+## Status: April 2026 — first run vs. mastery quest
+
+**Default curriculum:** The first time we teach Magic Tap in-app is the **first-run** flow **"First Spell: Magic Tap"** (before the existing VoiceOver Basics quest sequence), not a scored hub quest. See **`memlog/requirements/GameSpec-MagicTapFirstSpell.txt`** and **`memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt`**.
+
+**Bard’s Interrupt (and other themes below)** are **optional follow-on research**—build a mastery quest only if it adds clear transfer beyond that onboarding. If it is mostly “hit the audio cue in time,” it should stay parked. Track decisions in **`memlog/MagicTap-BardsInterrupt-Tasks.md`**.
+
+The rest of this document is **ideation** for a future full quest, rhythm feedback, and thematic directions. It is not the committed first-run contract.
+
+---
+
 ## Premise
 
 Magic Tap remains the platform shortcut: two-finger double-tap. RA11y should not hide or rename the gesture so much that users fail to transfer the skill to real apps. The game can wrap it in expressive fiction, feedback, timing, and scoring, but the user-facing lesson should stay clear:

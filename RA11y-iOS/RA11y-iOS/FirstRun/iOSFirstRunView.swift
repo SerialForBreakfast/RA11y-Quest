@@ -5,6 +5,11 @@ import RA11yCore
 
 /// First-run entry screen and container for the VoiceOver Basics sequence.
 ///
+/// **Roadmap:** The product spec at `memlog/requirements/GameSpec-MagicTapFirstSpell.txt` calls
+/// for a **First Spell: Magic Tap** step *before* this Basics sequence (VoiceOver on → practice
+/// surface → success → "Continue Basics"). When that ships, this view should route the primary
+/// CTA through the first-spell flow instead of jumping straight to ``iOSBasicsSequenceView``.
+///
 /// Presents the entry choice on initial launch and starts the sequence when
 /// launched from the hub or when the user chooses "Start Basics."
 ///

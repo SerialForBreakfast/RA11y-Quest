@@ -1,0 +1,123 @@
+RA11y — First Spell: Magic Tap — Ready screen image-generation prompt
+=====================================================================
+
+Date: 2026-04-27
+Status: Draft — **generate Ready state first** (validates QuestPaint + interaction read)
+Owner: Design / product
+Related:
+  memlog/requirements/GameSpec-MagicTapFirstSpell.txt
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt
+  (future) memlog/requirements/Design/MockupScreens/ — export target for final PNGs
+
+Rationale: Screen 3 “First Spell Ready” is where the **interaction model** must read
+visually: Magic Tap is a *ready spell*, not a tappable button. Art direction for
+Entry, VoiceOver gate, Success, and Help should be **derived from** this Ready
+asset so the set stays coherent.
+
+Target export (file name)
+-------------------------
+  magictap_firstspell_iphone_ready_v06.png  (current — **Magic Tap to enter the Tavern.**)
+  magictap_firstspell_iphone_ready_v05.png  (prior closing line: Spell ready…)
+  magictap_firstspell_iphone_ready_v04.png  (one panel, mixed line styles)
+  magictap_firstspell_iphone_ready_v03.png  (ABC / multi-card — deprecated)
+
+Generated assets (repo)
+-----------------------
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v06.png
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v05.png
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v04.png
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_spellbook_reference.png
+    (user reference: open book + sigil + two-finger icon on table)
+
+Consistency with shipped UI
+-----------------------------
+Match `docs/screenshots/.../04_EnchanterPrologue.png`: iOS status bar, nav title +
+back chevron, blurred torchlit tavern, **one** wide dark material panel with a
+**single** thin gold border containing **all** instruction copy (not multiple
+A/B/C cards). Serif + sans hierarchy, high-contrast body. **No sky-blue pill** on
+Ready. Help as small gold text link. Hero art: spellbook on table, golden sigil
+with two-finger hand at center—**one** thing to do: Magic Tap to enter the Tavern.
+
+Use case for generators
+-----------------------
+  ui-mockup
+
+Asset type
+----------
+  RA11y Phase 3 iPhone portrait UI mockup (full screen in frame — not a
+  device-in-hand marketing shot, no extra poster bleed unless product asks).
+
+---
+
+Primary request (copy into image tool)
+--------------------------------------
+
+Use case: ui-mockup
+
+Asset type: RA11y Phase 3 iPhone portrait UI mockup
+
+Primary request: Create one polished iPhone portrait app screen for RA11y first-run onboarding: "First Spell: Magic Tap."
+
+Scene/backdrop: Warm torchlit fantasy tavern interior matching the RA11y QuestPaint style: stone wall, wood table, amber lantern light, dark umber shadows, subtle gold magical glow, readable dark center lane.
+
+Subject: An open spellbook or circular spell sigil on a tavern table, glowing softly to show the spell is ready. The spell object should feel like a ready action, not like a button.
+
+Style/medium: Painterly semi-realistic fantasy mobile UI mockup, consistent with RA11y hub and lesson card mockups. **One** dark translucent instruction panel (single gold border), large readable typography, iOS app screen proportions.
+
+Composition/framing: iPhone portrait screen, no outer marketing background. Full-screen illustrated backdrop with a dark readable scrim. Top navigation/title area, central spellbook/sigil art, **one unified text block** below the hero (not three separate cards or A/B/C panels), one small secondary Help control.
+
+Text layout:
+- Nav title: "First Spell: Magic Tap"
+- **Single panel** body (one block, uniform body typography, paragraph spacing only):
+  "Two-finger double-tap anywhere on this screen."
+  "Magic Tap casts the obvious action now."
+  "Magic Tap to enter the Tavern."
+- Footer link: "Help"
+
+Color palette: warm amber, deep umber, charcoal black translucent panels, muted stone gray, gold highlights. Avoid purple-dominant or blue-gradient styling.
+
+Constraints: Must match RA11y QuestPaint UI direction; readable with large accessibility-oriented text; the Magic Tap practice surface must not look like a normal tappable button; decorative art must leave clear space for text.
+
+Avoid: no sci-fi UI, no neon cyberpunk, no generic app onboarding, no marketing hero layout, no fake giant button target for Magic Tap, no characters in the main ready screen, no busy patterns behind text, no logos or watermarks.
+
+---
+
+v06 (current copy)
+------------------
+Closing line ties Magic Tap to the **hub** metaphor: **"Magic Tap to enter the
+Tavern."** (replaces the older "Spell ready. Magic Tap now." line.)
+
+v05 notes (single block + no “ABC” typography)
+---------------------------------------------
+- **One** instruction panel (not three cards). Inside the panel, use **one** body
+  style for all lines—same size and color—so the three sentences do not read as
+  three separate tiers. Paragraph spacing only.
+
+v04 / regeneration: single panel + spellbook ref
+------------------------------------------------
+Attach `magictap_firstspell_spellbook_reference.png` for spellbook/sigil style.
+One gold-bordered frosted panel; no A/B/C cards. No sky-blue button.
+
+---
+
+Derivation order (after Ready is approved)
+------------------------------------------
+1. Entry — "Learn your first spell" (same tavern + scrim language)
+2. VoiceOver required gate — first-spell-specific copy; Siri callout
+3. Success — "Spell learned" + Continue Basics; warmer resolve lighting
+4. Help — sheet or inline; typography matches Ready panels
+
+Re-use: backdrop texture, material panel style, gold accent system, and central
+focal type placement from the Ready mockup; vary only copy, lighting beat, and
+layout density per screen.
+
+---
+
+Notes for handoff to implementation
+----------------------------------
+- This mockup may include **baked-in text** for design review. Shipped app text
+  remains in `Localizable.xcstrings`; dev may match layout to mockup.
+- The **Magic Tap** completion path is not a `Button` in product spec; the image
+  must not train a “tap here” affordance.
+- When importing to Assets / docs, follow existing MockupScreens naming and
+  `DesignProcess.md` for Phase 3 placement.

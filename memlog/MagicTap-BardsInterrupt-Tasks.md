@@ -2,14 +2,26 @@
 
 Date: 2026-04-21
 
+Status update 2026-04-26: Bard's Interrupt is now conditional research, not an
+assumed quest slot. The first exposure to Magic Tap should happen earlier in
+first run as "First Spell: Magic Tap"; see
+`memlog/requirements/GameSpec-MagicTapFirstSpell.txt`. This quest should proceed
+only if it teaches substantial additional VoiceOver transfer value beyond first
+run. If it remains primarily timing accuracy against audio cues, retire or park
+it in favor of more urgent VoiceOver accessibility tools.
+
 ## Goal
 
-Build a Magic Tap quest where the player is a bard interrupting enemy spells mid-chant. The quest teaches:
+Explore whether a Magic Tap quest where the player is a bard interrupting enemy
+spells mid-chant is worth building after First Spell. The quest must teach
+something First Spell does not already cover:
 
-- Magic Tap is the two-finger double-tap shortcut.
-- Magic Tap triggers the most obvious current action.
-- Magic Tap should work even when VoiceOver focus is not on a specific button.
-- Timing matters: wait for the release cue, then interrupt.
+- Magic Tap changes meaning across real app contexts, not just combat states.
+- Magic Tap can be chosen appropriately among other VoiceOver tools.
+- Magic Tap works independently of focused-button activation in situations that
+  resemble real app workflows.
+- Timing matters only if it supports broader transfer, not as the main reason
+  the quest exists.
 
 Working title: **Bard's Interrupt**.
 
