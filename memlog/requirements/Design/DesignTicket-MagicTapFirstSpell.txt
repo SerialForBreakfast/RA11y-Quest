@@ -250,9 +250,8 @@ tokens. See:
   memlog/requirements/Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
 
 Target filename for the current approved Ready mockup:
-  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v06.png
-  (v06: closing line "Magic Tap to enter the Tavern."; v05: "Spell ready…";
-  v04–v03: earlier)
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v07.png
+  (v07 winner; v06: previous copy/layout iteration; v05-v03: earlier)
 
 Implementation Notes
 --------------------

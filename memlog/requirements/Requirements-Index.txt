@@ -65,7 +65,10 @@ Design Tickets (active)
 - Design/DesignTicket-MagicTapFirstSpell.txt     First-run Magic Tap UI wireframes and states.
 - Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
                                                  Ready-screen Phase 3 mockup prompt; current export
-                                                 `magictap_firstspell_iphone_ready_v06.png`.
+                                                 `magictap_firstspell_iphone_ready_v07.png`.
+- Design/DesignTicket-MagicTapFirstSpell-MockupVerification.txt
+                                                 Verification gates and QA status for First Spell
+                                                 mockup set (Ready + remaining state screens).
 
 Advanced modes (design guidance)
 --------------------------------

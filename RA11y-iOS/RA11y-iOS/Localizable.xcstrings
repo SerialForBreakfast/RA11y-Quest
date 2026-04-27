@@ -1716,6 +1716,266 @@
         }
       }
     },
+    "firstSpell.continueBasics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue Basics"
+          }
+        }
+      }
+    },
+    "firstSpell.entry.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic Tap is a two-finger double-tap. It casts the obvious action for this moment."
+          }
+        }
+      }
+    },
+    "firstSpell.entry.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn your first spell"
+          }
+        }
+      }
+    },
+    "firstSpell.help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help"
+          }
+        }
+      }
+    },
+    "firstSpell.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First Spell: Magic Tap"
+          }
+        }
+      }
+    },
+    "firstSpell.ready.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perform Magic Tap, a two-finger double-tap, to enter the Tavern."
+          }
+        }
+      }
+    },
+    "firstSpell.ready.body.line1" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two-finger double-tap anywhere on this screen."
+          }
+        }
+      }
+    },
+    "firstSpell.ready.body.line2" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic Tap casts the obvious action now."
+          }
+        }
+      }
+    },
+    "firstSpell.ready.body.line3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic Tap to enter the Tavern."
+          }
+        }
+      }
+    },
+    "firstSpell.start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start First Spell"
+          }
+        }
+      }
+    },
+    "firstSpell.start.a11yHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checks VoiceOver and begins the Magic Tap lesson."
+          }
+        }
+      }
+    },
+    "firstSpell.start.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start First Spell"
+          }
+        }
+      }
+    },
+    "firstSpell.success.announcement" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spell learned. Magic Tap opened the Tavern."
+          }
+        }
+      }
+    },
+    "firstSpell.success.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic Tap cast the primary action. In other apps, Magic Tap often starts, stops, answers, or performs the obvious current action."
+          }
+        }
+      }
+    },
+    "firstSpell.success.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spell learned"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To learn Magic Tap, turn on VoiceOver first."
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.howToEnable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to Enable VoiceOver"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.iTurnedOnVoiceOver" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I turned on VoiceOver"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.navigationTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Required"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.openSettings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Accessibility Settings"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.returnToEntry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to entry"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.settingsFallback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If Settings did not open, open Settings manually, choose Accessibility, then turn on VoiceOver."
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.siri.a11yLabel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say, Hey Siri, turn on VoiceOver."
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.siri.heading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask Siri"
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.siri.phrase" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Hey Siri, turn on VoiceOver.\""
+          }
+        }
+      }
+    },
+    "firstSpellVORequired.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceOver Required"
+          }
+        }
+      }
+    },
     "game.banishment.goal" : {
       "extractionState" : "stale",
       "localizations" : {

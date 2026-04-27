@@ -26,6 +26,10 @@ This file is the single source of truth for screenshot coverage in the iOS UI te
 | `14_BanishmentWardTrap` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentWardTrap` | `banishmentWardTrap` | `banishment.trap.root` | Direct scene boot |
 | `15_BanishmentTower` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentTower` | `banishmentTower` | `banishment.trap.root` | Direct scene boot |
 | `16_BanishmentResult` | `testScreenshots_Banishment` | `-uiTesting -screenshotScene banishmentResult` | `banishmentResult` | `gameResult.root` | Direct scene boot |
+| `17_FirstSpellEntry` | `testScreenshots_FirstSpell` | `-uiTesting -screenshotScene firstSpellEntry` | `firstSpellEntry` | `firstRun.title` | Direct scene boot |
+| `18_FirstSpellVORequired` | `testScreenshots_FirstSpell` | `-uiTesting -screenshotScene firstSpellVORequired` | `firstSpellVORequired` | `firstSpellVORequired.title` | Direct scene boot |
+| `19_FirstSpellReady` | `testScreenshots_FirstSpell` | `-uiTesting -screenshotScene firstSpellReady` | `firstSpellReady` | `firstSpell.ready.card` | Direct scene boot |
+| `20_FirstSpellSuccess` | `testScreenshots_FirstSpell` | `-uiTesting -screenshotScene firstSpellSuccess` | `firstSpellSuccess` | `firstSpell.success.card` | Direct scene boot |
 
 Screens `09`–`11` use legacy **`Dungeon*`** file basenames and `dungeon*` scene IDs for contract stability; in-app they present **Crystal Resonance** (Scroll Hunt).
 

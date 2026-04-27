@@ -1,0 +1,162 @@
+TICKET-DESIGN-MAGICTAP-001 - Mockup Verification
+================================================
+
+Date: 2026-04-26
+Status: PASS with implementation notes
+Related:
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+  memlog/requirements/GameSpec-MagicTapFirstSpell.txt
+
+Verified Mockup Set
+-------------------
+
+- memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_entry_v01.png
+- memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_vo_required_v01.png
+- memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v07.png
+- memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_success_v01.png
+- memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_help_v01.png
+
+Checklist Result
+----------------
+
+Overall: PASS
+
+The set is acceptable as a Phase 3 UX mockup reference for the Magic Tap
+first-spell workstream. It should guide layout, copy hierarchy, art direction,
+and state progression. Implementation should still translate the mockups through
+existing QuestPaint SwiftUI components rather than copying every decorative
+detail exactly.
+
+DesignProcess Phase 3
+---------------------
+
+- PASS - Files live inside `memlog/requirements/Design/MockupScreens/`.
+- PASS - Filenames follow `[quest]_iphone_[state]_vNN.png`.
+- PASS - All required states are covered: entry, VoiceOver required, ready,
+  success, help.
+- PASS - All files are valid iPhone portrait PNGs at 853 x 1844.
+- PASS - States are visually distinguishable at a glance.
+- PASS - The Ready state makes the Magic Tap gesture visually central without
+  using a fake large button target.
+
+Magic Tap Product Criteria
+--------------------------
+
+- PASS - Ready state teaches Magic Tap as a two-finger double-tap.
+- PASS - Ready state uses the agreed Tavern action language:
+  "Magic Tap to enter the Tavern."
+- PASS - Success state reinforces transfer:
+  "In other apps, Magic Tap performs the main action for the moment."
+- PASS - Help state does not include a completion bypass.
+- PASS - VoiceOver-required state keeps Siri, Settings, help, and return paths
+  visible.
+
+QuestPaint Consistency
+----------------------
+
+- PASS - Uses warm torchlit tavern art, dark material panels, gold borders, and
+  high-contrast text consistent with the current QuestPaint direction.
+- PASS - Ready, entry, success, and help share a coherent spellbook/sigil visual
+  language.
+- PASS - The set avoids sci-fi, neon, marketing-hero layout, and generic
+  onboarding templates.
+- NOTE - The mockups are more ornate and serif-heavy than the current SwiftUI
+  implementation. App code should keep current QuestPaint text roles and token
+  spacing where possible, using these images as visual direction rather than
+  exact typography specs.
+- NOTE - The generated VoiceOver-required Siri orb is a design placeholder. The
+  implementation should use the existing Siri callout structure unless a
+  product-approved asset is created.
+
+Copy and Readability
+--------------------
+
+- PASS - Core user-facing copy is present and readable in each state.
+- PASS - Buttons and links are visually identifiable.
+- PASS - No state relies on color alone to communicate meaning.
+- NOTE - Text in generated mockups is baked into images for design review. The
+  shipped app must use `Localizable.xcstrings` and dynamic SwiftUI text.
+- NOTE - Dynamic Type behavior cannot be proven from static generated PNGs and
+  must be validated in implementation screenshots.
+
+Component Identification
+------------------------
+
+Back to front layer order:
+
+1. Opaque illustrated tavern/spellbook background generated as mockup art.
+2. Dark readability scrim or vignette baked into the mockup.
+3. Decorative state art:
+   - Entry: closed spellbook with Magic Tap sigil.
+   - VoiceOver required: accessibility/speech sigil.
+   - Ready: open spellbook with two-finger Magic Tap sigil.
+   - Success: open Tavern doorway plus resolved Magic Tap sigil.
+   - Help: two-finger Magic Tap sigil.
+4. Top navigation/title chrome.
+5. Dark material content panel(s) with thin gold border.
+6. Primary/secondary controls.
+
+Generated-image elements:
+
+- Tavern backgrounds.
+- Spellbook/sigil art.
+- Accessibility/Siri-style visual motifs.
+- Decorative borders and panel ornamentation in the mockup PNGs.
+
+Code-drawn implementation elements:
+
+- Navigation chrome.
+- Text.
+- Buttons/links.
+- Material panels.
+- Scrims.
+- Accessibility labels, hints, and Magic Tap handler.
+
+Approximate visual proportions on phone:
+
+- Top chrome: 7-9% of screen height.
+- Hero/state art: 35-45% of screen height.
+- Content/action panel: 35-45% of screen height depending on state.
+- Bottom action area: 8-12% of screen height.
+
+Pass/Fail Notes by Screen
+-------------------------
+
+Entry: PASS
+
+- Clear first-spell introduction.
+- Includes "Start First Spell" and "Go to Hub."
+- Slightly more ornate than shipped app, but direction is coherent.
+
+VoiceOver Required: PASS
+
+- Includes required title, VoiceOver rationale, Siri phrase, Settings, help, and
+  return affordance.
+- Siri orb should be treated as placeholder art.
+
+Ready: PASS
+
+- Best current reference for the interaction model.
+- Two-finger icon and "Magic Tap to enter the Tavern" are strong.
+- Implementation should preserve one instruction panel and avoid turning the
+  spell surface into a visible button.
+
+Success: PASS
+
+- Clearly shows the Tavern opened.
+- Includes transfer copy and Continue Basics CTA.
+
+Help: PASS
+
+- Explains the gesture plainly.
+- Does not include skip/mark-complete affordance.
+
+Decision
+--------
+
+Use this mockup set as the approved Phase 3 direction for implementation
+planning. Do not treat the ornamental frame, exact serif typography, or Siri orb
+as mandatory app assets. The implementation should preserve the state structure,
+copy, one-panel Ready instruction model, tavern/spellbook visual language, and
+Magic Tap interaction semantics.

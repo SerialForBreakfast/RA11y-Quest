@@ -17,6 +17,13 @@ import RA11yCore
 /// ``QuestPaintReadableText`` roles, and ``QuestPaintContentMetrics`` as the main hub.
 struct iOSFirstRunView: View {
 
+    /// First-run subflow state before entering ``iOSBasicsSequenceView``.
+    private enum FirstSpellStage: Equatable {
+        case entry
+        case voiceOverRequired
+        case ready
+    }
+
     // MARK: - Private Properties
 
     private let mode: FirstRunMode
@@ -26,6 +33,7 @@ struct iOSFirstRunView: View {
     // MARK: - State
 
     @State private var isShowingSequence = false
+    @State private var firstSpellStage: FirstSpellStage = .entry
     @State private var hasAttemptedAutoStart = false
 
     // MARK: - Environment
@@ -58,17 +66,41 @@ struct iOSFirstRunView: View {
         Group {
             if isShowingSequence {
                 iOSBasicsSequenceView(storage: storage)
-            } else if mode == .sequence {
-                ProgressView(String(localized: "app.loading"))
             } else {
-                entryContent
+                switch firstSpellStage {
+                case .entry:
+                    entryContent
+                case .voiceOverRequired:
+                    iOSFirstSpellVoiceOverRequiredView(
+                        voiceOverProvider: voiceOverProvider,
+                        onReturnToEntry: { firstSpellStage = .entry },
+                        onVoiceOverEnabled: { firstSpellStage = .ready }
+                    )
+                case .ready:
+                    iOSMagicTapFirstSpellView(
+                        onContinueBasics: { isShowingSequence = true }
+                    )
+                    .accessibilityIdentifier("firstSpell.ready")
+                }
             }
         }
-        .navigationTitle(String(localized: "firstRun.navigationTitle"))
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.colorScheme, .dark)
         .task {
             await handleAutoStartIfNeeded()
+        }
+    }
+
+    private var navigationTitle: String {
+        if isShowingSequence {
+            return String(localized: "firstRun.navigationTitle")
+        }
+        switch firstSpellStage {
+        case .entry, .ready:
+            return String(localized: "firstSpell.navigationTitle")
+        case .voiceOverRequired:
+            return String(localized: "firstSpellVORequired.navigationTitle")
         }
     }
 
@@ -89,24 +121,25 @@ struct iOSFirstRunView: View {
             ScrollView {
                 VStack(alignment: .center, spacing: RA11ySpacing.xl) {
                     VStack(spacing: RA11ySpacing.md) {
-                        Text(String(localized: "firstRun.title"))
+                        Text(String(localized: "firstSpell.entry.title"))
                             .questPaintReadableText(.heroTitle)
                             .multilineTextAlignment(.center)
                             .accessibilityIdentifier("firstRun.title")
 
-                        Text(String(localized: "firstRun.body"))
+                        Text(String(localized: "firstSpell.entry.body"))
                             .questPaintReadableText(.bodySupporting)
                             .multilineTextAlignment(.center)
                     }
 
                     VStack(spacing: RA11ySpacing.sm) {
-                        Button(String(localized: "firstRun.startBasics")) {
-                            attemptStartBasics()
+                        Button(String(localized: "firstSpell.start")) {
+                            attemptStartFirstSpell()
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
-                        .accessibilityLabel(String(localized: "firstRun.startBasics.a11yLabel"))
-                        .accessibilityHint(String(localized: "firstRun.startBasics.a11yHint"))
+                        .accessibilityLabel(String(localized: "firstSpell.start.a11yLabel"))
+                        .accessibilityHint(String(localized: "firstSpell.start.a11yHint"))
+                        .accessibilityIdentifier("firstSpell.start")
 
                         Button(String(localized: "firstRun.goToHub")) {
                             dismissToHub()
@@ -138,16 +171,16 @@ struct iOSFirstRunView: View {
     private func handleAutoStartIfNeeded() async {
         guard mode == .sequence, !hasAttemptedAutoStart else { return }
         hasAttemptedAutoStart = true
-        attemptStartBasics()
+        attemptStartFirstSpell()
     }
 
-    private func attemptStartBasics() {
+    private func attemptStartFirstSpell() {
         let decision = GameStartDecision.evaluate(kind: .findAndFocus, provider: voiceOverProvider)
         switch decision {
         case .proceed:
-            isShowingSequence = true
-        case .requireVoiceOver(let kind):
-            router.push(.voiceOverInterstitial(kind: kind))
+            firstSpellStage = .ready
+        case .requireVoiceOver:
+            firstSpellStage = .voiceOverRequired
         }
     }
 

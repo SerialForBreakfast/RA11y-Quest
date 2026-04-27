@@ -29,7 +29,9 @@ Current structure (as of 2026-04-26)
 |   |   |   `-- iOSQuestFeedbackCoordinator.swift
 |   |   |-- FirstRun
 |   |   |   |-- iOSBasicsSequenceView.swift
-|   |   |   `-- iOSFirstRunView.swift
+|   |   |   |-- iOSFirstRunView.swift
+|   |   |   |-- iOSFirstSpellVoiceOverRequiredView.swift
+|   |   |   `-- iOSMagicTapFirstSpellView.swift
 |   |   |-- Games
 |   |   |   |-- iOSDungeonDescentView.swift
 |   |   |   |-- iOSDungeonResonanceArt.swift
@@ -414,14 +416,20 @@ Current structure (as of 2026-04-26)
 |   |   |   |-- DesignTicket-BanishmentPromptSheet.txt
 |   |   |   |-- DesignTicket-DungeonResonancePromptSheet.txt
 |   |   |   |-- DesignTicket-FirstRunEntry.txt
+|   |   |   |-- DesignTicket-MagicTapFirstSpell-MockupVerification.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
 |   |   |   |-- MockupScreens
+|   |   |   |   |-- magictap_firstspell_iphone_entry_v01.png
+|   |   |   |   |-- magictap_firstspell_iphone_help_v01.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v02.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v03.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v04.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v05.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v06.png
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v07.png
+|   |   |   |   |-- magictap_firstspell_iphone_success_v01.png
+|   |   |   |   |-- magictap_firstspell_iphone_vo_required_v01.png
 |   |   |   |   |-- magictap_firstspell_spellbook_reference.png
 |   |   |   |   `-- banishment_iphone_*.png, etc. (see folder)
 |   |   |   |-- DesignTicket-PromptSheet.txt

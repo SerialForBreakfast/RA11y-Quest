@@ -51,6 +51,15 @@ enum iOSScreenshotScene: String, CaseIterable {
     /// The Banishment — sample result screen.
     case banishmentResult = "banishmentResult"
 
+    /// First Spell entry before VoiceOver gate check.
+    case firstSpellEntry = "firstSpellEntry"
+    /// First Spell VoiceOver gate.
+    case firstSpellVORequired = "firstSpellVORequired"
+    /// First Spell ready state.
+    case firstSpellReady = "firstSpellReady"
+    /// First Spell success state (post Magic Tap).
+    case firstSpellSuccess = "firstSpellSuccess"
+
     /// Process argument name used to request a specific screenshot scene.
     static let launchArgument = "-screenshotScene"
 
@@ -83,6 +92,10 @@ enum iOSScreenshotScene: String, CaseIterable {
         case .banishmentWardTrap: return "14_BanishmentWardTrap"
         case .banishmentTower: return "15_BanishmentTower"
         case .banishmentResult: return "16_BanishmentResult"
+        case .firstSpellEntry: return "17_FirstSpellEntry"
+        case .firstSpellVORequired: return "18_FirstSpellVORequired"
+        case .firstSpellReady: return "19_FirstSpellReady"
+        case .firstSpellSuccess: return "20_FirstSpellSuccess"
         }
     }
 
@@ -115,6 +128,14 @@ enum iOSScreenshotScene: String, CaseIterable {
             return "banishment.trap.root"
         case .banishmentResult:
             return "gameResult.root"
+        case .firstSpellEntry:
+            return "firstRun.title"
+        case .firstSpellVORequired:
+            return "firstSpellVORequired.title"
+        case .firstSpellReady:
+            return "firstSpell.ready.card"
+        case .firstSpellSuccess:
+            return "firstSpell.success.card"
         }
     }
 }
