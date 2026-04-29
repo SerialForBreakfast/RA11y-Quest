@@ -13,6 +13,10 @@ import RA11yCore
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 struct iOSFirstSpellVoiceOverRequiredView: View {
 
+    private enum FocusTarget: Hashable {
+        case continueButton
+    }
+
     let onReturnToEntry: () -> Void
     let onVoiceOverEnabled: () -> Void
 
@@ -20,6 +24,10 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
 
     @State private var showHelpSheet = false
     @State private var showManualFallback = false
+    @State private var voiceOverIsReady = false
+    @State private var statusMessage: String?
+
+    @AccessibilityFocusState private var focusedTarget: FocusTarget?
 
     init(
         voiceOverProvider: some VoiceOverStateProvider = iOSLiveVoiceOverStateProvider(),
@@ -59,9 +67,18 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
             iOSVoiceOverHelpSheet()
         }
         .onAppear {
-            if voiceOverProvider.isVoiceOverRunning {
-                onVoiceOverEnabled()
+            refreshVoiceOverState(announceChange: false, showOffStatus: false)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            refreshVoiceOverState(announceChange: false)
+        }
+        .task {
+            for await isRunning in voiceOverProvider.stateChanges {
+                handleVoiceOverStateChange(isRunning)
             }
+        }
+        .onDisappear {
+            focusedTarget = nil
         }
     }
 
@@ -89,6 +106,17 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
 
     private var ctaSection: some View {
         VStack(spacing: RA11ySpacing.sm) {
+            if voiceOverIsReady {
+                readySection
+            } else {
+                enableVoiceOverSection
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var enableVoiceOverSection: some View {
+        VStack(spacing: RA11ySpacing.sm) {
             siriCallout
 
             Button(String(localized: "firstSpellVORequired.openSettings")) {
@@ -105,17 +133,50 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
             .controlSize(.large)
             .frame(maxWidth: .infinity)
 
-            Button(String(localized: "firstSpellVORequired.iTurnedOnVoiceOver")) {
-                if voiceOverProvider.isVoiceOverRunning {
-                    onVoiceOverEnabled()
-                }
+            if let statusMessage {
+                statusText(statusMessage)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
+
+            voiceOverCheckButton
+        }
+    }
+
+    private var readySection: some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            if let statusMessage {
+                statusText(statusMessage)
+            }
+
+            Button(String(localized: "firstSpellVORequired.continue")) {
+                onVoiceOverEnabled()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             .frame(maxWidth: .infinity)
+            .accessibilityLabel(String(localized: "firstSpellVORequired.continue"))
+            .accessibilityHint(String(localized: "firstSpellVORequired.continue.accessibilityHint"))
+            .accessibilityFocused($focusedTarget, equals: .continueButton)
             .accessibilityIdentifier("firstSpellVORequired.voiceOverEnabled")
         }
+    }
+
+    private var voiceOverCheckButton: some View {
+        Button(String(localized: "firstSpellVORequired.iTurnedOnVoiceOver")) {
+            handleVoiceOverEnabledButton()
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
         .frame(maxWidth: .infinity)
+        .accessibilityHint(String(localized: "firstSpellVORequired.iTurnedOnVoiceOver.accessibilityHint"))
+        .accessibilityIdentifier("firstSpellVORequired.voiceOverEnabled")
+    }
+
+    private func statusText(_ text: String) -> some View {
+        Text(text)
+            .multilineTextAlignment(.center)
+            .questPaintReadableText(.materialCardMeta)
+            .frame(maxWidth: .infinity)
+            .accessibilityIdentifier("firstSpellVORequired.status")
     }
 
     private var siriCallout: some View {
@@ -173,6 +234,53 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
             withAnimation {
                 showManualFallback = true
             }
+        }
+    }
+
+    private func refreshVoiceOverState(announceChange: Bool, showOffStatus: Bool = true) {
+        handleVoiceOverStateChange(
+            voiceOverProvider.isVoiceOverRunning,
+            announceChange: announceChange,
+            showOffStatus: showOffStatus
+        )
+    }
+
+    private func handleVoiceOverStateChange(
+        _ isRunning: Bool,
+        announceChange: Bool = true,
+        showOffStatus: Bool = true
+    ) {
+        guard isRunning || showOffStatus else { return }
+        guard voiceOverIsReady != isRunning || statusMessage == nil else { return }
+        withAnimation {
+            voiceOverIsReady = isRunning
+            statusMessage = String(
+                localized: isRunning
+                ? "firstSpellVORequired.voiceOverReady"
+                : "firstSpellVORequired.voiceOverStillOff"
+            )
+        }
+        if announceChange {
+            UIAccessibility.post(notification: .announcement, argument: statusMessage)
+        }
+        if isRunning {
+            focusContinueButton()
+        } else {
+            focusedTarget = nil
+        }
+    }
+
+    private func handleVoiceOverEnabledButton() {
+        let isRunning = voiceOverProvider.isVoiceOverRunning
+        handleVoiceOverStateChange(isRunning, announceChange: true)
+        guard isRunning else { return }
+    }
+
+    private func focusContinueButton() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            focusedTarget = .continueButton
         }
     }
 }

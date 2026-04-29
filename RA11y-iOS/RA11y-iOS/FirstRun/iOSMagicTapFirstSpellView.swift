@@ -40,6 +40,7 @@ struct iOSMagicTapFirstSpellView: View {
 
     @State private var isSpellLearned = false
     @State private var showHelpSheet = false
+    @AccessibilityFocusState private var isContinueFocused: Bool
 
     // MARK: - Environment
 
@@ -91,6 +92,8 @@ struct iOSMagicTapFirstSpellView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
                         .frame(maxWidth: .infinity)
+                        .accessibilityHint(String(localized: "firstSpell.continueBasics.a11yHint"))
+                        .accessibilityFocused($isContinueFocused)
                         .accessibilityIdentifier("firstSpell.continueBasics")
                     }
 
@@ -119,7 +122,7 @@ struct iOSMagicTapFirstSpellView: View {
         .sheet(isPresented: $showHelpSheet) {
             iOSVoiceOverHelpSheet()
         }
-        .accessibilityAction(.magicTap, castMagicTapSpell)
+        .accessibilityAction(.magicTap, performMagicTapPrimaryAction)
         .accessibilityElement(children: .contain)
         .onAppear {
             applyScreenshotStateIfNeeded()
@@ -206,9 +209,17 @@ struct iOSMagicTapFirstSpellView: View {
 
     // MARK: - Actions
 
+    private func performMagicTapPrimaryAction() {
+        if isSpellLearned {
+            onContinueBasics()
+        } else {
+            castMagicTapSpell()
+        }
+    }
+
     private func castMagicTapSpell() {
-        guard !isSpellLearned else { return }
         isSpellLearned = true
+        isContinueFocused = true
         UIAccessibility.post(notification: .announcement, argument: String(localized: "firstSpell.success.announcement"))
     }
 
