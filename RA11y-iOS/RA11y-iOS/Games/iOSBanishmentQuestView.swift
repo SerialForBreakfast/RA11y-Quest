@@ -689,37 +689,51 @@ struct iOSBanishmentQuestView: View {
     }
 
     private var prologueBody: some View {
-        ScrollView {
-            VStack(alignment: .center, spacing: RA11ySpacing.lg) {
-                Text(String(localized: "banishment.prologue.title"))
-                    .multilineTextAlignment(.center)
-                    .questPaintReadableText(.heroTitle)
-                    .accessibilityIdentifier("banishment.prologue.title")
-                    .accessibilityAddTraits(.isHeader)
-                Text(String(localized: "banishment.prologue.body"))
-                    .multilineTextAlignment(.center)
-                    .questPaintReadableText(.bodySupporting)
-                    .accessibilityIdentifier("banishment.prologue.body")
-                Text(String(localized: "banishment.prologue.instructions"))
-                    .multilineTextAlignment(.center)
-                    .questPaintReadableText(.bodyEmphasis)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("banishment.prologue.instructions")
-                banishmentZScrubSpellPlate
-                Button(String(localized: "banishment.prologue.begin")) {
-                    viewModel.beginTrial()
+        GeometryReader { geo in
+            let hPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                gameKind: nil
+            )
+            let colW = QuestPaintContentMetrics.contentMaxWidth(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                horizontalPadding: hPad
+            )
+            ScrollView {
+                VStack(alignment: .center, spacing: RA11ySpacing.lg) {
+                    Text(String(localized: "banishment.prologue.title"))
+                        .multilineTextAlignment(.center)
+                        .questPaintReadableText(.heroTitle)
+                        .accessibilityIdentifier("banishment.prologue.title")
+                        .accessibilityAddTraits(.isHeader)
+                    Text(String(localized: "banishment.prologue.body"))
+                        .multilineTextAlignment(.center)
+                        .questPaintReadableText(.bodySupporting)
+                        .accessibilityIdentifier("banishment.prologue.body")
+                    Text(String(localized: "banishment.prologue.instructions"))
+                        .multilineTextAlignment(.center)
+                        .questPaintReadableText(.bodyEmphasis)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("banishment.prologue.instructions")
+                    banishmentZScrubSpellPlate
+                    Button(String(localized: "banishment.prologue.begin")) {
+                        viewModel.beginTrial()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("banishment.beginTrial")
+                    .accessibilityHint(String(localized: "banishment.prologue.begin.a11yHint"))
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .padding(.vertical, RA11ySpacing.md)
+                .frame(maxWidth: colW)
                 .frame(maxWidth: .infinity)
-                .accessibilityIdentifier("banishment.beginTrial")
-                .accessibilityHint(String(localized: "banishment.prologue.begin.a11yHint"))
             }
-            .padding(.horizontal, RA11ySpacing.lg)
-            .padding(.vertical, RA11ySpacing.md)
-            .frame(maxWidth: prologueColumnMaxWidth)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, RA11ySpacing.sm)
+            .padding(.horizontal, hPad)
+            .scrollContentBackground(.hidden)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("banishment.prologue")
@@ -751,11 +765,6 @@ struct iOSBanishmentQuestView: View {
                 .shadow(color: Color.ra11yAccent.opacity(0.55), radius: 10, y: 3)
         }
         .frame(width: 280, height: 150)
-    }
-
-    /// iPad / regular width uses a wider lesson column so screenshots and Dynamic Type do not hug the left edge.
-    private var prologueColumnMaxWidth: CGFloat {
-        horizontalSizeClass == .regular ? 600 : 560
     }
 
     private var wardIntermissionBody: some View {

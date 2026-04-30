@@ -46,7 +46,6 @@ struct iOSBasicsSequenceView: View {
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Init
 
@@ -60,36 +59,16 @@ struct iOSBasicsSequenceView: View {
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            let horizontalPad = QuestPaintContentMetrics.scrollHorizontalPadding(
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                gameKind: nil
-            )
-            let readingMax = QuestPaintContentMetrics.readingColumnMaxWidth(
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                horizontalPadding: horizontalPad
-            )
-            ScrollView {
-                VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-                    headerSection
-                    stepList
-                }
-                .padding(.horizontal, horizontalPad)
-                .padding(.vertical, RA11ySpacing.base)
-                .frame(maxWidth: readingMax)
-                .frame(maxWidth: .infinity)
+        QuestPaintScreen(
+            ambientImageName: "simon_room_bg",
+            layoutRole: .reading,
+            accessibilityIdentifier: "basicsSequence.screen"
+        ) {
+            VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                headerSection
+                stepList
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .environment(\.colorScheme, .dark)
-        .background {
-            ZStack {
-                Color(red: 0.10, green: 0.07, blue: 0.05)
-                QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
-                QuestPaintReadableScrim()
-            }
+            .padding(.vertical, RA11ySpacing.base)
         }
         .accessibilityAction(.magicTap, launchSelectedPlayableStep)
         .onAppear {

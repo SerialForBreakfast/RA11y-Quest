@@ -39,7 +39,6 @@ struct iOSFirstRunView: View {
     // MARK: - Environment
 
     @Environment(iOSAppRouter.self) private var router
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Init
 
@@ -107,62 +106,43 @@ struct iOSFirstRunView: View {
     // MARK: - Entry Content
 
     private var entryContent: some View {
-        GeometryReader { geo in
-            let horizontalPad = QuestPaintContentMetrics.scrollHorizontalPadding(
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                gameKind: nil
-            )
-            let readingMax = QuestPaintContentMetrics.readingColumnMaxWidth(
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                horizontalPadding: horizontalPad
-            )
-            ScrollView {
-                VStack(alignment: .center, spacing: RA11ySpacing.xl) {
-                    VStack(spacing: RA11ySpacing.md) {
-                        Text(String(localized: "firstSpell.entry.title"))
-                            .questPaintReadableText(.heroTitle)
-                            .multilineTextAlignment(.center)
-                            .accessibilityIdentifier("firstRun.title")
+        QuestPaintScreen(
+            ambientImageName: "magictap_bg",
+            layoutRole: .reading,
+            accessibilityIdentifier: "firstRun.entry"
+        ) {
+            VStack(alignment: .center, spacing: RA11ySpacing.xl) {
+                VStack(spacing: RA11ySpacing.md) {
+                    Text(String(localized: "firstSpell.entry.title"))
+                        .questPaintReadableText(.heroTitle)
+                        .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("firstRun.title")
 
-                        Text(String(localized: "firstSpell.entry.body"))
-                            .questPaintReadableText(.bodySupporting)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    VStack(spacing: RA11ySpacing.sm) {
-                        Button(String(localized: "firstSpell.start")) {
-                            attemptStartFirstSpell()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-                        .accessibilityLabel(String(localized: "firstSpell.start.a11yLabel"))
-                        .accessibilityHint(String(localized: "firstSpell.start.a11yHint"))
-                        .accessibilityIdentifier("firstSpell.start")
-
-                        Button(String(localized: "firstRun.goToHub")) {
-                            dismissToHub()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
-                        .accessibilityLabel(String(localized: "firstRun.goToHub.a11yLabel"))
-                        .accessibilityHint(String(localized: "firstRun.goToHub.a11yHint"))
-                    }
+                    Text(String(localized: "firstSpell.entry.body"))
+                        .questPaintReadableText(.bodySupporting)
+                        .multilineTextAlignment(.center)
                 }
-                .padding(.horizontal, horizontalPad)
-                .padding(.vertical, RA11ySpacing.base)
-                .frame(maxWidth: readingMax)
-                .frame(maxWidth: .infinity)
+
+                VStack(spacing: RA11ySpacing.sm) {
+                    Button(String(localized: "firstSpell.start")) {
+                        attemptStartFirstSpell()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityLabel(String(localized: "firstSpell.start.a11yLabel"))
+                    .accessibilityHint(String(localized: "firstSpell.start.a11yHint"))
+                    .accessibilityIdentifier("firstSpell.start")
+
+                    Button(String(localized: "firstRun.goToHub")) {
+                        dismissToHub()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .accessibilityLabel(String(localized: "firstRun.goToHub.a11yLabel"))
+                    .accessibilityHint(String(localized: "firstRun.goToHub.a11yHint"))
+                }
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            ZStack {
-                Color(red: 0.10, green: 0.07, blue: 0.05)
-                QuestPaintAmbientBackdrop(imageName: "magictap_bg")
-                QuestPaintReadableScrim()
-            }
+            .padding(.vertical, RA11ySpacing.base)
         }
     }
 

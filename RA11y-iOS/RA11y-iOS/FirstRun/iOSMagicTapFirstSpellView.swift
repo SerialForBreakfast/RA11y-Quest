@@ -44,7 +44,6 @@ struct iOSMagicTapFirstSpellView: View {
 
     // MARK: - Environment
 
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Init
 
@@ -64,61 +63,40 @@ struct iOSMagicTapFirstSpellView: View {
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            let horizontalPad = QuestPaintContentMetrics.scrollHorizontalPadding(
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                gameKind: nil
-            )
-            let readingMax = QuestPaintContentMetrics.readingColumnMaxWidth(
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                horizontalPadding: horizontalPad
-            )
-            ScrollView {
-                VStack(spacing: RA11ySpacing.lg) {
-                    spellbookHero
+        QuestPaintScreen(
+            ambientImageName: "magictap_bg",
+            layoutRole: .reading,
+            accessibilityIdentifier: "firstSpell.screen"
+        ) {
+            VStack(spacing: RA11ySpacing.lg) {
+                spellbookHero
 
-                    if isSpellLearned {
-                        learnedCard
-                    } else {
-                        readyCard
-                    }
-
-                    if isSpellLearned {
-                        Button(String(localized: "firstSpell.continueBasics")) {
-                            onContinueBasics()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-                        .frame(maxWidth: .infinity)
-                        .accessibilityHint(String(localized: "firstSpell.continueBasics.a11yHint"))
-                        .accessibilityFocused($isContinueFocused)
-                        .accessibilityIdentifier("firstSpell.continueBasics")
-                    }
-
-                    Button(String(localized: "firstSpell.help")) {
-                        showHelpSheet = true
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .accessibilityIdentifier("firstSpell.help")
+                if isSpellLearned {
+                    learnedCard
+                } else {
+                    readyCard
                 }
-                .padding(.horizontal, horizontalPad)
-                .padding(.vertical, RA11ySpacing.base)
-                .frame(maxWidth: readingMax)
-                .frame(maxWidth: .infinity)
+
+                if isSpellLearned {
+                    Button(String(localized: "firstSpell.continueBasics")) {
+                        onContinueBasics()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityHint(String(localized: "firstSpell.continueBasics.a11yHint"))
+                    .accessibilityFocused($isContinueFocused)
+                    .accessibilityIdentifier("firstSpell.continueBasics")
+                }
+
+                Button(String(localized: "firstSpell.help")) {
+                    showHelpSheet = true
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .accessibilityIdentifier("firstSpell.help")
             }
-            // Hide the scroll view's default material background so the ambient backdrop
-            // and scrim remain visible (otherwise screenshots show a large light mat).
-            .scrollContentBackground(.hidden)
-        }
-        .background {
-            ZStack {
-                Color(red: 0.08, green: 0.06, blue: 0.05)
-                QuestPaintAmbientBackdrop(imageName: "magictap_bg")
-                QuestPaintReadableScrim()
-            }
+            .padding(.vertical, RA11ySpacing.base)
         }
         .navigationTitle(String(localized: "firstSpell.navigationTitle"))
         .navigationBarTitleDisplayMode(.inline)
@@ -126,7 +104,6 @@ struct iOSMagicTapFirstSpellView: View {
             iOSVoiceOverHelpSheet()
         }
         .accessibilityAction(.magicTap, performMagicTapPrimaryAction)
-        .accessibilityElement(children: .contain)
         .onAppear {
             applyScreenshotStateIfNeeded()
         }

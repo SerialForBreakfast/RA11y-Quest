@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-26)
+Current structure (as of 2026-04-30)
 ---
 
 .
@@ -394,6 +394,7 @@ Current structure (as of 2026-04-26)
 |   |-- MagicTap-Brainstorming.md
 |   |-- MagicTap-BardsInterrupt-Tasks.md
 |   |-- DesignRecommendationReview.md
+|   |-- VOAccessibilityResearch.md
 |   |-- archive
 |   |   `-- GameSpec-ActivateDoubleTap.txt
 |   |-- requirements
