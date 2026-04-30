@@ -41,7 +41,7 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
 
     var body: some View {
         QuestPaintScreen(
-            ambientImageName: "simon_room_bg",
+            ambientImageName: "magictap_bg",
             layoutRole: .reading
         ) {
             VStack(alignment: .center, spacing: RA11ySpacing.xl) {

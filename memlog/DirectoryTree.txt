@@ -403,6 +403,7 @@ Current structure (as of 2026-04-26)
 |   |   |   |   |-- dungeon
 |   |   |   |   |-- enchanter
 |   |   |   |   |-- hub
+|   |   |   |   |-- magictap  (pre-import PNG staging — Phase 5)
 |   |   |   |   |-- rogue
 |   |   |   |   `-- simon
 |   |   |   |-- Mockups-v2
@@ -419,6 +420,8 @@ Current structure (as of 2026-04-26)
 |   |   |   |-- DesignTicket-MagicTapFirstSpell-MockupVerification.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+|   |   |   |-- DesignTicket-MagicTapFirstSpellPromptSheet.txt
+|   |   |   |-- MagicTapFirstSpellAssetPipeline.txt
 |   |   |   |-- MockupScreens
 |   |   |   |   |-- magictap_firstspell_iphone_entry_v01.png
 |   |   |   |   |-- magictap_firstspell_iphone_help_v01.png

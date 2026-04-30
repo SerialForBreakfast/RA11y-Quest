@@ -77,7 +77,7 @@ struct iOSMagicTapFirstSpellView: View {
             )
             ScrollView {
                 VStack(spacing: RA11ySpacing.lg) {
-                    magicTapSpellbookPlaceholder
+                    spellbookHero
 
                     if isSpellLearned {
                         learnedCard
@@ -113,7 +113,7 @@ struct iOSMagicTapFirstSpellView: View {
         .background {
             ZStack {
                 Color(red: 0.08, green: 0.06, blue: 0.05)
-                QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
+                QuestPaintAmbientBackdrop(imageName: "magictap_bg")
                 QuestPaintReadableScrim()
             }
         }
@@ -131,38 +131,12 @@ struct iOSMagicTapFirstSpellView: View {
 
     // MARK: - Subviews
 
-    /// SF Symbol placeholder hero until final spellbook art is imported.
-    private var magicTapSpellbookPlaceholder: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .fill(.black.opacity(0.32))
-            VStack(spacing: RA11ySpacing.base) {
-                ZStack {
-                    Circle()
-                        .stroke(Color.ra11yAccent.opacity(0.85), lineWidth: 2)
-                        .frame(width: 180, height: 180)
-                    Circle()
-                        .stroke(Color.ra11yAccent.opacity(0.4), lineWidth: 1)
-                        .frame(width: 220, height: 220)
-                    Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 54, weight: .semibold))
-                        .foregroundStyle(Color.ra11yAccent.opacity(0.95))
-                    Image(systemName: "book.closed.fill")
-                        .font(.system(size: 126, weight: .regular))
-                        .foregroundStyle(Color.white.opacity(0.16))
-                        .offset(y: 24)
-                }
-                .frame(maxWidth: .infinity)
-                .accessibilityHidden(true)
-            }
-            .padding(RA11ySpacing.lg)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 320)
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .stroke(Color.ra11yAccent.opacity(0.45), lineWidth: 1)
-        )
+    private var spellbookHero: some View {
+        Image("magictap_spellbook_sigil")
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity, maxHeight: 320)
+            .accessibilityHidden(true)
     }
 
     private var readyCard: some View {

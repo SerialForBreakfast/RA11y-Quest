@@ -160,7 +160,7 @@ struct iOSFirstRunView: View {
         .background {
             ZStack {
                 Color(red: 0.10, green: 0.07, blue: 0.05)
-                QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
+                QuestPaintAmbientBackdrop(imageName: "magictap_bg")
                 QuestPaintReadableScrim()
             }
         }

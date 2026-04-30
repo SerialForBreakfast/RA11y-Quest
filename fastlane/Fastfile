@@ -20,7 +20,11 @@ UI_TEST_IDS    = [
 OUTPUT_BASE    = "../fastlane/screenshots/en-US".freeze
 DOCS_BASE      = "../docs/screenshots/en-US".freeze
 EXTRACT_SCRIPT = "../scripts/extract_screenshots.sh".freeze
-DERIVED_DATA   = "/tmp/RA11y_screenshots_DerivedData".freeze
+# Xcode scratch for the screenshots lane: xcresult bundles and -derivedDataPath.
+# Kept under gitignored `build_results/` (repo root) so automation stays auditable
+# and easy to wipe with `rm -rf build_results/fastlane_screenshots`.
+SCREENSHOT_XCODE_ARTIFACTS = "../build_results/fastlane_screenshots".freeze
+DERIVED_DATA = "#{SCREENSHOT_XCODE_ARTIFACTS}/DerivedData".freeze
 CONTRACT_CHECK = "../utility/validate_screenshot_contract.sh".freeze
 BANISHMENT_ASSET_QA = "../utility/validate_banishment_assets.sh".freeze
 SCREEN_AUDIT_CHECK = "../utility/validate_screen_audit.sh".freeze
@@ -93,6 +97,7 @@ platform :ios do
     sh("bash '#{BANISHMENT_ASSET_QA}'")
 
     sh("rm -rf '#{OUTPUT_BASE}' && mkdir -p '#{OUTPUT_BASE}'")
+    sh("mkdir -p '#{SCREENSHOT_XCODE_ARTIFACTS}'")
     sh("rm -rf '#{DERIVED_DATA}'")
 
     # Build once, then run test-without-building per simulator.
@@ -131,7 +136,7 @@ platform :ios do
       seen_udids << udid
 
       label       = spec[:label]
-      result_path = "/tmp/RA11y_screenshot_#{udid}.xcresult"
+      result_path = "#{SCREENSHOT_XCODE_ARTIFACTS}/RA11y_screenshot_#{udid}.xcresult"
       output_dir  = "#{OUTPUT_BASE}/#{label}"
 
       sh("rm -rf '#{result_path}'")
