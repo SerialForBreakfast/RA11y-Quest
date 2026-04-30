@@ -109,6 +109,9 @@ struct iOSMagicTapFirstSpellView: View {
                 .frame(maxWidth: readingMax)
                 .frame(maxWidth: .infinity)
             }
+            // Hide the scroll view's default material background so the ambient backdrop
+            // and scrim remain visible (otherwise screenshots show a large light mat).
+            .scrollContentBackground(.hidden)
         }
         .background {
             ZStack {

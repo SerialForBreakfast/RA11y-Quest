@@ -3,7 +3,7 @@ RA11y - Requirements Index
 memlog/requirements/
 
 Keep this index updated when adding or moving requirement documents.
-Last updated: 2026-04-26
+Last updated: 2026-04-29
 
 Phase 1 — Capture (Historical)
 -------------------------------
@@ -35,6 +35,13 @@ Research / conditional quests
 - ../MagicTap-BardsInterrupt-Tasks.md     Bard's Interrupt: optional post-onboarding
                                           Magic Tap quest; conditional on added transfer
                                           value (First Spell in first run is primary).
+
+Architecture Decision Records (memlog/research/)
+-----------------------------------------------
+- ADR-0001 through ADR-0006 — See `memlog/research/` filenames.
+- ADR-0006-VoiceOver-Rotor-Actions-Pedagogy.md — VoiceOver **Actions** in the rotor
+  (default activate vs custom accessibility actions); platform label constraints;
+  distinct skill from ADR-0004 filtered navigation.
 
 Spikes
 ------

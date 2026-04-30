@@ -19,9 +19,9 @@ enum BanishmentPhase: Equatable {
     case darkTower
 }
 
-// MARK: - Threat model (placeholder art)
+// MARK: - Threat model
 
-/// Single creature beat — raster from ``iOSBanishmentArt`` when the imageset exists, else SF Symbol greybox.
+/// Single creature beat — renders from ``iOSBanishmentArt`` catalog art when available; falls back to SF Symbol if an imageset is missing.
 struct BanishmentThreat: Identifiable, Equatable {
     let id: String
     /// SF Symbol name used when ``catalogImageName`` is missing from the asset catalog.
@@ -443,7 +443,8 @@ final class BanishmentQuestViewModel {
 
 // MARK: - iOSBanishmentQuestView
 
-/// The Banishment — teaches VoiceOver’s two-finger scrub escape using SF Symbol greybox UI.
+/// The Banishment — teaches VoiceOver’s two-finger scrub escape. Renders ``iOSBanishmentArt``
+/// catalog PNGs when present; falls back to SF Symbol or gradient if any asset is missing.
 ///
 /// **VoiceOver:** While a trap is active, the system navigation bar is hidden so the scrub
 /// gesture is not delivered to UIKit’s back affordance (which can pop the whole quest).
@@ -453,8 +454,9 @@ final class BanishmentQuestViewModel {
 /// ## Concurrency
 /// Implicitly `@MainActor` via `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
 ///
-/// **Mockup bootstrap:** Landscape PNGs from ``utility/import_banishment_mockups_to_assets`` are detected and skipped
-/// for full-bleed backgrounds and trap rasters so UI does not paint a device frame inside the real device.
+/// **Asset heuristics:** ``shouldUseRasterBackground(named:)`` and ``shouldUseRasterTrapDecorations()``
+/// reject landscape images (e.g. old mockup crops) so the UI never paints a device frame
+/// inside the real device. All current catalog masters are portrait or square and pass.
 struct iOSBanishmentQuestView: View {
 
     @State private var viewModel: BanishmentQuestViewModel
