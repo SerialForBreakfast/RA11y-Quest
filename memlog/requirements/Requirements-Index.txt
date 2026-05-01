@@ -3,7 +3,7 @@ RA11y - Requirements Index
 memlog/requirements/
 
 Keep this index updated when adding or moving requirement documents.
-Last updated: 2026-04-26
+Last updated: 2026-04-29
 
 Phase 1 — Capture (Historical)
 -------------------------------
@@ -36,6 +36,13 @@ Research / conditional quests
                                           Magic Tap quest; conditional on added transfer
                                           value (First Spell in first run is primary).
 
+Architecture Decision Records (memlog/research/)
+-----------------------------------------------
+- ADR-0001 through ADR-0006 — See `memlog/research/` filenames.
+- ADR-0006-VoiceOver-Rotor-Actions-Pedagogy.md — VoiceOver **Actions** in the rotor
+  (default activate vs custom accessibility actions); platform label constraints;
+  distinct skill from ADR-0004 filtered navigation.
+
 Spikes
 ------
 - Spike-ScrollObservability-SwiftUI.txt  Scroll progress observation for Scroll Hunt (CLOSED).
@@ -65,7 +72,10 @@ Design Tickets (active)
 - Design/DesignTicket-MagicTapFirstSpell.txt     First-run Magic Tap UI wireframes and states.
 - Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
                                                  Ready-screen Phase 3 mockup prompt; current export
-                                                 `magictap_firstspell_iphone_ready_v06.png`.
+                                                 `magictap_firstspell_iphone_ready_v07.png`.
+- Design/DesignTicket-MagicTapFirstSpell-MockupVerification.txt
+                                                 Verification gates and QA status for First Spell
+                                                 mockup set (Ready + remaining state screens).
 
 Advanced modes (design guidance)
 --------------------------------

@@ -24,16 +24,20 @@ set -euo pipefail
 XCRESULT="${1:?Usage: $0 <path/to/test.xcresult> <output-dir>}"
 OUTPUT_DIR="${2:?Usage: $0 <path/to/test.xcresult> <output-dir>}"
 
-TEMP_DIR=$(mktemp -d)
-cleanup() { rm -rf "$TEMP_DIR"; }
-trap cleanup EXIT
-
 if [ ! -d "$XCRESULT" ]; then
     echo "[extract_screenshots] ERROR: xcresult not found at '${XCRESULT}'" >&2
     exit 1
 fi
 
 mkdir -p "$OUTPUT_DIR"
+
+# Stage xcresulttool export under the output tree (not TMPDIR) for easier cleanup/reasoning.
+TEMP_DIR=$(mktemp -d "$OUTPUT_DIR/.xcresult_export.XXXXXX") || {
+    echo "[extract_screenshots] ERROR: mktemp failed." >&2
+    exit 1
+}
+cleanup() { rm -rf "$TEMP_DIR"; }
+trap cleanup EXIT
 
 echo "[extract_screenshots] Exporting attachments from: ${XCRESULT}"
 xcrun xcresulttool export attachments \

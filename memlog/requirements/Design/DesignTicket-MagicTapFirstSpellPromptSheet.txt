@@ -1,0 +1,159 @@
+RA11y - Design Ticket
+The Magic Tap First Spell — Asset Prompt Sheet
+
+Date: 2026-04-29
+Owner: Product / Design (Requirements)
+Status: Draft — ready for LLM image generation session
+Related:
+  memlog/requirements/GameSpec-MagicTapFirstSpell.txt
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell.txt
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell-MockupVerification.txt
+  memlog/requirements/Design/DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v07.png  (visual anchor)
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_spellbook_reference.png  (sigil/book ref)
+  memlog/requirements/Design/MagicTapFirstSpellAssetPipeline.txt
+  RA11y-iOS/RA11y-iOS/FirstRun/iOSMagicTapFirstSpellView.swift
+  RA11y-iOS/RA11y-iOS/FirstRun/iOSFirstRunView.swift
+
+User Story
+==========
+As a designer and developer
+I want single-asset prompts for the Magic Tap First Spell screens
+So that final authored art can replace the current SF Symbol / simon_room_bg
+placeholder without changing the VoiceOver Magic Tap contract or introducing
+decorative accessibility clutter.
+
+Design Intent
+=============
+The Magic Tap First Spell teaches the two-finger double-tap as the player's first
+VoiceOver spell. The screen must feel like casting a ready spell from a spellbook,
+not pressing a button. Art must support the lesson: the spellbook is open, the
+spell is ready, and the player performs Magic Tap to enter the Tavern.
+
+The art must not imply a visible tap target. Magic Tap is a platform gesture
+registered on the root scene, not an on-screen button.
+
+All five first-spell states (entry, VoiceOver required, ready, success, help) share
+the same tavern + spellbook visual language. The ready state (v07) is the approved
+visual anchor — entry, gate, success, and help derive from it.
+
+Global Style Constraints (Include in EVERY prompt)
+==================================================
+- painterly flat fantasy illustration consistent with existing RA11y mockups
+- same world as the hub, Enchanter, Rogue, and Crystal Resonance mockups: torchlit
+  stone, warm amber light, dark umbers, muted slate blues, golden magical highlights
+- high contrast, readable on phone and tablet
+- simple large shapes first; controlled detail second
+- no text, no letters, no numbers
+- no watermark, no logo, no UI chrome baked into the art
+- avoid collage layouts and avoid multiple objects in one canvas
+- one asset only per generation
+- preserve clean edges and clear silhouette at small sizes
+
+Implementation / Export Conventions
+===================================
+- Transparent sprites: 1024x1024 PNG RGBA, centered subject, generous padding.
+- Background: non-transparent portrait master, 2048x4096 preferred. App uses
+  `.scaledToFill()`; keep the focal spellbook / tavern table zone in the
+  center-vertical 50-65% so iPhone and iPad crops stay calm behind the scrim
+  and instruction panel.
+- Do not generate sprite sheets, contact sheets, or multi-variation layouts.
+- Do not bake the two-finger hand or gesture indicator into the background.
+- Do not bake UI cards, nav titles, buttons, or instruction copy into art.
+
+Asset Set
+=========
+
+1) magictap_bg
+--------------
+Role
+- Opaque full-screen backdrop for all five first-spell states (entry, VoiceOver
+  required, ready, success, help). QuestPaintAmbientBackdrop renders it behind
+  a dark readable scrim; the text and controls float above.
+
+Requirements
+- non-transparent background
+- portrait-first composition for iPhone and iPad safe cropping
+- warm torchlit tavern interior: stone wall, rough wood table or shelf, amber
+  lantern or candle light, dark umber shadows
+- a sense that a spellbook or magic surface is present on the table, subtly
+  glowing or open — but NO large gesture sigil (that goes in magictap_spellbook_sigil)
+- readable dark center lane where scrim and instruction panel will layer
+- no characters, no hands, no fingers, no UI, no text
+- must remain calm as a backdrop when darkened by a 55-70% translucent scrim
+
+Prompt
+- Painterly flat fantasy tavern interior background: rough stone wall, warm wood
+  table surface, one lit candle or amber lantern in the scene, dark umber shadows,
+  warm golden glow pooling on the table, spellbook suggestion (closed book spine
+  or faint open page) resting on the table with a subtle magical ambient glow,
+  calm readable center area for a text panel and controls overlay, same world as
+  RA11y hub and dungeon mockups, no characters, no hands, no fingers, no creatures,
+  no UI, no text, no readable letters or numbers, portrait master composition,
+  high contrast but not noisy, 2048x4096.
+
+2) magictap_spellbook_sigil
+---------------------------
+Role
+- Transparent center hero for the ready and success states. Replaces the SF Symbol
+  placeholder (hand.tap.fill + book.closed.fill with concentric circles) in
+  iOSMagicTapFirstSpellView. Rendered at approximately 280-320 pt tall, centered
+  above the instruction panel.
+
+Requirements
+- transparent background (PNG RGBA, real alpha — no white or dark matte)
+- subject: an open spellbook lying on a tavern table surface, with a glowing
+  circular or arcane sigil above or within the open pages
+- a soft ethereal glyph or ghostly arcane handprint symbol above the sigil
+  suggesting a gentle double-tap activation — rendered abstractly, not as a
+  realistic hand; two concentric activation rings are also acceptable
+- the overall composition should feel like "a spell ready to cast," not a button
+- centered, generous padding — avoid clipping the glow
+- no UI chrome, no text, no baked labels, no arrows, no speech bubbles
+
+NOTE: Prompts referencing specific fingers or realistic hands may trigger content
+filters in some generators. Use the abstract/glyph language in the prompt below.
+If the generator still flags it, use the fallback prompt (no hand/glyph at all).
+
+Prompt (preferred — abstract glyph)
+- Single open fantasy spellbook resting on a warm wooden tavern table, glowing
+  circular arcane sigil rising from the open pages in warm gold and amber light,
+  a soft ethereal glyph above the sigil suggesting a gentle double-tap motion,
+  rendered as a ghostly arcane trace or faint magical handprint symbol — not a
+  realistic hand — painterly flat RA11y fantasy illustration style, centered with
+  generous padding, transparent background, no UI chrome, no text, no letters,
+  no numbers, no arrows, no extra objects, 1024x1024.
+
+Prompt (fallback — sigil only, no hand/glyph)
+- Single open fantasy spellbook on a warm wooden tavern table, circular glowing
+  arcane sigil rising from the open pages, warm gold and amber light, soft magical
+  glow with small ember particles, the sigil radiating outward with two concentric
+  rings suggesting activation, painterly flat RA11y fantasy illustration style,
+  centered with generous padding, transparent background, no characters, no UI
+  chrome, no text, no letters, no numbers, no arrows, no extra objects, 1024x1024.
+
+Quality Control Checklist
+=========================
+- Transparent assets must be PNG RGBA with real alpha, not checkerboard or white/dark mats.
+- magictap_bg must be opaque and must not contain UI cards, gesture hands, or copy.
+- magictap_spellbook_sigil: subject centered, no hard rectangular crop on the glow.
+- No embedded text, digits, logos, or symbols intended as readable UI text.
+- magictap_spellbook_sigil reviewed over magictap_bg (with scrim) and over black.
+- magictap_bg reviewed at 55-70% dark scrim opacity; text and gold panel remain readable.
+- magictap_bg focal zone verified: center 50-65% vertically reads calmly under overlay.
+- magictap_spellbook_sigil hand must read as "about to double-tap" not "pressing a button."
+- After import: build the app and verify both images resolve without warnings.
+
+Generation Order
+================
+Generate magictap_bg first; use it as a backdrop reference when generating
+magictap_spellbook_sigil to confirm the sigil reads clearly over the tavern surface.
+
+Pre-import storage
+==================
+Store generated PNGs here before Xcode import:
+  memlog/requirements/Design/Assets/magictap/
+
+Revision History
+================
+- 2026-04-29: Initial prompt sheet from approved Phase 3 mockup set (v07 winner).

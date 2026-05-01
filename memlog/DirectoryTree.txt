@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-26)
+Current structure (as of 2026-04-30)
 ---
 
 .
@@ -29,7 +29,9 @@ Current structure (as of 2026-04-26)
 |   |   |   `-- iOSQuestFeedbackCoordinator.swift
 |   |   |-- FirstRun
 |   |   |   |-- iOSBasicsSequenceView.swift
-|   |   |   `-- iOSFirstRunView.swift
+|   |   |   |-- iOSFirstRunView.swift
+|   |   |   |-- iOSFirstSpellVoiceOverRequiredView.swift
+|   |   |   `-- iOSMagicTapFirstSpellView.swift
 |   |   |-- Games
 |   |   |   |-- iOSDungeonDescentView.swift
 |   |   |   |-- iOSDungeonResonanceArt.swift
@@ -394,6 +396,7 @@ Current structure (as of 2026-04-26)
 |   |-- MagicTap-Brainstorming.md
 |   |-- MagicTap-BardsInterrupt-Tasks.md
 |   |-- DesignRecommendationReview.md
+|   |-- VOAccessibilityResearch.md
 |   |-- archive
 |   |   `-- GameSpec-ActivateDoubleTap.txt
 |   |-- requirements
@@ -403,6 +406,7 @@ Current structure (as of 2026-04-26)
 |   |   |   |   |-- dungeon
 |   |   |   |   |-- enchanter
 |   |   |   |   |-- hub
+|   |   |   |   |-- magictap  (pre-import PNG staging — Phase 5)
 |   |   |   |   |-- rogue
 |   |   |   |   `-- simon
 |   |   |   |-- Mockups-v2
@@ -413,17 +417,26 @@ Current structure (as of 2026-04-26)
 |   |   |   |-- DesignTicket-AssetDeliveryNaming.txt
 |   |   |   |-- DesignTicket-AssetListDefinition.txt
 |   |   |   |-- DesignTicket-AssetReviewChecklist.txt
+|   |   |   |-- DesignTicket-BanishmentMockupVerification.txt
 |   |   |   |-- DesignTicket-BanishmentPromptSheet.txt
 |   |   |   |-- DesignTicket-DungeonResonancePromptSheet.txt
 |   |   |   |-- DesignTicket-FirstRunEntry.txt
+|   |   |   |-- DesignTicket-MagicTapFirstSpell-MockupVerification.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
+|   |   |   |-- DesignTicket-MagicTapFirstSpellPromptSheet.txt
+|   |   |   |-- MagicTapFirstSpellAssetPipeline.txt
 |   |   |   |-- MockupScreens
+|   |   |   |   |-- magictap_firstspell_iphone_entry_v01.png
+|   |   |   |   |-- magictap_firstspell_iphone_help_v01.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v02.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v03.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v04.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v05.png
 |   |   |   |   |-- magictap_firstspell_iphone_ready_v06.png
+|   |   |   |   |-- magictap_firstspell_iphone_ready_v07.png
+|   |   |   |   |-- magictap_firstspell_iphone_success_v01.png
+|   |   |   |   |-- magictap_firstspell_iphone_vo_required_v01.png
 |   |   |   |   |-- magictap_firstspell_spellbook_reference.png
 |   |   |   |   `-- banishment_iphone_*.png, etc. (see folder)
 |   |   |   |-- DesignTicket-PromptSheet.txt
@@ -452,6 +465,7 @@ Current structure (as of 2026-04-26)
 |   |   |-- ADR-0003-Dungeon-Resonance-Scroll-Interaction.md
 |   |   |-- ADR-0004-ArcanistsTower-Rotor-Interaction.md
 |   |   |-- ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md
+|   |   |-- ADR-0006-VoiceOver-Rotor-Actions-Pedagogy.md
 |   |   |-- ArcanistsTower.txt
 |   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md

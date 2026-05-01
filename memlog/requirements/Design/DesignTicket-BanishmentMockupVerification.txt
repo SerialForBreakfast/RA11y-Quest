@@ -1,0 +1,128 @@
+TICKET-DESIGN-BANISHMENT — Mockup Verification
+================================================
+
+Date: 2026-04-29
+Status: PASS
+Related:
+  memlog/requirements/Design/DesignTicket-BanishmentPromptSheet.txt
+  memlog/requirements/Design/BanishmentAssetPipeline.txt
+  memlog/requirements/Design/QuestConcept-Banishment.txt
+  memlog/requirements/GameSpec-BanishmentQuest.txt (if filed separately)
+
+Verified Mockup Set
+-------------------
+
+- memlog/requirements/Design/MockupScreens/banishment_iphone_ward_v01.png
+- memlog/requirements/Design/MockupScreens/banishment_iphone_skeleton_v01.png
+- memlog/requirements/Design/MockupScreens/banishment_iphone_orc_v01.png
+- memlog/requirements/Design/MockupScreens/banishment_iphone_troll_v01.png
+- memlog/requirements/Design/MockupScreens/banishment_iphone_dark_v01.png
+- memlog/requirements/Design/MockupScreens/banishment_iphone_banished_v03.png
+
+Checklist Result
+----------------
+
+Overall: PASS
+
+The set is acceptable as a Phase 3 UX mockup reference for The Banishment
+workstream. It should guide layout, creature/backdrop art direction, and state
+progression. Implementation translates mockups through existing QuestPaint
+SwiftUI components rather than copying every decorative detail exactly.
+
+DesignProcess Phase 3
+---------------------
+
+- PASS - Files live inside memlog/requirements/Design/MockupScreens/.
+- PASS - Filenames follow [quest]_iphone_[state]_vNN.png.
+- PASS - All required states are covered: ward practice, three tower encounters
+  (skeleton, orc, troll), Lights Off dark, and banished success.
+- PASS - All files are valid iPhone portrait PNGs.
+- PASS - States are visually distinguishable at a glance (creature silhouette and
+  lighting beat change across states).
+- PASS - Success/failure framing is unambiguous (banished state shows clear resolution).
+
+Banishment Product Criteria
+----------------------------
+
+- PASS - Ward state establishes practice framing: instruction visible, creature present.
+- PASS - Tower states are visually distinct from ward (darker backdrop, timed feel).
+- PASS - Lights Off (dark) state is readable as a "lights out" encounter — creature
+  silhouette against near-black, minimal visual cues.
+- PASS - Banished state communicates escape success without implying a button was pressed.
+- PASS - No state exposes a tappable "escape" affordance; gesture must be performed.
+
+QuestPaint Consistency
+----------------------
+
+- PASS - Warm torchlit stone mood in ward; darker tower and Lights Off states darken
+  progressively, consistent with RA11y QuestPaint direction.
+- PASS - Creature silhouettes are distinct by shape (goblin, skeleton, orc, troll, dragon).
+- PASS - Banished success state uses creature-agnostic dissolve/flare, not a
+  species-specific VFX — matches BanishmentAssetPipeline §"Success feedback must be
+  creature-agnostic."
+- NOTE - Mockups are more ornate than final SwiftUI implementation. App keeps current
+  QuestPaint text roles and token spacing; images serve as visual direction only.
+
+Component Identification
+------------------------
+
+Back to front layer order (ward/tower states):
+
+1. Opaque illustrated background (banishment_ward_bg / banishment_tower_bg).
+2. Code-drawn dark trap veil (black overlay ~70-80% opacity).
+3. Ward ring behind creature (banishment_ward_ring — transparent sprite).
+4. Creature sprite (banishment_goblin / skeleton / orc / troll — transparent).
+5. Encounter card: code-drawn dark material panel + escape instruction text.
+6. Timer HUD (timed stages only): code-drawn.
+7. trapLeaveQuestControl: code-drawn explicit back affordance.
+
+Lights Off layer order:
+
+1. Color.black (code-drawn).
+2. banishment_tower_bg at ~14% opacity (code-drawn composite).
+3. Dragon/dark-anchor sprite as center anchor.
+4. Encounter card with Lights Off copy (code-drawn).
+5. Timer HUD (code-drawn).
+6. trapLeaveQuestControl (code-drawn).
+
+Generated-image elements (all from DesignTicket-BanishmentPromptSheet.txt):
+
+- Backdrop PNGs (ward_bg, tower_bg)
+- Creature sprites (goblin, skeleton, orc, troll, dragon)
+- Ward ring, flare_escape, dark_anchor, hub_icon
+- Gesture Z reference (prologue only — optional)
+
+Code-drawn elements:
+
+- Trap veil overlay
+- Z gesture path in prologue (BanishmentZGestureShape)
+- Encounter card panel, text, escape hint
+- Timer HUD
+- Leave-quest back affordance (trapLeaveQuestControl)
+- Navigation chrome
+
+Lights Off and VoiceOver Contract Audit (static, 2026-04-29)
+-------------------------------------------------------------
+
+B4 — Lights Off layer stack: PASS
+  Code matches BanishmentAssetPipeline §"Lights Off":
+  - Color.black base + tower_bg at 0.14 opacity
+  - darkThreat = banishmentDragon; darkAnchor fallback in threatRasterName()
+  - Z gesture not shown (prologue only)
+  - Timer HUD rendered in scoredChrome
+
+B5 — VoiceOver accessibility contract: PASS
+  - .accessibilityAction(.escape, onEscape) present on BanishmentTrapOverlay card
+    (line ~966) and trap root (line ~1060)
+  - All decorative images .accessibilityHidden(true)
+  - Creature sprites .accessibilityHidden(true); no focusable hit targets
+  - trapLeaveQuestControl is an explicit labeled Button — does not rely on
+    system nav bar (which is hidden during traps)
+  - No unnamed focusable rectangles introduced by catalog art
+
+Decision
+--------
+
+Use this mockup set as the approved Phase 3 direction for The Banishment. The
+implementation is complete and matches the layer stack and interaction model
+defined in the mockups and BanishmentAssetPipeline.txt.

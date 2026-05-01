@@ -867,20 +867,36 @@ private struct DungeonPrologueView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: RA11ySpacing.lg) {
-                dmNarrationCard
-                QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
-                practiceZone
-                beginButton
+        GeometryReader { geo in
+            let hPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                gameKind: .scrollHunt
+            )
+            let colW = QuestPaintContentMetrics.contentMaxWidth(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                horizontalPadding: hPad
+            )
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    dmNarrationCard
+                    QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
+                    practiceZone
+                    beginButton
+                }
+                .padding(.vertical, RA11ySpacing.md)
+                .frame(maxWidth: colW)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(.horizontal, sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base)
-            .padding(.vertical, RA11ySpacing.md)
-            .frame(maxWidth: sizeClass == .regular ? 680 : .infinity)
-            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, hPad)
+            .scrollContentBackground(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.colorScheme, .dark)
+        .accessibilityElement(children: .contain)
     }
 
     private var dmNarrationCard: some View {

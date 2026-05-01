@@ -16,13 +16,15 @@ asset so the set stays coherent.
 
 Target export (file name)
 -------------------------
-  magictap_firstspell_iphone_ready_v06.png  (current — **Magic Tap to enter the Tavern.**)
+  magictap_firstspell_iphone_ready_v07.png  (current winner — approved visual anchor)
+  magictap_firstspell_iphone_ready_v06.png  (prior closing line iteration)
   magictap_firstspell_iphone_ready_v05.png  (prior closing line: Spell ready…)
   magictap_firstspell_iphone_ready_v04.png  (one panel, mixed line styles)
   magictap_firstspell_iphone_ready_v03.png  (ABC / multi-card — deprecated)
 
 Generated assets (repo)
 -----------------------
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v07.png
   memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v06.png
   memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v05.png
   memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v04.png
@@ -82,10 +84,10 @@ Avoid: no sci-fi UI, no neon cyberpunk, no generic app onboarding, no marketing 
 
 ---
 
-v06 (current copy)
-------------------
-Closing line ties Magic Tap to the **hub** metaphor: **"Magic Tap to enter the
-Tavern."** (replaces the older "Spell ready. Magic Tap now." line.)
+v07 decision
+------------
+`magictap_firstspell_iphone_ready_v07.png` is the current winner and style anchor
+for follow-up state generation (Entry, VO Required, Success, Help).
 
 v05 notes (single block + no “ABC” typography)
 ---------------------------------------------

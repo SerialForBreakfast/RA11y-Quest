@@ -804,46 +804,37 @@ private struct EnchanterPrologueView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private var horizontalPadding: CGFloat {
-        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
-    }
-
-    private var contentMaxWidth: CGFloat? {
-        sizeClass == .regular ? 600 : nil
-    }
-
     var body: some View {
-        ScrollView(.vertical) {
-            enchanterContent {
-                dmNarrationCard
-                lessonCard
-                QuestVoiceOverGestureSpellPlate.linearFocusLesson()
-                gestureGuide
-                beginButton
+        GeometryReader { geo in
+            let hPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                gameKind: nil
+            )
+            let colW = QuestPaintContentMetrics.contentMaxWidth(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                horizontalPadding: hPad
+            )
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    dmNarrationCard
+                    lessonCard
+                    QuestVoiceOverGestureSpellPlate.linearFocusLesson()
+                    gestureGuide
+                    beginButton
+                }
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(maxWidth: colW)
+                .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, hPad)
+            .scrollContentBackground(.hidden)
         }
-        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
-    }
-
-    @ViewBuilder
-    private func enchanterContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        let inner = VStack(spacing: RA11ySpacing.lg) {
-            content()
-        }
-        .padding(.vertical, RA11ySpacing.lg)
-        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
-        .frame(maxWidth: .infinity)
-
-        if sizeClass == .regular {
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
-                inner
-                Spacer(minLength: 0)
-            }
-        } else {
-            inner
-        }
+        .accessibilityElement(children: .contain)
     }
 
     private var dmNarrationCard: some View {
@@ -930,60 +921,47 @@ private struct EnchanterAttemptView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private var horizontalPadding: CGFloat {
-        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
-    }
-
-    private var contentMaxWidth: CGFloat? {
-        sizeClass == .regular ? 600 : nil
-    }
-
     var body: some View {
-        ScrollView(.vertical) {
-            enchanterLevelContent {
-                promptCard(
-                    title: String(format: String(localized: "simon.l1.target.format"), targetRelic.displayName),
-                    a11yLabel: String(format: String(localized: "simon.a11y.l1.target"), targetRelic.displayName),
-                    a11yHint: String(localized: "simon.a11y.l1.target.hint")
-                )
-
-                mistakeHUD
-
-                relicStack
-
-                if let statusMessage {
-                    statusRow(statusMessage)
+        GeometryReader { geo in
+            let hPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                gameKind: nil
+            )
+            let colW = QuestPaintContentMetrics.contentMaxWidth(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                horizontalPadding: hPad
+            )
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    promptCard(
+                        title: String(format: String(localized: "simon.l1.target.format"), targetRelic.displayName),
+                        a11yLabel: String(format: String(localized: "simon.a11y.l1.target"), targetRelic.displayName),
+                        a11yHint: String(localized: "simon.a11y.l1.target.hint")
+                    )
+                    mistakeHUD
+                    relicStack
+                    if let statusMessage {
+                        statusRow(statusMessage)
+                    }
+                    if levelComplete {
+                        continueButton
+                    } else if EnchanterHintPresentation.showsHintButtonInGameplay {
+                        hintButton
+                    }
                 }
-
-                if levelComplete {
-                    continueButton
-                } else if EnchanterHintPresentation.showsHintButtonInGameplay {
-                    hintButton
-                }
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(maxWidth: colW)
+                .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, hPad)
+            .scrollContentBackground(.hidden)
         }
-        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
-    }
-
-    @ViewBuilder
-    private func enchanterLevelContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        let inner = VStack(spacing: RA11ySpacing.lg) {
-            content()
-        }
-        .padding(.vertical, RA11ySpacing.lg)
-        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
-        .frame(maxWidth: .infinity)
-
-        if sizeClass == .regular {
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
-                inner
-                Spacer(minLength: 0)
-            }
-        } else {
-            inner
-        }
+        .accessibilityElement(children: .contain)
     }
 
     private var mistakeHUD: some View {
@@ -1043,65 +1021,54 @@ private struct EnchanterRisingView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private var horizontalPadding: CGFloat {
-        sizeClass == .regular ? RA11ySpacing.xl : RA11ySpacing.base
-    }
-
-    private var contentMaxWidth: CGFloat? {
-        sizeClass == .regular ? 600 : nil
-    }
-
     var body: some View {
-        ScrollView(.vertical) {
-            enchanterLevelContent {
-                promptCard(
-                    title: String(format: String(localized: "simon.l2.target.format"), targetRelic.displayName),
-                    a11yLabel: String(format: String(localized: "simon.a11y.l2.target"), targetRelic.displayName),
-                    a11yHint: String(localized: "simon.a11y.l1.target.hint")
-                )
-
-                TimerHUD(timeRemaining: timeRemaining, total: 45)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(
-                        String(format: String(localized: "simon.a11y.l2.timer"), Int(ceil(timeRemaining)))
+        GeometryReader { geo in
+            let hPad = QuestPaintContentMetrics.horizontalPadding(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                gameKind: nil
+            )
+            let colW = QuestPaintContentMetrics.contentMaxWidth(
+                role: .reading,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: sizeClass,
+                horizontalPadding: hPad
+            )
+            ScrollView(.vertical) {
+                VStack(spacing: RA11ySpacing.lg) {
+                    promptCard(
+                        title: String(format: String(localized: "simon.l2.target.format"), targetRelic.displayName),
+                        a11yLabel: String(format: String(localized: "simon.a11y.l2.target"), targetRelic.displayName),
+                        a11yHint: String(localized: "simon.a11y.l1.target.hint")
                     )
-                    .accessibilityHint(String(localized: "a11y.timer.group.hint"))
-
-                if timedOut {
-                    timeoutBanner
-                } else {
-                    relicStack
-                    if let statusMessage { statusRow(statusMessage) }
-                    if levelComplete {
-                        continueButton
-                    } else if EnchanterHintPresentation.showsHintButtonInGameplay {
-                        hintButton
+                    TimerHUD(timeRemaining: timeRemaining, total: 45)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(
+                            String(format: String(localized: "simon.a11y.l2.timer"), Int(ceil(timeRemaining)))
+                        )
+                        .accessibilityHint(String(localized: "a11y.timer.group.hint"))
+                    if timedOut {
+                        timeoutBanner
+                    } else {
+                        relicStack
+                        if let statusMessage { statusRow(statusMessage) }
+                        if levelComplete {
+                            continueButton
+                        } else if EnchanterHintPresentation.showsHintButtonInGameplay {
+                            hintButton
+                        }
                     }
                 }
+                .padding(.vertical, RA11ySpacing.lg)
+                .frame(maxWidth: colW)
+                .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, hPad)
+            .scrollContentBackground(.hidden)
         }
-        .contentMargins(.horizontal, horizontalPadding, for: .scrollContent)
         .environment(\.colorScheme, .dark)
-    }
-
-    @ViewBuilder
-    private func enchanterLevelContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        let inner = VStack(spacing: RA11ySpacing.lg) {
-            content()
-        }
-        .padding(.vertical, RA11ySpacing.lg)
-        .frame(minWidth: 0, maxWidth: contentMaxWidth ?? CGFloat.infinity)
-        .frame(maxWidth: .infinity)
-
-        if sizeClass == .regular {
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
-                inner
-                Spacer(minLength: 0)
-            }
-        } else {
-            inner
-        }
+        .accessibilityElement(children: .contain)
     }
 
     private var relicStack: some View {
