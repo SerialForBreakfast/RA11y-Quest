@@ -65,6 +65,7 @@ visual artifact thresholds, and optional pixel-diff baselines.
 | Opaque rectangular border around a transparent asset | Edge-opacity inspector |
 | Screenshot drifted significantly from a known-good baseline | Pixel-diff baseline comparison |
 | LLM-generated or placeholder art shipped at low confidence | Asset provenance rules |
+| Expected screenshot journey is incomplete or references the wrong screens | Flow validation |
 
 Every finding is written to `findings.json` with a rule ID, severity, confidence
 score, and a human-readable message. Findings classified as `.error` cause the CLI
@@ -88,8 +89,9 @@ screenshots/          contracts.json         provenance.json (optional)
 │  3. Evaluate deterministic rules against evidence               │
 │  4. Run visual inspectors on critical/protected regions         │
 │  5. Compare to pixel-diff baselines (if configured)             │
-│  6. Write evidence.json, findings.json, summary.md              │
-│  7. Render annotated PNG overlays for findings                  │
+│  6. Validate ordered flows against collected evidence           │
+│  7. Write evidence.json, findings.json, summary.md, flow reports│
+│  8. Render annotated PNG overlays for findings                  │
 └─────────────────────────────────────────────────────────────────┘
      │
      ▼
@@ -97,6 +99,8 @@ build_results/screen-audit/<device>/
   ├── evidence.json          ← what was extracted from each PNG
   ├── findings.json          ← all rule violations
   ├── summary.md             ← human-readable review summary
+  ├── flow.json              ← ordered flow validation facts
+  ├── flow-summary.md        ← human-readable journey summary
   └── overlays/
       ├── <screen>.png       ← screenshot annotated with region boxes
       ├── <screen>.json      ← machine-readable overlay sidecar
@@ -112,7 +116,7 @@ The package is divided into six functional layers, each in its own source file:
 | **Contracts** | `ScreenAuditContracts.swift` | JSON schema for describing expected screen state |
 | **Evidence** | `ScreenAuditEvidence.swift` | Extract deterministic facts from PNG files |
 | **Rules** | `ScreenAuditRules.swift` | Evaluate contracts against evidence; produce findings |
-| **Validation** | `ScreenAuditValidation.swift` | Orchestrate all layers end-to-end |
+| **Validation** | `ScreenAuditValidation.swift`, `ScreenAuditFlowValidation.swift` | Orchestrate all layers end-to-end and validate screenshot flows |
 | **Reports** | `ScreenAuditReports.swift` | Write JSON + Markdown output files |
 | **Visual** | `Visual/*.swift` | Four pluggable pixel-level inspectors |
 
@@ -672,6 +676,7 @@ contracts, unsupported schema versions, and missing-field contracts.
 | Fastlane lane (`screen_audit`) | ✅ Shipped |
 | Asset provenance tracking + low-confidence findings | ✅ Shipped |
 | Per-screen severity overrides | ✅ Shipped |
+| Ordered flow validation + flow reports | ✅ Shipped |
 | Vision OCR recognizer implementation | 🔲 Not yet |
 | Multi-locale screenshot support | 🔲 Not yet |
 | Dynamic Type / accessibility size variant contracts | 🔲 Not yet |
