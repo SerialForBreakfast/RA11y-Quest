@@ -27,11 +27,11 @@ until processed. The default size guard distinguishes those from device screensh
 (tall portrait or large two-axis tablet frames) so you usually **do not** need
 ``--allow-large`` for relics and seals.
 
-**Safe batch (preview to ``/tmp/nobg`` first):**
+**Safe batch (preview to ``build_results/nobg_preview`` first):**
 
     find RA11y-iOS/RA11y-iOS/Assets.xcassets -name '*.png' \\
       \\( -path '*enchanter_relic_*' -o -path '*rogue_seal_*' -o -path '*_hub_icon*' \\) \\
-      | xargs python3 utility/remove_white_background.py -o /tmp/nobg/
+      | xargs python3 utility/remove_white_background.py -o build_results/nobg_preview/
 
 Alternative: ImageMagick (global white removal — aggressive)
 ============================================================
@@ -49,13 +49,13 @@ Usage examples
 ================
 Single file to stdout path::
 
-    python3 utility/remove_white_background.py -o /tmp/out.png \\
+    python3 utility/remove_white_background.py -o build_results/out_preview.png \\
         RA11y-iOS/RA11y-iOS/Assets.xcassets/enchanter_relic_dragon_scale.imageset/enchanter_relic_dragon_scale.png
 
 Batch into a folder (flattened basenames)::
 
     find RA11y-iOS/RA11y-iOS/Assets.xcassets -name '*.png' -print0 | \\
-      xargs -0 python3 utility/remove_white_background.py -o /tmp/nobg/
+      xargs -0 python3 utility/remove_white_background.py -o build_results/nobg_preview/
 
 In-place (backs up ``.png.bak``, or ``.png.bak.1``, ``.png.bak.2``, … if a backup
 already exists so a second run does not overwrite the first backup)::

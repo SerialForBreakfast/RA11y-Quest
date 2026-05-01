@@ -30,6 +30,14 @@ struct iOSScreenshotRootView: View {
             iOSVORequiredView(kind: .findAndFocus)
         case .firstRun:
             iOSFirstRunView(mode: .entry, storage: storage)
+        case .firstSpellEntry:
+            iOSFirstRunView(mode: .entry, storage: storage)
+        case .firstSpellVORequired:
+            iOSFirstSpellVoiceOverRequiredView(onReturnToEntry: {}, onVoiceOverEnabled: {})
+        case .firstSpellReady:
+            iOSMagicTapFirstSpellView(screenshotState: .ready, onContinueBasics: {})
+        case .firstSpellSuccess:
+            iOSMagicTapFirstSpellView(screenshotState: .success, onContinueBasics: {})
         case .enchanterPrologue,
              .enchanterAttempt,
              .enchanterRising,

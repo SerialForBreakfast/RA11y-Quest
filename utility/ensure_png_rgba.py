@@ -82,6 +82,8 @@ EDGE_SPRITE_IMAGESET_PREFIXES: tuple[str, ...] = (
     "dungeon_hub_icon",
     "enchanter_hub_icon",
     "rogue_hub_icon",
+    # Magic Tap first-spell hero: LLM exports often ship on a white mat; edge flood in ensure_png_rgba.
+    "magictap_spellbook_sigil",
 )
 
 # ``dungeon_room_*`` and any future “card” art: RGBA opaque only.

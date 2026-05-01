@@ -1,0 +1,226 @@
+RA11y - Magic Tap First Spell Asset Pipeline
+============================================
+
+Date: 2026-04-29
+Related:
+  DesignTicket-MagicTapFirstSpellPromptSheet.txt
+  DesignTicket-MagicTapFirstSpell.txt
+  DesignTicket-MagicTapFirstSpell-MockupVerification.txt
+  memlog/requirements/Design/MockupScreens/magictap_firstspell_iphone_ready_v07.png
+  RA11y-iOS/RA11y-iOS/FirstRun/iOSMagicTapFirstSpellView.swift
+  RA11y-iOS/RA11y-iOS/FirstRun/iOSFirstRunView.swift
+
+Purpose
+=======
+Describe how the two Magic Tap First Spell PNGs compose in SwiftUI without
+changing the VoiceOver Magic Tap gesture contract already implemented in
+iOSMagicTapFirstSpellView.
+
+Important constraint: art is decorative and atmospheric. The gameplay mechanic
+is the Magic Tap platform gesture (.accessibilityAction(.magicTap)) registered
+on the root scene. Adding final art must not introduce new VoiceOver focus stops,
+hidden tappable rectangles, or any image that implies "tap this" to the user.
+
+Catalog Location
+================
+All images should live under:
+
+  RA11y-iOS/RA11y-iOS/Assets.xcassets/
+
+Use one universal imageset per asset for the first pass:
+  magictap_bg.imageset/   — contains magictap_bg.png + Contents.json
+  magictap_spellbook_sigil.imageset/   — contains magictap_spellbook_sigil.png + Contents.json
+
+Add @2x / @3x only if large-device sharpness is visibly inadequate.
+Follow the existing imageset structure (e.g. simon_room_bg.imageset for backdrop reference).
+
+Layer Stack (Back to Front)
+===========================
+
+Ready and Success States (iOSMagicTapFirstSpellView)
+----------------------------------------------------
+1. `magictap_bg`
+   - Opaque full-screen background.
+   - Rendered via QuestPaintAmbientBackdrop(imageName: "magictap_bg").
+   - `.scaledToFill()` and clipped — same behavior as other quest backdrops.
+
+2. Code-drawn dark scrim
+   - QuestPaintReadableScrim() — no image needed.
+   - Sits above the backdrop.
+
+3. `magictap_spellbook_sigil`
+   - Transparent hero image, centered above the instruction panel.
+   - .resizable().scaledToFit()
+   - .frame(maxWidth: .infinity, maxHeight: 320)
+   - .accessibilityHidden(true)
+   - Replaces the current magicTapSpellbookPlaceholder computed var.
+
+4. Instruction panel (code-drawn)
+   - ultraThinMaterial + gold border RoundedRectangle.
+   - Text: firstSpell.ready.body.line1/2/3 (ready) or firstSpell.success.title/body (success).
+   - Exists at the same VStack level as the hero image.
+
+5. Action controls (code-drawn)
+   - "Continue Basics" button (success state only).
+   - "Help" button (both states).
+
+6. Navigation chrome (code-drawn)
+   - Navigation title: "First Spell: Magic Tap".
+   - Nav bar with .inline display mode.
+
+Entry State (iOSFirstRunView — entryContent)
+--------------------------------------------
+1. `magictap_bg`
+   - Same backdrop via QuestPaintAmbientBackdrop(imageName: "magictap_bg").
+   - No hero sigil image — the entry state is text + CTA only.
+
+2. Code-drawn dark scrim
+   - QuestPaintReadableScrim().
+
+3. Title + body text (code-drawn)
+   - firstSpell.entry.title (heroTitle role)
+   - firstSpell.entry.body (bodySupporting role)
+
+4. Action controls (code-drawn)
+   - "Start First Spell" (borderedProminent)
+   - "Go to Hub" (bordered)
+
+VoiceOver Required State (iOSFirstSpellVoiceOverRequiredView)
+-------------------------------------------------------------
+This state also borrows simon_room_bg (line 44: ambientImageName: "simon_room_bg").
+Update it to magictap_bg for visual consistency across all first-spell states.
+See SwiftUI Changes Required section below.
+
+Runtime Sizing (SwiftUI Points)
+================================
+
+Background
+----------
+- Fill viewport via QuestPaintAmbientBackdrop (scaledToFill + clipped).
+- Accept edge crop on both iPhone and iPad.
+- focal zone (spellbook/tavern center) should stay visible in center 50-65% vertical.
+
+Hero Sigil (magictap_spellbook_sigil)
+-------------------------------------
+- Base frame: .frame(maxWidth: .infinity, maxHeight: 320) — matches placeholder.
+- .scaledToFit() preserves aspect ratio within that frame.
+- No Dynamic Type scaling on the image itself; it is purely decorative.
+- .accessibilityHidden(true) — no focus stop.
+- .allowsHitTesting(false) — no tap target.
+
+Instruction Panel
+-----------------
+- ultraThinMaterial panel with RA11yRadius.card corner radius.
+- Gold border: Color.ra11yAccent.opacity(0.55), lineWidth: 1.
+- Padding: RA11ySpacing.lg on all sides.
+- maxWidth constrained by QuestPaintContentMetrics.readingColumnMaxWidth.
+
+SwiftUI Changes Required (Phase 6)
+===================================
+
+File: RA11y-iOS/RA11y-iOS/FirstRun/iOSMagicTapFirstSpellView.swift
+
+1. Remove the magicTapSpellbookPlaceholder computed var (lines 135-166).
+   Replace the call site `magicTapSpellbookPlaceholder` in body with:
+
+     Image("magictap_spellbook_sigil")
+         .resizable()
+         .scaledToFit()
+         .frame(maxWidth: .infinity, maxHeight: 320)
+         .accessibilityHidden(true)
+
+2. In the .background modifier (lines 113-119), change:
+     QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
+   to:
+     QuestPaintAmbientBackdrop(imageName: "magictap_bg")
+
+File: RA11y-iOS/RA11y-iOS/FirstRun/iOSFirstRunView.swift
+
+3. In entryContent's .background modifier (lines 160-166), change:
+     QuestPaintAmbientBackdrop(imageName: "simon_room_bg")
+   to:
+     QuestPaintAmbientBackdrop(imageName: "magictap_bg")
+
+File: RA11y-iOS/RA11y-iOS/FirstRun/iOSFirstSpellVoiceOverRequiredView.swift
+
+4. At line 44, change:
+     ambientImageName: "simon_room_bg"
+   to:
+     ambientImageName: "magictap_bg"
+
+Optional Phase 6 refinement (ready card text)
+---------------------------------------------
+The readyCard VStack uses spacing: RA11ySpacing.md between three Text views.
+The design spec calls for "paragraph spacing only, same body style, no tier
+differentiation." If RA11ySpacing.md visually reads as card-separation rather
+than paragraph spacing, consolidate to a single Text view with "\n" separators,
+which uses the body font's natural line/paragraph spacing. Only change this if
+the rendered output feels too tiered.
+
+Transparency Rules
+==================
+
+Opaque:
+- magictap_bg
+
+Transparent PNG RGBA:
+- magictap_spellbook_sigil
+
+No transparent asset may contain a checkerboard, white matte, black matte, or
+semi-opaque rectangular plate. Review magictap_spellbook_sigil over
+magictap_bg (with scrim applied) and over solid black.
+
+Accessibility Contract
+======================
+
+Final art must preserve the current Magic Tap contract:
+
+- Root scene owns .accessibilityAction(.magicTap, performMagicTapPrimaryAction).
+- magictap_spellbook_sigil is .accessibilityHidden(true).
+- magictap_bg is rendered via QuestPaintAmbientBackdrop, which is already
+  excluded from accessibility tree.
+- No image asset introduces a new focusable element.
+- No generated image contains text that VoiceOver would encounter.
+- Help remains a standard Button; it does not count as Magic Tap completion.
+
+iPad Layout Notes
+=================
+
+- Content column is already constrained by QuestPaintContentMetrics.readingColumnMaxWidth.
+- magictap_spellbook_sigil: maxWidth: .infinity within the constrained column — will
+  be narrower than iPhone full-width, which is appropriate.
+- magictap_bg: full-viewport fill (same as all other quest backdrops on iPad).
+
+Naming Stability
+================
+
+Prompt filenames become imageset names exactly. If implementation chooses different
+names, update all of the following in the same change:
+
+- DesignTicket-MagicTapFirstSpellPromptSheet.txt
+- MagicTapFirstSpellAssetPipeline.txt (this file)
+- imageset folder names in Assets.xcassets
+- QuestPaintAmbientBackdrop imageName strings in iOSMagicTapFirstSpellView.swift
+  and iOSFirstRunView.swift
+
+Verification Steps
+==================
+
+After import and SwiftUI edits:
+
+1. Build the app: `utility/build_and_test.sh`
+2. Run screenshot captures: `bundle exec fastlane screenshots`
+3. Verify four scenes render real art (not SF Symbols):
+   - firstSpellEntry (iOSFirstRunView entry stage)
+   - firstSpellVORequired
+   - firstSpellReady (magictap_spellbook_sigil visible above instruction panel)
+   - firstSpellSuccess
+4. Manual VoiceOver check: Magic Tap still dismisses / advances as before.
+   The hero image must produce no announcement (accessibilityHidden).
+5. Test largest Dynamic Type: instruction panel wraps cleanly, sigil does not cover text.
+6. Test Increase Contrast: panel and text remain distinct over the backdrop.
+7. Test Reduce Transparency: material panel fallback remains readable.
+
+Revision History
+================
+- 2026-04-29: Initial pipeline from approved Phase 3 mockup set (v07 winner).

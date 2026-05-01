@@ -227,12 +227,14 @@ enum QuestPaintContentMetrics {
 
 /// Full-bleed illustrated quest surface: ambient art, readable scrim, dark color scheme, and a single scroll column sized by ``QuestLayoutRole``.
 ///
-/// Use this for result screens, the VoiceOver gate, and prologues that share the same “painting + scrim + centered stack” pattern.
+/// Use this for result screens, the VoiceOver gate, first-run onboarding, and any prologue that owns its own full-bleed backdrop.
 /// Callers supply only the scroll body; horizontal padding and max width follow ``QuestPaintContentMetrics`` for the chosen role.
 ///
 /// ## VoiceOver
-/// Backdrop and scrim are decorative (scrim is ``accessibilityHidden``). This scaffold does not introduce extra focus stops.
-/// Attach ``accessibilityIdentifier`` and grouping on content inside ``content`` so screen order stays explicit.
+/// Backdrop and scrim are decorative and hidden from the accessibility tree. When `accessibilityIdentifier` is provided,
+/// this scaffold owns the accessibility container boundary (`.accessibilityElement(children: .contain)`) on the scroll column;
+/// callers must NOT add a second `.accessibilityElement(children: .contain)` on the result. When `accessibilityIdentifier`
+/// is `nil`, attach grouping and identifiers inside the `content` closure instead.
 ///
 /// ## Concurrency
 /// A plain `View` with no shared mutable state; safe wherever SwiftUI view builders run (typically ``MainActor`` for UI).
@@ -247,6 +249,13 @@ struct QuestPaintScreen<Content: View>: View {
     /// When ``GameKind/scrollHunt``, adds the extra horizontal gutter for Dungeon-aligned surfaces (see ``QuestPaintContentMetrics``).
     var gameKind: GameKind?
 
+    /// When non-nil, the scroll column becomes an accessibility container (`children: .contain`) with this identifier.
+    /// Do not also call `.accessibilityElement(children: .contain)` on the result.
+    var accessibilityIdentifier: String?
+
+    /// Accessibility label for the container; only applied when `accessibilityIdentifier` is also set.
+    var accessibilityLabel: String?
+
     @ViewBuilder private let content: () -> Content
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -255,11 +264,15 @@ struct QuestPaintScreen<Content: View>: View {
         ambientImageName: String,
         layoutRole: QuestLayoutRole,
         gameKind: GameKind? = nil,
+        accessibilityIdentifier: String? = nil,
+        accessibilityLabel: String? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.ambientImageName = ambientImageName
         self.layoutRole = layoutRole
         self.gameKind = gameKind
+        self.accessibilityIdentifier = accessibilityIdentifier
+        self.accessibilityLabel = accessibilityLabel
         self.content = content
     }
 
@@ -289,6 +302,14 @@ struct QuestPaintScreen<Content: View>: View {
                 }
                 .padding(.horizontal, hPad)
                 .scrollContentBackground(.hidden)
+                .if(accessibilityIdentifier != nil) { view in
+                    view
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier(accessibilityIdentifier!)
+                        .if(accessibilityLabel != nil) { v in
+                            v.accessibilityLabel(accessibilityLabel!)
+                        }
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -394,5 +415,11 @@ extension View {
     ///   ``View/accessibilityHint(_:)-6yw3c`` / grouping at the container when the UX needs it.
     func questPaintReadableText(_ role: QuestPaintReadableTextRole) -> some View {
         modifier(QuestPaintReadableTextModifier(role: role))
+    }
+
+    /// Applies `transform` when `condition` is true; returns the unmodified view otherwise.
+    @ViewBuilder
+    func `if`<T: View>(_ condition: Bool, transform: (Self) -> T) -> some View {
+        if condition { transform(self) } else { self }
     }
 }

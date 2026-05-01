@@ -3,6 +3,12 @@
 Date: 2026-04-22
 Status: Proposed
 
+## See also
+
+- **ADR-0006** — VoiceOver **Actions** (default activate vs custom
+  `accessibilityAction` names), copy without hard-coded default strings, and quest flow
+  for **multi-action** elements.
+
 ## Context
 
 RA11y needs a quest that teaches the VoiceOver rotor. Prior quests teach:

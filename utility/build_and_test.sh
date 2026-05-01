@@ -145,6 +145,9 @@ DERIVED_DATA_PATH="$RUN_DIR/$DERIVED_DATA_RELATIVE"
 # Reuses a persisted last-working UDID (per family) when still present in
 # simctl output — see RA11Y_SIMULATOR_STATE_DIR in the header comment.
 #
+# Requires LOG_ROOT/RUN_DIR to exist (caller creates them first); simctl JSON
+# is written briefly under RUN_DIR, not under TMPDIR.
+#
 # Args:
 #   preferred_name  Exact device name to try first. Pass "" to skip.
 #   family          "iPhone" or "iPad"
@@ -178,10 +181,10 @@ resolve_simulator_udid() {
         return 1
     fi
 
-    # Write simctl JSON to a temp file so Python parses it with json.load (embedding
-    # in a """ string breaks on sequences like \/ that simctl emits — SyntaxWarning).
+    # Write simctl JSON under the current run's build_results dir (not TMPDIR) so
+    # automation stays inside the repo; same lifecycle: write → Python → rm -f.
     local simctl_json_tmp
-    simctl_json_tmp=$(mktemp "${TMPDIR:-/tmp}/ra11y_simctl.XXXXXX") || {
+    simctl_json_tmp=$(mktemp "$RUN_DIR/simctl_json.XXXXXX") || {
         echo "[simulator] ERROR: mktemp failed." >&2
         return 1
     }

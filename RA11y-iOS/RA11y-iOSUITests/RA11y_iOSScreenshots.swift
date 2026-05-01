@@ -28,6 +28,10 @@
 //  | 14_BanishmentWardTrap | banishmentWardTrap   | banishment.trap.root   |
 //  | 15_BanishmentTower    | banishmentTower      | banishment.trap.root   |
 //  | 16_BanishmentResult   | banishmentResult     | gameResult.root        |
+//  | 17_FirstSpellEntry    | firstSpellEntry      | firstRun.title         |
+//  | 18_FirstSpellVORequired | firstSpellVORequired | firstSpellVORequired.title |
+//  | 19_FirstSpellReady    | firstSpellReady      | firstSpell.ready.card  |
+//  | 20_FirstSpellSuccess  | firstSpellSuccess    | firstSpell.success.card |
 //
 //  ## Navigation Strategy
 //  Screenshot capture now uses deterministic app-level scene bootstrapping:
@@ -73,6 +77,20 @@ final class RA11y_iOSScreenshots: XCTestCase {
     func testScreenshots_FirstRun() {
         let app = XCUIApplication()
         captureScene("firstRun", fileName: "03_FirstRun", anchorIdentifier: "firstRun.title", in: app)
+    }
+
+    // MARK: - Pass 2B: First Spell (Magic Tap onboarding)
+
+    /// Captures First Spell entry, VoiceOver gate, ready, and success states.
+    ///
+    /// - Concurrency: `@MainActor` — XCUIApplication interactions require the main thread.
+    @MainActor
+    func testScreenshots_FirstSpell() {
+        let app = XCUIApplication()
+        captureScene("firstSpellEntry", fileName: "17_FirstSpellEntry", anchorIdentifier: "firstRun.title", in: app)
+        captureScene("firstSpellVORequired", fileName: "18_FirstSpellVORequired", anchorIdentifier: "firstSpellVORequired.title", in: app)
+        captureScene("firstSpellReady", fileName: "19_FirstSpellReady", anchorIdentifier: "firstSpell.ready.card", in: app)
+        captureScene("firstSpellSuccess", fileName: "20_FirstSpellSuccess", anchorIdentifier: "firstSpell.success.card", in: app)
     }
 
     // MARK: - Pass 3: Enchanter

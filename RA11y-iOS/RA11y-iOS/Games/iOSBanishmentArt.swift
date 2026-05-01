@@ -4,9 +4,9 @@ import Foundation
 
 /// Asset catalog string keys for **The Banishment** final art (PNG imagesets).
 ///
-/// PNGs are intended as **universal 1x** imagesets under `Assets.xcassets`, matching
-/// ``iOSDungeonResonanceArt``. Until files are imported, the quest continues to use
-/// SF Symbol greybox portraits.
+/// All 12 assets are imported as **universal 1x** imagesets under `Assets.xcassets`.
+/// SF Symbol and gradient fallbacks in ``iOSBanishmentQuestView`` remain as safety nets
+/// for missing assets but are not exercised by the current catalog.
 ///
 /// **Authoritative prompts and import order:** ``memlog/requirements/Design/Banishment-ImageGen-ExecutionPlan.txt``
 /// and ``DesignTicket-BanishmentPromptSheet.txt``. **Layer stack:** ``BanishmentAssetPipeline.txt``.
@@ -34,7 +34,9 @@ enum iOSBanishmentArt {
 
     /// Ward binding ring raster — **not shown in UI** until art direction re-enables it; pipeline may still ship the asset.
     static let wardRing = "banishment_ward_ring"
-    /// Prologue Z illustration (golden particle trail + nodes, mockup-aligned). PNG is **RGBA** with transparent exterior matte (see ``utility/transparent_edge_dark_matte.py``).
+    /// Prologue Z illustration used in ``QuestVoiceOverGestureSpellPlate`` as a gesture reference — **not a trap gameplay element**.
+    /// PNG is 1376×768 landscape RGBA; the trap-decoration heuristics intentionally exclude it from ``shouldUseRasterTrapDecorations()``.
+    /// Falls back to the code-drawn ``BanishmentZGestureShape`` if absent.
     static let gestureZReference = "banishment_gesture_z_reference"
 
     // MARK: Creature encounters (transparent RGBA)
