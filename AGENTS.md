@@ -68,6 +68,37 @@ risk before asking. Do not run it until the user confirms.
 - `xcodebuild -runFirstLaunch`
 - `xcodebuild -license accept`
 
+### Git Is Read-Only for Agents
+
+Agents MUST NEVER perform git writes in this repository. Human oversight is
+required for any modification to the git index, branches, history, remotes, or
+working tree through git.
+
+Allowed git usage is read-only inspection, such as:
+- `git status`
+- `git diff`
+- `git log`
+- `git show`
+- `git branch --show-current`
+- `git ls-files`
+
+Prohibited git usage includes, but is not limited to:
+- `git add`
+- `git commit`
+- `git checkout` / `git switch`
+- `git restore`
+- `git reset`
+- `git merge`
+- `git rebase`
+- `git stash`
+- `git rm`
+- `git mv`
+- `git pull`
+- `git push`
+- Any command that writes `.git/index`, changes branch state, changes history,
+  stages files, unstages files, rewrites files through git, or contacts a remote
+  to modify repository state.
+
 ### Debugging System Issues (Simulators, CoreSimulator, Xcode)
 
 When diagnosing system-level failures (simulator services down,
