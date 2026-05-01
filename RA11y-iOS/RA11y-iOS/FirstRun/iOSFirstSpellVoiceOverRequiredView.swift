@@ -278,6 +278,7 @@ struct iOSFirstSpellVoiceOverRequiredView: View {
 
     private func focusContinueButton() {
         Task { @MainActor in
+            // 250 ms is the standard VO settle delay for in-game/in-flow screen transitions.
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
             focusedTarget = .continueButton
