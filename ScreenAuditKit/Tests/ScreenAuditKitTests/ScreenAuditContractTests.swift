@@ -22,6 +22,10 @@ final class ScreenAuditContractTests: XCTestCase {
         XCTAssertEqual(screen.assets.fallbackArt.count, 1)
         XCTAssertEqual(screen.assets.fallbackArt.first?.name, "hero-image")
         XCTAssertEqual(screen.assets.fallbackArt.first?.confidence, 0.92)
+        XCTAssertEqual(contractSet.flows.count, 1)
+        XCTAssertEqual(contractSet.flows.first?.id, "onboarding")
+        XCTAssertEqual(contractSet.flows.first?.steps.first?.screenID, "hub")
+        XCTAssertEqual(contractSet.flows.first?.steps.first?.required, true)
 
         let device = try XCTUnwrap(screen.devices.first)
         XCTAssertEqual(device.label, "iPhone_large")

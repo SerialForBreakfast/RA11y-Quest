@@ -70,10 +70,16 @@ final class ScreenAuditCLITests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.outputDirectory.appendingPathComponent("evidence.json").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.outputDirectory.appendingPathComponent("findings.json").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.outputDirectory.appendingPathComponent("summary.md").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.outputDirectory.appendingPathComponent("flow.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.outputDirectory.appendingPathComponent("flow-summary.md").path))
 
         let findingsData = try Data(contentsOf: fixture.outputDirectory.appendingPathComponent("findings.json"))
         let findingsReport = try JSONDecoder().decode(ScreenAuditFindingsReport.self, from: findingsData)
         XCTAssertEqual(findingsReport.findings.count, 0)
+
+        let flowData = try Data(contentsOf: fixture.outputDirectory.appendingPathComponent("flow.json"))
+        let flowReport = try JSONDecoder().decode(ScreenAuditFlowReport.self, from: flowData)
+        XCTAssertTrue(flowReport.flows.isEmpty)
     }
 
     /// Verifies `validate` exits with validation failure when deterministic findings include errors.

@@ -43,5 +43,16 @@
         "mockupSimilarityLow": "warning"
       }
     }
+  ],
+  "flows": [
+    {
+      "id": "onboarding",
+      "title": "Onboarding",
+      "steps": [
+        {
+          "screenID": "hub"
+        }
+      ]
+    }
   ]
 }

@@ -28,6 +28,15 @@ public enum ScreenAuditRuleID: String, Codable, Equatable, Sendable {
 
     /// Project-supplied fallback art confidence is below the configured threshold.
     case lowConfidenceFallbackArt
+
+    /// A flow references a screen ID that is not declared in the screen contract set.
+    case flowUnknownStep
+
+    /// A required flow step does not have screenshot evidence in the current run.
+    case flowMissingRequiredStep
+
+    /// A flow references the same screen more than once, which may indicate a stuck or duplicated state.
+    case flowDuplicateStep
 }
 
 /// Reference to the source evidence that produced a finding.

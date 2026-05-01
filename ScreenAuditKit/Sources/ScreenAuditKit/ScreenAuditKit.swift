@@ -116,6 +116,8 @@ public struct ScreenAuditCLI {
             standardOutput("Evidence report: \(parsedArguments.outputDirectory.appendingPathComponent("evidence.json").path)")
             standardOutput("Findings report: \(parsedArguments.outputDirectory.appendingPathComponent("findings.json").path)")
             standardOutput("Markdown summary: \(parsedArguments.outputDirectory.appendingPathComponent("summary.md").path)")
+            standardOutput("Flow report: \(parsedArguments.outputDirectory.appendingPathComponent("flow.json").path)")
+            standardOutput("Flow summary: \(parsedArguments.outputDirectory.appendingPathComponent("flow-summary.md").path)")
 
             if result.findingsReport.hasHardFailures {
                 standardError("Screen audit completed with hard failures.")

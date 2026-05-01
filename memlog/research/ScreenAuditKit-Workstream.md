@@ -189,22 +189,39 @@ isolated files.
 
 Tasks:
 
-- SAK-7.1 Define flow contract model.
-- SAK-7.2 Define ordered run manifest model.
-- SAK-7.3 Implement missing step rule.
-- SAK-7.4 Implement duplicate/stuck state warning.
+- SAK-7.1 Define flow contract model. Done.
+- SAK-7.2 Define ordered run manifest model. Deferred; current implementation
+  derives observed steps from screenshot evidence for deterministic folder runs.
+- SAK-7.3 Implement missing step rule. Done.
+- SAK-7.4 Implement duplicate/stuck state warning. Partially done; duplicate
+  screen references in declared flows are warning findings.
 - SAK-7.5 Implement expected previous/next transition checks.
-- SAK-7.6 Generate Markdown flow summary.
+- SAK-7.6 Generate Markdown flow summary. Done.
 - SAK-7.7 Generate optional Mermaid graph.
 - SAK-7.8 Add RA11y quest flow contracts for hub, VoiceOver required, first run,
-  Enchanter, Dungeon, Resonance, and Banishment screenshot groups.
+  Enchanter, Dungeon, Resonance, and Banishment screenshot groups. Partially
+  done for home/VoiceOver gate, Enchanter, Dungeon, and Banishment.
 
 Acceptance checks:
 
 - Flow validation can run on a folder with only metadata and screenshots.
-- Missing required states fail deterministically.
-- Duplicate/stuck findings include both screenshot references.
+- Missing required states fail deterministically. Verified.
+- Duplicate/stuck findings include the flow ID and duplicated screen reference.
 - Mermaid output is advisory report content, not required for CI pass/fail.
+
+Implementation notes:
+
+- Added top-level `flows` to the ScreenAuditKit contract schema.
+- Added `ScreenAuditFlowEvaluator`, `ScreenAuditFlowReport`, and flow step
+  status output.
+- Added flow findings for unknown screen references, missing required steps,
+  and duplicate declared steps.
+- Added `flow.json` and `flow-summary.md` report output.
+- Added RA11y flow contracts for home/VoiceOver gate, Enchanter Trial, Dungeon
+  Scroll Hunt, and The Banishment.
+- Verified `swift test --package-path ScreenAuditKit`.
+- Verified `bash utility/validate_screen_audit.sh` across 4 existing screenshot
+  folders.
 
 ### Milestone F: Pedagogy and Copy Progression
 

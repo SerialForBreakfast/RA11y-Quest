@@ -262,5 +262,46 @@
       },
       "severityOverrides": {}
     }
+  ],
+  "flows": [
+    {
+      "id": "homeAndVoiceOverGate",
+      "title": "Home and VoiceOver Gate",
+      "steps": [
+        { "screenID": "hub", "note": "Home surface and quest entry point." },
+        { "screenID": "voRequired", "note": "VoiceOver-off gate for blocked quest entry." },
+        { "screenID": "firstRun", "note": "First-run basics entry surface." }
+      ]
+    },
+    {
+      "id": "enchanterTrial",
+      "title": "Enchanter Trial",
+      "steps": [
+        { "screenID": "enchanterPrologue" },
+        { "screenID": "enchanterAttempt" },
+        { "screenID": "enchanterRising" },
+        { "screenID": "enchanterTimed" },
+        { "screenID": "enchanterResult" }
+      ]
+    },
+    {
+      "id": "dungeonScrollHunt",
+      "title": "Dungeon Scroll Hunt",
+      "steps": [
+        { "screenID": "dungeonPrologue" },
+        { "screenID": "dungeonFirstAttempt" },
+        { "screenID": "dungeonResult" }
+      ]
+    },
+    {
+      "id": "banishment",
+      "title": "The Banishment",
+      "steps": [
+        { "screenID": "banishmentPrologue" },
+        { "screenID": "banishmentWardTrap" },
+        { "screenID": "banishmentTower" },
+        { "screenID": "banishmentResult" }
+      ]
+    }
   ]
 }

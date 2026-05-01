@@ -36,18 +36,23 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
     /// Screen-level contracts that define expected screenshot state.
     public let screens: [ScreenAuditScreenContract]
 
+    /// Optional ordered flows that group screens into reviewable journeys.
+    public let flows: [ScreenAuditFlowContract]
+
     /// Creates a contract set after validating schema and required fields.
     /// - Parameters:
     ///   - schemaVersion: Schema version declared by the contract file.
     ///   - projectName: Human-readable project or contract collection name.
     ///   - assetProvenancePath: Optional asset provenance file path relative to this contract file.
     ///   - screens: Screen-level contracts.
+    ///   - flows: Optional ordered flows that group screens into reviewable journeys.
     /// - Throws: `ScreenAuditContractError` when required contract metadata is invalid.
     public init(
         schemaVersion: Int,
         projectName: String,
         assetProvenancePath: String? = nil,
-        screens: [ScreenAuditScreenContract]
+        screens: [ScreenAuditScreenContract],
+        flows: [ScreenAuditFlowContract] = []
     ) throws {
         try Self.validateSchemaVersion(schemaVersion)
         try Self.validateRequired(projectName, name: "projectName")
@@ -56,6 +61,27 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
         self.projectName = projectName
         self.assetProvenancePath = assetProvenancePath
         self.screens = screens
+        self.flows = flows
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case projectName
+        case assetProvenancePath
+        case screens
+        case flows
+    }
+
+    /// Decodes a contract set, defaulting optional flow data for older contracts.
+    /// - Parameter decoder: Source decoder.
+    /// - Throws: Decoding errors.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        projectName = try container.decode(String.self, forKey: .projectName)
+        assetProvenancePath = try container.decodeIfPresent(String.self, forKey: .assetProvenancePath)
+        screens = try container.decodeIfPresent([ScreenAuditScreenContract].self, forKey: .screens) ?? []
+        flows = try container.decodeIfPresent([ScreenAuditFlowContract].self, forKey: .flows) ?? []
     }
 
     /// Decodes and validates a contract set from JSON data.
@@ -74,6 +100,9 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
 
         for screen in decoded.screens {
             try screen.validate()
+        }
+        for flow in decoded.flows {
+            try flow.validate()
         }
 
         return decoded
@@ -100,6 +129,92 @@ public struct ScreenAuditContractSet: Codable, Equatable, Sendable {
         guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw ScreenAuditContractError.emptyRequiredField(name: name)
         }
+    }
+}
+
+/// Ordered group of screenshots that should read as a coherent user journey.
+public struct ScreenAuditFlowContract: Codable, Equatable, Sendable {
+    /// Stable flow identifier used in reports and findings.
+    public let id: String
+
+    /// Human-readable flow title.
+    public let title: String
+
+    /// Ordered steps that make up the flow.
+    public let steps: [ScreenAuditFlowStep]
+
+    /// Creates a flow contract.
+    /// - Parameters:
+    ///   - id: Stable flow identifier used in reports and findings.
+    ///   - title: Human-readable flow title.
+    ///   - steps: Ordered steps that make up the flow.
+    public init(
+        id: String,
+        title: String,
+        steps: [ScreenAuditFlowStep]
+    ) {
+        self.id = id
+        self.title = title
+        self.steps = steps
+    }
+
+    /// Validates required flow metadata after decoding.
+    /// - Throws: `ScreenAuditContractError` when required values are empty.
+    public func validate() throws {
+        try ScreenAuditContractSet.validateRequired(id, name: "flows[].id")
+        try ScreenAuditContractSet.validateRequired(title, name: "flows[].title")
+        for step in steps {
+            try step.validate()
+        }
+    }
+}
+
+/// One ordered screen reference inside a flow contract.
+public struct ScreenAuditFlowStep: Codable, Equatable, Sendable {
+    /// Screen contract ID expected at this point in the flow.
+    public let screenID: String
+
+    /// Whether missing evidence for this step should be a hard failure.
+    public let required: Bool
+
+    /// Optional project-specific note for reviewers.
+    public let note: String?
+
+    /// Creates a flow step.
+    /// - Parameters:
+    ///   - screenID: Screen contract ID expected at this point in the flow.
+    ///   - required: Whether missing evidence for this step should be a hard failure.
+    ///   - note: Optional project-specific note for reviewers.
+    public init(
+        screenID: String,
+        required: Bool = true,
+        note: String? = nil
+    ) {
+        self.screenID = screenID
+        self.required = required
+        self.note = note
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case screenID
+        case required
+        case note
+    }
+
+    /// Decodes a flow step, defaulting `required` to true for concise contracts.
+    /// - Parameter decoder: Source decoder.
+    /// - Throws: Decoding errors.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        screenID = try container.decode(String.self, forKey: .screenID)
+        required = try container.decodeIfPresent(Bool.self, forKey: .required) ?? true
+        note = try container.decodeIfPresent(String.self, forKey: .note)
+    }
+
+    /// Validates required flow step metadata after decoding.
+    /// - Throws: `ScreenAuditContractError` when required values are empty.
+    public func validate() throws {
+        try ScreenAuditContractSet.validateRequired(screenID, name: "flows[].steps[].screenID")
     }
 }
 

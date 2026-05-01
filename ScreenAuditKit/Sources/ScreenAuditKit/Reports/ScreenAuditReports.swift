@@ -81,10 +81,12 @@ public struct ScreenAuditReportWriter {
     /// - Parameters:
     ///   - evidenceReport: Evidence report.
     ///   - findingsReport: Findings report.
+    ///   - flowReport: Optional flow report.
     ///   - outputDirectory: Directory where reports should be written.
     public func writeReports(
         evidenceReport: ScreenAuditEvidenceReport,
         findingsReport: ScreenAuditFindingsReport,
+        flowReport: ScreenAuditFlowReport? = nil,
         outputDirectory: URL
     ) throws {
         try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
@@ -102,6 +104,18 @@ public struct ScreenAuditReportWriter {
             atomically: true,
             encoding: .utf8
         )
+
+        if let flowReport {
+            try encoder.encode(flowReport).write(
+                to: outputDirectory.appendingPathComponent("flow.json"),
+                options: .atomic
+            )
+            try markdownFlowSummary(for: flowReport).write(
+                to: outputDirectory.appendingPathComponent("flow-summary.md"),
+                atomically: true,
+                encoding: .utf8
+            )
+        }
     }
 
     /// Builds a Markdown summary for humans reviewing validation output.
@@ -130,6 +144,45 @@ public struct ScreenAuditReportWriter {
         }
 
         lines.append("")
+        return lines.joined(separator: "\n")
+    }
+
+    /// Builds a Markdown summary for humans reviewing ordered screenshot flows.
+    /// - Parameter flowReport: Flow report to summarize.
+    /// - Returns: Markdown flow summary text.
+    public func markdownFlowSummary(for flowReport: ScreenAuditFlowReport) -> String {
+        var lines: [String] = [
+            "# Screen Audit Flow Summary",
+            "",
+            "- Project: \(flowReport.projectName)",
+            "- Flows: \(flowReport.flows.count)",
+            "",
+        ]
+
+        if flowReport.flows.isEmpty {
+            lines.append("No flows declared.")
+            lines.append("")
+            return lines.joined(separator: "\n")
+        }
+
+        for flow in flowReport.flows {
+            lines.append("## \(flow.title)")
+            lines.append("")
+            lines.append("- Flow ID: \(flow.id)")
+            lines.append("- Steps: \(flow.steps.count)")
+            lines.append("")
+            lines.append("| Step | Screen | Required | Status | Note |")
+            lines.append("|---:|---|---|---|---|")
+
+            for step in flow.steps {
+                lines.append(
+                    "| \(step.index + 1) | \(step.screenID) | \(step.required ? "yes" : "no") | \(step.status.rawValue) | \(step.note ?? "") |"
+                )
+            }
+
+            lines.append("")
+        }
+
         return lines.joined(separator: "\n")
     }
 }

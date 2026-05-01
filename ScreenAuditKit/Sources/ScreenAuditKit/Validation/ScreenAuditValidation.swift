@@ -32,6 +32,9 @@ public struct ScreenAuditValidationResult: Equatable, Sendable {
     /// Findings report produced by validation.
     public let findingsReport: ScreenAuditFindingsReport
 
+    /// Flow report produced by validation.
+    public let flowReport: ScreenAuditFlowReport
+
     /// Overlay PNG paths produced by validation.
     public let overlayPaths: [String]
 
@@ -39,14 +42,17 @@ public struct ScreenAuditValidationResult: Equatable, Sendable {
     /// - Parameters:
     ///   - evidenceReport: Evidence report produced by validation.
     ///   - findingsReport: Findings report produced by validation.
+    ///   - flowReport: Flow report produced by validation.
     ///   - overlayPaths: Overlay PNG paths produced by validation.
     public init(
         evidenceReport: ScreenAuditEvidenceReport,
         findingsReport: ScreenAuditFindingsReport,
+        flowReport: ScreenAuditFlowReport,
         overlayPaths: [String] = []
     ) {
         self.evidenceReport = evidenceReport
         self.findingsReport = findingsReport
+        self.flowReport = flowReport
         self.overlayPaths = overlayPaths
     }
 }
@@ -60,6 +66,7 @@ public struct ScreenAuditValidator {
     private let overlayRenderer: ScreenAuditOverlayRenderer
     private let renderedMatteInspector: ScreenAuditRenderedMatteInspector
     private let checkerboardInspector: ScreenAuditCheckerboardInspector
+    private let flowEvaluator: ScreenAuditFlowEvaluator
 
     /// Creates a filesystem validator.
     /// - Parameters:
@@ -70,6 +77,7 @@ public struct ScreenAuditValidator {
     ///   - overlayRenderer: Renders failed-region review overlays.
     ///   - renderedMatteInspector: Inspects critical regions for matte-like artifacts.
     ///   - checkerboardInspector: Inspects critical regions for checkerboard-like artifacts.
+    ///   - flowEvaluator: Evaluates ordered screenshot flows.
     public init(
         imageExtractor: ScreenAuditImageEvidenceExtractor = ScreenAuditImageEvidenceExtractor(),
         ruleEvaluator: ScreenAuditRuleEvaluator = ScreenAuditRuleEvaluator(),
@@ -77,7 +85,8 @@ public struct ScreenAuditValidator {
         baselineComparator: ScreenAuditBaselineComparator = ScreenAuditBaselineComparator(),
         overlayRenderer: ScreenAuditOverlayRenderer = ScreenAuditOverlayRenderer(),
         renderedMatteInspector: ScreenAuditRenderedMatteInspector = ScreenAuditRenderedMatteInspector(),
-        checkerboardInspector: ScreenAuditCheckerboardInspector = ScreenAuditCheckerboardInspector()
+        checkerboardInspector: ScreenAuditCheckerboardInspector = ScreenAuditCheckerboardInspector(),
+        flowEvaluator: ScreenAuditFlowEvaluator = ScreenAuditFlowEvaluator()
     ) {
         self.imageExtractor = imageExtractor
         self.ruleEvaluator = ruleEvaluator
@@ -86,6 +95,7 @@ public struct ScreenAuditValidator {
         self.overlayRenderer = overlayRenderer
         self.renderedMatteInspector = renderedMatteInspector
         self.checkerboardInspector = checkerboardInspector
+        self.flowEvaluator = flowEvaluator
     }
 
     /// Validates screenshots against a contract file and writes reports.
@@ -173,6 +183,11 @@ public struct ScreenAuditValidator {
             projectName: contractSet.projectName,
             screenshots: evidenceItems
         )
+        let flowEvaluation = flowEvaluator.evaluate(
+            contractSet: contractSet,
+            evidenceItems: evidenceItems
+        )
+        findings.append(contentsOf: flowEvaluation.findings)
         let findingsReport = ScreenAuditFindingsReport(
             projectName: contractSet.projectName,
             findings: findings
@@ -182,6 +197,7 @@ public struct ScreenAuditValidator {
             try reportWriter.writeReports(
                 evidenceReport: evidenceReport,
                 findingsReport: findingsReport,
+                flowReport: flowEvaluation.report,
                 outputDirectory: outputDirectory
             )
         } catch {
@@ -201,6 +217,7 @@ public struct ScreenAuditValidator {
         return ScreenAuditValidationResult(
             evidenceReport: evidenceReport,
             findingsReport: findingsReport,
+            flowReport: flowEvaluation.report,
             overlayPaths: overlayPaths
         )
     }

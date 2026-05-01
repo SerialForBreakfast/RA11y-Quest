@@ -149,6 +149,7 @@ Current structure (as of 2026-04-26)
 |   |   |   |   |-- ScreenAuditOverlayRenderer.swift
 |   |   |   |   `-- ScreenAuditReports.swift
 |   |   |   |-- Validation
+|   |   |   |   |-- ScreenAuditFlowValidation.swift
 |   |   |   |   `-- ScreenAuditValidation.swift
 |   |   |   |-- Visual
 |   |   |   |   |-- ScreenAuditBaselineComparator.swift
@@ -170,6 +171,7 @@ Current structure (as of 2026-04-26)
 |   |       |-- ScreenAuditCheckerboardTests.swift
 |   |       |-- ScreenAuditContractTests.swift
 |   |       |-- ScreenAuditEvidenceTests.swift
+|   |       |-- ScreenAuditFlowTests.swift
 |   |       |-- ScreenAuditKitTests.swift
 |   |       |-- ScreenAuditRenderedMatteTests.swift
 |   |       |-- ScreenAuditRuleTests.swift

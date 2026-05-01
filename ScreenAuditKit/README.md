@@ -13,7 +13,7 @@ Products:
 Current status: local package with versioned contract decoding, PNG metadata
 evidence extraction, injectable OCR boundary, deterministic text/dimension
 rules, baseline comparison, visual heuristic inspectors, overlay report
-generation, and asset provenance warnings.
+generation, asset provenance warnings, and ordered flow validation.
 
 The package deliberately stays app-agnostic. RA11y supplies screenshot contracts,
 critical regions, and asset provenance data from its iOS UI test bundle.
@@ -40,6 +40,8 @@ Reports are written under `build_results/screen-audit/` by device folder:
 - `evidence.json`: collected screenshot facts
 - `findings.json`: machine-readable findings
 - `summary.md`: reviewer summary
+- `flow.json`: ordered flow validation facts
+- `flow-summary.md`: reviewer summary for screenshot journeys
 - `overlays/*.png`: annotated screenshots for findings
 - `overlays/*.md` and `overlays/*.json`: explanation sidecars for each overlay
 
