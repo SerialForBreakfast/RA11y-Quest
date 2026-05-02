@@ -130,4 +130,13 @@ public extension RankThresholds {
         goodMaxTime:        28, goodMaxMistakes:    1,
         okMaxTime:          55, okMaxMistakes:      4
     )
+
+    /// Thresholds for The Threefold Seal (`arcanists-tower`) — Practice is unscored; these
+    /// apply when a timed Trial session ships (see `GameSpec-ArcanistsTower.txt` — **The Threefold Seal** spec; filename keeps legacy catalog id).
+    static let arcanistsTower = RankThresholds(
+        timeoutSeconds:     60,
+        perfectMaxTime:     25, perfectMaxMistakes: 0,
+        goodMaxTime:        45, goodMaxMistakes:    1,
+        okMaxTime:          60, okMaxMistakes:      3
+    )
 }

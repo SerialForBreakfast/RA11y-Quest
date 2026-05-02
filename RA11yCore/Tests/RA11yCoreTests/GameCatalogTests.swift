@@ -48,12 +48,21 @@ struct GameCatalogTests {
         #expect(kinds.contains(.findAndFocus))
         #expect(kinds.contains(.scrollHunt))
         #expect(kinds.contains(.banishment))
+        #expect(kinds.contains(.arcanistsTower))
     }
 
     @Test func banishmentDefinitionLookup() {
         let def = GameCatalog.definition(for: "the-banishment")
         #expect(def?.kind == .banishment)
         #expect(def?.prerequisiteID == "scroll-hunt")
+    }
+
+    @Test func arcanistsTowerDefinitionLookup() {
+        let def = GameCatalog.definition(for: "arcanists-tower")
+        #expect(def?.kind == .arcanistsTower)
+        #expect(def?.prerequisiteID == "the-banishment")
+        #expect(def?.titleKey == "game.arcanistsTower.title")
+        #expect(def?.goalKey == "game.arcanistsTower.goal")
     }
 
     // MARK: - Per-Game Data Contract

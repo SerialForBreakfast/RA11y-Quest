@@ -1,7 +1,7 @@
 import Foundation
 
 /// Rule identifiers emitted by deterministic validation.
-public enum ScreenAuditRuleID: String, Codable, Equatable, Sendable {
+public enum ScreenAuditRuleID: String, Codable, Equatable, Hashable, Sendable {
     /// A screenshot file declared by a contract was not found.
     case missingScreenshot
 

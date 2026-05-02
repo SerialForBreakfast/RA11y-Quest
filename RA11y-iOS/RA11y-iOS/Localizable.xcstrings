@@ -766,6 +766,26 @@
         }
       }
     },
+    "basicsSequence.skill.arcanistsTower.intro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will practice the VoiceOver rotor so flicks jump chapter titles, whole storage niches, and margin links before you double-tap the clue target."
+          }
+        }
+      }
+    },
+    "basicsSequence.skill.arcanistsTower.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotor: titles, niches, links"
+          }
+        }
+      }
+    },
     "basicsSequence.skill.banishment.intro" : {
       "localizations" : {
         "en" : {
@@ -2135,6 +2155,26 @@
         }
       }
     },
+    "game.arcanistsTower.goal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Threefold Seal: use the VoiceOver rotor so flicks jump titles, storage regions, and links—then open what the clue names."
+          }
+        }
+      }
+    },
+    "game.arcanistsTower.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Threefold Seal"
+          }
+        }
+      }
+    },
     "game.findAndFocus.goal" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2438,6 +2478,396 @@
         }
       }
     },
+    "rotorThreeSeal.announce.beatContainers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second seal: choose the storage niche the clue describes. Use the Containers rotor, then double-tap Open."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.announce.beatHeadings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First seal: find the chapter title the riddle names. Use the Headings rotor, then double-tap that title."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.announce.beatLinks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Third seal: trace the bound mark that matches the oath. Use the Links rotor, then double-tap it."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.beat.containers.objective" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the niche that held the quiet oath—listen for the name carved on the stone lip."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.beat.containers.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage row"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.beat.headings.objective" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the chapter titled “Oath of the Quiet Dawn.”"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.beat.headings.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title hall"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.beat.links.objective" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace the bound mark named “Seal of Binding.”"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.beat.links.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Margin marks"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.heading.ash" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter of Ash"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.heading.cinders" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter of Cinders"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.heading.dawn" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oath of the Quiet Dawn"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.heading.ember" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter of Ember"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.link.binding" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seal of Binding"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.link.bonding" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seal of Bonding"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.link.ember" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ember mark"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.links.prose" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scribe’s margin is crowded with marks. Only the bound marks respond like links."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.niche.bond" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage niche: Bond charter"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.niche.iron" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage niche: Iron compact"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.niche.open" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.niche.quiet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage niche: Quiet oath chamber"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.practice.hint.containers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice: set the rotor to Containers so flicks jump whole niches before you open one."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.practice.hint.headings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice: set the rotor to Headings so flicks jump chapter titles, not every line."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.practice.hint.links" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice: set the rotor to Links so flicks jump the bound marks in the margin."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.a11y.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First of three seals. Title hall."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.a11y.prologue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prologue. Three seals await."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.a11y.three" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Third of three seals. Margin marks."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.a11y.two" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second of three seals. Storage row."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.visible.one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seal 1 of 3 — Title hall"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.visible.prologue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Three seals to set"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.visible.three" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seal 3 of 3 — Margin marks"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.progress.visible.two" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seal 2 of 3 — Storage row"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.prologue.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The archive holds three inner seals. Each seal opens when you move through it the way VoiceOver expects—first by titles, then by whole storage niches, then by bound marks at the margin."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.prologue.continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin the seals"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.prologue.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Threefold Seal"
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.result.flavor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The three seals settle. The archive falls quiet—complete."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.wrong.container" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That niche was empty—try another."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.wrong.heading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That is not the chapter the riddle named."
+          }
+        }
+      }
+    },
+    "rotorThreeSeal.wrong.link" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That mark was not the one the clue named."
+          }
+        }
+      }
+    },
     "result.returnToHub" : {
       "localizations" : {
         "en" : {
@@ -2464,6 +2894,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Use the same scrub to dismiss alerts, sheets, or stuck focus in apps."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.arcanistsTower.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In The Threefold Seal you used Headings, Containers, and Links in the rotor so VoiceOver jumps the right kind of element before you double-tap."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.arcanistsTower.realWorld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the same idea in long articles, settings screens, and mail—pick the rotor setting that matches what you are hunting for."
           }
         }
       }
@@ -3234,6 +3684,17 @@
         }
       }
     },
+    "voSpell.kicker.rotor" : {
+      "comment" : "Uppercase kicker for the Threefold Seal VoiceOver gate spell plate.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threefold Seal"
+          }
+        }
+      }
+    },
     "voSpell.kicker.scrolling" : {
       "comment" : "Uppercase kicker for three-finger scroll spell cards. Matches canonical zone name 'Glyph stream'.",
       "localizations" : {
@@ -3294,6 +3755,59 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Swipe to move focus"
+          }
+        }
+      }
+    },
+    "voSpell.rotorNav.a11y" : {
+      "comment" : "Accessibility label for the Threefold Seal VoiceOver gate spell plate.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotor navigation: set the rotor to Headings, Containers, or Links so flicks jump the right kind of element before you double-tap."
+          }
+        }
+      }
+    },
+    "voSpell.rotorNav.body" : {
+      "comment" : "Body copy on the Threefold Seal VoiceOver gate spell plate.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn VoiceOver on, then use the rotor to choose Headings, Containers, or Links. Flicks move between those elements; double-tap activates the focused one."
+          }
+        }
+      }
+    },
+    "voSpell.rotorNav.reminder" : {
+      "comment" : "Short reminder on the result screen for The Threefold Seal.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You practiced rotor settings so flicks jump titles, storage niches, and links."
+          }
+        }
+      }
+    },
+    "voSpell.rotorNav.reminder.a11y" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminder: rotor Headings, Containers, and Links."
+          }
+        }
+      }
+    },
+    "voSpell.rotorNav.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotor changes what flicks jump to"
           }
         }
       }

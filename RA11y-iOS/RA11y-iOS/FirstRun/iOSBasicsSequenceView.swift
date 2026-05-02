@@ -208,6 +208,8 @@ struct iOSBasicsSequenceView: View {
             return String(localized: "basicsSequence.skill.scrollHunt.title")
         case .banishment:
             return String(localized: "basicsSequence.skill.banishment.title")
+        case .arcanistsTower:
+            return String(localized: "basicsSequence.skill.arcanistsTower.title")
         }
     }
 
@@ -219,6 +221,8 @@ struct iOSBasicsSequenceView: View {
             return String(localized: "basicsSequence.skill.scrollHunt.intro")
         case .banishment:
             return String(localized: "basicsSequence.skill.banishment.intro")
+        case .arcanistsTower:
+            return String(localized: "basicsSequence.skill.arcanistsTower.intro")
         }
     }
 

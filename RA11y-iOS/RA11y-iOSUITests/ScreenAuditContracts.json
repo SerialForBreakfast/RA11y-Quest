@@ -43,6 +43,98 @@
       "severityOverrides": {}
     },
     {
+      "id": "firstSpellEntry",
+      "filename": "17_FirstSpellEntry.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {
+        "missingScreenshot": "warning"
+      }
+    },
+    {
+      "id": "firstSpellVORequired",
+      "filename": "18_FirstSpellVORequired.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "introduce",
+      "severityOverrides": {
+        "missingScreenshot": "warning"
+      }
+    },
+    {
+      "id": "firstSpellReady",
+      "filename": "19_FirstSpellReady.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "tutorial",
+      "pedagogyRole": "practice",
+      "regions": {
+        "critical": [
+          { "name": "first-spell-sigil-checkerboard-review", "x": 390, "y": 430, "width": 430, "height": 260, "coordinateSpace": { "width": 1206, "height": 2622 } }
+        ]
+      },
+      "assets": {
+        "fallbackArt": [
+          {
+            "name": "magictap-spellbook-sigil",
+            "confidence": 0.40,
+            "minimumConfidence": 0.85,
+            "note": "The spellbook sigil asset is tracked because the current PNG appears to include a baked checkerboard transparency background.",
+            "provenanceID": "magictap-spellbook-sigil"
+          }
+        ]
+      },
+      "severityOverrides": {
+        "missingScreenshot": "warning"
+      }
+    },
+    {
+      "id": "firstSpellSuccess",
+      "filename": "20_FirstSpellSuccess.png",
+      "devices": [
+        { "label": "iPhone_large", "family": "iPhone", "pixelWidth": 1206, "pixelHeight": 2622, "orientation": "portrait" },
+        { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
+        { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "role": "result",
+      "pedagogyRole": "conclude",
+      "regions": {
+        "critical": [
+          { "name": "first-spell-sigil-checkerboard-review", "x": 390, "y": 430, "width": 430, "height": 260, "coordinateSpace": { "width": 1206, "height": 2622 } }
+        ]
+      },
+      "assets": {
+        "fallbackArt": [
+          {
+            "name": "magictap-spellbook-sigil",
+            "confidence": 0.40,
+            "minimumConfidence": 0.85,
+            "note": "The spellbook sigil asset is tracked because the current PNG appears to include a baked checkerboard transparency background.",
+            "provenanceID": "magictap-spellbook-sigil"
+          }
+        ]
+      },
+      "severityOverrides": {
+        "missingScreenshot": "warning"
+      }
+    },
+    {
       "id": "enchanterPrologue",
       "filename": "04_EnchanterPrologue.png",
       "devices": [
@@ -271,6 +363,16 @@
         { "screenID": "hub", "note": "Home surface and quest entry point." },
         { "screenID": "voRequired", "note": "VoiceOver-off gate for blocked quest entry." },
         { "screenID": "firstRun", "note": "First-run basics entry surface." }
+      ]
+    },
+    {
+      "id": "firstSpellMagicTap",
+      "title": "First Spell Magic Tap",
+      "steps": [
+        { "screenID": "firstSpellEntry", "required": false, "note": "First-spell entry surface before the VoiceOver gate." },
+        { "screenID": "firstSpellVORequired", "required": false, "note": "VoiceOver-required branch for first-spell onboarding." },
+        { "screenID": "firstSpellReady", "required": false, "note": "Ready state with the spellbook sigil asset under review." },
+        { "screenID": "firstSpellSuccess", "required": false, "note": "Post-Magic Tap success state." }
       ]
     },
     {

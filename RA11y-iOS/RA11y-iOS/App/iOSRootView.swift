@@ -93,6 +93,8 @@ struct iOSRootView: View {
             iOSDungeonDescentView(storage: storage)
         case .theBanishment:
             iOSBanishmentQuestView(storage: storage)
+        case .arcanistsTower:
+            iOSRotorNavigationQuestView(storage: storage)
         case .dungeonResonancePrototype:
             iOSDungeonResonanceMockupView()
         case .gameResult(let result, let gameKind, let gameSpecificAnnouncement):
@@ -124,6 +126,7 @@ struct iOSRootView: View {
         case "find-and-focus": return .findAndFocus
         case "scroll-hunt": return .scrollHunt
         case "the-banishment": return .banishment
+        case "arcanists-tower": return .arcanistsTower
         default: return nil
         }
     }

@@ -134,12 +134,24 @@ public struct ScreenAuditReportWriter {
         if findingsReport.findings.isEmpty {
             lines.append("No findings.")
         } else {
-            lines.append("| Severity | Rule | Screen | Evidence | Message |")
-            lines.append("|---|---|---|---|---|")
+            lines.append("## Review Queue")
+            lines.append("")
+            lines.append("| Severity | Rule | Screen | What failed | Why it matters | Suggested next step | Evidence |")
+            lines.append("|---|---|---|---|---|---|---|")
             for finding in findingsReport.findings {
                 lines.append(
-                    "| \(finding.severity.rawValue) | \(finding.ruleID.rawValue) | \(finding.evidence.screenID) | \(finding.evidence.excerpt) | \(finding.message) |"
+                    "| \(finding.severity.rawValue) | \(finding.ruleID.rawValue) | \(finding.evidence.screenID) | \(markdownCell(finding.message)) | \(markdownCell(reviewImpact(for: finding.ruleID))) | \(markdownCell(recommendedAction(for: finding.ruleID))) | \(markdownCell(finding.evidence.excerpt)) |"
                 )
+            }
+
+            lines.append("")
+            lines.append("## Rule Guide")
+            lines.append("")
+            lines.append("| Rule | What ScreenAuditKit examined | Typical fix |")
+            lines.append("|---|---|---|")
+
+            for ruleID in orderedRuleIDs(in: findingsReport.findings) {
+                lines.append("| \(ruleID.rawValue) | \(markdownCell(reviewImpact(for: ruleID))) | \(markdownCell(recommendedAction(for: ruleID))) |")
             }
         }
 
@@ -184,5 +196,81 @@ public struct ScreenAuditReportWriter {
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    private func orderedRuleIDs(in findings: [ScreenAuditFinding]) -> [ScreenAuditRuleID] {
+        var seen: Set<ScreenAuditRuleID> = []
+        var ruleIDs: [ScreenAuditRuleID] = []
+
+        for finding in findings where !seen.contains(finding.ruleID) {
+            seen.insert(finding.ruleID)
+            ruleIDs.append(finding.ruleID)
+        }
+
+        return ruleIDs
+    }
+
+    private func reviewImpact(for ruleID: ScreenAuditRuleID) -> String {
+        switch ruleID {
+        case .missingScreenshot:
+            return "A required screen did not produce a PNG, so docs, App Store assets, or flow validation may be stale."
+        case .requiredTextMissing:
+            return "Expected instructional or identifying copy was not detected in the screenshot evidence."
+        case .forbiddenTextPresent:
+            return "Debug, placeholder, or otherwise forbidden copy appears in the captured UI."
+        case .dimensionMismatch:
+            return "The PNG dimensions do not match any declared device expectation, which can invalidate visual comparisons."
+        case .baselineDifferenceExceeded:
+            return "The screenshot changed more than the allowed baseline threshold outside ignored regions."
+        case .suspiciousOpaqueBorder:
+            return "A transparent asset may have exported with an opaque rectangular matte around it."
+        case .renderedMatteRisk:
+            return "A critical visual region appears too flat or matte-like for authored art."
+        case .checkerboardPatternRisk:
+            return "A critical visual region resembles a checkerboard transparency artifact."
+        case .lowConfidenceFallbackArt:
+            return "A declared fallback or bootstrap asset is below the required confidence for shippable art."
+        case .flowUnknownStep:
+            return "A declared flow references a screen ID that is not present in the screen contract set."
+        case .flowMissingRequiredStep:
+            return "A required flow step has no screenshot evidence in this audit run."
+        case .flowDuplicateStep:
+            return "A flow repeats a screen ID, which may indicate a stuck state or duplicated documentation beat."
+        }
+    }
+
+    private func recommendedAction(for ruleID: ScreenAuditRuleID) -> String {
+        switch ruleID {
+        case .missingScreenshot:
+            return "Regenerate screenshots or update the contract only if the screen is intentionally removed."
+        case .requiredTextMissing:
+            return "Open the referenced PNG and confirm whether the copy is absent, clipped, localized differently, or missing from OCR."
+        case .forbiddenTextPresent:
+            return "Remove the forbidden copy from the UI or narrow the contract if it is intentionally visible."
+        case .dimensionMismatch:
+            return "Verify the screenshot folder came from the expected simulator family and update device expectations only for intentional changes."
+        case .baselineDifferenceExceeded:
+            return "Compare the overlay and baseline; accept a new baseline only after confirming the visual change is intentional."
+        case .suspiciousOpaqueBorder:
+            return "Inspect the source PNG alpha/export settings and re-ingest the asset if the matte is real."
+        case .renderedMatteRisk:
+            return "Inspect the highlighted critical region for missing art, flat placeholder rendering, or an incorrectly cropped asset."
+        case .checkerboardPatternRisk:
+            return "Inspect the highlighted critical region for checkerboard transparency showing through the final UI."
+        case .lowConfidenceFallbackArt:
+            return "Replace the fallback asset with approved authored art or raise confidence only with documented review."
+        case .flowUnknownStep:
+            return "Fix the flow screen ID or add the missing screen contract if the step is real."
+        case .flowMissingRequiredStep:
+            return "Regenerate the screenshot set or mark the step optional only if the flow no longer requires it."
+        case .flowDuplicateStep:
+            return "Confirm the repeated step is intentional; otherwise remove the duplicate from the flow contract."
+        }
+    }
+
+    private func markdownCell(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "|", with: "\\|")
     }
 }

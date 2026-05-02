@@ -19,6 +19,8 @@ enum AppRoute: Hashable {
     case dungeonDescent
     /// Game 3 — The Banishment (`GameKind.banishment`). Escape-gesture training.
     case theBanishment
+    /// Game 4 — The Threefold Seal (`GameKind.arcanistsTower`). VoiceOver rotor navigation (Headings, Containers, Links).
+    case arcanistsTower
     /// Crystal Resonance v2 prototype route for iterative design and feedback integration.
     case dungeonResonancePrototype
     /// The shared result screen shown after any game completes.
@@ -140,6 +142,8 @@ final class iOSAppRouter {
             push(.dungeonDescent)
         case .banishment:
             push(.theBanishment)
+        case .arcanistsTower:
+            push(.arcanistsTower)
         }
     }
 

@@ -174,6 +174,18 @@ struct ScoringModelTests {
         #expect(rank == .failed)
     }
 
+    // MARK: - RankThresholds — The Threefold Seal (`arcanists-tower`)
+
+    @Test func arcanistsTowerLegendaryWithinThreshold() {
+        let rank = RankThresholds.arcanistsTower.evaluate(timeSeconds: 25, mistakes: 0)
+        #expect(rank == .perfect)
+    }
+
+    @Test func arcanistsTowerFailedOnTimeout() {
+        let rank = RankThresholds.arcanistsTower.evaluate(timeSeconds: 60.001, mistakes: 0)
+        #expect(rank == .failed)
+    }
+
     // MARK: - RankThresholds.bucketMistakes
     //
     // Spec (GameSpec-FindAndFocus.txt):

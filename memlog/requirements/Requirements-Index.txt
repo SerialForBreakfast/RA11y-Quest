@@ -3,7 +3,7 @@ RA11y - Requirements Index
 memlog/requirements/
 
 Keep this index updated when adding or moving requirement documents.
-Last updated: 2026-04-29
+Last updated: 2026-05-01
 
 Phase 1 — Capture (Historical)
 -------------------------------
@@ -29,6 +29,7 @@ Archived Game Specs
 New Quest Concepts
 ------------------
 - Design/QuestConcept-Banishment.txt   The Banishment — two-finger scrub dismiss gesture.
+- Design/QuestConcept-ThreefoldSeal.txt  The Threefold Seal — VoiceOver rotor (Headings, Containers, Links).
 
 Research / conditional quests
 -----------------------------
@@ -39,9 +40,14 @@ Research / conditional quests
 Architecture Decision Records (memlog/research/)
 -----------------------------------------------
 - ADR-0001 through ADR-0006 — See `memlog/research/` filenames.
+- ADR-0008-Rotor-Navigation-ThreefoldSeal-SlimV1.md — **The Threefold Seal** v1 scope (shallow beats; Containers first-class).
 - ADR-0006-VoiceOver-Rotor-Actions-Pedagogy.md — VoiceOver **Actions** in the rotor
   (default activate vs custom accessibility actions); platform label constraints;
   distinct skill from ADR-0004 filtered navigation.
+- ../research/RotorActions-NextQuest-Curriculum-Investigation.md — Next-quest analysis:
+  The Threefold Seal (rotor navigation) vs Rotor Actions curriculum split and improvement paths.
+- ../research/RotorNavigationQuestBrainstorming.txt — Navigation-rotor rework brainstorm
+  (Containers-first quest frames, tiered rotor modes, scope principles).
 
 Spikes
 ------

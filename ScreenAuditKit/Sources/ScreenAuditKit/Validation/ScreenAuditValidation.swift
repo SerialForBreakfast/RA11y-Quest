@@ -348,6 +348,16 @@ public struct ScreenAuditValidator {
             "- Screenshot: \(report.screenshotPath)",
             "- Overlay: \(report.overlayPath)",
             "",
+            "## How to Read This Overlay",
+            "",
+            "The PNG draws only the regions ScreenAuditKit reviewed for this failed screen. A rectangle is not automatically the failing pixel; it is the inspection area tied to the findings below.",
+            "",
+            "| Color | Role | Meaning |",
+            "|---|---|---|",
+            "| Red | critical / screenshot | High-signal review area for missing art, matte blocks, checkerboard artifacts, or a whole-screen fallback when no region is configured. |",
+            "| Blue | protected | Region expected to remain visually stable during baseline comparison. |",
+            "| Amber | ignored | Region intentionally ignored for broad baseline comparison, usually because it contains volatile content. |",
+            "",
             "## Findings",
             "",
         ]
@@ -355,20 +365,57 @@ public struct ScreenAuditValidator {
         for finding in report.findings {
             lines.append("- \(finding.severity.rawValue) \(finding.ruleID.rawValue): \(finding.message)")
             lines.append("  Evidence: \(finding.evidence.excerpt)")
+            lines.append("  Review: \(overlayReviewAction(for: finding.ruleID))")
         }
 
         lines.append("")
         lines.append("## Regions")
         lines.append("")
+        lines.append("| Label | Role | Rectangle | Why shown |")
+        lines.append("|---|---|---|---|")
 
         for region in report.regions {
-            lines.append("- \(region.role.rawValue) \(region.region.name): x \(region.region.x), y \(region.region.y), width \(region.region.width), height \(region.region.height)")
+            let rectangle = "x \(region.region.x), y \(region.region.y), width \(region.region.width), height \(region.region.height)"
+            lines.append("| \(markdownCell(region.label)) | \(region.role.rawValue) | \(rectangle) | \(markdownCell(region.role.reviewMeaning)) |")
         }
 
         lines.append("")
-        lines.append("Legend: red = critical or failure review region, blue = protected region, amber = ignored region.")
-        lines.append("")
         return lines.joined(separator: "\n")
+    }
+
+    private func overlayReviewAction(for ruleID: ScreenAuditRuleID) -> String {
+        switch ruleID {
+        case .missingScreenshot:
+            return "No overlay can prove the missing screen; regenerate screenshots or correct the contract."
+        case .requiredTextMissing:
+            return "Check whether the expected copy is missing, clipped, localized differently, or absent from OCR evidence."
+        case .forbiddenTextPresent:
+            return "Look for debug or placeholder text in the screenshot and remove it if it is not intentional."
+        case .dimensionMismatch:
+            return "Confirm this screenshot came from the expected device family before changing the contract."
+        case .baselineDifferenceExceeded:
+            return "Compare highlighted stable regions against the baseline and decide whether the visual drift is intentional."
+        case .suspiciousOpaqueBorder:
+            return "Inspect the asset edge and alpha export; the highlighted region may contain an opaque matte."
+        case .renderedMatteRisk:
+            return "Inspect the red critical region for flat placeholder rendering or missing authored art."
+        case .checkerboardPatternRisk:
+            return "Inspect the red critical region for checkerboard transparency showing through the final render."
+        case .lowConfidenceFallbackArt:
+            return "Confirm the visible asset is approved authored art rather than a bootstrap or low-confidence fallback."
+        case .flowUnknownStep:
+            return "Fix the flow contract; this finding is about declared order, not a pixel region."
+        case .flowMissingRequiredStep:
+            return "Regenerate the screenshot set or update the flow contract; this finding is about missing evidence."
+        case .flowDuplicateStep:
+            return "Confirm the repeated flow step is intentional; this finding is about documentation sequence."
+        }
+    }
+
+    private func markdownCell(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "|", with: "\\|")
     }
 
     private func sanitizedFilename(_ value: String) -> String {
@@ -424,4 +471,19 @@ private struct ScreenAuditOverlayInput {
     let pixelWidth: Int
     let pixelHeight: Int
     let findings: [ScreenAuditFinding]
+}
+
+private extension ScreenAuditOverlayRegionRole {
+    var reviewMeaning: String {
+        switch self {
+        case .protected:
+            return "Stable visual content that should not drift unexpectedly."
+        case .ignored:
+            return "Volatile content excluded from broad visual comparisons."
+        case .critical:
+            return "High-value visual content checked for obvious asset or rendering defects."
+        case .screenshot:
+            return "Whole-screen fallback used when a finding has no configured region."
+        }
+    }
 }

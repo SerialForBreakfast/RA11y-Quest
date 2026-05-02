@@ -1,881 +1,197 @@
-RA11y — The Arcanist's Tower
-Rotor Quest Game Design Document
+================================================================================
+SUPERSEDED — HISTORICAL GDD (wizard-tower metaphor, deep floors)
+================================================================================
+The shipped navigation-rotor quest is **The Threefold Seal** (slim v1). Authoritative:
+  memlog/research/ADR-0008-Rotor-Navigation-ThreefoldSeal-SlimV1.md
+  memlog/requirements/Design/QuestConcept-ThreefoldSeal.txt
+  memlog/requirements/GameSpec-ArcanistsTower.txt  (stable catalog id `arcanists-tower`)
+The text below is retained for posterity and early tone reference only.
+================================================================================
 
-Date: 2026-04-22
-Status: Refined Draft — actionable design plan
-Source: ArcanistsTower GDD.docx v1.0 draft, expanded into implementation tasks
 
-===============================================================================
-1. OVERVIEW
-===============================================================================
+⚗️
+The Arcanist's Tower (historical working title)
+Rotor Quest — Game Design Document
+RA11y-Quest  ·  v1.0 Draft
 
-The Arcanist's Tower is RA11y's rotor quest. Where Enchanter's Trial teaches
-linear VoiceOver navigation and double-tap activation, Crystal Resonance teaches
-three-finger scroll, and Banishment teaches two-finger scrub escape, Arcanist's
-Tower teaches the VoiceOver rotor: the gesture that changes what swipe gestures
-search for or adjust.
 
-Fantasy framing:
+Overview
+The Arcanist's Tower was an early working title for RA11y’s navigation-rotor quest. Where The Enchanter's Trial teaches swipe-to-navigate and Crystal Resonance teaches three-finger scroll, that quest teaches the VoiceOver rotor — the control that changes what **next and previous flicks** move between.
 
-  The rotor is the spell wheel. Each rotor setting is a magical discipline.
-  Choosing the wrong setting is casting the wrong school of magic for the room.
+The framing in this draft: ascending a wizard's tower floor by floor. **v1 product copy** instead uses **The Threefold Seal** / signed-archive language (see QuestConcept). The rotor is the platform navigation **mode picker**. Choosing the wrong setting still wastes time because flicks do not land on the right element class.
 
-Core lesson:
 
-  The rotor is not just a menu. It changes the meaning of your next swipe.
 
-Player should leave knowing:
+Quest Arc at a Glance
 
-  1. How to invoke the rotor with a two-finger twist.
-  2. How to select a rotor setting.
-  3. Why Headings, Links, and Adjustable are useful in different contexts.
-  4. How to recognize when the room demands a specific rotor setting.
 
-Non-negotiable accessibility goal:
+L3 (Form Controls) and L5 (Characters) are reserved for a future milestone. The Boss floor draws only from the implemented levels.
 
-  Every challenge must genuinely require the intended rotor setting. The quest
-  fails pedagogically if brute-force one-element swiping is equally viable.
+L0 — The Arcanist Speaks
+Purpose
+Introduce the rotor before the player attempts anything. The Arcanist explains the gesture, names the spell wheel, and sets expectations. The player cannot proceed until they have dismissed the lesson card.
 
-===============================================================================
-2. CURRICULUM FIT
-===============================================================================
+Narrative
 
-Skill taught:
 
-  VoiceOver rotor: two-finger twist to choose a navigation or adjustment mode,
-  then swipe according to the selected rotor setting.
+Mechanics
+Static lesson card — no interaction required beyond dismissal
+Animated diagram shows two-finger rotation gesture
+VoiceOver reads the full Arcanist monologue as an accessibility announcement on screen load
+Continue button is the only interactive element
 
-One-sentence lesson:
+Accessibility Notes
+accessibilityLabel on the diagram: "Two fingers rotating clockwise on screen, revealing a menu of rotor options"
+Continue button hint: "Double-tap to ascend to the first floor"
+No timer, no score, no failure state
 
-  When a screen has a kind of thing you need, use the rotor to make swipe gestures
-  jump directly to that kind of thing.
+L1 — The Codex Floor
 
-Prerequisites:
 
-  - Enchanter's Trial: swipe through elements and double-tap to activate.
-  - Crystal Resonance: understand that multi-finger VoiceOver gestures can control
-    the focused accessibility surface.
-  - Banishment: two-finger gesture vocabulary and confidence.
+Narrative Setup
 
-Downstream skills:
 
-  - Efficient web/document navigation.
-  - Form adjustment and picker interaction.
-  - Advanced rotor settings such as Characters, Words, Containers, Landmarks, and
-    custom rotors.
+Core Mechanic — Treasure Hunt
+The screen is a long scroll of lore text with 8 chapter headings. The Arcanist reads a riddle aloud at the start ("The answer sleeps beneath the Chapter of Ash"). The player must:
+Invoke the rotor and select Headings
+Swipe down to jump heading-by-heading through the Codex
+Identify and double-tap the named chapter
 
-Paradigm shift:
+Swiping without setting the Headings rotor first moves through every element — the lore text is dense enough that brute-force swiping is visibly painful. The rotor is not optional; it's the only practical path.
 
-  Player moves from linear exploration to filtered exploration.
+Heading Design
+Headings are crafted to require listening, not guessing. Several are thematically adjacent:
+Chapter of Ash  /  Chapter of Cinders
+The Iron Compact  /  The Iron Accord
+Verse of Flame  /  Verse of Ember
 
-===============================================================================
-3. QUEST STRUCTURE
-===============================================================================
+The target heading is randomised each run from a pool, so the riddle always refers to the correct chapter.
 
-The quest should follow RA11y's three-stage design rule while preserving the
-original floor fantasy.
+Failure State
+Activating the wrong chapter: "The Vault shudders — that is not the chapter. -5 seconds."
+Timer expires: "The Vault seals. The knowledge is lost." → Defeated rank
 
-Stage 1 — Practice: The Arcanist Speaks + Guided Floors
--------------------------------------------------------
+Scaffolding Across Sub-levels
 
-Purpose:
 
-  Teach the rotor gesture and the three implemented disciplines without ranking.
+Accessibility Notes
+Each heading has a clear, distinct accessibilityLabel
+Penalty announcement is made via accessibilityAnnouncement, not visual-only
+Timer announces at 50% and 25% elapsed — never continuously
+VoiceOver focus moves to the first heading automatically on screen load
 
-Content:
+L2 — The Tome Floor
 
-  - L0 Prologue: spell wheel lesson.
-  - L1a Codex: Headings with 3 headings, untimed.
-  - L2a Tome: Links with 3 links, untimed.
-  - L3a Archery: Adjustable with 1 arrow, untimed.
 
-Exit condition:
+Narrative Setup
 
-  Player completes one successful use of each implemented rotor mode.
 
-Stage 2 — Trial: The Shifting Tower
------------------------------------
+Core Mechanic — Rune Hunt
+The screen shows a dense page of lore prose. Embedded within are 6 link elements styled as glowing runes. The player must:
+Invoke the rotor and select Links
+Swipe to enumerate only the rune-links, skipping surrounding text
+Identify the named rune by its accessibilityLabel
+Double-tap to activate it
 
-Purpose:
+Without the Links rotor, the player must swipe through all body text to reach each rune. The text is deliberately long — the rotor is the only practical way to scan runes efficiently under the timer.
 
-  Test recognition under time pressure.
+Rune Label Design
+Rune labels are chosen to require careful listening. Near-identical pairs appear in the pool:
+Seal of Binding  /  Seal of Bonding
+Ember Rune  /  Ember Mark
+Shadow Glyph  /  Shadow Sign
+Rune of Passage  /  Rune of Passing
 
-Content:
+Only one rune-link is the target. The rest are traps. The target is randomised per run.
 
-  - Random sequence of Headings, Links, and Adjustable rooms.
-  - Timer hard.
-  - No explicit "choose Headings now" instruction.
-  - Environmental and VoiceOver cues reveal which mode is appropriate.
+Failure States
+Wrong rune activated: "A trap springs — shadows close in. -10 seconds."
+Timer expires: "The seal holds. The tome burns." → Defeated rank
 
-Exit condition:
+Scaffolding Across Sub-levels
 
-  Complete all rounds before timer expires.
 
-Stage 3 — Lights Off: The Blind Observatory
--------------------------------------------
+Accessibility Notes
+Each rune-link has a distinct accessibilityLabel and accessibilityHint: "Double-tap to invoke this rune"
+Trap activation announcement is immediate and unambiguous
+Surrounding lore text elements are marked accessibilityElementsHidden: false — they must be present to make the rotor feel valuable
+Timer behaviour mirrors L1
 
-Purpose:
+L4 — The Archery Floor
 
-  Prove the rotor skill with visual cues minimized.
 
-Content:
+Narrative Setup
 
-  - Same round types as Stage 2.
-  - Darkened screen.
-  - VoiceOver, haptics, and short audio cues carry floor identity.
-  - No visual labels beyond minimal status/anchor.
 
-Exit condition:
+Core Mechanic — Arrow Draw
+The screen shows a bow-and-target interface. A draw weight indicator (an adjustable SwiftUI element) represents how far the bow is drawn. The player must:
+Invoke the rotor and select Adjustable
+Swipe up to increase draw weight, swipe down to decrease
+Land on the exact required value — VoiceOver announces the current value on each swipe
+Double-tap to fire
 
-  Complete all rounds before timer expires.
+The mapping is physical and intuitive: swipe up = pull the string back further. The Adjustable rotor + vertical swipe mirrors the actual gesture model exactly.
 
-Why this mapping:
+Arrow Sequence
 
-  The original L1/L2/L4/Boss floor structure is strong, but RA11y's current design
-  process wants three stages. This plan keeps the floor fantasy while making the
-  implementation path clear.
 
-===============================================================================
-4. ROTOR DISCIPLINES
-===============================================================================
+Feedback Model
+Undershoot: "The arrow falls short. The lock holds." — visual arrow drops below target
+Overshoot: "Too much force — the arrow shatters the frame." — visual arrow punches through
+Hit: "The lock cracks. One seal broken." — satisfying haptic + audio
+All three hit: gate opens, floor complete
+Any miss: arrow attempt is consumed; 3 misses in a run contributes to lower rank
 
-Discipline A — Headings: The Codex Floor
-----------------------------------------
+Why Adjustable Rotor is Required
+The draw weight element is a custom adjustable element. Without selecting the Adjustable rotor, vertical swipes scroll the page rather than adjusting the value. The player will swipe up and nothing will happen to the bow — the failure is immediate and instructive.
 
-Rotor setting:
+Scaffolding Across Sub-levels
 
-  Headings.
 
-Real-world mapping:
+Accessibility Notes
+Draw weight element: accessibilityLabel "Draw weight", accessibilityValue "[n] of [max]"
+accessibilityIncrementHandler / decrementHandler drive the value
+Required weight announced on each arrow: "The enchantment requires a draw of 7"
+Current value announced on every swipe step by VoiceOver natively via the Adjustable trait
+Timer announces at 15 seconds and 5 seconds remaining
 
-  Jumping between headings in documents, articles, settings pages, and web pages.
+Boss — The Shifting Tower
 
-Challenge fantasy:
 
-  The Arcanist gives a riddle. The answer is hidden under a chapter heading.
+Narrative Setup
 
-Core mechanic:
 
-  The screen contains dense lore text broken into headings. The player sets the
-  rotor to Headings and swipes between headings to find and activate the named
-  chapter.
+Core Mechanic — Random Floor Order
+Each run presents 5–7 challenges drawn randomly from the floor pool (L1 Codex, L2 Tome, L4 Archery). No hint is given about which rotor is needed. The player must read environmental cues and select the correct setting before acting.
 
-Why the rotor is required:
+Environmental Cue Design
+Each floor type has a consistent visual and audio identity that signals the required rotor without stating it:
 
-  Without Headings, the player must swipe through body paragraphs and decorative
-  text. With Headings, the player jumps directly between chapters.
 
-Practice version:
+Scoring
+The Boss is scored on two dimensions: completion and efficiency.
+Rounds completed within 60 seconds → base score
+Each wrong rotor selection that wastes time → penalty applied to rank calculation
+Perfect run (correct rotor first try, every round) → Legendary rank
+All rounds complete with errors → Skilled or Novice depending on time remaining
+Timer expires mid-run → Defeated regardless of rounds completed
 
-  - 3 headings.
-  - Target name is literal.
-  - No timer.
-  - Example target: "Chapter of Ash."
+Replayability Design
+The randomised floor order means memorisation is not a path to Legendary rank — correct rotor selection judgment is. A player who genuinely understands the rotor will score consistently across runs. A player who memorised the tutorial order will be exposed immediately.
 
-Trial version:
 
-  - 8 headings.
-  - Similar labels included.
-  - Timer active.
-  - Wrong heading costs time or mistake.
 
-Lights Off version:
+Accessibility Notes
+Each floor transition is announced: "The tower shifts. A new room forms around you."
+No visual-only indication of floor type — audio and VoiceOver cues carry full meaning
+Timer announces at 30 seconds, 15 seconds, and 5-4-3-2-1 countdown
+Wrong rotor selection: VoiceOver announces what the current rotor found ("No headings found" or "No links found") — instructive, not punitive
 
-  - Same accessibility tree.
-  - Visual text dimmed.
-  - VoiceOver heading labels carry all information.
+Open Questions
+L3 (Form Controls): scenario TBD — postponed pending a mechanic that genuinely requires the rotor rather than tolerating brute-force swiping
+L5 (Characters): Corrupted Glyph mechanic approved in principle — postponed pending L3 resolution
+Boss round count: 5 vs 7 — depends on how long individual floor challenges take in playtesting
+Rank thresholds for Boss: need calibration against real completion times
+Lights Off variant: post-M8 consideration — Boss floor with screen curtain engaged
 
-Candidate heading pool:
-
-  - Chapter of Ash
-  - Chapter of Cinders
-  - The Iron Compact
-  - The Iron Accord
-  - Verse of Flame
-  - Verse of Ember
-  - The Sapphire Oath
-  - The Sapphire Path
-  - Index of Moons
-  - Index of Stars
-  - The Silent Gate
-  - The Sealed Gate
-
-Success:
-
-  "Correct chapter. The Codex opens."
-
-Wrong action:
-
-  "That is not the chapter. The tower steals time."
-
-Implementation requirements:
-
-  - Each chapter title is a real accessibility heading.
-  - Body text remains in the accessibility tree so the rotor has obvious value.
-  - Target heading is a Button or has explicit activation action.
-  - Programmatic focus should land near the instruction/objective, then allow
-    normal rotor use.
-
-Acceptance criteria:
-
-  - Device VoiceOver: Headings rotor jumps only chapter titles.
-  - Wrong heading activation is announced and tracked.
-  - Timer does not speak continuously.
-  - Brute-force swiping is intentionally slower than rotor use.
-
-Discipline B — Links: The Tome Floor
-------------------------------------
-
-Rotor setting:
-
-  Links.
-
-Real-world mapping:
-
-  Jumping between links in web pages, rich text, and documents.
-
-Challenge fantasy:
-
-  A cursed tome contains several rune-links. One breaks the seal; the rest are
-  traps.
-
-Core mechanic:
-
-  The screen contains dense lore prose with embedded link elements. The player
-  sets the rotor to Links, jumps rune-to-rune, and activates the named rune.
-
-Why the rotor is required:
-
-  Without Links, the user must traverse all surrounding paragraphs. With Links,
-  only runes are enumerated.
-
-Practice version:
-
-  - 3 rune links.
-  - Distinct names.
-  - No traps.
-  - No timer.
-
-Trial version:
-
-  - 6 rune links.
-  - Near-similar labels.
-  - Wrong rune triggers time penalty/mistake.
-
-Lights Off version:
-
-  - Visual rune glow mostly hidden.
-  - Link labels and hints carry all semantics.
-
-Candidate rune pool:
-
-  - Seal of Binding
-  - Seal of Bonding
-  - Ember Rune
-  - Ember Mark
-  - Shadow Glyph
-  - Shadow Sign
-  - Rune of Passage
-  - Rune of Passing
-  - Mirror Sigil
-  - Mirror Seal
-  - Ward of Dawn
-  - Ward of Dusk
-
-Success:
-
-  "Correct rune. The tome releases its seal."
-
-Wrong action:
-
-  "A trap springs. Shadows close in."
-
-Implementation requirements:
-
-  - Rune text must be real Link accessibility elements.
-  - Hints: "Double-tap to invoke this rune."
-  - Surrounding prose remains accessible.
-  - Wrong link and success paths update state immediately.
-
-Acceptance criteria:
-
-  - Device VoiceOver: Links rotor jumps only rune links.
-  - Player can complete without visually reading the page.
-  - Wrong rune is clearly distinguished from correct rune.
-
-Discipline C — Adjustable: The Archery Floor
---------------------------------------------
-
-Rotor setting:
-
-  Adjustable.
-
-Real-world mapping:
-
-  Adjusting sliders, steppers, pickers, ratings, values, and custom adjustable
-  controls.
-
-Challenge fantasy:
-
-  A magical bow must be drawn to the exact weight needed to strike a distant lock.
-
-Core mechanic:
-
-  The player focuses a custom adjustable draw-weight element. With the Adjustable
-  rotor, swipe up increases draw weight and swipe down decreases it. Double-tap
-  fires the arrow.
-
-Why the rotor is required:
-
-  The draw weight element exposes adjustable behavior. Vertical swipes change the
-  value only when VoiceOver is using the appropriate adjustment model.
-
-Practice version:
-
-  - 1 arrow.
-  - Required value: 5 of 10.
-  - Tolerance: ±2.
-  - No timer.
-
-Trial version:
-
-  - 3 arrows.
-  - Required values: 5 of 10, 7 of 10, 8 of 12.
-  - Tolerance narrows from ±1 to exact.
-  - Timer active.
-
-Lights Off version:
-
-  - Bow visuals suppressed.
-  - Current value and required value are VoiceOver-first.
-  - Haptics indicate under/near/exact.
-
-Success:
-
-  "The arrow strikes true. One seal breaks."
-
-Undershoot:
-
-  "The arrow falls short. Draw more."
-
-Overshoot:
-
-  "Too much force. Ease the draw."
-
-Implementation requirements:
-
-  - Draw weight element has `.accessibilityAdjustableAction`.
-  - Label: "Draw weight."
-  - Value: "[n] of [max]."
-  - Hint: "Swipe up or down to adjust. Double-tap to fire."
-  - The fire action should be distinct from adjustment.
-
-Acceptance criteria:
-
-  - Device VoiceOver announces value changes natively.
-  - Swipe up/down changes only the draw weight while focused.
-  - Exact hit, undershoot, and overshoot are testable.
-
-===============================================================================
-5. BOSS / TRIAL STRUCTURE: THE SHIFTING TOWER
-===============================================================================
-
-The original Boss concept becomes Stage 2 and Stage 3's main structure.
-
-Round count:
-
-  Recommended initial value: 5 rounds.
-
-Why 5, not 7:
-
-  Rotor selection itself is slow and cognitively heavy. Start with 5 to avoid
-  fatigue. Increase only after device playtesting shows runs are too short.
-
-Round pool:
-
-  - Codex room: Headings.
-  - Tome room: Links.
-  - Archery room: Adjustable.
-
-Round selection:
-
-  - Randomized order per run.
-  - Avoid same discipline more than twice in a row.
-  - Ensure every run includes at least one instance of each discipline.
-
-No explicit setting instruction:
-
-  Stage 2 and 3 should not say "Use Headings" or "Use Links." They should present
-  a room cue and let the player infer the correct rotor.
-
-Cue model:
-
-  Codex:
-    Visual: scroll or codex pedestal.
-    VoiceOver: "A chapter awaits you."
-    Audio: page turn / parchment shift.
-
-  Tome:
-    Visual: open tome with glowing runes.
-    VoiceOver: "A rune must be broken."
-    Audio: low magical hum with small rune chime.
-
-  Archery:
-    Visual: bow and distant lock.
-    VoiceOver: "The lock must be struck true."
-    Audio: bowstring tension.
-
-Completion:
-
-  - Each successful round advances immediately.
-  - After all rounds, tower opens and result is recorded.
-
-Failure:
-
-  - Timer expires: Defeated.
-  - Wrong activation/shot/rune adds mistake and costs time.
-  - Wrong rotor choice is not directly observable from app code, so design should
-    not depend on detecting rotor selection itself. Instead, wrong attempts produce
-    instructional feedback when an activation or fire happens incorrectly.
-
-===============================================================================
-6. SCORING
-===============================================================================
-
-Practice stage:
-
-  - No rank.
-  - Mistakes are teaching moments.
-
-Trial stage:
-
-  - Hard timer: 75 seconds for first tuning pass.
-  - Base completion required.
-  - Mistakes lower rank.
-  - Remaining time breaks ties.
-
-Lights Off stage:
-
-  - Hard timer: 90 seconds for first tuning pass.
-  - Same rank rules, slightly more forgiving due reduced visuals.
-
-Rank draft:
-
-  Legendary:
-    Complete all rounds, 0 mistakes, with at least 25% time remaining.
-
-  Skilled:
-    Complete all rounds with 0-2 mistakes.
-
-  Novice:
-    Complete all rounds with 3+ mistakes.
-
-  Defeated:
-    Timer expires before all rounds complete.
-
-Mistake rules:
-
-  - Wrong heading: +1 mistake.
-  - Wrong link: +1 mistake.
-  - Wrong bow shot: +1 mistake.
-  - Repeated wrong action during cooldown: ignored, not multiplied.
-
-Time penalties:
-
-  - Wrong heading/link: optional -5 seconds in Stage 2.
-  - Wrong bow shot: consumes arrow attempt or adds +1 mistake, but avoid both
-    consuming attempt and adding harsh time penalty until playtested.
-
-Calibration notes:
-
-  Initial timers are guesses. Device testing with VoiceOver must set final values.
-
-===============================================================================
-7. ACCESSIBILITY MODEL
-===============================================================================
-
-Global rules:
-
-  - VoiceOver must be required for real quest entry.
-  - Each discipline must use real platform semantics where possible.
-  - Do not fake rotor behavior with custom buttons unless a platform API is
-    unavailable.
-  - No visual-only cues.
-  - No continuous narration during active timed play.
-
-Prologue:
-
-  - One lesson card and Continue button.
-  - Diagram is decorative with a descriptive accessibility label.
-  - No timer.
-
-Codex:
-
-  - Chapter titles use Heading trait.
-  - Target chapter is activatable.
-  - Body text remains accessible.
-
-Tome:
-
-  - Runes use Link trait.
-  - Rune labels must be distinct and localizable.
-  - Body text remains accessible.
-
-Archery:
-
-  - Draw weight uses Adjustable trait.
-  - Value changes via native VoiceOver adjustment announcement.
-
-Timer:
-
-  - Stage 2: announce 50%, 25%, 10 seconds, then 5-4-3-2-1.
-  - Stage 3: announce 50%, 25%, 10 seconds, then 5-4-3-2-1.
-  - Do not announce every second.
-
-Focus:
-
-  - On room transition, focus should move to the room objective/status region.
-  - For Adjustable rooms, after objective is read, focus may move to the draw
-    weight element.
-  - Do not programmatically fight rotor navigation during active play.
-
-Wrong-action announcements:
-
-  - Immediate.
-  - Short.
-  - Rate-limited to avoid speech spam.
-
-===============================================================================
-8. UI / ART DIRECTION
-===============================================================================
-
-Overall:
-
-  A vertical wizard tower with distinct floors. Each floor has a clear discipline
-  identity but shares the RA11y dark fantasy visual language.
-
-Prologue:
-
-  - Arcanist portrait or silhouette.
-  - Spell wheel diagram: two fingers rotating a dial.
-  - Large lesson card.
-
-Codex:
-
-  - Long parchment/codex page.
-  - Headings as large chapter plaques.
-  - Body text visually dense but readable.
-
-Tome:
-
-  - Open cursed tome.
-  - Glowing rune links embedded in prose.
-  - Trap runes visually tempting but not overwhelming.
-
-Archery:
-
-  - Bow silhouette foreground.
-  - Distant lock or target.
-  - Draw meter as accessible adjustable control.
-
-Shifting Tower:
-
-  - Room cue changes per round.
-  - Shared timer and progress indicator.
-  - Avoid over-animating transitions; VoiceOver needs stable context.
-
-Lights Off:
-
-  - Dark veil.
-  - Minimal discipline anchor remains visible.
-  - Full semantics via VoiceOver/haptics/audio.
-
-Asset candidates:
-
-  - arcanist_tower_bg
-  - arcanist_portrait
-  - arcanist_spell_wheel_diagram
-  - arcanist_codex_bg
-  - arcanist_tome_bg
-  - arcanist_archery_bg
-  - arcanist_bow
-  - arcanist_target_lock
-  - arcanist_success_flare
-  - arcanist_lights_off_anchor
-
-Asset approach:
-
-  Build greybox first. Use final art only after rotor semantics are verified on
-  device. This follows the Banishment lesson from Crystal Resonance: beautiful art
-  cannot come before the accessibility contract.
-
-===============================================================================
-9. IMPLEMENTATION ARCHITECTURE
-===============================================================================
-
-Suggested files:
-
-  RA11y-iOS/RA11y-iOS/Games/iOSArcanistsTowerView.swift
-  RA11y-iOS/RA11y-iOS/Games/iOSArcanistsTowerComponents.swift
-  RA11y-iOS/RA11y-iOS/Games/iOSArcanistsTowerArt.swift
-
-Core types:
-
-  enum ArcanistsTowerPhase
-    - prologue
-    - practiceCodex
-    - practiceTome
-    - practiceArchery
-    - trial(roundIndex)
-    - lightsOff(roundIndex)
-    - completed
-
-  enum TowerDiscipline
-    - headings
-    - links
-    - adjustable
-
-  enum TowerRoundState
-    - intro
-    - active
-    - success
-    - mistake
-    - timeout
-
-  struct TowerRound
-    - id
-    - discipline
-    - targetID
-    - targetLabel
-    - decoys
-    - timeBudget
-    - lightsOff
-
-ViewModel responsibilities:
-
-  - Own phase, round list, current target, mistakes, timer, result.
-  - Generate deterministic rounds for tests/screenshot scenes.
-  - Handle heading activation.
-  - Handle link activation.
-  - Handle draw-weight adjustment and fire action.
-  - Start/stop timers with VoiceOver grace period.
-  - Record GameSession results.
-  - Post announcements through one method.
-
-View responsibilities:
-
-  - Render the current floor.
-  - Expose correct accessibility semantics.
-  - Avoid computing game outcomes.
-  - Keep decorative art hidden from accessibility.
-
-Testing hooks:
-
-  - Inject seeded round generator.
-  - Inject clock or use deterministic time advancement in ViewModel tests.
-  - Screenshot scene can force specific phase and round.
-
-===============================================================================
-10. ACTIONABLE TASK BREAKDOWN
-===============================================================================
-
-Phase 0 — Design acceptance
----------------------------
-
-Tasks:
-
-  - Confirm this refined plan.
-  - Decide final quest name: "The Arcanist's Tower" vs "Arcanists' Tower."
-  - Decide whether this is MVP or post-MVP.
-  - Decide unlock order relative to Banishment and Magic Tap.
-
-Acceptance criteria:
-
-  - One-sentence lesson accepted.
-  - Three-stage arc accepted.
-  - Implemented rotor settings limited to Headings, Links, Adjustable for v1.
-
-Phase 1 — ADR
--------------
-
-Tasks:
-
-  - Write ADR for rotor interaction model.
-  - Document why real rotor semantics are required.
-  - Define Lights Off strategy.
-  - Define wrong-action model.
-
-Acceptance criteria:
-
-  - ADR states no fake rotor shortcuts for shipped behavior.
-  - ADR explains how each discipline maps to platform semantics.
-
-Phase 2 — GameSpec
-------------------
-
-Tasks:
-
-  - Write `memlog/requirements/GameSpec-ArcanistsTower.txt`.
-  - Include stage rules, timers, scoring, copy, and feedback schedule.
-  - Include localization key list.
-
-Acceptance criteria:
-
-  - Every stage has timer, success, failure, and wrong-action rules.
-  - Rank thresholds have first-pass values.
-
-Phase 3 — Rotor feasibility spikes
-----------------------------------
-
-Tasks:
-
-  - Spike Headings rotor on native SwiftUI heading content.
-  - Spike Links rotor on Text/Link/Button composition.
-  - Spike Adjustable rotor with custom SwiftUI adjustable action.
-  - Device test with VoiceOver.
-
-Acceptance criteria:
-
-  - Headings rotor can jump chapter headings.
-  - Links rotor can jump rune links.
-  - Adjustable rotor can change draw weight.
-  - Known limitations documented before full build.
-
-Phase 4 — Greybox implementation
---------------------------------
-
-Tasks:
-
-  - Implement ViewModel.
-  - Implement prologue.
-  - Implement practice Codex/Tome/Archery floors.
-  - Implement Shifting Tower trial.
-  - Implement Lights Off stage.
-
-Acceptance criteria:
-
-  - Quest completable with VoiceOver on device.
-  - GameSession records result for scored stages.
-  - No final art required.
-
-Phase 5 — Feedback
-------------------
-
-Tasks:
-
-  - Define semantic feedback events for room shift, success, wrong action, timer
-    threshold, and perfect adjustment.
-  - Map to haptics/audio.
-  - Rate-limit announcements.
-
-Acceptance criteria:
-
-  - Feedback is distinguishable without sight.
-  - VoiceOver speech does not overlap rapid timer spam.
-
-Phase 6 — Design artifacts
---------------------------
-
-Tasks:
-
-  - Build `Mockups-v2/arcanists_tower_mockup.html`.
-  - Build `DesignTicket-ArcanistsTowerPromptSheet.txt`.
-  - Build `ArcanistsTowerAssetPipeline.txt`.
-
-Acceptance criteria:
-
-  - Mockup has Prologue, Codex, Tome, Archery, Trial, Lights Off, Success states.
-  - Prompt sheet has one asset per prompt.
-  - Pipeline preserves accessibility structure.
-
-Phase 7 — Art import
---------------------
-
-Tasks:
-
-  - Generate/import approved assets.
-  - Add asset constants.
-  - Add asset registry tests.
-  - Smoke test over dark/light states.
-
-Acceptance criteria:
-
-  - No missing assets.
-  - Transparent sprites have real alpha.
-  - Art does not add focusable elements.
-
-Phase 8 — Screenshot coverage
------------------------------
-
-Tasks:
-
-  - Add screenshot scene IDs.
-  - Update screenshot route catalog.
-  - Update screenshot tests and Fastlane allowlist.
-
-Acceptance criteria:
-
-  - Screenshot contract validates.
-  - Captures cover all major floor types.
-
-Phase 9 — QA
-------------
-
-Tasks:
-
-  - Full VoiceOver device walkthrough.
-  - Dynamic Type, Increase Contrast, Reduce Transparency, Reduce Motion checks.
-  - Tune timers and rank thresholds.
-
-Acceptance criteria:
-
-  - All targets pass build/test.
-  - Device QA confirms rotor semantics.
-  - Timers feel fair to actual VoiceOver users.
-
-===============================================================================
-11. OPEN DECISIONS
-===============================================================================
-
-1. Quest naming:
-
-  "The Arcanist's Tower" is grammatically clean for one mentor. "Arcanists'
-  Tower" implies a guild tower. Pick one and use it consistently.
-
-2. Stage count:
-
-  The doc now maps floor fantasy into RA11y's 3-stage rule. Confirm whether this
-  quest should be an exception or follow the standard.
-
-3. Form Controls and Characters:
-
-  Original draft reserved Form Controls and Characters. Keep them post-v1 unless
-  a strong mechanic emerges.
-
-4. Boss timer:
-
-  60 seconds may be tight for real rotor use. Start at 75 seconds for Stage 2 and
-  tune down only after testing.
-
-5. Wrong rotor detection:
-
-  Apps generally cannot reliably know the current rotor selection. Design should
-  avoid scoring "wrong rotor selected" directly. Score wrong outcomes instead.
-
-6. Adjustable activation:
-
-  Need a clear way to fire after setting draw weight. A focused adjustable element
-  can expose value changes, but firing may need a separate Button or custom action.
-  Device testing should decide.
-
-===============================================================================
-12. IMMEDIATE NEXT STEPS
-===============================================================================
-
-1. Confirm the v1 discipline set: Headings, Links, Adjustable.
-2. Write the rotor ADR.
-3. Build device spikes for each rotor mode.
-4. Draft the formal GameSpec.
-5. Build the HTML mockup once the interaction model is accepted.
-
-End of refined draft.
+RA11y-Quest · The Arcanist's Tower · GDD v1.0 Draft

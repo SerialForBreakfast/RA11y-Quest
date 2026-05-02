@@ -1,6 +1,24 @@
 {
   "assets": [
     {
+      "id": "magictap-spellbook-sigil",
+      "name": "Magic Tap Spellbook Sigil",
+      "source": "llmAuthored",
+      "authoringStatus": "reviewNeeded",
+      "sourceQuality": "review",
+      "knownRisks": [
+        "bakedCheckerboardBackground",
+        "alphaExportSuspect",
+        "needsTransparentMaster"
+      ],
+      "evidence": [
+        "RA11y-iOS/RA11y-iOS/Assets.xcassets/magictap_spellbook_sigil.imageset/magictap_spellbook_sigil.png",
+        "docs/screenshots/en-US/*/19_FirstSpellReady.png",
+        "docs/screenshots/en-US/*/20_FirstSpellSuccess.png"
+      ],
+      "note": "The current source PNG visibly contains a checkerboard transparency bed behind the sigil. ScreenAuditKit should keep surfacing this until the asset is replaced with a clean transparent master."
+    },
+    {
       "id": "banishment-prologue-art",
       "name": "Banishment Prologue Art",
       "source": "mockupCrop",

@@ -1,0 +1,97 @@
+RA11y — QuestConcept (Phase 0)
+The Threefold Seal — VoiceOver rotor navigation
+=============================================
+Date: 2026-05-01
+Status: Draft
+Owner: Product / Design / Engineering
+Related research:
+  memlog/research/RotorNavigationQuestBrainstorming.txt (§10–11, §10.9 wrong-selection)
+  memlog/research/ADR-0004-ArcanistsTower-Rotor-Interaction.md
+  memlog/research/ADR-0008-Rotor-Navigation-ThreefoldSeal-SlimV1.md
+DesignProcess: memlog/requirements/Design/DesignProcess.md
+
+
+1. Phase 0 — Pedagogy and curriculum fit
+=========================================
+
+1.1 Single skill (composite, DesignProcess alignment)
+-----------------------------------------------------
+**Primary paradigm:** The VoiceOver **rotor** changes what **next/previous flick**
+moves between on screen.
+
+**Composite rationale (DesignProcess exception):** DesignProcess asks for one
+paradigm shift per quest. This quest keeps **one** paradigm — rotor-driven **filtered
+navigation** — and delivers **three short proofs** that differ only in **which rotor
+setting** is the right tool (Headings, Containers, Links). Each proof is a **shallow**
+beat (one success path, small content), not a full second quest. Product treats this as
+**one lesson card** with three beats under the same story frame.
+
+**Downstream:** Player can choose real-world navigation modes with intent (long
+documents, regions, link lists). **Upstream prerequisites:** Enchanter’s Trial, Crystal
+Resonance, The Banishment (same chain as the earlier multi-floor rotor draft).
+
+**Not in this quest:** Form controls rotor, Adjustable rotor, Rotor Actions (ADR-0006).
+
+
+1.2 One-sentence lesson
+-----------------------
+When the screen is crowded, twist the rotor so your next and previous flicks jump the
+**kind of thing** you need — chapter **titles**, whole **storage regions**, or **links**
+— then open the one the clue names.
+
+
+1.3 Plain-language glossary (player-facing and VO)
+---------------------------------------------------
+Avoid rare English words. Prefer:
+
+  - **Title plate** — a chapter line that is a real heading.
+  - **Storage niche** — a labeled vault region (accessibility **container**); not
+    “reliquary” or “epithet.”
+  - **Bound mark** — a margin sigil implemented as a **link**; short VO label.
+  - **Seal** — progress marker (first / second / third seal set).
+
+
+1.4 Stage structure (DesignProcess three stages)
+------------------------------------------------
+  **Stage 1 — Practice (guided three-beat sequence)**  
+  No rank. No timer (or soft optional timer only if stalls appear in testing).  
+  Prologue → Beat A Headings → Beat B Containers → Beat C Links.  
+  Practice may **name** Headings, Containers, Links once per beat.
+
+  **Stage 2 — Trial (optional for v1 ship or v1.1)**  
+  Hard timer. Three rounds, one discipline each, random order, cue-only (no rotor names).  
+  Rank awarded.
+
+  **Stage 3 — Lights Off**  
+  Deferred for v1 **or** unlocked after first clear; same semantics, reduced vision.
+
+
+1.5 Beat summary (content caps)
+-------------------------------
+  - **Headings:** 4–6 title plates; one riddle target; body text present so Headings has
+    value.
+  - **Containers:** exactly **three** labeled storage niches; clue uses name + one
+    non-color cue (sound, material word, shape word).
+  - **Links:** 3–4 bound marks including at most one trap; short prose.
+
+
+1.6 Wrong-action behaviour
+--------------------------
+  - Detect **which element activated** only; never infer rotor setting.  
+  - Outcome-based copy; no “wrong rotor.”  
+  - Stay on beat; short cooldown (~0.8–1.2 s); optional mistake count toward Trial rank.  
+  - Full detail: RotorNavigationQuestBrainstorming.txt §10.9.
+
+
+1.7 User journey (text)
+-----------------------
+Hub → VoiceOver interstitial if needed → Prologue → Beat Headings → Beat Containers →
+Beat Links → (Trial) → Game result → Hub.
+
+
+1.8 Open product items
+----------------------
+  - **Locked (naming):** **The Threefold Seal** (hub + VoiceOver + results).  
+  - Trial in v1 or v1.1.  
+  - Lights Off timing.  
+  - Final rank thresholds (see GameSpec).

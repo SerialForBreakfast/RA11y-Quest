@@ -12,6 +12,7 @@ extension GameKind {
         case .findAndFocus: return "enchanter_tower_shelf_bg"
         case .scrollHunt: return "dungeon_descent_bg"
         case .banishment: return iOSBanishmentArt.towerBackground
+        case .arcanistsTower: return "dungeon_descent_bg"
         }
     }
 
@@ -23,6 +24,19 @@ extension GameKind {
         case .findAndFocus: return "enchanter_tower_shelf_bg"
         case .scrollHunt: return "dungeon_descent_bg"
         case .banishment: return iOSBanishmentArt.wardBackground
+        case .arcanistsTower: return "dungeon_descent_bg"
+        }
+    }
+
+    /// Full-bleed painting for lesson-style quest surfaces (prologue / guided beats).
+    ///
+    /// The Threefold Seal reuses the dungeon master until `threefold_seal_bg` exists in catalog.
+    var questLessonAmbientImageName: String {
+        switch self {
+        case .findAndFocus: return "enchanter_tower_shelf_bg"
+        case .scrollHunt: return "dungeon_descent_bg"
+        case .banishment: return iOSBanishmentArt.wardBackground
+        case .arcanistsTower: return "dungeon_descent_bg"
         }
     }
 }

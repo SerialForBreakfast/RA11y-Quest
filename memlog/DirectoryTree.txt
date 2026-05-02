@@ -40,6 +40,7 @@ Current structure (as of 2026-04-30)
 |   |   |   |-- iOSDungeonResonancePlayView.swift
 |   |   |   |-- iOSResonanceVoiceOverScrollProxyRepresentable.swift
 |   |   |   |-- iOSEnchantersTrialView.swift
+|   |   |   |-- iOSRotorNavigationQuestView.swift
 |   |   |   `-- iOSRogueGauntletView.swift
 |   |   |-- Hub
 |   |   |   |-- iOSHubBackgroundView.swift
@@ -176,6 +177,7 @@ Current structure (as of 2026-04-30)
 |   |       |-- ScreenAuditFlowTests.swift
 |   |       |-- ScreenAuditKitTests.swift
 |   |       |-- ScreenAuditRenderedMatteTests.swift
+|   |       |-- ScreenAuditReportTests.swift
 |   |       |-- ScreenAuditRuleTests.swift
 |   |       `-- ScreenAuditTransparencyTests.swift
 |   |-- .gitignore
@@ -425,6 +427,7 @@ Current structure (as of 2026-04-30)
 |   |   |   |-- DesignTicket-MagicTapFirstSpell.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpell-ReadyMockup-Prompt.txt
 |   |   |   |-- DesignTicket-MagicTapFirstSpellPromptSheet.txt
+|   |   |   |-- DesignTicket-ThreefoldSealPromptSheet.txt
 |   |   |   |-- MagicTapFirstSpellAssetPipeline.txt
 |   |   |   |-- MockupScreens
 |   |   |   |   |-- magictap_firstspell_iphone_entry_v01.png
@@ -438,10 +441,13 @@ Current structure (as of 2026-04-30)
 |   |   |   |   |-- magictap_firstspell_iphone_success_v01.png
 |   |   |   |   |-- magictap_firstspell_iphone_vo_required_v01.png
 |   |   |   |   |-- magictap_firstspell_spellbook_reference.png
+|   |   |   |   |-- rotor_three_seals_iphone_*.png (exploratory; batch-refresh deferred)
 |   |   |   |   `-- banishment_iphone_*.png, etc. (see folder)
 |   |   |   |-- DesignTicket-PromptSheet.txt
 |   |   |   |-- DungeonResonanceAssetPipeline.txt
-|   |   |   `-- QuestConcept-Banishment.txt
+|   |   |   |-- QuestConcept-Banishment.txt
+|   |   |   |-- QuestConcept-ThreefoldSeal.txt
+|   |   |   `-- RotorThreeSealsAssetPipeline.txt
 |   |   |-- GameRules-MVP.txt
 |   |   |-- GameSpec-ArcanistsTower.txt
 |   |   |-- GameSpec-FindAndFocus.txt
@@ -466,12 +472,17 @@ Current structure (as of 2026-04-30)
 |   |   |-- ADR-0004-ArcanistsTower-Rotor-Interaction.md
 |   |   |-- ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md
 |   |   |-- ADR-0006-VoiceOver-Rotor-Actions-Pedagogy.md
+|   |   |-- ADR-0007-Screenshot-Rendering-Factory-And-Fastlane-Refactor.md
+|   |   |-- ADR-0008-Rotor-Navigation-ThreefoldSeal-SlimV1.md
 |   |   |-- ArcanistsTower.txt
 |   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md
 |   |   |-- AccessibilityFeatureGamification.md
 |   |   |-- InitialBrainstorming.txt
 |   |   |-- NativeAccessibility.txt
+|   |   |-- RotorActions-NextQuest-Curriculum-Investigation.md
+|   |   |-- RotorNavigationQuestBrainstorming.txt
+|   |   |-- RotorThreeSeals-VoiceOver-QAChecklist.txt
 |   |   `-- ScreenAuditKit-Workstream.md
 |   `-- DirectoryTree.txt
 |-- scripts

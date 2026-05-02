@@ -12,6 +12,8 @@ public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     case scrollHunt
     /// The Banishment — two-finger scrub / accessibility escape (`the-banishment`).
     case banishment
+    /// The Threefold Seal — rotor navigation (Headings, Containers, Links; `arcanists-tower`).
+    case arcanistsTower
 }
 
 // MARK: - GameDefinition
@@ -89,7 +91,7 @@ public enum GameCatalog {
     ///
     /// Games are sequentially gated: each game after the first has a `prerequisiteID`
     /// pointing to the game that must be beaten before it is unlocked. Display order
-    /// matches unlock order: **Enchanter → Crystal Resonance → The Banishment**.
+    /// matches unlock order: **Enchanter → Crystal Resonance → The Banishment → The Threefold Seal**.
     ///
     /// Thumbnails use dedicated square hub icons (`*_hub_icon`) designed for
     /// the dark quest card at ~72–96 pt. Background scene images and individual
@@ -122,6 +124,16 @@ public enum GameCatalog {
             kind: .banishment,
             thumbnailAssetName: "banishment_hub_icon",
             prerequisiteID: "scroll-hunt"
+        ),
+        // The Threefold Seal — stable id `arcanists-tower` matches persisted storage keys.
+        GameDefinition(
+            id: "arcanists-tower",
+            titleKey: "game.arcanistsTower.title",
+            goalKey: "game.arcanistsTower.goal",
+            estimatedDuration: "~8 min",
+            kind: .arcanistsTower,
+            thumbnailAssetName: "enchanter_hub_icon",
+            prerequisiteID: "the-banishment"
         ),
     ]
 

@@ -5,7 +5,7 @@ Status: Proposed
 
 ## Related documents
 
-- **ADR-0004** — Arcanist’s Tower as **filtered navigation** (Headings / Links /
+- **ADR-0004** — Navigation-class **filtered navigation** (Headings / Links /
   Adjustable semantics).
 - **ADR-0005** — Screenshot / pedagogy validation when scenes exist.
 - **memlog/research/AccessibilityFeatureGamification.md** — Broader VoiceOver teaching
@@ -110,7 +110,7 @@ executed** is appropriate and is the natural way to score a beat.
 Any of the following is valid product work; **pick one in a GameSpec / ticket**, not
 in this ADR alone:
 
-- **Dedicated quest** — “Rotor Actions” / Arcanist module that only teaches Actions.
+- **Dedicated quest** — “Rotor Actions” module that only teaches Actions.
 - **Floor inside** a larger tower — only if combined with ADR-0004 navigation floors
   with a **clear** cognitive separator (different beat, different VO script).
 - **Short module** in First Run or hub help — shallow pass before a timed quest.

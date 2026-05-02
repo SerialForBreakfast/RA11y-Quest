@@ -1,0 +1,54 @@
+RA11y - Design Ticket
+The Threefold Seal — Image Prompt Sheet (Phase 4)
+=================================================
+Date: 2026-05-01
+Owner: Product / Design
+Status: Draft
+Related:
+  memlog/requirements/Design/QuestConcept-ThreefoldSeal.txt
+  memlog/requirements/GameSpec-ArcanistsTower.txt
+  memlog/research/ADR-0008-Rotor-Navigation-ThreefoldSeal-SlimV1.md
+  memlog/requirements/Design/MockupScreens/rotor_three_seals_iphone_*_v01.png
+  memlog/requirements/Design/RotorThreeSealsAssetPipeline.txt
+
+Quest prefix (asset names)
+===========================
+threefold_seal_
+
+Global style constraints (include in every prompt)
+====================================================
+- Painterly flat fantasy; torchlit stone, warm amber, dark umber, muted slate blues.
+- High contrast; readable on phone and iPad.
+- No baked-in UI chrome, timers, or readable quest text in art.
+- No watermarks or logos.
+- One asset per generation; no contact sheets.
+- Authorship per root AGENTS.md: LLM or human masters only for shipping art.
+
+Asset list (initial)
+====================
+
+1) threefold_seal_bg
+--------------------
+Role: non-transparent portrait gameplay background behind all three beats.
+Notes: vault / archive hall; focal interest in center 60% vertical for scaledToFill.
+
+2) threefold_seal_hub_icon
+--------------------------
+Role: hub card thumbnail (wide format per DesignProcess — match enchanter/dungeon hub icon canvas).
+
+3) threefold_seal_title_plate_decoration (optional)
+---------------------------------------------------
+Role: subtle texture behind heading row — only if art-driven headings are adopted; otherwise code-only Text.
+
+4) threefold_seal_niche_frame (optional)
+----------------------------------------
+Role: single niche frame sprite reused three times with different tints in code; or omit and use SwiftUI shapes.
+
+5) threefold_seal_success_flare
+-------------------------------
+Role: transparent success burst overlay for seal completion.
+
+Mockup reference
+================
+Use PNGs in memlog/requirements/Design/MockupScreens/ as composition reference only;
+replace with final authored exports before removing bootstrap status.

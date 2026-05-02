@@ -1,0 +1,19 @@
+RA11y - Asset pipeline notes
+The Threefold Seal (threefold_seal_ prefix)
+===========================================
+Date: 2026-05-01
+Status: Draft
+
+Ingest
+------
+- Masters must be LLM- or human-authored per AGENTS.md.
+- Normalize with utility/ensure_png_rgba.py when edge cleanup applies.
+- Hub icon dimensions: follow DesignTicket-ThreefoldSealPromptSheet.txt and existing
+  `*_hub_icon` examples in Assets.
+
+Catalog placement
+-------------------
+- Add imagesets under RA11y-iOS asset catalog with names matching Swift constants once
+  art is approved.
+- Until masters land, gameplay may use `dungeon_descent_bg` / `enchanter_hub_icon`
+  fallbacks (see iOS implementation comments).

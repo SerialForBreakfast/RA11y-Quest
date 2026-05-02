@@ -1,0 +1,33 @@
+RA11y — Device VoiceOver QA checklist
+The Threefold Seal (VoiceOver rotor navigation)
+============================================
+Date: 2026-05-01
+
+Environment
+-------------
+- Physical iPhone or iPad with VoiceOver on; iOS version recorded.
+- Quiet room or headphones for audio cues.
+
+Practice (three-beat sequence)
+---------------
+- [ ] Prologue: focus lands on primary Continue; rotor not required to proceed.
+- [ ] Beat A (Headings): Headings rotor moves only among title plates; body text is not in heading list.
+- [ ] Beat B (Containers): Containers rotor moves among three labeled niches; labels are plain language.
+- [ ] Beat C (Links): Links rotor moves among margin marks; prose remains reachable without Links if needed.
+- [ ] Wrong activation: one outcome line; no “wrong rotor” phrasing; retry on same beat.
+- [ ] Cooldown prevents double-count when double-tapping rapidly.
+
+Trial (when enabled)
+--------------------
+- [ ] Three rounds appear; each discipline once; cues do not name rotor settings.
+- [ ] Timer announcements at agreed milestones (if implemented).
+
+Results
+-------
+- [ ] Game result summary reads rank, time, mistakes as one VO element.
+- [ ] Skill transfer strings match new localization keys.
+
+Regression
+----------
+- [ ] Hub fourth card unlocks only after Banishment cleared (without audit flag).
+- [ ] VoiceOver interstitial appears when launching quest with VoiceOver off.

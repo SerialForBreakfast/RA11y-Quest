@@ -1,0 +1,519 @@
+RA11y - Research
+Rotor Navigation Quest — Brainstorming & Rework Notes
+======================================================
+Date: 2026-05-01
+Status: Brainstorm (not locked product)
+Related:
+  memlog/research/ADR-0004-ArcanistsTower-Rotor-Interaction.md
+  memlog/requirements/GameSpec-ArcanistsTower.txt
+  memlog/research/ArcanistsTower.txt
+  memlog/research/RotorActions-NextQuest-Curriculum-Investigation.md
+
+Note on vocabulary
+------------------
+This file is about **navigation-class** rotor settings: what VoiceOver’s
+next/previous flick moves **between** on screen (headings, links, containers, etc.).
+
+It is **not** about **Rotor Actions** (Rotor → Actions → default vs custom actions on
+one focus target). That skill stays under ADR-0006 and a separate quest spec.
+
+Purpose
+-------
+The earlier navigation-rotor draft (catalog id `arcanists-tower`; player-facing **The Threefold Seal** in v1) taught **Headings**, **Links**, and **Adjustable**
+in one quest with Practice + Trial + Lights Off. That scope felt heavy for a single
+hub card and mixed three different mental models.
+
+This document captures:
+- Which navigation rotor modes are most **useful in the wild** and often **implemented**
+  by apps and web content.
+- Whether to **tailor** a reworked quest around a **narrower** rotor theme (e.g.
+  **Containers** + thematic “open the right vessel”).
+- **Blue-sky** quest frames for a thorough rework.
+
+Always validate rotor **names and availability** on target iOS versions and devices
+before locking a lesson — Apple adjusts menus over time.
+
+
+1. Navigation rotor modes — practical priority (teaching order of merit)
+------------------------------------------------------------------------
+
+Rough tiers for **transfer** to real iOS use (web, mail, settings, long articles).
+Order is opinionated for a **training product**, not a statistical survey.
+
+Tier A — Very common / high transfer
+  - **Headings** — Long articles, help pages, structured apps; huge win per minute
+    of teaching.
+  - **Links** — Mail, Safari, many in-app web views; distinct from headings when links
+    are dense.
+  - **Form Controls** — Settings, login, forms; pairs well with “find the field”
+    quests (often overlaps with Buttons in simpler UIs).
+
+Tier B — Common in specific contexts
+  - **Buttons** — Simpler apps where everything is a button; can feel redundant with
+    swipe order in flat UIs but still useful.
+  - **Landmarks** — Strong on **web**; variable in native apps depending on markup.
+  - **Images** — When the lesson is “find the illustration / map / icon row.”
+
+Tier C — Useful but niche or layout-dependent
+  - **Containers** — Jumps between accessibility **container** boundaries (regions,
+    scroll areas, grouped sections). Powerful when content authors expose proper
+    container structure; weaker when everything is one flat list with poor grouping.
+  - **Tables / Lists** — Where content exposes list/table semantics (settings tables,
+    grouped lists).
+  - **Static text / Lines / Words / Characters** — Editor and reader navigation; more
+    specialized; higher lesson cost.
+
+Tier D — Teach later or as advanced modules
+  - **Adjustable** — Already in tower draft; valuable but a **different gesture
+    vocabulary** (vertical adjust vs horizontal navigation); consider isolating as its
+    own small quest.
+  - **Vertical / Horizontal** (when present) — Orientation-specific navigation aids.
+
+Takeaway for rework
+  - A **single-rotor-mode v1** (e.g. Headings-only OR Containers-only) reduces scope
+    and matches “one clear lesson per quest.”
+  - **Containers-first** is viable **if** we build **real** `accessibilityElement`
+    containers (and labels) so the Containers rotor has something honest to jump
+    between — same rule as ADR-0004: no fake rotor simulator.
+
+
+2. Containers as the thematic spine — does it fit?
+---------------------------------------------------
+
+Idea (user sketch): narrative says you perceive “boxes” or vessels; player uses rotor
+to move among **containers**, then opens the one that matches a **hint** (color,
+riddle, audio cue, etc.).
+
+Pros
+  - **Thematic**: vaults, reliquaries, chests, ward circles, cartouches, sealed jars,
+    monolith panels — all map to “closed thing → open the right one.”
+  - **Finite choices**: 3–5 containers per beat matches short trial loops.
+  - **Distinct from Headings/Links** lesson: teaches **spatial / region** thinking,
+    not outline or hyperlink scanning.
+
+Risks / constraints
+  - **Authoring burden**: SwiftUI must expose **meaningful container** boundaries and
+    labels; empty or generic containers make the rotor feel random.
+  - **Player vocabulary**: “Containers” in VoiceOver may not match player words;
+    practice must **name the rotor setting** once, then trial uses fiction only
+    (same pattern as ADR-0004 trial).
+  - **Confusion with focus order**: if containers nest badly, next/previous may feel
+    jumpy — design and QA must tune grouping and `accessibilitySortPriority` only
+    after semantics are correct (see memlog/VOAccessibilityResearch.md).
+
+Verdict
+  - **Yes, tailor a rework around Containers** if we commit to **semantic** container
+    design and keep **one primary rotor mode** for v1 (plus optional second mode in a
+    sequel quest).
+
+
+3. Brainstorm — quest frames (navigation rotor, Containers-forward)
+-------------------------------------------------------------------
+
+Each frame assumes: **real** container semantics, **hint** in practice + environmental
+cue in trial, **outcome** feedback (not “wrong rotor”), optional timer/rank later.
+
+A. Storage niche row
+   - Three sealed storage niches on a shelf; hint names material or vow (“open the
+     vessel that held the ember oath”). Containers rotor jumps **between** niche
+     regions; double-tap opens (activates) the focused one.
+
+B. Vault cartouches
+   - Stone wall with cartouche panels; only one responds to the “moon phase” clue.
+     Containers = each panel is a labeled region.
+
+C. Conveyance / sorting room (rail without Rotor Actions)
+   - Three bins or wagons as containers; clue is destination sigil. Same mechanic,
+     stronger logistics fantasy than “color boxes.”
+
+D. Archive drawers (micro Headings hybrid)
+   - If Containers feels thin on one screen, pair **drawer container** labels with
+     inner **headings** only in **v2** — avoid hybrid in v1.
+
+E. Ward circles on the floor
+   - Circular regions as containers; audio pans or haptic identifies which ward
+     matches the riddle; Lights Off leans on audio ring identity.
+
+F. Tome spreads (container = left page / right page / margin)
+   - Risky: nested containers confuse beginners; only if QA proves traversal is clean.
+
+G. “Listening only” trial
+   - Same as E but trial hides visible color words; cue only in VO + sound — raises
+   difficulty; ship after plain visual cue version works.
+
+
+4. Brainstorm — other single-mode quests (if not Containers)
+-------------------------------------------------------------
+
+Headings-only “Codex path”
+  - One long scroll, one riddle → one chapter; trial randomizes chapter pool.
+  - Strongest **document** transfer; weakest **settings-table** transfer alone.
+
+Links-only “Rune line”
+  - Narrow rune strip or mail-like link list; trap links teach care.
+
+Form-controls-only “Sanctum panel”
+  - Settings-like screen: find the toggle or text field the clue names; good prep
+   for system Settings apps.
+
+Landmarks-only “Temple map”
+  - Only if web-style landmarks exist in content; great for Safari-heavy users.
+
+Images-only “Bestiary scan”
+  - Hunt the creature image that matches the clue; decorative images hidden from VO.
+
+
+5. Rework principles (carry into next GameSpec draft)
+-----------------------------------------------------
+
+  - **One navigation rotor mode in v1** unless playtesting proves otherwise.
+  - **Practice** may name the rotor setting; **Trial** uses thematic + sensory cues
+    only (ADR-0004).
+  - **No rotor-state detection**; score by **which element activated** and time.
+  - **Lights Off** optional or post-clear to avoid triple-stacking stress on first
+    completion.
+  - **Rotor Actions** (ADR-0006) remains a **separate** quest; do not merge into this
+    navigation quest without a written merge decision.
+  - Prefer **container labels** that sound good in VoiceOver and read differently in
+    a single sentence (avoid “Box 1, Box 2” unless fiction supports it).
+
+
+6. Bad / tired examples to avoid (unless fiction saves them)
+-----------------------------------------------------------
+
+  - “Green red blue box” with only color as cue — fails color-only users and is thin
+    fantasy; replace with **named vessels** + **one** non-color cue (texture word,
+    sound, riddle line).
+  - Three identical `Group`s with no labels — rotor teaches nothing.
+  - Mixing Adjustable + Containers + Links in one **first** rotor quest — back to
+    overload.
+
+
+7. Open decisions for product
+---------------------------
+
+  - v1 rotor mode: **Containers** vs **Headings** vs other single mode.
+  - **Resolved:** Player-facing name **The Threefold Seal**; stable catalog id `arcanists-tower`; fiction uses archive / storage-row / margin marks (see QuestConcept glossary).
+  - Whether Adjustable and Links become **sequel** hub cards or later **chapters** in a
+    **later** release.
+  - Minimum iOS version for rotor menu parity in copy and QA scripts.
+
+
+8. Next artifacts to create when direction locks
+-----------------------------------------------
+
+  - New or revised `GameSpec-*.txt` for the chosen v1 mode only.
+  - Design ticket + prompt sheet for container art that does not replace semantics.
+  - Device QA script: Containers rotor reaches each labeled region; wrong open
+    outcome; timer optional.
+
+
+9. Separate quests (Headings, Links, Containers, Form controls) — build load
+---------------------------------------------------------------------------
+
+Product direction (2026-05-01 discussion): **one navigation rotor mode per quest**
+instead of one mega-tower — e.g. four quests: **Headings**, **Links**, **Containers**,
+**Form controls**. That is a lot of surface area if each quest is built like a full
+three-stage tower with unique art and long copy.
+
+Why it is still reasonable
+  - **Pedagogy matches the product**: each mode is a different mental model; bundling
+    them inflated cognitive load and felt like “too much for one quest.”
+  - **Implementation can amortize**: one shared **rotor-navigation quest shell**
+    (round loop, timer, rank, VO gate, mistake model per ADR-0004) with **swappable
+    content modules** (heading pool, link pool, container layout, form panel layout).
+    Art and narrative skin per quest, not four unrelated architectures.
+
+How to keep build cost under control
+  - **Thin v1 per quest**: short Practice (name the rotor setting + one micro-room) +
+    short Trial (timed rounds); defer **Lights Off** to v1.1 or post-clear unlock so
+    you do not pay four full “triple stage” tax up front.
+  - **Stagger shipping**: ship **Headings** first (highest transfer), then **Links**,
+    then **Containers**, then **Form controls** — hub chain reflects pedagogy priority,
+    not fantasy chronology requirement.
+  - **Shared fantasy frame**: same “order / archive / tower” fiction with **floor**
+    or **wing** names per quest reduces new IP work vs four unrelated worlds.
+  - **Adjustable** stays out of this navigation set unless you later add a **fifth**
+    small quest; it is gesture-different (ADR-0004 still applies when you add it).
+  - **Rotor Actions** (ADR-0006) remains **outside** this four-pack — different API and
+    lesson; count it separately in roadmap capacity.
+
+Honest capacity note
+  - Four quests is **four** hub cards, **four** VO-gated routes, **four** screenshot /
+    contract rows when those exist — planning and QA multiply even when code is shared.
+  - If capacity is tight, the smallest cut is **merge only where semantics overlap**
+    (rare): e.g. **Links + Buttons** can sometimes share one narrow web-like screen,
+    but **Headings vs Containers** should stay split because user mental model differs.
+
+Open product follow-up
+  - Lock **ship order** and **v1 depth** (Practice+Trial only vs +Lights Off) per quest
+    before writing four full GameSpecs.
+
+
+10. Revised scope option — ONE quest, SIMPLE use of each: Headings, Containers, Links
+------------------------------------------------------------------------------------
+
+Product direction (2026-05-01): one hub quest that teaches **three** navigation rotor
+modes only — **one small beat each** for **Headings**, **Containers**, and **Links**.
+**Form controls** deferred to a later quest. **Adjustable** and **Rotor Actions**
+remain separate curriculum items elsewhere.
+
+This balances “not three full towers” with “not four hub cards to build.”
+
+
+10.1 UX goals
+  - Player leaves knowing **what each mode is for** and having **succeeded once** in
+    each mode on real semantics.
+  - Cognitive load stays bounded: **short** content per beat, **one** success
+    condition per beat, clear **transition** between beats.
+  - ADR-0004: Practice may **name** the rotor setting; Trial (if any) uses **room
+    outcome** copy only; do not detect or punish “wrong rotor” by name.
+
+
+10.2 Recommended beat order (pedagogy)
+  1. **Headings** first — outline / structure scan; most users encounter this in long
+     content first; establishes “rotor changes what flick visits.”
+  2. **Containers** second — region / panel jumps; builds on “chunks” without
+     conflating with hyperlink semantics yet.
+  3. **Links** third — discrete tappable text targets; dense prose optional but keep
+     **few** links so the beat stays short.
+
+  (If playtesting shows Containers harder than Links, swap 2 and 3 — document in
+  GameSpec.)
+
+
+10.3 Stage model (suggested — one quest, two layers)
+  **Layer A — Guided practice (Practice-equivalent)**
+    - Optional **one** prologue card: rotor gesture + “spell wheel / lens” metaphor;
+      dismiss with one primary control; focus contract per VOAccessibilityResearch
+      playbook.
+    - **Beat 1 — Headings**: small scroll (few headings + short body). Objective:
+      jump to named heading, double-tap. Wrong heading → one line outcome, retry.
+    - **Beat 2 — Containers**: **3 labeled containers** (reliquaries, vault bays, cartouche
+      panels). Objective: rotor to **Containers**, land on hinted container, open
+      (activate). Wrong → outcome line, retry.
+    - **Beat 3 — Links**: short passage + **3–4** rune links (or mail-like links).
+      Objective: **Links** rotor, activate named link. Trap/wrong link → outcome, retry.
+    - **No rank** in Layer A; **no timer** or a very soft optional timer only if
+      telemetry shows stalls.
+    - **No separate hint system** beyond Practice copy naming the setting once per beat
+      and clear labels on elements.
+
+  **Layer B — Trial (optional v1 or v1.1)**
+    - **One** short timed run: **3 rounds** (one discipline each), randomized order
+      with constraint “each mode appears once.” Room cues only; no rotor name in cue.
+    - Timer and rank only here — keeps first completion friendly.
+
+  **Lights Off**
+    - **Defer** for this quest’s v1 unless trivial to reuse same tree with dimmed chrome;
+      otherwise post-clear or separate ticket.
+
+
+10.4 Per-beat UX (screen chrome)
+  Shared across beats:
+    - **Where am I**: title strip (“The Threefold Seal — Title hall” / “… — Storage row” / “… — Margin marks”).
+    - **Objective strip**: one sentence or VO-friendly combined region (non-interactive
+      or header) stating the target name or clue.
+    - **Progress**: “1 of 3” or three dots; VoiceOver should announce beat transitions
+      on entry (`layoutChanged` / `screenChanged` as appropriate).
+  Per beat:
+    - **Headings**: focus lands on first heading or objective region; body text stays
+      accessible so Headings rotor has value.
+    - **Containers**: each container is a **real** labeled region; inner controls
+      minimal so double-tap target is obvious.
+    - **Links**: prose length tuned so Links rotor is practical but beat stays short.
+
+
+10.5 Failure and success (feel)
+  - Success: immediate confirmation + short transition animation or sound; move to
+    next beat automatically after VO settles (or explicit “Continue” if auto-advance
+    confuses testers).
+  - Wrong choice: **immediate** outcome line, **short** cooldown, **same** screen state
+    for retry (do not eject from beat on first mistake).
+
+
+10.6 What NOT to do in this scope
+  - Do not add **Form controls** or **Adjustable** in the same v1 quest — scope creep
+    returns to “too much for one card.”
+  - Do not use **color-only** container clues; pair with name, texture word, or audio.
+  - Do not require **Lights Off + Trial + long Practice** all mandatory on first ship.
+
+
+10.7 Implementation sketch (for GameSpec later)
+  - One SwiftUI flow: `enum Beat { case headings, containers, links }` with shared
+    chrome and beat-specific content views.
+  - Shared mistake/timer presenter; discipline-specific content builders.
+  - Device QA: each beat completable with VoiceOver; rotors reach intended elements;
+    wrong activation observable.
+
+
+10.8 Relation to older tower draft
+  - Replaces “three **deep** floors + long trial” with “three **shallow** beats + optional
+    small trial.” Same skills, smaller surface; revisit `GameSpec-ArcanistsTower.txt`
+    or supersede with a new spec name when product locks title.
+
+
+10.9 Incorrect selections — policy (Headings / Containers / Links)
+--------------------------------------------------------------------
+
+What counts as incorrect
+  - **Headings**: user double-taps a **chapter heading** that is **not** the objective
+    heading (including activating body that is not set up as a heading — avoid; body
+    should not masquerade as headings).
+  - **Containers**: user double-taps the **primary action** on the **wrong** container
+    region (define one clear “open” target per vessel so the game can observe which
+    region fired).
+  - **Links**: user activates a **link** that is **not** the objective link (trap links
+    count as incorrect if tapped).
+
+What does **not** count as incorrect (no feedback, or neutral)
+  - Exploring with **wrong rotor setting** and slow swipes — time is its own penalty
+    in timed layers only; do not scold rotor choice (ADR-0004).
+  - Moving focus onto wrong element then **correcting** before activating — no
+    penalty unless you later add a “panic” mode (not v1).
+
+Detection model (implementation)
+  - Branch on **which semantic element received activation** (heading id, container id,
+    link id). **Do not** read VoiceOver’s internal rotor setting.
+  - Same pipeline for Practice and Trial so behavior stays predictable.
+
+Feedback copy (VoiceOver / announcement)
+  - **Outcome-based**, one short line per mistake; **never** “wrong rotor,” “switch to
+    Links,” etc.
+  - Examples (tone, not final strings): “That is not the chapter.” / “The wrong vault
+    opens — empty.” / “A ward snaps shut on that rune.”
+  - Avoid stacking announcement + immediate focus move in the same beat unless tested;
+    prefer outcome line then brief pause before refocusing objective.
+
+Practice vs Trial
+  - **Practice (guided sequence)**: mistake = outcome line + retry; **optional** light
+    instructional tail (“Listen for the chapter named in the clue”) — keep tails
+    short so they do not feel like a second hint system.
+  - **Trial**: mistake increments **mistake count** for rank; optional **time penalty**
+    (e.g. −N seconds) only if playtests show players otherwise ignore wrong opens — tune
+    so exploration is not punished harshly.
+
+UX state after a mistake
+  - **Stay on the same beat**; same targets remain (or regenerate pool if design uses
+    random target — then re-announce objective once).
+  - **Short cooldown** (order of ~0.8–1.2s) before another activation counts — prevents
+    double-count spam and gives VO time to finish.
+  - **Focus**: return to a stable anchor — objective strip, first distractor heading, or
+    first container — pick one rule per beat and document it; avoid focus fights during
+    cooldown.
+
+Success after mistake
+  - Correct activation clears mistake streak visually (optional) and proceeds as in
+    §10.5; do not require extra “reset” tap unless a trap state requires it (prefer not
+    in v1).
+
+Edge cases
+  - **Double mistake same target**: cooldown prevents duplicate-announcement stacking;
+    optional cap on repeated identical mistakes (same line, no spam).
+  - **Timer hits zero during Trial**: defeat rank; summarize mistakes; offer retry from
+    Trial entry, not mid-beat confusion.
+  - **Accessibility**: haptic/light sound may accompany wrong outcome; must not mask
+    VoiceOver speech during the critical correction window.
+
+
+11. Gamification framing — one quest, three beats (Headings → Containers → Links)
+-------------------------------------------------------------------------------
+
+Goal: **one** hub card, **one** story frame, **three** “lenses” on the same fantasy
+problem so each navigation mode has a **distinct verb** in fiction and a **tiny**
+playfield.
+
+
+11.1 Master frame (simple quest pitch)
+  **Working title:** “The Threefold Seal” (locked for v1 ship).
+
+  **Pitch (player-facing):** The signed archive will not open until **three** inner
+  locks agree. Each lock responds to a **different way of moving through the archive**:
+  first by **titles**, then by **chambers**, then by **bound marks** (links). You are
+  not collecting loot — you are **proving** you can move like VoiceOver through dense
+  on-screen clutter.
+
+  **Progress metaphor:** three **seal segments** on a ring or three **candles** on a
+  candelabrum — each beat lights one segment on success (minimal UI, strong read in
+  VO: “First seal set. The index stirs.”).
+
+  **Why it teaches:** fiction names **structure → regions → hyperlinks**, which maps to
+  **Headings → Containers → Links** without ever saying “rotor” in trial copy.
+
+
+11.2 Beat 1 — Headings (“The Index Hall”)
+  **Fantasy:** A wall of **chapter plates** (headings) in a hall of whispers; body text
+  is “draft marginalia” below each plate — dense enough that line-by-line swipes hurt.
+
+  **Player verb:** “Find the **title** the riddle names.”
+
+  **Teachable hook:** Practice says once: use **Headings** so flicks jump **titles**, not
+  every word.
+
+  **Fun:** Riddle is one line; wrong heading triggers a **vault shudder** line (§10.9).
+
+  **Keep it small:** 4–6 headings max in practice; distractors sound similar but labels
+  stay distinct in VO.
+
+
+11.3 Beat 2 — Containers (“The Storage Row”)
+  **Fantasy:** Three **vault bays** (accessibility containers), each a sealed niche with
+  a carved **name on the stone lip** VoiceOver reads as the container label — not “green box.”
+
+  **Player verb:** “Open the **bay** the clue describes.”
+
+  **Teachable hook:** Practice says once: use **Containers** so flicks jump **whole
+  bays**, not inside the wrong niche first.
+
+  **Fun:** Wrong bay opens **empty** or puffs dust — outcome line, no damage spiral.
+
+  **Keep it small:** Exactly **three** bays v1; one clue that keys on **name + one
+  non-color cue** (emblem shape word, material “obsidian lip,” hum pitch in audio).
+
+
+11.4 Beat 3 — Links (“The Bound Margin”)
+  **Fantasy:** A single **tome page** with prose and **glowing ink sigils** (links) in
+  the margin — only sigils are links; prose stays readable noise.
+
+  **Player verb:** “**Trace** the sigil that matches the oath fragment.”
+
+  **Teachable hook:** Practice says once: use **Links** so flicks jump **sigils**, not
+  the story text.
+
+  **Fun:** Wrong sigil is a **trap ward** — short hiss, one line, retry.
+
+  **Keep it small:** 3–4 links including one trap; labels parallel but distinguishable
+  (“Seal of Binding” vs “Seal of Bonding”).
+
+
+11.5 Shared UX chrome (gamified but light)
+  - **Table-guide VO** (short narrator lines): one-line beat intro + success sting; no long cutscenes.
+  - **Seal ring / candelabrum:** 1/3 → 2/3 → 3/3 fills on success; VoiceOver summary on
+    beat entry: “One seal of three remains” after beat 1, etc.
+  - **Objective strip:** riddle fragment + target class (“a chapter,” “a bay,” “a
+    sigil”) without naming rotor in trial layer.
+  - **SFX per beat:** parchment shuffle (headings), stone grind (containers), glass chime
+    (links) — short identity for Lights Off later.
+
+
+11.6 Trial layer (optional, still on-theme)
+  **Name:** “The Scrambled Vault” — same three locks, **random order**, cue-only, short
+  timer.
+
+  **Gamification:** rank by time + mistakes; **no new fiction** — same three rooms as
+  compressed rounds. Seal ring resets or becomes “master seal” glow on full clear.
+
+
+11.7 What to avoid in this framing
+  - Color-only container choice; unlabeled containers; headings that are decorative
+    only; links that duplicate button semantics elsewhere on screen.
+  - Teaching **Form controls** or **Rotor Actions** in this same quest — breaks the
+    three-seal story and scope.
+
+
+11.8 One-line teaching map (for writers)
+  | Beat        | Rotor mode   | Player mental model        | Fantasy verb   |
+  |-------------|--------------|-----------------------------|----------------|
+  | Index Hall  | Headings    | Jump by **outline / title** | Find the title |
+  | Storage row | Containers  | Jump by **room / region**   | Open the bay   |
+  | Bound Margin| Links       | Jump by **hyperlink**       | Trace the sigil|

@@ -185,6 +185,8 @@ struct iOSGameResultView: View {
             return String(localized: "result.skillTransfer.scrollHunt.body")
         case .banishment:
             return String(localized: "result.skillTransfer.banishment.body")
+        case .arcanistsTower:
+            return String(localized: "result.skillTransfer.arcanistsTower.body")
         }
     }
 
@@ -196,6 +198,8 @@ struct iOSGameResultView: View {
             return String(localized: "result.skillTransfer.scrollHunt.realWorld")
         case .banishment:
             return String(localized: "result.skillTransfer.banishment.realWorld")
+        case .arcanistsTower:
+            return String(localized: "result.skillTransfer.arcanistsTower.realWorld")
         }
     }
 

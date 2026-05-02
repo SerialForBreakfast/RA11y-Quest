@@ -174,6 +174,18 @@ extension QuestVoiceOverGestureSpellPlate {
                 accessibilityLabel: String(localized: "voSpell.zScrub.reminder.a11y"),
                 accessibilityIdentifier: "result.voSpell.banishment"
             )
+        case .arcanistsTower:
+            QuestVoiceOverGestureSpellPlate(
+                layout: .resultReminder,
+                kicker: String(localized: "voSpell.kicker.rotor"),
+                title: String(localized: "voSpell.rotorNav.title"),
+                spellBody: String(localized: "voSpell.rotorNav.reminder"),
+                symbolName: "circle.grid.2x2.fill",
+                catalogArtName: nil,
+                catalogArtFallback: nil,
+                accessibilityLabel: String(localized: "voSpell.rotorNav.reminder.a11y"),
+                accessibilityIdentifier: "result.voSpell.arcanistsTower"
+            )
         }
     }
 }

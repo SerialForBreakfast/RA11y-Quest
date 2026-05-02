@@ -58,6 +58,17 @@ struct HubViewModelTests {
         #expect(viewModel.prerequisite(for: banishment)?.id == "scroll-hunt")
     }
 
+    /// The Threefold Seal stays locked until The Banishment has a stored result.
+    @Test func arcanistsTowerLockedUntilBanishmentClearsWithoutAuditFlag() async throws {
+        let storage = InMemoryStorageComponent()
+        let threefoldSeal = try #require(GameCatalog.definition(for: "arcanists-tower"))
+        let viewModel = makeViewModel(storage: storage)
+        await viewModel.refreshBestResults()
+
+        #expect(!viewModel.isUnlocked(threefoldSeal))
+        #expect(viewModel.prerequisite(for: threefoldSeal)?.id == "the-banishment")
+    }
+
     // MARK: - Best Results: Initial State
 
     /// A freshly created view model has no results until `refreshBestResults()` is called.
@@ -66,6 +77,7 @@ struct HubViewModelTests {
         #expect(viewModel.bestRank(for: "find-and-focus") == nil)
         #expect(viewModel.bestRank(for: "scroll-hunt") == nil)
         #expect(viewModel.bestRank(for: "the-banishment") == nil)
+        #expect(viewModel.bestRank(for: "arcanists-tower") == nil)
     }
 
     /// `refreshBestResults()` returns nil for games that have never been played.
@@ -76,6 +88,7 @@ struct HubViewModelTests {
         #expect(viewModel.bestRank(for: "find-and-focus") == nil)
         #expect(viewModel.bestRank(for: "scroll-hunt") == nil)
         #expect(viewModel.bestRank(for: "the-banishment") == nil)
+        #expect(viewModel.bestRank(for: "arcanists-tower") == nil)
     }
 
     // MARK: - Best Results: Load from Storage
@@ -94,6 +107,7 @@ struct HubViewModelTests {
         #expect(viewModel.bestRank(for: "find-and-focus") == .perfect)
         #expect(viewModel.bestRank(for: "scroll-hunt")    == .ok)
         #expect(viewModel.bestRank(for: "the-banishment") == nil)
+        #expect(viewModel.bestRank(for: "arcanists-tower") == nil)
     }
 
     // MARK: - Best Results: Refresh
