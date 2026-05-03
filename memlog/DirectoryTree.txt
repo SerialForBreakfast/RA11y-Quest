@@ -178,6 +178,7 @@ Current structure (as of 2026-05-03)
 |   |       |-- ScreenAuditCheckerboardTests.swift
 |   |       |-- ScreenAuditContractTests.swift
 |   |       |-- ScreenAuditEvidenceTests.swift
+|   |       |-- ScreenAuditFeatureWalkthroughTests.swift
 |   |       |-- ScreenAuditFlowTests.swift
 |   |       |-- ScreenAuditKitTests.swift
 |   |       |-- ScreenAuditRenderedMatteTests.swift
@@ -490,6 +491,7 @@ Current structure (as of 2026-05-03)
 |   |   |-- RotorNavigationQuestBrainstorming.txt
 |   |   |-- RotorThreeSeals-VoiceOver-QAChecklist.txt
 |   |   |-- ScreenshotAndScreenAudit-GoldenPath.md
+|   |   |-- ScreenAuditKitFeatureWalkthrough.md
 |   |   `-- ScreenAuditKit-Workstream.md
 |   `-- DirectoryTree.txt
 |-- scripts

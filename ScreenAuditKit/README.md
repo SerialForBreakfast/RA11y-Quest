@@ -658,12 +658,13 @@ swift test --package-path ScreenAuditKit
 
 Tests are split across two targets:
 
-**`ScreenAuditKitTests`** — Library unit tests (twelve files, ~1 400 lines):
+**`ScreenAuditKitTests`** — Library unit tests (thirteen files, ~1 800 lines):
 
 | Test file | What it covers |
 |---|---|
 | `ScreenAuditContractTests` | JSON decoding, schema validation, required fields; `flows` JSON + evaluator |
 | `ScreenAuditEvidenceTests` | PNG metadata extraction, alpha detection |
+| `ScreenAuditFeatureWalkthroughTests` | Generated PNG walkthrough scenarios proving stakeholder-facing value |
 | `ScreenAuditFlowTests` | Ordered flow steps: exhaustive `ScreenAuditFlowEvaluator` branch matrix |
 | `ScreenAuditValidatorFlowTests` | Full `ScreenAuditValidator.validate` merge when PNGs are partial vs complete |
 | `ScreenAuditRuleTests` | Required/forbidden text, dimension checks, fallback art |

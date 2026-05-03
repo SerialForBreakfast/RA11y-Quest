@@ -66,6 +66,7 @@ public struct ScreenAuditValidator {
     private let overlayRenderer: ScreenAuditOverlayRenderer
     private let renderedMatteInspector: ScreenAuditRenderedMatteInspector
     private let checkerboardInspector: ScreenAuditCheckerboardInspector
+    private let transparencyInspector: ScreenAuditTransparencyInspector
     private let flowEvaluator: ScreenAuditFlowEvaluator
 
     /// Creates a filesystem validator.
@@ -77,6 +78,7 @@ public struct ScreenAuditValidator {
     ///   - overlayRenderer: Renders failed-region review overlays.
     ///   - renderedMatteInspector: Inspects critical regions for matte-like artifacts.
     ///   - checkerboardInspector: Inspects critical regions for checkerboard-like artifacts.
+    ///   - transparencyInspector: Inspects alpha-bearing PNGs for opaque-border export artifacts.
     ///   - flowEvaluator: Evaluates ordered screenshot flows.
     public init(
         imageExtractor: ScreenAuditImageEvidenceExtractor = ScreenAuditImageEvidenceExtractor(),
@@ -86,6 +88,7 @@ public struct ScreenAuditValidator {
         overlayRenderer: ScreenAuditOverlayRenderer = ScreenAuditOverlayRenderer(),
         renderedMatteInspector: ScreenAuditRenderedMatteInspector = ScreenAuditRenderedMatteInspector(),
         checkerboardInspector: ScreenAuditCheckerboardInspector = ScreenAuditCheckerboardInspector(),
+        transparencyInspector: ScreenAuditTransparencyInspector = ScreenAuditTransparencyInspector(),
         flowEvaluator: ScreenAuditFlowEvaluator = ScreenAuditFlowEvaluator()
     ) {
         self.imageExtractor = imageExtractor
@@ -95,6 +98,7 @@ public struct ScreenAuditValidator {
         self.overlayRenderer = overlayRenderer
         self.renderedMatteInspector = renderedMatteInspector
         self.checkerboardInspector = checkerboardInspector
+        self.transparencyInspector = transparencyInspector
         self.flowEvaluator = flowEvaluator
     }
 
@@ -279,6 +283,18 @@ public struct ScreenAuditValidator {
         evidence: ScreenAuditScreenshotEvidence
     ) throws -> [ScreenAuditFinding] {
         var visualFindings: [ScreenAuditFinding] = []
+
+        if evidence.hasAlpha {
+            let opaqueBorderInspection = try transparencyInspector.inspectOpaqueBorder(at: screenshotURL)
+            if let opaqueBorderFinding = transparencyInspector.findingIfNeeded(
+                inspection: opaqueBorderInspection,
+                screenID: screen.id,
+                path: screenshotURL.path,
+                severity: screen.severityOverrides[ScreenAuditRuleID.suspiciousOpaqueBorder.rawValue] ?? .warning
+            ) {
+                visualFindings.append(opaqueBorderFinding)
+            }
+        }
 
         for region in screen.regions.critical {
             let scaledRegion = region.scaled(toPixelWidth: evidence.pixelWidth, pixelHeight: evidence.pixelHeight)

@@ -2,7 +2,7 @@ import Foundation
 
 /// Selects which OCR engine populates ``ScreenAuditOCRTranscript`` during validation.
 public enum ScreenAuditOCROption: String, Sendable, Equatable {
-    /// No OCR; text rules see an empty transcript unless tests inject a custom recognizer.
+    /// No OCR; text rules are surfaced as skipped info findings.
     case none
     /// Apple Vision text recognition on decoded PNG bitmaps (macOS host).
     case vision
