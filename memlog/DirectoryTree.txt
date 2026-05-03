@@ -507,6 +507,7 @@ Current structure (as of 2026-05-03)
 |   |   |-- RotorThreeSeals-VoiceOver-QAChecklist.txt
 |   |   |-- ScreenshotAndScreenAudit-GoldenPath.md
 |   |   |-- ScreenAuditKitFeatureWalkthrough.md
+|   |   |-- ScreenAuditKit-NativeUIElementDetection-Research.md
 |   |   `-- ScreenAuditKit-Workstream.md
 |   `-- DirectoryTree.txt
 |-- scripts
@@ -528,7 +529,7 @@ Current structure (as of 2026-05-03)
 |-- Gemfile.lock
 `-- README.md
 
-119 directories, 276 files
+119 directories, 277 files
 
 Planned first-run (see memlog/requirements/GameSpec-MagicTapFirstSpell.txt)
 ------------------------------------------------------------------------

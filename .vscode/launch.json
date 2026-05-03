@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:RA11y-AccessibilityGamification}/ScreenAuditKit",
+            "name": "Debug screenaudit (ScreenAuditKit)",
+            "target": "screenaudit",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug screenaudit (ScreenAuditKit)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:RA11y-AccessibilityGamification}/ScreenAuditKit",
+            "name": "Release screenaudit (ScreenAuditKit)",
+            "target": "screenaudit",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release screenaudit (ScreenAuditKit)"
+        }
+    ]
+}

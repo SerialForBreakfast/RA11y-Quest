@@ -9,3 +9,8 @@ RA11y.xcworkspace/xcuserdata/josephmccraw.xcuserdatad/UserInterfaceState.xcusers
 /fastlane/test_output
 /fastlane/report.xml
 /vendor/bundle
+
+# Swift Package Manager build artifacts
+**/.build/
+**/.swiftpm/
+**/Package.resolved

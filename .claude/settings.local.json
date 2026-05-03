@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(awk '/## File System Boundaries/,/## Simulator Detection/' \"/Users/josephmccraw/Dropbox/My Mac \\(MacBook-Air\\)/Documents/GitHub/RA11y-AccessibilityGamification/AGENTS.md\")"
+      "Bash(awk '/## File System Boundaries/,/## Simulator Detection/' \"/Users/josephmccraw/Dropbox/My Mac \\(MacBook-Air\\)/Documents/GitHub/RA11y-AccessibilityGamification/AGENTS.md\")",
+      "Bash(swift test *)"
     ]
   }
 }
