@@ -258,7 +258,7 @@ Tasks:
 - SAK-9.2 Add SARIF report output.
 - SAK-9.3 Document fastlane integration.
 - SAK-9.4 Document generic shell integration.
-- SAK-9.5 Document GitHub Actions artifact/report pattern. Partially done: `ios-screenshots.yml` uploads `screen-audit-reports`; optional PR-only `docs/screenshots` gate documented in `ScreenAuditKit/README.md`.
+- SAK-9.5 Document GitHub Actions artifact/report pattern. Partially done: screen audit runs in Fastlane (`screenshots` / `screen_audit`); optional PR-only `docs/screenshots` gate documented in `ScreenAuditKit/README.md`. CI may still attach `build_results/screen-audit` from the same lane output.
 - SAK-9.6 Document Xcode Cloud artifact/report pattern.
 - SAK-9.7 Document Bitrise/Buildkite/CircleCI/Jenkins invocation pattern.
 - SAK-9.8 Add package-level README with minimal non-RA11y example.

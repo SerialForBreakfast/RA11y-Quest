@@ -35,19 +35,4 @@ jobs:
           path: |
             fastlane/screenshots
             fastlane/test_output
-
-      - name: Screen audit (Vision OCR)
-        if: always()
-        env:
-          RA11Y_SCREEN_AUDIT_OCR: vision
-        run: |
-          bash utility/validate_screen_audit.sh \
-            fastlane/screenshots/en-US \
-            "${GITHUB_WORKSPACE}/build_results/screen-audit"
-
-      - name: Upload screen audit reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: screen-audit-reports
-          path: build_results/screen-audit
+            build_results/screen-audit

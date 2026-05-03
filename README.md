@@ -259,10 +259,10 @@ Definition of Done:
 **Screen audit gate:** `bash utility/validate_screen_audit.sh` validates the
 captured screenshots through `ScreenAuditKit`, writes JSON/Markdown reports to
 `build_results/screen-audit/`, and emits overlay artifacts for review-only
-design findings. Set `RA11Y_SCREEN_AUDIT_OCR=vision` to run Apple Vision OCR so
-`text.required` / `text.forbidden` rules apply. The manual
-`.github/workflows/ios-screenshots.yml` job runs this after Fastlane capture,
-uploads `screen-audit-reports`, and fails the job on hard findings. Banishment
+design findings. `bundle exec fastlane ios screenshots` runs ScreenAuditKit with
+Vision OCR after capture (`RA11Y_SCREEN_AUDIT_OCR=vision` via
+`utility/validate_screen_audit.sh`); use `bundle exec fastlane ios screen_audit`
+for the same check against committed `docs/screenshots/en-US`. Banishment
 screenshot warnings currently use
 `RA11y-iOS/RA11y-iOSUITests/ScreenAuditAssetProvenance.json` to explain asset
 source, authoring status, source quality, known risks, and evidence.
@@ -376,6 +376,7 @@ swift test --package-path ScreenAuditKit
 ```bash
 bash utility/validate_screen_audit.sh
 bundle exec fastlane ios screen_audit
+bundle exec fastlane ios screenshots   # capture, then Vision screen audit (see Fastfile)
 ```
 
 The screen audit package is intentionally generic. RA11y provides the app-specific

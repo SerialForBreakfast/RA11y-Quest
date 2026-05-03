@@ -28,6 +28,8 @@ DERIVED_DATA = "#{SCREENSHOT_XCODE_ARTIFACTS}/DerivedData".freeze
 CONTRACT_CHECK = "../utility/validate_screenshot_contract.sh".freeze
 BANISHMENT_ASSET_QA = "../utility/validate_banishment_assets.sh".freeze
 SCREEN_AUDIT_CHECK = "../utility/validate_screen_audit.sh".freeze
+# ScreenAuditKit JSON/Markdown + overlays (repo root); written after capture when using Vision OCR.
+SCREEN_AUDIT_OUTPUT = "../build_results/screen-audit".freeze
 ROUTE_CATALOG  = "../RA11y-iOS/RA11y-iOSUITests/ScreenshotRouteCatalog.md".freeze
 
 # ---------------------------------------------------------------------------
@@ -85,6 +87,10 @@ platform :ios do
     Screenshots land in fastlane/screenshots/en-US/<label>/
 
     Fails loudly (UI.user_error!) if zero devices succeed.
+
+    After at least one device succeeds, runs ScreenAuditKit with Vision OCR on
+    `fastlane/screenshots/en-US/` (see `utility/validate_screen_audit.sh` and
+    `RA11Y_SCREEN_AUDIT_OCR=vision`). Hard findings fail the lane.
   DESC
   lane :screenshots do
     require "json"
@@ -198,6 +204,15 @@ platform :ios do
       end
     end
 
+    # Screen audit gate (host macOS Vision OCR) — same contract as committed docs screenshots.
+    unless succeeded.empty?
+      UI.message("Screen audit: ScreenAuditKit + Vision OCR on #{OUTPUT_BASE} → #{SCREEN_AUDIT_OUTPUT}")
+      sh(
+        "env RA11Y_SCREEN_AUDIT_OCR=vision " \
+        "bash '#{SCREEN_AUDIT_CHECK}' '#{OUTPUT_BASE}' '#{SCREEN_AUDIT_OUTPUT}'"
+      )
+    end
+
     # Fail loudly — never report success when zero screenshots were captured.
     if succeeded.empty?
       UI.user_error!(
@@ -218,9 +233,9 @@ platform :ios do
     screenshots
   end
 
-  desc "Validate committed screenshot folders with ScreenAuditKit"
+  desc "Validate committed screenshot folders with ScreenAuditKit (Vision OCR)"
   lane :screen_audit do
-    sh("bash '#{SCREEN_AUDIT_CHECK}'")
+    sh("env RA11Y_SCREEN_AUDIT_OCR=vision bash '#{SCREEN_AUDIT_CHECK}'")
   end
 end
 

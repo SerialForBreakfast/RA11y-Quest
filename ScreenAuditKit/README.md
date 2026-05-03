@@ -577,8 +577,9 @@ Fastlane (lower cost than a full screenshot capture job).
 bundle exec fastlane ios screen_audit
 ```
 
-Defined in `fastlane/Fastfile`, this lane calls `validate_screen_audit.sh`
-and is wired into the standard release pipeline.
+Defined in `fastlane/Fastfile`: `screen_audit` validates default `docs/screenshots`;
+`screenshots` runs the same script with Vision on `fastlane/screenshots/en-US`
+after capture (see `SCREEN_AUDIT_OUTPUT` in the Fastfile).
 
 ---
 
@@ -696,7 +697,7 @@ contracts, unsupported schema versions, and missing-field contracts.
 | Asset provenance tracking + low-confidence findings | ✅ Shipped |
 | Per-screen severity overrides | ✅ Shipped |
 | Ordered flow validation + flow reports | ✅ Shipped |
-| GitHub Actions screenshot job + screen-audit artifact | ✅ Shipped (`.github/workflows/ios-screenshots.yml`) |
+| Fastlane `screenshots` / `screen_audit` + Vision OCR gate | ✅ Shipped (`fastlane/Fastfile`) |
 | Multi-locale screenshot support | 🔲 Not yet |
 | Dynamic Type / accessibility size variant contracts | 🔲 Not yet |
 | CI badge / summary comment on pull requests | 🔲 Not yet |
