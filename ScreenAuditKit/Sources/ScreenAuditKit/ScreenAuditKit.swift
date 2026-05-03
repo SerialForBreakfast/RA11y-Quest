@@ -135,6 +135,8 @@ public struct ScreenAuditCLI {
             standardOutput("Flow summary: \(parsedArguments.outputDirectory.appendingPathComponent("flow-summary.md").path)")
 
             if result.findingsReport.hasHardFailures {
+                let summaryPath = parsedArguments.outputDirectory.appendingPathComponent("summary.md").path
+                standardError("Human-readable triage: \(summaryPath)")
                 standardError("Screen audit completed with hard failures.")
                 return ScreenAuditExitCode.validationFailed.rawValue
             }

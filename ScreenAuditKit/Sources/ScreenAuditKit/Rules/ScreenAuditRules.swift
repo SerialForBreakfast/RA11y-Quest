@@ -11,6 +11,9 @@ public enum ScreenAuditRuleID: String, Codable, Equatable, Hashable, Sendable {
     /// A forbidden OCR text anchor was present in screenshot evidence.
     case forbiddenTextPresent
 
+    /// Text rules were declared but skipped because OCR was not requested.
+    case textRulesSkipped
+
     /// Screenshot dimensions did not match a device expectation.
     case dimensionMismatch
 
@@ -120,11 +123,41 @@ public struct ScreenAuditRuleEvaluator {
         provenanceSet: ScreenAuditAssetProvenanceSet? = nil
     ) -> [ScreenAuditFinding] {
         var findings: [ScreenAuditFinding] = []
-        findings.append(contentsOf: evaluateRequiredText(contract: contract, evidence: evidence))
-        findings.append(contentsOf: evaluateForbiddenText(contract: contract, evidence: evidence))
+        if evidence.ocrTranscript.recognitionStatus == .notRequested {
+            findings.append(contentsOf: evaluateSkippedTextRules(contract: contract, evidence: evidence))
+        } else {
+            findings.append(contentsOf: evaluateRequiredText(contract: contract, evidence: evidence))
+            findings.append(contentsOf: evaluateForbiddenText(contract: contract, evidence: evidence))
+        }
         findings.append(contentsOf: evaluateDimensions(contract: contract, evidence: evidence))
         findings.append(contentsOf: evaluateFallbackArt(contract: contract, evidence: evidence, provenanceSet: provenanceSet))
         return findings
+    }
+
+    private func evaluateSkippedTextRules(
+        contract: ScreenAuditScreenContract,
+        evidence: ScreenAuditScreenshotEvidence
+    ) -> [ScreenAuditFinding] {
+        let requiredCount = contract.text.required.count
+        let forbiddenCount = contract.text.forbidden.count
+        guard requiredCount + forbiddenCount > 0 else {
+            return []
+        }
+
+        let anchors = skippedTextSummary(required: contract.text.required, forbidden: contract.text.forbidden)
+        return [
+            ScreenAuditFinding(
+                ruleID: .textRulesSkipped,
+                severity: .info,
+                confidence: 1.0,
+                message: "Skipped \(requiredCount) required and \(forbiddenCount) forbidden text rule(s) because OCR was not requested.",
+                evidence: ScreenAuditEvidenceReference(
+                    screenID: evidence.screenID,
+                    path: evidence.path,
+                    excerpt: anchors
+                )
+            )
+        ]
     }
 
     private func evaluateRequiredText(
@@ -256,6 +289,17 @@ public struct ScreenAuditRuleEvaluator {
 
     private func containsText(_ needle: String, in haystack: String) -> Bool {
         haystack.range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+    }
+
+    private func skippedTextSummary(required: [String], forbidden: [String]) -> String {
+        var parts: [String] = []
+        if !required.isEmpty {
+            parts.append("required=\(required.joined(separator: ", "))")
+        }
+        if !forbidden.isEmpty {
+            parts.append("forbidden=\(forbidden.joined(separator: ", "))")
+        }
+        return parts.joined(separator: " | ")
     }
 
     private func formattedRatio(_ ratio: Double) -> String {

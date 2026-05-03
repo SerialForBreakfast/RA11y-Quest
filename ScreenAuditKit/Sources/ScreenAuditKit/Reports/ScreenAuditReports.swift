@@ -99,7 +99,8 @@ public struct ScreenAuditReportWriter {
             to: outputDirectory.appendingPathComponent("findings.json"),
             options: .atomic
         )
-        try markdownSummary(for: findingsReport).write(
+        let includeFlowDocs = flowReport.map { !$0.flows.isEmpty } ?? false
+        try markdownSummary(for: findingsReport, includesFlowDocumentation: includeFlowDocs).write(
             to: outputDirectory.appendingPathComponent("summary.md"),
             atomically: true,
             encoding: .utf8
@@ -119,17 +120,36 @@ public struct ScreenAuditReportWriter {
     }
 
     /// Builds a Markdown summary for humans reviewing validation output.
-    /// - Parameter findingsReport: Findings to summarize.
+    /// - Parameters:
+    ///   - findingsReport: Findings to summarize.
+    ///   - includesFlowDocumentation: When true, the triage section mentions `flow-summary.md`
+    ///     because the contract declared at least one flow and flow reports were written.
     /// - Returns: Markdown summary text.
-    public func markdownSummary(for findingsReport: ScreenAuditFindingsReport) -> String {
+    public func markdownSummary(
+        for findingsReport: ScreenAuditFindingsReport,
+        includesFlowDocumentation: Bool = false
+    ) -> String {
+        let errorCount = findingsReport.findings.filter { $0.severity == .error }.count
+        let warningCount = findingsReport.findings.filter { $0.severity == .warning }.count
+        let infoCount = findingsReport.findings.filter { $0.severity == .info }.count
+
         var lines: [String] = [
             "# Screen Audit Summary",
             "",
             "- Project: \(findingsReport.projectName)",
             "- Findings: \(findingsReport.findings.count)",
-            "- Hard failures: \(findingsReport.findings.filter { $0.severity == .error }.count)",
+            "- Hard failures (error): \(errorCount)",
+            "- Warnings: \(warningCount)",
+            "- Info: \(infoCount)",
             "",
+            "## Where to look next",
+            "",
+            "- Annotated PNGs and per-screen explanations: `overlays/` (same directory as this file).",
         ]
+        if includesFlowDocumentation {
+            lines.append("- Ordered journey review: `flow-summary.md` (and machine-readable `flow.json`).")
+        }
+        lines.append("")
 
         if findingsReport.findings.isEmpty {
             lines.append("No findings.")
@@ -240,6 +260,8 @@ public struct ScreenAuditReportWriter {
             return "Expected instructional or identifying copy was not detected in the screenshot evidence."
         case .forbiddenTextPresent:
             return "Debug, placeholder, or otherwise forbidden copy appears in the captured UI."
+        case .textRulesSkipped:
+            return "Text rules were declared, but this audit did not request OCR, so copy was not checked."
         case .dimensionMismatch:
             return "The PNG dimensions do not match any declared device expectation, which can invalidate visual comparisons."
         case .baselineDifferenceExceeded:
@@ -271,6 +293,8 @@ public struct ScreenAuditReportWriter {
             return "Open the referenced PNG and confirm whether the copy is absent, clipped, localized differently, or missing from OCR."
         case .forbiddenTextPresent:
             return "Remove the forbidden copy from the UI or narrow the contract if it is intentionally visible."
+        case .textRulesSkipped:
+            return "Run the audit again with `--ocr vision` when text required/forbidden rules need enforcement."
         case .dimensionMismatch:
             return "Verify the screenshot folder came from the expected simulator family and update device expectations only for intentional changes."
         case .baselineDifferenceExceeded:

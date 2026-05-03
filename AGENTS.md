@@ -415,6 +415,8 @@ Authoritative files:
 - `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift`
 - `fastlane/Fastfile` (`UI_TEST_IDS` allowlist)
 
+End-to-end workflow (catalog + Fastlane + ScreenAuditKit checks) is summarized in `memlog/research/ScreenshotAndScreenAudit-GoldenPath.md`.
+
 Required rules:
 - Any change to screenshot-covered UI routes, accessibility identifiers, or launch args MUST update all four files in the same change.
 - New screenshot-covered screens MUST include:
@@ -423,6 +425,7 @@ Required rules:
   - A route-catalog row with screenshot file name, scene ID, and root anchor identifier.
 - Before running `fastlane screenshots`, run:
   - `utility/validate_screenshot_contract.sh`
+- When using ScreenAuditKit rules (`ScreenAuditContracts.json`), run `utility/screenaudit_doctor.sh` to catch catalog or flow ID drift before a full audit.
 
 ---
 

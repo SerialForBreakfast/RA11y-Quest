@@ -89,8 +89,8 @@ platform :ios do
     Fails loudly (UI.user_error!) if zero devices succeed.
 
     After at least one device succeeds, runs ScreenAuditKit with Vision OCR on
-    `fastlane/screenshots/en-US/` (see `utility/validate_screen_audit.sh` and
-    `RA11Y_SCREEN_AUDIT_OCR=vision`). Hard findings fail the lane.
+    `fastlane/screenshots/en-US/` via `utility/validate_screen_audit.sh --ocr vision`.
+    Hard findings fail the lane.
   DESC
   lane :screenshots do
     require "json"
@@ -208,8 +208,7 @@ platform :ios do
     unless succeeded.empty?
       UI.message("Screen audit: ScreenAuditKit + Vision OCR on #{OUTPUT_BASE} → #{SCREEN_AUDIT_OUTPUT}")
       sh(
-        "env RA11Y_SCREEN_AUDIT_OCR=vision " \
-        "bash '#{SCREEN_AUDIT_CHECK}' '#{OUTPUT_BASE}' '#{SCREEN_AUDIT_OUTPUT}'"
+        "bash '#{SCREEN_AUDIT_CHECK}' --ocr vision '#{OUTPUT_BASE}' '#{SCREEN_AUDIT_OUTPUT}'"
       )
     end
 
@@ -235,7 +234,7 @@ platform :ios do
 
   desc "Validate committed screenshot folders with ScreenAuditKit (Vision OCR)"
   lane :screen_audit do
-    sh("env RA11Y_SCREEN_AUDIT_OCR=vision bash '#{SCREEN_AUDIT_CHECK}'")
+    sh("bash '#{SCREEN_AUDIT_CHECK}' --ocr vision")
   end
 end
 

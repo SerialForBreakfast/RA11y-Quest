@@ -13,8 +13,23 @@ final class ScreenAuditRuleTests: XCTestCase {
         XCTAssertTrue(findings.isEmpty)
     }
 
-    /// Verifies missing required text returns an error finding with evidence context.
-    func testMissingRequiredTextProducesFinding() {
+    /// Verifies no-op OCR skips text rules as info instead of producing false missing-text failures.
+    func testNoOpOCRSkipsTextRulesAsInfoFinding() {
+        let contract = makeContract()
+        let evidence = makeEvidenceWithoutOCR()
+
+        let findings = ScreenAuditRuleEvaluator().evaluate(contract: contract, evidence: evidence)
+
+        XCTAssertEqual(findings.count, 1)
+        XCTAssertEqual(findings.first?.ruleID, .textRulesSkipped)
+        XCTAssertEqual(findings.first?.severity, .info)
+        XCTAssertEqual(findings.first?.confidence, 1.0)
+        XCTAssertEqual(findings.first?.message, "Skipped 2 required and 1 forbidden text rule(s) because OCR was not requested.")
+        XCTAssertEqual(findings.first?.evidence.excerpt, "required=Quest Board, Start | forbidden=Debug")
+    }
+
+    /// Verifies completed OCR with missing required text returns an error finding with evidence context.
+    func testCompletedOCRMissingRequiredTextProducesFinding() {
         let contract = makeContract()
         let evidence = makeEvidence(transcript: "Start")
 
@@ -28,8 +43,8 @@ final class ScreenAuditRuleTests: XCTestCase {
         XCTAssertEqual(findings.first?.evidence.path, "01_Hub.png")
     }
 
-    /// Verifies forbidden text returns a finding and can use severity overrides.
-    func testForbiddenTextUsesSeverityOverride() {
+    /// Verifies completed OCR with forbidden text returns a finding and can use severity overrides.
+    func testCompletedOCRForbiddenTextUsesSeverityOverride() {
         let contract = makeContract(severityOverrides: [
             ScreenAuditRuleID.forbiddenTextPresent.rawValue: .warning
         ])
@@ -194,6 +209,19 @@ final class ScreenAuditRuleTests: XCTestCase {
             pixelHeight: pixelHeight,
             hasAlpha: false,
             ocrTranscript: ScreenAuditOCRTranscript(fullText: transcript)
+        )
+    }
+
+    /// Creates evidence for a run where OCR was intentionally disabled.
+    /// - Returns: Screenshot evidence with no requested OCR transcript.
+    private func makeEvidenceWithoutOCR() -> ScreenAuditScreenshotEvidence {
+        ScreenAuditScreenshotEvidence(
+            screenID: "hub",
+            path: "01_Hub.png",
+            pixelWidth: 1290,
+            pixelHeight: 2796,
+            hasAlpha: false,
+            ocrTranscript: ScreenAuditOCRTranscript()
         )
     }
 }

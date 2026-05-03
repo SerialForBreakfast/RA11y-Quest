@@ -84,6 +84,22 @@ final class ScreenAuditCLITests: XCTestCase {
         XCTAssertTrue(flowReport.flows.isEmpty)
     }
 
+    /// Verifies `validate` with a non-empty `flows` array writes `flow.json` that round-trips and matches evaluator output.
+    func testValidateWithDeclaredFlowWritesNonEmptyFlowReport() throws {
+        let fixture = try makeTwoScreenFlowValidationFixture()
+
+        let result = runCLI(arguments: validateArguments(for: fixture))
+
+        XCTAssertEqual(result.exitCode, ScreenAuditExitCode.success.rawValue)
+        XCTAssertTrue(result.error.isEmpty)
+
+        let flowData = try Data(contentsOf: fixture.outputDirectory.appendingPathComponent("flow.json"))
+        let flowReport = try JSONDecoder().decode(ScreenAuditFlowReport.self, from: flowData)
+        XCTAssertEqual(flowReport.flows.count, 1)
+        XCTAssertEqual(flowReport.flows.first?.id, "pair")
+        XCTAssertEqual(flowReport.flows.first?.steps.map(\.status), [.present, .present])
+    }
+
     /// Verifies `validate` exits with validation failure when deterministic findings include errors.
     func testValidateHardFailureReturnsValidationFailed() throws {
         let fixture = try makeValidationFixture(
@@ -118,7 +134,10 @@ final class ScreenAuditCLITests: XCTestCase {
         let result = runCLI(arguments: validateArguments(for: fixture))
 
         XCTAssertEqual(result.exitCode, ScreenAuditExitCode.validationFailed.rawValue)
-        XCTAssertTrue(result.error.contains("Screen audit completed with hard failures."))
+        let combinedError = result.error.joined(separator: "\n")
+        XCTAssertTrue(combinedError.contains("Human-readable triage:"))
+        XCTAssertTrue(combinedError.contains("summary.md"))
+        XCTAssertTrue(combinedError.contains("Screen audit completed with hard failures."))
 
         let findingsData = try Data(contentsOf: fixture.outputDirectory.appendingPathComponent("findings.json"))
         let findingsReport = try JSONDecoder().decode(ScreenAuditFindingsReport.self, from: findingsData)
@@ -219,6 +238,70 @@ final class ScreenAuditCLITests: XCTestCase {
 
         let screenshotFile = screenshotsDirectory.appendingPathComponent("pixel.png")
         try transparentPixelPNGData().write(to: screenshotFile, options: .atomic)
+
+        let contractFile = rootDirectory.appendingPathComponent("contracts.json")
+        try contractJSON.write(to: contractFile, atomically: true, encoding: .utf8)
+
+        return ValidationFixture(
+            rootDirectory: rootDirectory,
+            screenshotsDirectory: screenshotsDirectory,
+            contractFile: contractFile,
+            outputDirectory: outputDirectory
+        )
+    }
+
+    /// Builds a fixture with two 1×1 PNGs and one ordered flow (CLI wiring for ``flow.json``).
+    private func makeTwoScreenFlowValidationFixture() throws -> ValidationFixture {
+        let rootDirectory = packageRootURL()
+            .appendingPathComponent(".build")
+            .appendingPathComponent("test-artifacts")
+            .appendingPathComponent("cli")
+            .appendingPathComponent("flow-success")
+
+        if FileManager.default.fileExists(atPath: rootDirectory.path) {
+            try FileManager.default.removeItem(at: rootDirectory)
+        }
+
+        let screenshotsDirectory = rootDirectory.appendingPathComponent("screenshots")
+        let outputDirectory = rootDirectory.appendingPathComponent("reports")
+        try FileManager.default.createDirectory(at: screenshotsDirectory, withIntermediateDirectories: true)
+
+        let png = try transparentPixelPNGData()
+        try png.write(to: screenshotsDirectory.appendingPathComponent("01_Alpha.png"), options: .atomic)
+        try png.write(to: screenshotsDirectory.appendingPathComponent("02_Beta.png"), options: .atomic)
+
+        let contractJSON = """
+        {
+          "schemaVersion": 1,
+          "projectName": "CLI flow fixture",
+          "screens": [
+            {
+              "id": "alpha",
+              "filename": "01_Alpha.png",
+              "devices": [{ "label": "fixture", "pixelWidth": 1, "pixelHeight": 1 }],
+              "text": { "required": [], "optional": [], "forbidden": [] },
+              "severityOverrides": {}
+            },
+            {
+              "id": "beta",
+              "filename": "02_Beta.png",
+              "devices": [{ "label": "fixture", "pixelWidth": 1, "pixelHeight": 1 }],
+              "text": { "required": [], "optional": [], "forbidden": [] },
+              "severityOverrides": {}
+            }
+          ],
+          "flows": [
+            {
+              "id": "pair",
+              "title": "Alpha Beta",
+              "steps": [
+                { "screenID": "alpha" },
+                { "screenID": "beta", "requirePreviousStepPresent": true }
+              ]
+            }
+          ]
+        }
+        """
 
         let contractFile = rootDirectory.appendingPathComponent("contracts.json")
         try contractJSON.write(to: contractFile, atomically: true, encoding: .utf8)

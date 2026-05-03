@@ -36,8 +36,9 @@ Screenshots land in fastlane/screenshots/en-US/<label>/
 Fails loudly (UI.user_error!) if zero devices succeed.
 
 After at least one device succeeds, runs ScreenAuditKit with Vision OCR on
-`fastlane/screenshots/en-US/` (see `utility/validate_screen_audit.sh` and
-`RA11Y_SCREEN_AUDIT_OCR=vision`). Hard findings fail the lane.
+`fastlane/screenshots/en-US/` via `utility/validate_screen_audit.sh --ocr vision`.
+Hard findings fail the lane.
+
 
 ### ios screenshots_quick
 
@@ -53,7 +54,7 @@ Fast screenshot pass for iteration: one preferred iPhone device
 [bundle exec] fastlane ios screen_audit
 ```
 
-Validate committed screenshot folders with ScreenAuditKit (Vision OCR via `RA11Y_SCREEN_AUDIT_OCR=vision`)
+Validate committed screenshot folders with ScreenAuditKit (Vision OCR)
 
 ----
 

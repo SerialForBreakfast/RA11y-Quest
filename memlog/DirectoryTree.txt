@@ -7,10 +7,12 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-04-30)
+Current structure (as of 2026-05-03)
 ---
 
 .
+|-- .vscode
+|   `-- tasks.json
 |-- RA11y-iOS
 |   |-- RA11y-iOS
 |   |   |-- App
@@ -168,6 +170,7 @@ Current structure (as of 2026-04-30)
 |   |   |   `-- ScreenAuditCLITests.swift
 |   |   `-- ScreenAuditKitTests
 |   |       |-- Fixtures
+|   |       |   |-- flow-transition-contracts.json
 |   |       |   |-- missing-required-field-contracts.json
 |   |       |   |-- unsupported-schema-contracts.json
 |   |       |   `-- valid-contracts.json
@@ -181,6 +184,7 @@ Current structure (as of 2026-04-30)
 |   |       |-- ScreenAuditReportTests.swift
 |   |       |-- ScreenAuditRuleTests.swift
 |   |       |-- ScreenAuditTransparencyTests.swift
+|   |       |-- ScreenAuditValidatorFlowTests.swift
 |   |       `-- ScreenAuditVisionOCRRecognizerTests.swift
 |   |-- .gitignore
 |   |-- Package.swift
@@ -485,6 +489,7 @@ Current structure (as of 2026-04-30)
 |   |   |-- RotorActions-NextQuest-Curriculum-Investigation.md
 |   |   |-- RotorNavigationQuestBrainstorming.txt
 |   |   |-- RotorThreeSeals-VoiceOver-QAChecklist.txt
+|   |   |-- ScreenshotAndScreenAudit-GoldenPath.md
 |   |   `-- ScreenAuditKit-Workstream.md
 |   `-- DirectoryTree.txt
 |-- scripts
@@ -498,6 +503,7 @@ Current structure (as of 2026-04-30)
 |   |-- ensure_png_rgba.py
 |   |-- remove_white_background.py
 |   |-- resolve_simulator_udid.jq
+|   |-- screenaudit_doctor.sh
 |   |-- validate_screen_audit.sh
 |   `-- validate_screenshot_contract.sh
 |-- AGENTS.md

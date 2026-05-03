@@ -391,6 +391,8 @@ public struct ScreenAuditValidator {
             return "Check whether the expected copy is missing, clipped, localized differently, or absent from OCR evidence."
         case .forbiddenTextPresent:
             return "Look for debug or placeholder text in the screenshot and remove it if it is not intentional."
+        case .textRulesSkipped:
+            return "No overlay can prove skipped OCR text rules; rerun with `--ocr vision` to inspect copy."
         case .dimensionMismatch:
             return "Confirm this screenshot came from the expected device family before changing the contract."
         case .baselineDifferenceExceeded:

@@ -21,6 +21,17 @@ final class ScreenAuditReportTests: XCTestCase {
                         path: "screen.png",
                         excerpt: "critical-art"
                     )
+                ),
+                ScreenAuditFinding(
+                    ruleID: .textRulesSkipped,
+                    severity: .info,
+                    confidence: 1.0,
+                    message: "Skipped 1 required and 0 forbidden text rule(s) because OCR was not requested.",
+                    evidence: ScreenAuditEvidenceReference(
+                        screenID: "hub",
+                        path: "01_Hub.png",
+                        excerpt: "required=RA11y"
+                    )
                 )
             ]
         )
@@ -32,6 +43,25 @@ final class ScreenAuditReportTests: XCTestCase {
         XCTAssertTrue(markdown.contains("Suggested next step"))
         XCTAssertTrue(markdown.contains("## Rule Guide"))
         XCTAssertTrue(markdown.contains("Inspect the highlighted critical region"))
+        XCTAssertTrue(markdown.contains("- Warnings: 1"))
+        XCTAssertTrue(markdown.contains("- Info: 1"))
+        XCTAssertTrue(markdown.contains("- Hard failures (error): 0"))
+        XCTAssertTrue(markdown.contains("## Where to look next"))
+        XCTAssertTrue(markdown.contains("`overlays/`"))
+        XCTAssertTrue(markdown.contains("textRulesSkipped"))
+        XCTAssertTrue(markdown.contains("Run the audit again with `--ocr vision`"))
+    }
+
+    /// Verifies flow documentation is referenced in the summary when flows are part of the run.
+    func testMarkdownSummaryMentionsFlowDocsWhenConfigured() {
+        let report = ScreenAuditFindingsReport(projectName: "Flow Doc Fixture", findings: [])
+        let markdown = ScreenAuditReportWriter().markdownSummary(
+            for: report,
+            includesFlowDocumentation: true
+        )
+
+        XCTAssertTrue(markdown.contains("flow-summary.md"))
+        XCTAssertTrue(markdown.contains("flow.json"))
     }
 
     /// Verifies overlay Markdown explains the colored rectangles and review intent.

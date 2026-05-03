@@ -76,15 +76,55 @@ public struct ScreenAuditScreenshotEvidence: Codable, Equatable, Sendable {
     }
 }
 
+/// Text recognition state for a screenshot.
+public enum ScreenAuditOCRRecognitionStatus: String, Codable, Equatable, Sendable {
+    /// OCR was intentionally not requested for this validation run.
+    case notRequested
+
+    /// OCR ran and the transcript reflects recognizer output, which may be empty.
+    case completed
+}
+
 /// OCR transcript extracted from a screenshot.
 public struct ScreenAuditOCRTranscript: Codable, Equatable, Sendable {
     /// Full transcript text in reading order, when known.
     public let fullText: String
 
-    /// Creates an OCR transcript.
-    /// - Parameter fullText: Full transcript text in reading order, when known.
-    public init(fullText: String = "") {
+    /// Whether OCR was requested for this transcript.
+    public let recognitionStatus: ScreenAuditOCRRecognitionStatus
+
+    /// Creates an empty transcript for a validation run where OCR was intentionally disabled.
+    public init() {
+        fullText = ""
+        recognitionStatus = .notRequested
+    }
+
+    /// Creates an OCR transcript from recognizer output.
+    /// - Parameters:
+    ///   - fullText: Full transcript text in reading order, when known.
+    ///   - recognitionStatus: Recognition state for the transcript.
+    public init(
+        fullText: String,
+        recognitionStatus: ScreenAuditOCRRecognitionStatus = .completed
+    ) {
         self.fullText = fullText
+        self.recognitionStatus = recognitionStatus
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case fullText
+        case recognitionStatus
+    }
+
+    /// Decodes OCR transcript data, defaulting older empty reports to `notRequested`.
+    /// - Parameter decoder: Decoder containing transcript fields.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        fullText = try container.decodeIfPresent(String.self, forKey: .fullText) ?? ""
+        recognitionStatus = try container.decodeIfPresent(
+            ScreenAuditOCRRecognitionStatus.self,
+            forKey: .recognitionStatus
+        ) ?? (fullText.isEmpty ? .notRequested : .completed)
     }
 }
 

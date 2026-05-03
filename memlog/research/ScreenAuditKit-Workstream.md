@@ -208,6 +208,17 @@ Acceptance checks:
 - Missing required states fail deterministically. Verified.
 - Duplicate/stuck findings include the flow ID and duplicated screen reference.
 - Mermaid output is advisory report content, not required for CI pass/fail.
+- **Test matrix:** `ScreenAuditFlowTests` exercises every `ScreenAuditFlowEvaluator`
+  branch (present/missing optional+required, duplicate dedupe, unknown step,
+  `requirePreviousStepPresent` true/false/first-step guard, multi-flow isolation,
+  duplicate evidence `screenID`s, deterministic re-run). Fixture
+  `Fixtures/flow-transition-contracts.json` + `ScreenAuditContractTests` prove
+  JSON `flows` decode matches evaluator behavior.
+- **Validator merge:** `ScreenAuditValidatorFlowTests` proves missing PNGs omit
+  evidence rows yet still merge `missingScreenshot` with flow findings (same
+  order as production `ScreenAuditValidator.validate`).
+- **CLI wiring:** `ScreenAuditCLITests` includes a two-PNG fixture with a declared
+  flow and asserts non-empty `flow.json`.
 
 Implementation notes:
 

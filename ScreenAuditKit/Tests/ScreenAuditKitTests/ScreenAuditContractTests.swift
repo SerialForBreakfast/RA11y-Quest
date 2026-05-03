@@ -4,6 +4,35 @@ import XCTest
 
 /// Tests JSON contract decoding and validation behavior.
 final class ScreenAuditContractTests: XCTestCase {
+    /// Verifies JSON `flows` with `requirePreviousStepPresent` decode and match hand-built evaluator behavior.
+    ///
+    /// Guards Codable defaults and key names for `flows` against drift from the Swift initializer path.
+    func testFlowTransitionFixtureDecodesAndEvaluatorEmitsExpectedFindings() throws {
+        let contractSet = try decodeFixture(named: "flow-transition-contracts")
+        XCTAssertEqual(contractSet.flows.count, 1)
+        let step1 = try XCTUnwrap(contractSet.flows.first?.steps.dropFirst().first)
+        XCTAssertEqual(step1.screenID, "beta")
+        XCTAssertTrue(step1.requirePreviousStepPresent)
+
+        let evidenceBetaOnly = [
+            ScreenAuditScreenshotEvidence(
+                screenID: "beta",
+                path: "02_Beta.png",
+                pixelWidth: 1,
+                pixelHeight: 1,
+                hasAlpha: false,
+                ocrTranscript: ScreenAuditOCRTranscript(fullText: "")
+            ),
+        ]
+
+        let result = ScreenAuditFlowEvaluator().evaluate(contractSet: contractSet, evidenceItems: evidenceBetaOnly)
+
+        let ruleIDs = Set(result.findings.map(\.ruleID))
+        XCTAssertTrue(ruleIDs.contains(.flowMissingRequiredStep))
+        XCTAssertTrue(ruleIDs.contains(.flowPreviousStepMissing))
+        XCTAssertEqual(result.report.flows.first?.steps.map(\.status), [.missing, .present])
+    }
+
     /// Verifies a representative contract fixture decodes into typed schema models.
     func testValidContractFixtureDecodes() throws {
         let contractSet = try decodeFixture(named: "valid-contracts")

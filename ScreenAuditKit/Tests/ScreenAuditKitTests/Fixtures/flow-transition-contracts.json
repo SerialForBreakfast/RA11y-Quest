@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "projectName": "Flow JSON transition fixture",
+  "screens": [
+    {
+      "id": "alpha",
+      "filename": "01_Alpha.png",
+      "devices": [
+        {
+          "label": "fixture",
+          "pixelWidth": 1,
+          "pixelHeight": 1
+        }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "severityOverrides": {}
+    },
+    {
+      "id": "beta",
+      "filename": "02_Beta.png",
+      "devices": [
+        {
+          "label": "fixture",
+          "pixelWidth": 1,
+          "pixelHeight": 1
+        }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "severityOverrides": {}
+    }
+  ],
+  "flows": [
+    {
+      "id": "sequence",
+      "title": "Alpha then Beta",
+      "steps": [
+        { "screenID": "alpha" },
+        {
+          "screenID": "beta",
+          "requirePreviousStepPresent": true
+        }
+      ]
+    }
+  ]
+}

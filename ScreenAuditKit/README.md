@@ -539,6 +539,8 @@ written alongside each overlay PNG.
 
 ## RA11y Integration
 
+**Workflow guide:** `memlog/research/ScreenshotAndScreenAudit-GoldenPath.md` (ordered local commands, five-surface checklist, adoption levels A–C, Fastlane mapping).
+
 ### Input Sources
 
 | File | Role |
@@ -555,21 +557,30 @@ written alongside each overlay PNG.
 # Validate all device folders under docs/screenshots/en-US/ (OCR off unless set):
 bash utility/validate_screen_audit.sh
 
-# Enable Vision OCR for text rules (slower; matches CI screenshot workflow):
+# Explicit OCR (overrides env; preferred for one-off commands):
+bash utility/validate_screen_audit.sh --ocr none
+bash utility/validate_screen_audit.sh --ocr vision
+
+# CI-style default: Vision OCR if neither --ocr nor RA11Y_SCREEN_AUDIT_OCR is set:
+RA11Y_SCREEN_AUDIT_PROFILE=ci bash utility/validate_screen_audit.sh
+
+# Legacy env (still supported):
 RA11Y_SCREEN_AUDIT_OCR=vision bash utility/validate_screen_audit.sh
 
-# Override screenshot source and output directories:
-bash utility/validate_screen_audit.sh /path/to/screenshots /path/to/output
+# Override screenshot source and output directories (after any flags):
+bash utility/validate_screen_audit.sh --ocr vision /path/to/screenshots /path/to/output
 ```
+
+Pre-flight without PNGs: `bash utility/screenaudit_doctor.sh` (see golden path doc).
 
 The script iterates over each device subfolder and runs `screenaudit validate`
 once per device. Exit code is non-zero if any device folder has hard failures.
-`RA11Y_SCREEN_AUDIT_OCR` defaults to `none`; set it to `vision` to pass `--ocr vision`
-into `screenaudit` (required for `text.required` / `text.forbidden` enforcement).
+OCR resolution order: **`--ocr`** if passed; else if **`RA11Y_SCREEN_AUDIT_PROFILE=ci`** then `vision`; else **`RA11Y_SCREEN_AUDIT_OCR`** (default `none`). Vision is required for `text.required` / `text.forbidden` enforcement; with OCR off, text rules are skipped and surfaced as info findings.
 
-**Optional PR-only gate:** run the same script with default paths after updating
+**Optional PR-only gate:** run the same script with `--ocr vision` after updating
 `docs/screenshots/en-US` so text rules run against committed PNGs without invoking
-Fastlane (lower cost than a full screenshot capture job).
+Fastlane (lower cost than a full screenshot capture job). Omit Vision for the
+fast metadata-only pass.
 
 ### Running via Fastlane
 
@@ -599,7 +610,7 @@ select a concrete recognizer:
 
 | Mode | Recognizer | When to use |
 |---|---|---|
-| `none` (default CLI / script) | `ScreenAuditNoOpOCRRecognizer` | Metadata-only checks; skip OCR cost |
+| `none` (default CLI / script) | `ScreenAuditNoOpOCRRecognizer` | Metadata-only checks; text rules become info findings |
 | `vision` | `ScreenAuditVisionOCRRecognizer` | Host macOS validation with `VNRecognizeTextRequest` |
 
 Use `screenaudit validate ... --ocr vision` or `RA11Y_SCREEN_AUDIT_OCR=vision` with
@@ -647,13 +658,14 @@ swift test --package-path ScreenAuditKit
 
 Tests are split across two targets:
 
-**`ScreenAuditKitTests`** — Library unit tests (eleven files, ~1 300 lines):
+**`ScreenAuditKitTests`** — Library unit tests (twelve files, ~1 400 lines):
 
 | Test file | What it covers |
 |---|---|
-| `ScreenAuditContractTests` | JSON decoding, schema validation, required fields |
+| `ScreenAuditContractTests` | JSON decoding, schema validation, required fields; `flows` JSON + evaluator |
 | `ScreenAuditEvidenceTests` | PNG metadata extraction, alpha detection |
-| `ScreenAuditFlowTests` | Ordered flow steps, duplicate and predecessor checks |
+| `ScreenAuditFlowTests` | Ordered flow steps: exhaustive `ScreenAuditFlowEvaluator` branch matrix |
+| `ScreenAuditValidatorFlowTests` | Full `ScreenAuditValidator.validate` merge when PNGs are partial vs complete |
 | `ScreenAuditRuleTests` | Required/forbidden text, dimension checks, fallback art |
 | `ScreenAuditBaselineTests` | Pixel-diff accuracy, ignored regions, threshold clamping |
 | `ScreenAuditTransparencyTests` | Opaque-border heuristics, edge cases |
@@ -664,11 +676,20 @@ Tests are split across two targets:
 | `ScreenAuditKitTests` | Package version and help-text smoke tests |
 
 **`ScreenAuditCLITests`** — CLI argument parsing and end-to-end integration
-(~250 lines): validates all flag combinations, missing-argument errors, and
-the full validate command flow with fixture data.
+(~300 lines): validates all flag combinations, missing-argument errors, the
+full validate command flow with fixture data, and a **non-empty `flows`**
+fixture so `flow.json` round-trips through the CLI.
 
 **Test fixtures** live in `Tests/ScreenAuditKitTests/Fixtures/` and include valid
-contracts, unsupported schema versions, and missing-field contracts.
+contracts, unsupported schema versions, missing-field contracts, and
+`flow-transition-contracts.json` for flow JSON parity tests.
+
+**Flow validation guarantees (tests, not formal proof):** the evaluator is
+pure over `(ScreenAuditContractSet, [ScreenAuditScreenshotEvidence])`;
+`ScreenAuditFlowTests` lock branch behavior including “no false positive”
+`flowPreviousStepMissing` cases. `ScreenAuditValidatorFlowTests` lock the
+production path where missing files never produce evidence rows—so flow logic
+always sees the same `observedScreenIDs` the host run would.
 
 ---
 

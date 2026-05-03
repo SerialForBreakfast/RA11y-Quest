@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Screenshot contract check",
+      "type": "shell",
+      "command": "bash utility/validate_screenshot_contract.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Screen audit doctor",
+      "type": "shell",
+      "command": "bash utility/screenaudit_doctor.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Screen audit (committed screenshots)",
+      "type": "shell",
+      "command": "bash utility/validate_screen_audit.sh --ocr none",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
