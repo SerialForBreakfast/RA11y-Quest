@@ -1,0 +1,43 @@
+{
+  "findings" : [
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "DEBUG BUILD",
+        "path" : "<feature-walkthrough-test-output>\/settings-debug-fail\/screenshots\/screen.png",
+        "screenID" : "settings"
+      },
+      "message" : "Forbidden text `DEBUG BUILD` was found.",
+      "ruleID" : "forbiddenTextPresent",
+      "severity" : "error"
+    },
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "TODO",
+        "path" : "<feature-walkthrough-test-output>\/settings-debug-fail\/screenshots\/screen.png",
+        "screenID" : "settings"
+      },
+      "message" : "Forbidden text `TODO` was found.",
+      "ruleID" : "forbiddenTextPresent",
+      "severity" : "error"
+    }
+  ],
+  "overlayPath" : "<feature-walkthrough-test-output>\/settings-debug-fail\/reports\/overlays\/settings-overlay.png",
+  "regions" : [
+    {
+      "label" : "screenshot: screenshot",
+      "region" : {
+        "height" : 844,
+        "name" : "screenshot",
+        "width" : 390,
+        "x" : 0,
+        "y" : 0
+      },
+      "role" : "screenshot"
+    }
+  ],
+  "reportVersion" : 1,
+  "screenID" : "settings",
+  "screenshotPath" : "<feature-walkthrough-test-output>\/settings-debug-fail\/screenshots\/screen.png"
+}

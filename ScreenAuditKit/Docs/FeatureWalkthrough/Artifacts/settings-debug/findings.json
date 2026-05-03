@@ -1,0 +1,28 @@
+{
+  "findings" : [
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "DEBUG BUILD",
+        "path" : "<feature-walkthrough-test-output>\/settings-debug-fail\/screenshots\/screen.png",
+        "screenID" : "settings"
+      },
+      "message" : "Forbidden text `DEBUG BUILD` was found.",
+      "ruleID" : "forbiddenTextPresent",
+      "severity" : "error"
+    },
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "TODO",
+        "path" : "<feature-walkthrough-test-output>\/settings-debug-fail\/screenshots\/screen.png",
+        "screenID" : "settings"
+      },
+      "message" : "Forbidden text `TODO` was found.",
+      "ruleID" : "forbiddenTextPresent",
+      "severity" : "error"
+    }
+  ],
+  "projectName" : "Settings Walkthrough",
+  "reportVersion" : 1
+}

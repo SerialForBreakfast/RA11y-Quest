@@ -1,0 +1,17 @@
+{
+  "findings" : [
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "8124\/518400 pixels",
+        "path" : "<feature-walkthrough-test-output>\/tvos-focus-fail\/screenshots\/screen.png",
+        "screenID" : "library"
+      },
+      "message" : "Baseline mismatch ratio 0.0157 exceeded allowed ratio 0.0100.",
+      "ruleID" : "baselineDifferenceExceeded",
+      "severity" : "warning"
+    }
+  ],
+  "projectName" : "tvOS Focus Walkthrough",
+  "reportVersion" : 1
+}

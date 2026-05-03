@@ -1,0 +1,32 @@
+{
+  "findings" : [
+    {
+      "confidence" : 0.75,
+      "evidence" : {
+        "excerpt" : "1260\/1260 alternating cell groups",
+        "path" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/checker.png",
+        "screenID" : "checker"
+      },
+      "message" : "Region `hero-art` contains an alternating checkerboard-like pattern that may indicate a rendered transparency artifact.",
+      "ruleID" : "checkerboardPatternRisk",
+      "severity" : "warning"
+    }
+  ],
+  "overlayPath" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/reports\/overlays\/checker-overlay.png",
+  "regions" : [
+    {
+      "label" : "critical: hero-art",
+      "region" : {
+        "height" : 292,
+        "name" : "hero-art",
+        "width" : 302,
+        "x" : 44,
+        "y" : 176
+      },
+      "role" : "critical"
+    }
+  ],
+  "reportVersion" : 1,
+  "screenID" : "checker",
+  "screenshotPath" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/checker.png"
+}

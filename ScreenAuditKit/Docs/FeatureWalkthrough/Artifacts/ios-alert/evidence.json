@@ -1,0 +1,17 @@
+{
+  "projectName" : "iOS Alert Walkthrough",
+  "reportVersion" : 1,
+  "screenshots" : [
+    {
+      "hasAlpha" : true,
+      "ocrTranscript" : {
+        "fullText" : "10:41\nFiles\nDelete saved project?\nThis action removes the local copy fr....\nDelete",
+        "recognitionStatus" : "completed"
+      },
+      "path" : "<feature-walkthrough-test-output>\/ios-alert-fail\/screenshots\/screen.png",
+      "pixelHeight" : 844,
+      "pixelWidth" : 390,
+      "screenID" : "deleteAlert"
+    }
+  ]
+}

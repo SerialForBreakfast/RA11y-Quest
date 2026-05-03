@@ -1,0 +1,17 @@
+{
+  "findings" : [
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "21529\/326472 pixels",
+        "path" : "<feature-walkthrough-test-output>\/baseline-clipped-fail\/screenshots\/screen.png",
+        "screenID" : "onboarding"
+      },
+      "message" : "Baseline mismatch ratio 0.0659 exceeded allowed ratio 0.0100.",
+      "ruleID" : "baselineDifferenceExceeded",
+      "severity" : "warning"
+    }
+  ],
+  "projectName" : "Baseline Walkthrough",
+  "reportVersion" : 1
+}

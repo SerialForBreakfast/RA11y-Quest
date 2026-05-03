@@ -1,0 +1,17 @@
+{
+  "projectName" : "Settings Walkthrough",
+  "reportVersion" : 1,
+  "screenshots" : [
+    {
+      "hasAlpha" : true,
+      "ocrTranscript" : {
+        "fullText" : "10:41\nPrivacy\nMicrophone\nAllowed\nLocation\nWhile Using\nNotifications\nOn\nDEBUG BUILD\nTODO: wire API before release",
+        "recognitionStatus" : "completed"
+      },
+      "path" : "<feature-walkthrough-test-output>\/settings-debug-fail\/screenshots\/screen.png",
+      "pixelHeight" : 844,
+      "pixelWidth" : 390,
+      "screenID" : "settings"
+    }
+  ]
+}

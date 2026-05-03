@@ -1,0 +1,32 @@
+{
+  "findings" : [
+    {
+      "confidence" : 0.8,
+      "evidence" : {
+        "excerpt" : "2464\/2464 edge pixels opaque; 286032 transparent interior pixels",
+        "path" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/alpha.png",
+        "screenID" : "alpha"
+      },
+      "message" : "PNG has fully opaque edges around transparent interior pixels, which can indicate a rectangular matte or bad alpha cleanup.",
+      "ruleID" : "suspiciousOpaqueBorder",
+      "severity" : "warning"
+    }
+  ],
+  "overlayPath" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/reports\/overlays\/alpha-overlay.png",
+  "regions" : [
+    {
+      "label" : "screenshot: screenshot",
+      "region" : {
+        "height" : 844,
+        "name" : "screenshot",
+        "width" : 390,
+        "x" : 0,
+        "y" : 0
+      },
+      "role" : "screenshot"
+    }
+  ],
+  "reportVersion" : 1,
+  "screenID" : "alpha",
+  "screenshotPath" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/alpha.png"
+}

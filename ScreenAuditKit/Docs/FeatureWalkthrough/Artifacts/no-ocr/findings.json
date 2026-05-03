@@ -1,0 +1,17 @@
+{
+  "findings" : [
+    {
+      "confidence" : 1,
+      "evidence" : {
+        "excerpt" : "required=Cancel | forbidden=DEBUG BUILD",
+        "path" : "<feature-walkthrough-test-output>\/no-ocr-skip\/screenshots\/screen.png",
+        "screenID" : "deleteAlert"
+      },
+      "message" : "Skipped 1 required and 1 forbidden text rule(s) because OCR was not requested.",
+      "ruleID" : "textRulesSkipped",
+      "severity" : "info"
+    }
+  ],
+  "projectName" : "No OCR Walkthrough",
+  "reportVersion" : 1
+}

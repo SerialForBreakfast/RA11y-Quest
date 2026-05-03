@@ -1,0 +1,39 @@
+{
+  "projectName" : "Visual Artifact Walkthrough",
+  "reportVersion" : 1,
+  "screenshots" : [
+    {
+      "hasAlpha" : true,
+      "ocrTranscript" : {
+        "fullText" : "",
+        "recognitionStatus" : "notRequested"
+      },
+      "path" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/matte.png",
+      "pixelHeight" : 844,
+      "pixelWidth" : 390,
+      "screenID" : "matte"
+    },
+    {
+      "hasAlpha" : true,
+      "ocrTranscript" : {
+        "fullText" : "",
+        "recognitionStatus" : "notRequested"
+      },
+      "path" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/checker.png",
+      "pixelHeight" : 844,
+      "pixelWidth" : 390,
+      "screenID" : "checker"
+    },
+    {
+      "hasAlpha" : true,
+      "ocrTranscript" : {
+        "fullText" : "",
+        "recognitionStatus" : "notRequested"
+      },
+      "path" : "<feature-walkthrough-test-output>\/visual-artifacts-fail\/screenshots\/alpha.png",
+      "pixelHeight" : 844,
+      "pixelWidth" : 390,
+      "screenID" : "alpha"
+    }
+  ]
+}

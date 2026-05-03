@@ -142,6 +142,21 @@ Current structure (as of 2026-05-03)
 |   |       `-- VoiceOverTests.swift
 |   `-- Package.swift
 |-- ScreenAuditKit
+|   |-- Docs
+|   |   `-- FeatureWalkthrough
+|   |       |-- Artifacts
+|   |       |   |-- baseline-drift
+|   |       |   |-- clean-happy-path
+|   |       |   |-- device-orientation
+|   |       |   |-- flow-completeness
+|   |       |   |-- ios-alert
+|   |       |   |-- mac-toolbar
+|   |       |   |-- no-ocr
+|   |       |   |-- settings-debug
+|   |       |   |-- tvos-focus
+|   |       |   `-- visual-artifacts
+|   |       |-- ScreenAuditKitFeatureWalkthrough.md
+|   |       `-- refresh_artifacts.sh
 |   |-- Sources
 |   |   |-- ScreenAuditKit
 |   |   |   |-- Contracts

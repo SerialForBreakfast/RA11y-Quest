@@ -10,6 +10,7 @@ exit codes are outputs.
 ## Table of Contents
 
 - [What It Does](#what-it-does)
+- [Executive Walkthrough](#executive-walkthrough)
 - [How It Works](#how-it-works)
   - [Pipeline Overview](#pipeline-overview)
   - [Architecture](#architecture)
@@ -70,6 +71,18 @@ visual artifact thresholds, and optional pixel-diff baselines.
 Every finding is written to `findings.json` with a rule ID, severity, confidence
 score, and a human-readable message. Findings classified as `.error` cause the CLI
 to exit non-zero for CI/CD gating.
+
+## Executive Walkthrough
+
+The package includes a stakeholder-facing proof document with generated pass/fail
+PNG fixtures, report excerpts, and the tests that prove each scenario:
+
+- `Docs/FeatureWalkthrough/ScreenAuditKitFeatureWalkthrough.md`
+- `Docs/FeatureWalkthrough/Artifacts/`
+- `Docs/FeatureWalkthrough/refresh_artifacts.sh`
+
+Run `swift test --package-path ScreenAuditKit`, then `bash ScreenAuditKit/Docs/FeatureWalkthrough/refresh_artifacts.sh`
+to refresh the curated walkthrough artifacts from the latest test run.
 
 ---
 
@@ -664,7 +677,7 @@ Tests are split across two targets:
 |---|---|
 | `ScreenAuditContractTests` | JSON decoding, schema validation, required fields; `flows` JSON + evaluator |
 | `ScreenAuditEvidenceTests` | PNG metadata extraction, alpha detection |
-| `ScreenAuditFeatureWalkthroughTests` | Generated PNG walkthrough scenarios proving stakeholder-facing value |
+| `ScreenAuditFeatureWalkthroughTests` | Native-style generated PNG walkthrough scenarios, curated docs artifacts, report assertions |
 | `ScreenAuditFlowTests` | Ordered flow steps: exhaustive `ScreenAuditFlowEvaluator` branch matrix |
 | `ScreenAuditValidatorFlowTests` | Full `ScreenAuditValidator.validate` merge when PNGs are partial vs complete |
 | `ScreenAuditRuleTests` | Required/forbidden text, dimension checks, fallback art |
