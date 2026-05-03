@@ -10,7 +10,7 @@ final class ScreenAuditContractTests: XCTestCase {
 
         XCTAssertEqual(contractSet.schemaVersion, 1)
         XCTAssertEqual(contractSet.projectName, "Fixture App")
-        XCTAssertEqual(contractSet.screens.count, 1)
+        XCTAssertEqual(contractSet.screens.count, 2)
 
         let screen = try XCTUnwrap(contractSet.screens.first)
         XCTAssertEqual(screen.id, "hub")
@@ -26,6 +26,10 @@ final class ScreenAuditContractTests: XCTestCase {
         XCTAssertEqual(contractSet.flows.first?.id, "onboarding")
         XCTAssertEqual(contractSet.flows.first?.steps.first?.screenID, "hub")
         XCTAssertEqual(contractSet.flows.first?.steps.first?.required, true)
+        XCTAssertEqual(contractSet.flows.first?.steps.first?.requirePreviousStepPresent, false)
+        let secondStep = try XCTUnwrap(contractSet.flows.first?.steps.dropFirst().first)
+        XCTAssertEqual(secondStep.screenID, "help")
+        XCTAssertTrue(secondStep.requirePreviousStepPresent)
 
         let device = try XCTUnwrap(screen.devices.first)
         XCTAssertEqual(device.label, "iPhone_large")

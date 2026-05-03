@@ -13,6 +13,9 @@ public enum ScreenAuditEvidenceError: Error, Equatable, LocalizedError {
     /// The PNG image could not be decoded into pixel metadata.
     case missingImageProperties(path: String)
 
+    /// Vision text recognition failed for the decoded image.
+    case ocrFailed(path: String, reason: String)
+
     /// Human-readable error text suitable for CLI and report output.
     public var errorDescription: String? {
         switch self {
@@ -22,6 +25,8 @@ public enum ScreenAuditEvidenceError: Error, Equatable, LocalizedError {
             "Screenshot image at `\(path)` must be a PNG. Actual type: \(actualType ?? "unknown")."
         case let .missingImageProperties(path):
             "Unable to decode PNG metadata for screenshot image at `\(path)`."
+        case let .ocrFailed(path, reason):
+            "OCR failed for screenshot image at `\(path)`: \(reason)"
         }
     }
 }

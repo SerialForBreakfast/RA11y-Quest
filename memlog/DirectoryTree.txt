@@ -145,7 +145,8 @@ Current structure (as of 2026-04-30)
 |   |   |   |-- Contracts
 |   |   |   |   `-- ScreenAuditContracts.swift
 |   |   |   |-- Evidence
-|   |   |   |   `-- ScreenAuditEvidence.swift
+|   |   |   |   |-- ScreenAuditEvidence.swift
+|   |   |   |   `-- ScreenAuditVisionOCRRecognizer.swift
 |   |   |   |-- Rules
 |   |   |   |   `-- ScreenAuditRules.swift
 |   |   |   |-- Reports
@@ -179,7 +180,8 @@ Current structure (as of 2026-04-30)
 |   |       |-- ScreenAuditRenderedMatteTests.swift
 |   |       |-- ScreenAuditReportTests.swift
 |   |       |-- ScreenAuditRuleTests.swift
-|   |       `-- ScreenAuditTransparencyTests.swift
+|   |       |-- ScreenAuditTransparencyTests.swift
+|   |       `-- ScreenAuditVisionOCRRecognizerTests.swift
 |   |-- .gitignore
 |   |-- Package.swift
 |   `-- README.md

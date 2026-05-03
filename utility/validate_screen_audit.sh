@@ -9,6 +9,8 @@ DEFAULT_OUTPUT_ROOT="$ROOT/build_results/screen-audit"
 
 SCREENSHOT_ROOT="${1:-$DEFAULT_SCREENSHOT_ROOT}"
 OUTPUT_ROOT="${2:-$DEFAULT_OUTPUT_ROOT}"
+# Set RA11Y_SCREEN_AUDIT_OCR=vision to run Vision OCR (slower; enables text rules). Default: none.
+SCREEN_AUDIT_OCR="${RA11Y_SCREEN_AUDIT_OCR:-none}"
 
 fail() {
   echo "[screen-audit] ERROR: $*" >&2
@@ -31,7 +33,8 @@ for device_dir in "$SCREENSHOT_ROOT"/*; do
   swift run --package-path "$SCREEN_AUDIT_PACKAGE" screenaudit validate \
     --screenshots "$device_dir" \
     --contracts "$CONTRACT_FILE" \
-    --output "$output_dir"
+    --output "$output_dir" \
+    --ocr "$SCREEN_AUDIT_OCR"
 
   validated=$((validated + 1))
 done

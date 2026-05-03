@@ -1,5 +1,13 @@
 import Foundation
 
+/// Selects which OCR engine populates ``ScreenAuditOCRTranscript`` during validation.
+public enum ScreenAuditOCROption: String, Sendable, Equatable {
+    /// No OCR; text rules see an empty transcript unless tests inject a custom recognizer.
+    case none
+    /// Apple Vision text recognition on decoded PNG bitmaps (macOS host).
+    case vision
+}
+
 /// Namespace for package-level metadata and static command help.
 public enum ScreenAuditKit {
     /// Local package version used while the package is developed inside RA11y.
@@ -15,7 +23,7 @@ public enum ScreenAuditKit {
         Usage:
           \(executableName) --help
           \(executableName) --version
-          \(executableName) validate --screenshots <dir> --contracts <file> --output <dir> [--baselines <dir>]
+          \(executableName) validate --screenshots <dir> --contracts <file> --output <dir> [--baselines <dir>] [--ocr none|vision]
 
         Commands:
           validate    Validate screenshots against contracts.
@@ -50,12 +58,18 @@ public enum ScreenAuditExitCode: Int32 {
 
 /// Minimal command-line runner for the `screenaudit` executable.
 public struct ScreenAuditCLI {
-    private let validator: ScreenAuditValidator
+    /// Optional validator override for tests that inject a custom dependency graph.
+    private let validatorOverride: ScreenAuditValidator?
 
-    /// Creates a command-line runner.
-    /// - Parameter validator: Filesystem validator used by the `validate` command.
-    public init(validator: ScreenAuditValidator = ScreenAuditValidator()) {
-        self.validator = validator
+    /// Creates a command-line runner using the default validator factory per `--ocr`.
+    public init() {
+        self.validatorOverride = nil
+    }
+
+    /// Creates a command-line runner with a fixed validator (tests only).
+    /// - Parameter validatorOverride: Validator used for every `validate` invocation.
+    public init(validatorOverride: ScreenAuditValidator) {
+        self.validatorOverride = validatorOverride
     }
 
     /// Runs the command-line interface with explicit output sinks.
@@ -107,6 +121,7 @@ public struct ScreenAuditCLI {
         }
 
         do {
+            let validator = validatorOverride ?? ScreenAuditValidator.makeDefault(ocr: parsedArguments.ocr)
             let result = try validator.validate(
                 screenshotsDirectory: parsedArguments.screenshotsDirectory,
                 contractFile: parsedArguments.contractFile,
@@ -147,12 +162,14 @@ private struct ValidateArguments {
     let contractFile: URL
     let outputDirectory: URL
     let baselineDirectory: URL?
+    let ocr: ScreenAuditOCROption
 
     init(arguments: [String]) throws {
         var screenshotsPath: String?
         var contractsPath: String?
         var outputPath: String?
         var baselinesPath: String?
+        var ocrRaw: String?
 
         var index = 0
         while index < arguments.count {
@@ -171,6 +188,8 @@ private struct ValidateArguments {
                 outputPath = value
             case "--baselines":
                 baselinesPath = value
+            case "--ocr":
+                ocrRaw = value
             default:
                 throw ScreenAuditCLIArgumentError.unsupportedFlag(flag)
             }
@@ -191,6 +210,15 @@ private struct ValidateArguments {
         contractFile = URL(fileURLWithPath: contractsPath)
         outputDirectory = URL(fileURLWithPath: outputPath)
         baselineDirectory = baselinesPath.map { URL(fileURLWithPath: $0) }
+
+        if let ocrRaw {
+            guard let parsed = ScreenAuditOCROption(rawValue: ocrRaw) else {
+                throw ScreenAuditCLIArgumentError.invalidOCRMode(ocrRaw)
+            }
+            ocr = parsed
+        } else {
+            ocr = .none
+        }
     }
 }
 
@@ -198,6 +226,7 @@ private enum ScreenAuditCLIArgumentError: Error, LocalizedError {
     case missingRequiredFlag(String)
     case missingValue(flag: String)
     case unsupportedFlag(String)
+    case invalidOCRMode(String)
 
     var errorDescription: String? {
         switch self {
@@ -207,6 +236,8 @@ private enum ScreenAuditCLIArgumentError: Error, LocalizedError {
             "Missing value for flag: \(flag)."
         case let .unsupportedFlag(flag):
             "Unsupported flag: \(flag)."
+        case let .invalidOCRMode(value):
+            "Invalid --ocr value `\(value)`. Use `none` or `vision`."
         }
     }
 }

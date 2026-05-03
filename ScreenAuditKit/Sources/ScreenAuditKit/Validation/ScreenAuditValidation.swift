@@ -409,6 +409,8 @@ public struct ScreenAuditValidator {
             return "Regenerate the screenshot set or update the flow contract; this finding is about missing evidence."
         case .flowDuplicateStep:
             return "Confirm the repeated flow step is intentional; this finding is about documentation sequence."
+        case .flowPreviousStepMissing:
+            return "Capture the missing predecessor screenshot or relax `requirePreviousStepPresent` for this step."
         }
     }
 
@@ -485,5 +487,23 @@ private extension ScreenAuditOverlayRegionRole {
         case .screenshot:
             return "Whole-screen fallback used when a finding has no configured region."
         }
+    }
+}
+
+extension ScreenAuditValidator {
+    /// Creates a validator wired with the requested OCR backend for PNG evidence extraction.
+    ///
+    /// - Parameter ocr: `vision` enables Apple Vision text recognition on the macOS host; `none` keeps transcripts empty.
+    /// - Returns: A fully configured ``ScreenAuditValidator`` instance.
+    public static func makeDefault(ocr: ScreenAuditOCROption) -> ScreenAuditValidator {
+        let recognizer: any ScreenAuditOCRRecognizing = switch ocr {
+        case .none:
+            ScreenAuditNoOpOCRRecognizer()
+        case .vision:
+            ScreenAuditVisionOCRRecognizer()
+        }
+        return ScreenAuditValidator(
+            imageExtractor: ScreenAuditImageEvidenceExtractor(ocrRecognizer: recognizer)
+        )
     }
 }

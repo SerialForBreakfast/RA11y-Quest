@@ -37,6 +37,9 @@ public enum ScreenAuditRuleID: String, Codable, Equatable, Hashable, Sendable {
 
     /// A flow references the same screen more than once, which may indicate a stuck or duplicated state.
     case flowDuplicateStep
+
+    /// A step marked as requiring prior-step evidence appears without its declared predecessor's screenshot.
+    case flowPreviousStepMissing
 }
 
 /// Reference to the source evidence that produced a finding.

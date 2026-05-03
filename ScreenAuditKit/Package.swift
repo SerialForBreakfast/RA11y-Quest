@@ -20,7 +20,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ScreenAuditKit"
+            name: "ScreenAuditKit",
+            linkerSettings: [
+                .linkedFramework("Vision"),
+            ]
         ),
         .executableTarget(
             name: "screenaudit",
@@ -31,6 +34,9 @@ let package = Package(
             dependencies: ["ScreenAuditKit"],
             resources: [
                 .copy("Fixtures")
+            ],
+            linkerSettings: [
+                .linkedFramework("AppKit"),
             ]
         ),
         .testTarget(

@@ -545,14 +545,18 @@ written alongside each overlay PNG.
 |---|---|
 | `RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json` | Screen contracts (source of truth) |
 | `RA11y-iOS/RA11y-iOSUITests/ScreenAuditAssetProvenance.json` | Asset provenance metadata |
-| `docs/screenshots/en-US/<device>/` | Screenshots captured by Fastlane |
+| `docs/screenshots/en-US/<device>/` | Committed reference screenshots (default script input) |
+| `fastlane/screenshots/en-US/<device>/` | Fresh capture output from `fastlane screenshots` |
 | `build_results/screen-audit/` | Output directory for all reports |
 
 ### Running via Shell Script
 
 ```sh
-# Validate all device folders under docs/screenshots/en-US/
+# Validate all device folders under docs/screenshots/en-US/ (OCR off unless set):
 bash utility/validate_screen_audit.sh
+
+# Enable Vision OCR for text rules (slower; matches CI screenshot workflow):
+RA11Y_SCREEN_AUDIT_OCR=vision bash utility/validate_screen_audit.sh
 
 # Override screenshot source and output directories:
 bash utility/validate_screen_audit.sh /path/to/screenshots /path/to/output
@@ -560,6 +564,12 @@ bash utility/validate_screen_audit.sh /path/to/screenshots /path/to/output
 
 The script iterates over each device subfolder and runs `screenaudit validate`
 once per device. Exit code is non-zero if any device folder has hard failures.
+`RA11Y_SCREEN_AUDIT_OCR` defaults to `none`; set it to `vision` to pass `--ocr vision`
+into `screenaudit` (required for `text.required` / `text.forbidden` enforcement).
+
+**Optional PR-only gate:** run the same script with default paths after updating
+`docs/screenshots/en-US` so text rules run against committed PNGs without invoking
+Fastlane (lower cost than a full screenshot capture job).
 
 ### Running via Fastlane
 
@@ -582,13 +592,18 @@ public protocol ScreenAuditOCRRecognizing {
 }
 ```
 
-The default implementation is a **no-op** (`ScreenAuditNoOpOCRRecognizer`) that
-returns an empty transcript. This keeps the package dependency-free and the test
-suite fast, but means `text.required` and `text.forbidden` rules are not enforced
-until a real OCR recognizer is injected.
+The library default is a **no-op** (`ScreenAuditNoOpOCRRecognizer`) so unit tests
+stay fast and deterministic. The CLI and ``ScreenAuditValidator/makeDefault(ocr:)``
+select a concrete recognizer:
 
-**Planned implementation:** Vision framework (`VNRecognizeTextRequest`) wired in
-from the RA11y UI test bundle, where the `Vision` framework is available on-device.
+| Mode | Recognizer | When to use |
+|---|---|---|
+| `none` (default CLI / script) | `ScreenAuditNoOpOCRRecognizer` | Metadata-only checks; skip OCR cost |
+| `vision` | `ScreenAuditVisionOCRRecognizer` | Host macOS validation with `VNRecognizeTextRequest` |
+
+Use `screenaudit validate ... --ocr vision` or `RA11Y_SCREEN_AUDIT_OCR=vision` with
+`utility/validate_screen_audit.sh`. The Vision implementation pins `en-US` and
+disables language correction for more literal matching on short UI tokens.
 
 ---
 
@@ -631,17 +646,20 @@ swift test --package-path ScreenAuditKit
 
 Tests are split across two targets:
 
-**`ScreenAuditKitTests`** — Library unit tests (nine files, ~1 100 lines):
+**`ScreenAuditKitTests`** — Library unit tests (eleven files, ~1 300 lines):
 
 | Test file | What it covers |
 |---|---|
 | `ScreenAuditContractTests` | JSON decoding, schema validation, required fields |
 | `ScreenAuditEvidenceTests` | PNG metadata extraction, alpha detection |
+| `ScreenAuditFlowTests` | Ordered flow steps, duplicate and predecessor checks |
 | `ScreenAuditRuleTests` | Required/forbidden text, dimension checks, fallback art |
 | `ScreenAuditBaselineTests` | Pixel-diff accuracy, ignored regions, threshold clamping |
 | `ScreenAuditTransparencyTests` | Opaque-border heuristics, edge cases |
 | `ScreenAuditRenderedMatteTests` | Flat-matte detection in synthetic regions |
 | `ScreenAuditCheckerboardTests` | Alternating-pattern detection thresholds |
+| `ScreenAuditReportTests` | Markdown summaries, overlays, Mermaid flow graphs |
+| `ScreenAuditVisionOCRRecognizerTests` | Vision OCR + extractor wiring on synthetic PNGs |
 | `ScreenAuditKitTests` | Package version and help-text smoke tests |
 
 **`ScreenAuditCLITests`** — CLI argument parsing and end-to-end integration
@@ -662,7 +680,8 @@ contracts, unsupported schema versions, and missing-field contracts.
 | Contract schema v1 parsing and validation | ✅ Shipped |
 | PNG evidence extraction (dimensions, alpha) | ✅ Shipped |
 | OCR boundary (injectable protocol, no-op default) | ✅ Shipped |
-| Required / forbidden / optional text rules | ✅ Shipped (no-op until OCR injected) |
+| Vision OCR recognizer + CLI `--ocr` (`none` or `vision`) | ✅ Shipped |
+| Required / forbidden / optional text rules | ✅ Shipped (Vision OCR when enabled) |
 | Device dimension validation | ✅ Shipped |
 | Responsive region scaling (coordinate spaces) | ✅ Shipped |
 | Baseline pixel-diff comparison with ignored regions | ✅ Shipped |
@@ -677,7 +696,7 @@ contracts, unsupported schema versions, and missing-field contracts.
 | Asset provenance tracking + low-confidence findings | ✅ Shipped |
 | Per-screen severity overrides | ✅ Shipped |
 | Ordered flow validation + flow reports | ✅ Shipped |
-| Vision OCR recognizer implementation | 🔲 Not yet |
+| GitHub Actions screenshot job + screen-audit artifact | ✅ Shipped (`.github/workflows/ios-screenshots.yml`) |
 | Multi-locale screenshot support | 🔲 Not yet |
 | Dynamic Type / accessibility size variant contracts | 🔲 Not yet |
 | CI badge / summary comment on pull requests | 🔲 Not yet |
@@ -689,10 +708,6 @@ contracts, unsupported schema versions, and missing-field contracts.
 Priorities are tracked in `memlog/research/ScreenAuditKit-Workstream.md`.
 
 ### Near Term
-
-**Real OCR via Vision framework.** Wire `VNRecognizeTextRequest` into the iOS
-UI test bundle as a concrete `ScreenAuditOCRRecognizing` implementation. Until
-this lands, `text.required` and `text.forbidden` rules produce no findings.
 
 **Baseline management commands.** Add `screenaudit baseline accept` to promote
 the current screenshots to the baseline directory, and `screenaudit baseline diff`

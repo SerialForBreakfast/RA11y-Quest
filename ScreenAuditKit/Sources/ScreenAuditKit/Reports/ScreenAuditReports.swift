@@ -193,9 +193,31 @@ public struct ScreenAuditReportWriter {
             }
 
             lines.append("")
+            lines.append("### Flow graph (advisory)")
+            lines.append("")
+            lines.append("```mermaid")
+            lines.append("flowchart LR")
+            var previousNode: String?
+            for (index, step) in flow.steps.enumerated() {
+                let nodeId = "n\(index)"
+                let label = mermaidEscapeLabel(step.screenID)
+                lines.append("    \(nodeId)[\"\(label)\"]")
+                if let previousNode {
+                    lines.append("    \(previousNode) --> \(nodeId)")
+                }
+                previousNode = nodeId
+            }
+            lines.append("```")
+            lines.append("")
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    private func mermaidEscapeLabel(_ raw: String) -> String {
+        raw
+            .replacingOccurrences(of: "\"", with: "'")
+            .replacingOccurrences(of: "\n", with: " ")
     }
 
     private func orderedRuleIDs(in findings: [ScreenAuditFinding]) -> [ScreenAuditRuleID] {
@@ -236,6 +258,8 @@ public struct ScreenAuditReportWriter {
             return "A required flow step has no screenshot evidence in this audit run."
         case .flowDuplicateStep:
             return "A flow repeats a screen ID, which may indicate a stuck state or duplicated documentation beat."
+        case .flowPreviousStepMissing:
+            return "A later flow step has a screenshot while an earlier required predecessor is missing, so the journey folder may be incomplete."
         }
     }
 
@@ -265,6 +289,8 @@ public struct ScreenAuditReportWriter {
             return "Regenerate the screenshot set or mark the step optional only if the flow no longer requires it."
         case .flowDuplicateStep:
             return "Confirm the repeated step is intentional; otherwise remove the duplicate from the flow contract."
+        case .flowPreviousStepMissing:
+            return "Regenerate the full flow screenshot set or clear `requirePreviousStepPresent` on the step if partial captures are expected."
         }
     }
 

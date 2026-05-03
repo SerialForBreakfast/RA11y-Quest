@@ -259,7 +259,11 @@ Definition of Done:
 **Screen audit gate:** `bash utility/validate_screen_audit.sh` validates the
 captured screenshots through `ScreenAuditKit`, writes JSON/Markdown reports to
 `build_results/screen-audit/`, and emits overlay artifacts for review-only
-design findings. Banishment screenshot warnings currently use
+design findings. Set `RA11Y_SCREEN_AUDIT_OCR=vision` to run Apple Vision OCR so
+`text.required` / `text.forbidden` rules apply. The manual
+`.github/workflows/ios-screenshots.yml` job runs this after Fastlane capture,
+uploads `screen-audit-reports`, and fails the job on hard findings. Banishment
+screenshot warnings currently use
 `RA11y-iOS/RA11y-iOSUITests/ScreenAuditAssetProvenance.json` to explain asset
 source, authoring status, source quality, known risks, and evidence.
 

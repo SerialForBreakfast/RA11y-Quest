@@ -42,6 +42,21 @@
         "requiredTextMissing": "error",
         "mockupSimilarityLow": "warning"
       }
+    },
+    {
+      "id": "help",
+      "filename": "02_Help.png",
+      "devices": [
+        {
+          "label": "iPhone_large",
+          "family": "iPhone",
+          "pixelWidth": 1290,
+          "pixelHeight": 2796,
+          "orientation": "portrait"
+        }
+      ],
+      "text": { "required": [], "optional": [], "forbidden": [] },
+      "severityOverrides": {}
     }
   ],
   "flows": [
@@ -51,6 +66,10 @@
       "steps": [
         {
           "screenID": "hub"
+        },
+        {
+          "screenID": "help",
+          "requirePreviousStepPresent": true
         }
       ]
     }

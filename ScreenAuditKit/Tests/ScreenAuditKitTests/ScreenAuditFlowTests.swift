@@ -119,6 +119,37 @@ final class ScreenAuditFlowTests: XCTestCase {
         XCTAssertEqual(result.findings.first?.severity, .warning)
     }
 
+    /// Verifies `requirePreviousStepPresent` emits a warning when a later step has evidence without its predecessor.
+    func testRequirePreviousStepPresentProducesWarningWhenPredecessorMissing() throws {
+        let contractSet = try makeContractSet(
+            screens: [
+                ScreenAuditScreenContract(id: "entry", filename: "01_Entry.png"),
+                ScreenAuditScreenContract(id: "ready", filename: "02_Ready.png")
+            ],
+            flows: [
+                ScreenAuditFlowContract(
+                    id: "firstSpell",
+                    title: "First Spell",
+                    steps: [
+                        ScreenAuditFlowStep(screenID: "entry"),
+                        ScreenAuditFlowStep(screenID: "ready", requirePreviousStepPresent: true)
+                    ]
+                )
+            ]
+        )
+
+        let result = ScreenAuditFlowEvaluator().evaluate(
+            contractSet: contractSet,
+            evidenceItems: [makeEvidence(screenID: "ready")]
+        )
+
+        XCTAssertEqual(result.findings.count, 2)
+        let ruleIDs = Set(result.findings.map(\.ruleID))
+        XCTAssertTrue(ruleIDs.contains(.flowMissingRequiredStep))
+        XCTAssertTrue(ruleIDs.contains(.flowPreviousStepMissing))
+        XCTAssertTrue(result.findings.contains { $0.ruleID == .flowPreviousStepMissing && $0.severity == .warning })
+    }
+
     /// Verifies unknown flow screen references are hard failures.
     func testUnknownFlowStepProducesFinding() throws {
         let contractSet = try makeContractSet(

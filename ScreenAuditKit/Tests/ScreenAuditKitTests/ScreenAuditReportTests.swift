@@ -97,6 +97,30 @@ final class ScreenAuditReportTests: XCTestCase {
         XCTAssertTrue(markdown.contains("High-value visual content checked"))
     }
 
+    /// Verifies flow summaries include an advisory Mermaid graph for reviewer orientation.
+    func testMarkdownFlowSummaryIncludesMermaidBlock() {
+        let flowReport = ScreenAuditFlowReport(
+            projectName: "Mermaid Fixture",
+            flows: [
+                ScreenAuditFlowResult(
+                    id: "onboarding",
+                    title: "Onboarding",
+                    steps: [
+                        ScreenAuditFlowStepResult(index: 0, screenID: "entry", required: true, status: .present),
+                        ScreenAuditFlowStepResult(index: 1, screenID: "ready", required: true, status: .present),
+                    ]
+                ),
+            ]
+        )
+
+        let markdown = ScreenAuditReportWriter().markdownFlowSummary(for: flowReport)
+
+        XCTAssertTrue(markdown.contains("```mermaid"))
+        XCTAssertTrue(markdown.contains("flowchart LR"))
+        XCTAssertTrue(markdown.contains("entry"))
+        XCTAssertTrue(markdown.contains("ready"))
+    }
+
     private func makeFixtureDirectory(named name: String) throws -> URL {
         let directory = packageRootURL()
             .appendingPathComponent(".build")

@@ -145,6 +145,20 @@ public struct ScreenAuditFlowEvaluator {
                 }
                 seenScreenIDs.insert(step.screenID)
 
+                if index > 0, step.requirePreviousStepPresent, status == .present {
+                    let previous = flow.steps[index - 1]
+                    if !observedScreenIDs.contains(previous.screenID) {
+                        findings.append(
+                            missingPreviousStepFinding(
+                                flow: flow,
+                                step: step,
+                                previousScreenID: previous.screenID,
+                                index: index
+                            )
+                        )
+                    }
+                }
+
                 stepResults.append(
                     ScreenAuditFlowStepResult(
                         index: index,
@@ -214,6 +228,25 @@ public struct ScreenAuditFlowEvaluator {
                 screenID: step.screenID,
                 path: flow.id,
                 excerpt: "duplicate flow step"
+            )
+        )
+    }
+
+    private func missingPreviousStepFinding(
+        flow: ScreenAuditFlowContract,
+        step: ScreenAuditFlowStep,
+        previousScreenID: String,
+        index: Int
+    ) -> ScreenAuditFinding {
+        ScreenAuditFinding(
+            ruleID: .flowPreviousStepMissing,
+            severity: .warning,
+            confidence: 1.0,
+            message: "Flow `\(flow.id)` step \(index + 1) screen `\(step.screenID)` is present but required predecessor `\(previousScreenID)` has no screenshot in this run.",
+            evidence: ScreenAuditEvidenceReference(
+                screenID: step.screenID,
+                path: flow.id,
+                excerpt: "missingPrevious=\(previousScreenID)"
             )
         )
     }

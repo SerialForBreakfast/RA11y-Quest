@@ -11,7 +11,11 @@
         { "label": "iPhone_small", "family": "iPhone", "pixelWidth": 1170, "pixelHeight": 2532, "orientation": "portrait" },
         { "label": "iPad", "family": "iPad", "pixelWidth": 2064, "pixelHeight": 2752, "orientation": "portrait" }
       ],
-      "text": { "required": [], "optional": [], "forbidden": [] },
+      "text": {
+        "required": ["RA11y"],
+        "optional": ["Quest"],
+        "forbidden": []
+      },
       "role": "entry",
       "pedagogyRole": "introduce",
       "severityOverrides": {}
@@ -361,8 +365,16 @@
       "title": "Home and VoiceOver Gate",
       "steps": [
         { "screenID": "hub", "note": "Home surface and quest entry point." },
-        { "screenID": "voRequired", "note": "VoiceOver-off gate for blocked quest entry." },
-        { "screenID": "firstRun", "note": "First-run basics entry surface." }
+        {
+          "screenID": "voRequired",
+          "note": "VoiceOver-off gate for blocked quest entry.",
+          "requirePreviousStepPresent": true
+        },
+        {
+          "screenID": "firstRun",
+          "note": "First-run basics entry surface.",
+          "requirePreviousStepPresent": true
+        }
       ]
     },
     {
@@ -370,9 +382,24 @@
       "title": "First Spell Magic Tap",
       "steps": [
         { "screenID": "firstSpellEntry", "required": false, "note": "First-spell entry surface before the VoiceOver gate." },
-        { "screenID": "firstSpellVORequired", "required": false, "note": "VoiceOver-required branch for first-spell onboarding." },
-        { "screenID": "firstSpellReady", "required": false, "note": "Ready state with the spellbook sigil asset under review." },
-        { "screenID": "firstSpellSuccess", "required": false, "note": "Post-Magic Tap success state." }
+        {
+          "screenID": "firstSpellVORequired",
+          "required": false,
+          "note": "VoiceOver-required branch for first-spell onboarding.",
+          "requirePreviousStepPresent": true
+        },
+        {
+          "screenID": "firstSpellReady",
+          "required": false,
+          "note": "Ready state with the spellbook sigil asset under review.",
+          "requirePreviousStepPresent": true
+        },
+        {
+          "screenID": "firstSpellSuccess",
+          "required": false,
+          "note": "Post-Magic Tap success state.",
+          "requirePreviousStepPresent": true
+        }
       ]
     },
     {
@@ -380,10 +407,10 @@
       "title": "Enchanter Trial",
       "steps": [
         { "screenID": "enchanterPrologue" },
-        { "screenID": "enchanterAttempt" },
-        { "screenID": "enchanterRising" },
-        { "screenID": "enchanterTimed" },
-        { "screenID": "enchanterResult" }
+        { "screenID": "enchanterAttempt", "requirePreviousStepPresent": true },
+        { "screenID": "enchanterRising", "requirePreviousStepPresent": true },
+        { "screenID": "enchanterTimed", "requirePreviousStepPresent": true },
+        { "screenID": "enchanterResult", "requirePreviousStepPresent": true }
       ]
     },
     {
@@ -391,8 +418,8 @@
       "title": "Dungeon Scroll Hunt",
       "steps": [
         { "screenID": "dungeonPrologue" },
-        { "screenID": "dungeonFirstAttempt" },
-        { "screenID": "dungeonResult" }
+        { "screenID": "dungeonFirstAttempt", "requirePreviousStepPresent": true },
+        { "screenID": "dungeonResult", "requirePreviousStepPresent": true }
       ]
     },
     {
@@ -400,9 +427,9 @@
       "title": "The Banishment",
       "steps": [
         { "screenID": "banishmentPrologue" },
-        { "screenID": "banishmentWardTrap" },
-        { "screenID": "banishmentTower" },
-        { "screenID": "banishmentResult" }
+        { "screenID": "banishmentWardTrap", "requirePreviousStepPresent": true },
+        { "screenID": "banishmentTower", "requirePreviousStepPresent": true },
+        { "screenID": "banishmentResult", "requirePreviousStepPresent": true }
       ]
     }
   ]

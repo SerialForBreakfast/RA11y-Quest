@@ -177,6 +177,10 @@ public struct ScreenAuditFlowStep: Codable, Equatable, Sendable {
     /// Whether missing evidence for this step should be a hard failure.
     public let required: Bool
 
+    /// When true and this step's screenshot is present, the immediately preceding flow step's
+    /// screen must also have screenshot evidence (co-presence check for linear journeys).
+    public let requirePreviousStepPresent: Bool
+
     /// Optional project-specific note for reviewers.
     public let note: String?
 
@@ -184,20 +188,24 @@ public struct ScreenAuditFlowStep: Codable, Equatable, Sendable {
     /// - Parameters:
     ///   - screenID: Screen contract ID expected at this point in the flow.
     ///   - required: Whether missing evidence for this step should be a hard failure.
+    ///   - requirePreviousStepPresent: When true, a present current step requires the previous step's PNG too.
     ///   - note: Optional project-specific note for reviewers.
     public init(
         screenID: String,
         required: Bool = true,
+        requirePreviousStepPresent: Bool = false,
         note: String? = nil
     ) {
         self.screenID = screenID
         self.required = required
+        self.requirePreviousStepPresent = requirePreviousStepPresent
         self.note = note
     }
 
     private enum CodingKeys: String, CodingKey {
         case screenID
         case required
+        case requirePreviousStepPresent
         case note
     }
 
@@ -208,7 +216,19 @@ public struct ScreenAuditFlowStep: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         screenID = try container.decode(String.self, forKey: .screenID)
         required = try container.decodeIfPresent(Bool.self, forKey: .required) ?? true
+        requirePreviousStepPresent = try container.decodeIfPresent(Bool.self, forKey: .requirePreviousStepPresent) ?? false
         note = try container.decodeIfPresent(String.self, forKey: .note)
+    }
+
+    /// Encodes this step for JSON contract files.
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(screenID, forKey: .screenID)
+        try container.encode(required, forKey: .required)
+        if requirePreviousStepPresent {
+            try container.encode(true, forKey: .requirePreviousStepPresent)
+        }
+        try container.encodeIfPresent(note, forKey: .note)
     }
 
     /// Validates required flow step metadata after decoding.

@@ -82,8 +82,8 @@ Tasks:
 - SAK-2.1 Load PNG screenshots from explicit input paths.
 - SAK-2.2 Extract dimensions, scale-independent pixel size, color model, and
   alpha presence.
-- SAK-2.3 Add Vision OCR transcript extraction behind a narrow service boundary.
-- SAK-2.4 Add OCR fixture fallback or injectable transcript source for tests.
+- SAK-2.3 Add Vision OCR transcript extraction behind a narrow service boundary. Done.
+- SAK-2.4 Add OCR fixture fallback or injectable transcript source for tests. Done.
 - SAK-3.1 Implement required text rule.
 - SAK-3.2 Implement forbidden text rule.
 - SAK-3.3 Implement device dimension/orientation rule.
@@ -195,9 +195,9 @@ Tasks:
 - SAK-7.3 Implement missing step rule. Done.
 - SAK-7.4 Implement duplicate/stuck state warning. Partially done; duplicate
   screen references in declared flows are warning findings.
-- SAK-7.5 Implement expected previous/next transition checks.
+- SAK-7.5 Implement expected previous/next transition checks. Done.
 - SAK-7.6 Generate Markdown flow summary. Done.
-- SAK-7.7 Generate optional Mermaid graph.
+- SAK-7.7 Generate optional Mermaid graph. Done.
 - SAK-7.8 Add RA11y quest flow contracts for hub, VoiceOver required, first run,
   Enchanter, Dungeon, Resonance, and Banishment screenshot groups. Partially
   done for home/VoiceOver gate, Enchanter, Dungeon, and Banishment.
@@ -258,7 +258,7 @@ Tasks:
 - SAK-9.2 Add SARIF report output.
 - SAK-9.3 Document fastlane integration.
 - SAK-9.4 Document generic shell integration.
-- SAK-9.5 Document GitHub Actions artifact/report pattern.
+- SAK-9.5 Document GitHub Actions artifact/report pattern. Partially done: `ios-screenshots.yml` uploads `screen-audit-reports`; optional PR-only `docs/screenshots` gate documented in `ScreenAuditKit/README.md`.
 - SAK-9.6 Document Xcode Cloud artifact/report pattern.
 - SAK-9.7 Document Bitrise/Buildkite/CircleCI/Jenkins invocation pattern.
 - SAK-9.8 Add package-level README with minimal non-RA11y example.

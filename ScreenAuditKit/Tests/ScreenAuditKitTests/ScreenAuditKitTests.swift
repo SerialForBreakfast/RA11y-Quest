@@ -16,5 +16,6 @@ final class ScreenAuditKitTests: XCTestCase {
         XCTAssertTrue(helpText.contains("validate"))
         XCTAssertTrue(helpText.contains("Exit codes"))
         XCTAssertTrue(helpText.contains("2  Usage or configuration error."))
+        XCTAssertTrue(helpText.contains("--ocr"))
     }
 }

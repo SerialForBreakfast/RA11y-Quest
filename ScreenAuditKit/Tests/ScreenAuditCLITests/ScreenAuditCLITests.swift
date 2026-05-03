@@ -9,7 +9,9 @@ final class ScreenAuditCLITests: XCTestCase {
         let result = runCLI(arguments: ["--help"])
 
         XCTAssertEqual(result.exitCode, ScreenAuditExitCode.success.rawValue)
-        XCTAssertTrue(result.output.joined(separator: "\n").contains("ScreenAuditKit"))
+        let helpText = result.output.joined(separator: "\n")
+        XCTAssertTrue(helpText.contains("ScreenAuditKit"))
+        XCTAssertTrue(helpText.contains("--ocr"))
         XCTAssertTrue(result.error.isEmpty)
     }
 
@@ -146,6 +148,25 @@ final class ScreenAuditCLITests: XCTestCase {
 
         XCTAssertEqual(result.exitCode, ScreenAuditExitCode.inputError.rawValue)
         XCTAssertEqual(result.error, ["Required input does not exist: `\(missingDirectory.path)`."])
+    }
+
+    /// Verifies an invalid `--ocr` value maps to a usage error with guidance.
+    func testValidateInvalidOCRModeReturnsUsageError() throws {
+        let fixture = try makeValidationFixture(
+            name: "bad-ocr",
+            contractJSON: """
+            {
+              "schemaVersion": 1,
+              "projectName": "CLI Fixture",
+              "screens": []
+            }
+            """
+        )
+
+        let result = runCLI(arguments: validateArguments(for: fixture) + ["--ocr", "bogus"])
+
+        XCTAssertEqual(result.exitCode, ScreenAuditExitCode.usageError.rawValue)
+        XCTAssertTrue(result.error.joined(separator: "\n").contains("Invalid --ocr"))
     }
 
     /// Runs the CLI with captured output arrays.
