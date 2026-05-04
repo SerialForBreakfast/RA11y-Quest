@@ -30,25 +30,24 @@ Full research and architecture documentation: [`Research/NativeUIElementDetectio
 
 ---
 
-## Phase 1: Coordinate Spike (P0 blocker)
+## Phase 1: Coordinate Spike (P0 blocker) [~]
 
 *Goal: Prove that exported element coordinates align with PNG pixels before any dataset generation.*
 
-See research section 13.4 for full spike procedure.
+Full spike protocol and results template: [`Research/CoordinateSpike.md`](Research/CoordinateSpike.md)  
+Fixture code (copy into Xcode project): [`CoordinateSpike/`](CoordinateSpike/)
 
-- [ ] Build one SwiftUI fixture scene: `NavigationBar` + `Button` (primary) + `Toggle`
-- [ ] Export PNG screenshot from Simulator at @3x
-- [ ] Export element frames from accessibility tree / XCUITest
-- [ ] Draw pixel-precise overlay boxes using CoreGraphics
-- [ ] Visually confirm alignment within ±2px at @3x
-- [ ] Repeat at @2x
-- [ ] Resolve SwiftUI frame export strategy (GeometryReader vs `accessibilityFrame`)
-- [ ] Resolve `XCUIElement.frame` vs `accessibilityFrame` for transformed views
-- [ ] Resolve `displayScale` behavior during Simulator screenshot capture
-- [ ] Define scroll view ground truth: annotate visible rect + `occluded: true`
-- [ ] Document findings and final coordinate conversion formula in `Research/CoordinateSpike.md`
+- [x] Write `Research/CoordinateSpike.md` — methodology, protocol, results template, acceptance criteria
+- [x] Write `CoordinateSpike/CoordSpikeView.swift` — SwiftUI fixture: Button + TextField + Label at fixed positions
+- [x] Write `CoordinateSpike/CoordSpikeUITests.swift` — XCTest UI test measuring XCUIElement.frame vs declared ground truth at @2x and @3x
+- [ ] **Run on iPhone 14 Pro Simulator (@3x)** — fill in Results section of CoordinateSpike.md
+- [ ] **Run on iPhone SE Simulator (@2x)** — fill in Results section of CoordinateSpike.md
+- [ ] Resolve SwiftUI frame export strategy (GeometryReader vs `XCUIElement.frame`) — document in CoordinateSpike.md
+- [ ] Investigate known risks (safe area shift, clipsToBounds, transform divergence) — document outcome
+- [ ] Confirm ≤2px alignment at both scale factors — mark acceptance criteria in CoordinateSpike.md
+- [ ] Update `Research/NativeUIElementDetection.md` Section 6 with chosen coordinate strategy
 
-**Gate:** Do not begin Phase 2 until `Research/CoordinateSpike.md` confirms ≤2px alignment at both scale factors.
+**Gate:** Do not begin Phase 2 until `Research/CoordinateSpike.md` acceptance criteria are all checked.
 
 ---
 

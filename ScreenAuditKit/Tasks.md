@@ -83,18 +83,18 @@ Full architecture and workstream rationale: `memlog/research/ScreenAuditKit-Work
 - [ ] Multi-locale support in contracts (`locales[]` field)
 - [ ] Dynamic Type variant contracts
 
-## Milestone I: Extraction Readiness [ ]
+## Milestone I: Extraction Readiness [~]
 
 - [x] No RA11y-specific code in `Sources/ScreenAuditKit/`
 - [x] `AGENTS.md` inside package
 - [x] `Tasks.md` inside package
 - [x] `README.md` includes standalone-repo instructions
-- [ ] `LICENSE` file added (decision: MIT or Apache 2.0)
-- [ ] Package version bumped from `0.1.0-local` to `1.0.0`
-- [ ] `CHANGELOG.md` created with all public API changes from initial development
-- [ ] Public API audit: every `public` symbol has a doc comment
+- [x] `LICENSE` file added (MIT)
+- [x] Package version bumped from `0.1.0-local` to `1.0.0`
+- [x] `CHANGELOG.md` created with all public API changes from initial development
+- [x] Public API audit: all public symbols have doc comments (verified 2026-05-03)
+- [x] Monorepo adapter scripts updated to reference external package path pattern
 - [ ] External SPM URL decided (GitHub org / repo name)
-- [ ] Monorepo adapter scripts updated to reference external package path pattern
 
 ---
 
@@ -102,7 +102,7 @@ Full architecture and workstream rationale: `memlog/research/ScreenAuditKit-Work
 
 | Decision | Status | Options |
 |---|---|---|
-| License | Open | MIT or Apache 2.0 |
+| License | **Decided: MIT** | MIT |
 | Package name (final) | Likely `ScreenAuditKit` | No change proposed |
 | External repo URL | Open | `github.com/[org]/ScreenAuditKit` |
 | Baseline image storage | Open | In-repo vs. artifact store |

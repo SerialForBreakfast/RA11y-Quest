@@ -10,8 +10,8 @@ public enum ScreenAuditOCROption: String, Sendable, Equatable {
 
 /// Namespace for package-level metadata and static command help.
 public enum ScreenAuditKit {
-    /// Local package version used while the package is developed inside RA11y.
-    public static let version = "0.1.0-local"
+    /// Semantic version of the ScreenAuditKit package.
+    public static let version = "1.0.0"
 
     /// Returns command-line usage text for the `screenaudit` executable.
     /// - Parameter executableName: Name to show in command examples.

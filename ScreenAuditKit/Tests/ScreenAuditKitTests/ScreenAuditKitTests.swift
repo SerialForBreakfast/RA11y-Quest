@@ -4,8 +4,8 @@ import XCTest
 /// Tests package-level metadata and static help text.
 final class ScreenAuditKitTests: XCTestCase {
     /// Verifies the package version is exposed for command-line and report output.
-    func testVersionIsLocalDevelopmentVersion() {
-        XCTAssertEqual(ScreenAuditKit.version, "0.1.0-local")
+    func testVersionIsCurrentRelease() {
+        XCTAssertEqual(ScreenAuditKit.version, "1.0.0")
     }
 
     /// Verifies help text names the planned validation command and exit codes.

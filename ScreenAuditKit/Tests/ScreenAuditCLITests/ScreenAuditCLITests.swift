@@ -21,7 +21,7 @@ final class ScreenAuditCLITests: XCTestCase {
         let result = runCLI(arguments: ["--version"])
 
         XCTAssertEqual(result.exitCode, ScreenAuditExitCode.success.rawValue)
-        XCTAssertEqual(result.output, ["0.1.0-local"])
+        XCTAssertEqual(result.output, ["1.0.0"])
         XCTAssertTrue(result.error.isEmpty)
     }
 

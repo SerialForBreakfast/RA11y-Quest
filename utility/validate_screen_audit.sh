@@ -29,16 +29,16 @@ fail() {
   exit 1
 }
 
-# Resolve how to invoke the screenaudit CLI.
+# Invoke the screenaudit CLI with all arguments forwarded.
 # Priority: local package path → global PATH installation.
-resolve_cli() {
+run_screenaudit() {
   if [[ -d "$SCREEN_AUDIT_PACKAGE" ]]; then
-    echo "swift run --package-path '$SCREEN_AUDIT_PACKAGE' screenaudit"
+    swift run --package-path "$SCREEN_AUDIT_PACKAGE" screenaudit "$@"
     return
   fi
 
   if command -v screenaudit &>/dev/null; then
-    echo "screenaudit"
+    screenaudit "$@"
     return
   fi
 
@@ -99,8 +99,6 @@ case "$SCREEN_AUDIT_OCR" in
   *) fail "Invalid OCR mode: $SCREEN_AUDIT_OCR (use none or vision)" ;;
 esac
 
-CLI="$(resolve_cli)"
-
 [[ -f "$CONTRACT_FILE" ]] || fail "Missing ScreenAuditKit contract file: $CONTRACT_FILE"
 [[ -d "$SCREENSHOT_ROOT" ]] || fail "Missing screenshot root: $SCREENSHOT_ROOT"
 
@@ -113,10 +111,10 @@ for device_dir in "$SCREENSHOT_ROOT"/*; do
   output_dir="$OUTPUT_ROOT/$device_label"
 
   echo "[screen-audit] Validating $device_label (OCR=$SCREEN_AUDIT_OCR)"
-  eval "$CLI" validate \
-    --screenshots "'$device_dir'" \
-    --contracts "'$CONTRACT_FILE'" \
-    --output "'$output_dir'" \
+  run_screenaudit validate \
+    --screenshots "$device_dir" \
+    --contracts "$CONTRACT_FILE" \
+    --output "$output_dir" \
     --ocr "$SCREEN_AUDIT_OCR"
 
   validated=$((validated + 1))
