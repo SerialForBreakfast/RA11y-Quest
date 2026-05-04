@@ -12,6 +12,7 @@ final class ScreenAuditCLITests: XCTestCase {
         let helpText = result.output.joined(separator: "\n")
         XCTAssertTrue(helpText.contains("ScreenAuditKit"))
         XCTAssertTrue(helpText.contains("--ocr"))
+        XCTAssertTrue(helpText.contains("export-feature-walkthrough"))
         XCTAssertTrue(result.error.isEmpty)
     }
 
@@ -31,6 +32,32 @@ final class ScreenAuditCLITests: XCTestCase {
         XCTAssertEqual(result.exitCode, ScreenAuditExitCode.usageError.rawValue)
         XCTAssertTrue(result.output.isEmpty)
         XCTAssertEqual(result.error.count, 2)
+    }
+
+    /// Verifies `export-feature-walkthrough` fails with an input error when test artifacts are absent.
+    func testExportFeatureWalkthroughFailsWhenTestArtifactsMissing() throws {
+        let fakeRoot = packageRootURL()
+            .appendingPathComponent(".build")
+            .appendingPathComponent("test-artifacts")
+            .appendingPathComponent("cli-export-fake-package")
+        if FileManager.default.fileExists(atPath: fakeRoot.path) {
+            try FileManager.default.removeItem(at: fakeRoot)
+        }
+        try FileManager.default.createDirectory(
+            at: fakeRoot.appendingPathComponent(".build/test-artifacts", isDirectory: true),
+            withIntermediateDirectories: true
+        )
+        try "// swift-tools-version: 6.1\nimport PackageDescription\nlet package = Package(name: \"ScreenAuditKit\", targets: [])\n"
+            .write(to: fakeRoot.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
+
+        let result = runCLI(arguments: [
+            "export-feature-walkthrough",
+            "--package-root", fakeRoot.path,
+        ])
+
+        XCTAssertEqual(result.exitCode, ScreenAuditExitCode.inputError.rawValue)
+        XCTAssertTrue(result.output.isEmpty)
+        XCTAssertTrue(result.error.joined(separator: "\n").contains("Missing walkthrough test artifacts"))
     }
 
     /// Verifies `validate` writes reports and exits successfully when no hard findings exist.

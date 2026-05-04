@@ -144,6 +144,7 @@ Current structure (as of 2026-05-03)
 |-- ScreenAuditKit
 |   |-- Docs
 |   |   `-- FeatureWalkthrough
+|   |       |-- images
 |   |       |-- Artifacts
 |   |       |   |-- baseline-drift
 |   |       |   |-- clean-happy-path
@@ -155,8 +156,9 @@ Current structure (as of 2026-05-03)
 |   |       |   |-- settings-debug
 |   |       |   |-- tvos-focus
 |   |       |   `-- visual-artifacts
-|   |       |-- ScreenAuditKitFeatureWalkthrough.md
-|   |       `-- refresh_artifacts.sh
+|   |       `-- ScreenAuditKitFeatureWalkthrough.md
+|   |-- Utility
+|   |   `-- export_feature_walkthrough.sh
 |   |-- Sources
 |   |   |-- ScreenAuditKit
 |   |   |   |-- Contracts
@@ -164,6 +166,8 @@ Current structure (as of 2026-05-03)
 |   |   |   |-- Evidence
 |   |   |   |   |-- ScreenAuditEvidence.swift
 |   |   |   |   `-- ScreenAuditVisionOCRRecognizer.swift
+|   |   |   |-- FeatureWalkthrough
+|   |   |   |   `-- ScreenAuditFeatureWalkthroughArtifactExporter.swift
 |   |   |   |-- Rules
 |   |   |   |   `-- ScreenAuditRules.swift
 |   |   |   |-- Reports

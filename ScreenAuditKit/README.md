@@ -79,10 +79,16 @@ PNG fixtures, report excerpts, and the tests that prove each scenario:
 
 - `Docs/FeatureWalkthrough/ScreenAuditKitFeatureWalkthrough.md`
 - `Docs/FeatureWalkthrough/Artifacts/`
-- `Docs/FeatureWalkthrough/refresh_artifacts.sh`
+- `Docs/FeatureWalkthrough/images/`
+- `Utility/export_feature_walkthrough.sh` (optional wrapper around the CLI)
 
-Run `swift test --package-path ScreenAuditKit`, then `bash ScreenAuditKit/Docs/FeatureWalkthrough/refresh_artifacts.sh`
-to refresh the curated walkthrough artifacts from the latest test run.
+Run `swift test --package-path ScreenAuditKit`, then:
+
+```bash
+swift run --package-path ScreenAuditKit screenaudit export-feature-walkthrough --package-root "$PWD/ScreenAuditKit"
+```
+
+(or `bash ScreenAuditKit/Utility/export_feature_walkthrough.sh` from the monorepo root) to refresh curated walkthrough artifacts and doc images from the latest test run.
 
 ---
 

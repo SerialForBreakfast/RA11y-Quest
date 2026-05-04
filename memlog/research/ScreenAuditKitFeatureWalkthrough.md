@@ -7,6 +7,7 @@ The living executive walkthrough now lives inside the package so it can move wit
 
 - `ScreenAuditKit/Docs/FeatureWalkthrough/ScreenAuditKitFeatureWalkthrough.md`
 - `ScreenAuditKit/Docs/FeatureWalkthrough/Artifacts/`
-- `ScreenAuditKit/Docs/FeatureWalkthrough/refresh_artifacts.sh`
+- `ScreenAuditKit/Docs/FeatureWalkthrough/images/`
+- `screenaudit export-feature-walkthrough` (see `ScreenAuditKit/Utility/export_feature_walkthrough.sh`)
 
 The proving tests are in `ScreenAuditKit/Tests/ScreenAuditKitTests/ScreenAuditFeatureWalkthroughTests.swift`.

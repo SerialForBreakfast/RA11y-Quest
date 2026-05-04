@@ -17,5 +17,6 @@ final class ScreenAuditKitTests: XCTestCase {
         XCTAssertTrue(helpText.contains("Exit codes"))
         XCTAssertTrue(helpText.contains("2  Usage or configuration error."))
         XCTAssertTrue(helpText.contains("--ocr"))
+        XCTAssertTrue(helpText.contains("export-feature-walkthrough"))
     }
 }

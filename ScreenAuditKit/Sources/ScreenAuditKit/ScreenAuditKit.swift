@@ -24,9 +24,11 @@ public enum ScreenAuditKit {
           \(executableName) --help
           \(executableName) --version
           \(executableName) validate --screenshots <dir> --contracts <file> --output <dir> [--baselines <dir>] [--ocr none|vision]
+          \(executableName) export-feature-walkthrough [--package-root <dir>]
 
         Commands:
-          validate    Validate screenshots against contracts.
+          validate                      Validate screenshots against contracts.
+          export-feature-walkthrough    Copy curated feature-walkthrough PNGs and reports into Docs/FeatureWalkthrough (run swift test first).
 
         Exit codes:
           0  Success.
@@ -101,6 +103,14 @@ public struct ScreenAuditCLI {
             )
         }
 
+        if arguments.first == "export-feature-walkthrough" {
+            return runExportFeatureWalkthrough(
+                arguments: Array(arguments.dropFirst()),
+                standardOutput: standardOutput,
+                standardError: standardError
+            )
+        }
+
         standardError("Unsupported arguments: \(arguments.joined(separator: " "))")
         standardError("Run `screenaudit --help` for usage.")
         return ScreenAuditExitCode.usageError.rawValue
@@ -155,6 +165,73 @@ public struct ScreenAuditCLI {
         } catch {
             standardError(error.localizedDescription)
             return ScreenAuditExitCode.runtimeError.rawValue
+        }
+    }
+
+    private func runExportFeatureWalkthrough(
+        arguments: [String],
+        standardOutput: (String) -> Void,
+        standardError: (String) -> Void
+    ) -> Int32 {
+        let packageRoot: URL
+        do {
+            packageRoot = try ExportFeatureWalkthroughArguments(arguments: arguments).packageRootDirectory
+        } catch {
+            standardError(error.localizedDescription)
+            standardError("Run `screenaudit --help` for usage.")
+            return ScreenAuditExitCode.usageError.rawValue
+        }
+
+        let packageSwift = packageRoot.appendingPathComponent("Package.swift")
+        guard FileManager.default.fileExists(atPath: packageSwift.path) else {
+            standardError("No Package.swift at `\(packageSwift.path)`. Pass the ScreenAuditKit package root with `--package-root`.")
+            return ScreenAuditExitCode.usageError.rawValue
+        }
+
+        do {
+            try ScreenAuditFeatureWalkthroughArtifactExporter().export(packageRoot: packageRoot)
+            let docs = packageRoot
+                .appendingPathComponent("Docs", isDirectory: true)
+                .appendingPathComponent("FeatureWalkthrough", isDirectory: true)
+            standardOutput("Refreshed walkthrough artifacts under `\(docs.appendingPathComponent("Artifacts").path)`.")
+            standardOutput("Refreshed walkthrough doc images under `\(docs.appendingPathComponent("images").path)`.")
+            return ScreenAuditExitCode.success.rawValue
+        } catch let error as ScreenAuditFeatureWalkthroughExportError {
+            standardError(error.localizedDescription)
+            return ScreenAuditExitCode.inputError.rawValue
+        } catch {
+            standardError(error.localizedDescription)
+            return ScreenAuditExitCode.runtimeError.rawValue
+        }
+    }
+}
+
+private struct ExportFeatureWalkthroughArguments {
+    let packageRootDirectory: URL
+
+    init(arguments: [String]) throws {
+        var rootPath: String?
+        var index = 0
+        while index < arguments.count {
+            let flag = arguments[index]
+            guard index + 1 < arguments.count else {
+                throw ScreenAuditCLIArgumentError.missingValue(flag: flag)
+            }
+            let value = arguments[index + 1]
+            switch flag {
+            case "--package-root":
+                rootPath = value
+            default:
+                throw ScreenAuditCLIArgumentError.unsupportedFlag(flag)
+            }
+            index += 2
+        }
+
+        if let rootPath {
+            packageRootDirectory = URL(fileURLWithPath: rootPath, isDirectory: true).standardizedFileURL
+        } else {
+            packageRootDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
+                .standardizedFileURL
         }
     }
 }
