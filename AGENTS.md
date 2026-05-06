@@ -22,13 +22,137 @@ The SwiftUI rules are intended for design and implementation guidance and should
 
 - `RA11y-iOS/` — iOS app target and Xcode project (`RA11y-iOS.xcodeproj`).
 - `RA11yCore/` — Shared Swift package. All platform-agnostic logic lives here.
-- `RA11y.xcworkspace` — Workspace that ties the app and package together. Always open this.
-- `utility/` — Build and test scripts.
+- `NativeUIAuditKit/` — Local Swift package (research scaffold). Native Apple UI element detector, pre-CoreML model. See its own `AGENTS.md` and `Tasks.md`.
+- `RA11y.xcworkspace` — Workspace that ties the iOS app and RA11yCore together. Always open this.
+- `utility/` — Build and test scripts, including fastlane adapter scripts for external CLI tools.
 - `build_results/` — Script output. Gitignored.
 - `memlog/` — Project notes, requirements, ticket breakdown, and design docs.
 
 Future platform targets follow the same convention: `RA11y-macOS/`, `RA11y-tvOS/`,
 each with its own `.xcodeproj` referenced by the workspace.
+
+**ScreenAuditKit is an external dependency** (extracted from this monorepo). It is not in this
+directory. See the "External CLI Tools" section below for installation and fastlane integration.
+
+---
+
+## External CLI Tools
+
+RA11y's fastlane and utility scripts depend on external Swift CLI tools that are **not** in this
+repository. This section documents what they are, where they live, how to install them, and how
+the adapter scripts call them.
+
+---
+
+### ScreenAuditKit — `screenaudit` CLI
+
+**Repository:** `https://github.com/SerialForBreakfast/ScreenAuditKit`  
+**Current version in use:** `1.0.0`  
+**Purpose:** Deterministic screenshot validation against JSON contracts. Detects missing text,
+dimension mismatches, rendering artifacts, baseline drift, and quest flow violations.  
+**Platform:** macOS only. Not imported into the iOS app — used only by CI and fastlane.
+
+#### Installation
+
+The `screenaudit` binary must be on `PATH` before running any fastlane lane that calls
+`utility/validate_screen_audit.sh`.
+
+**Option A — Build from the tagged release (current approach):**
+```bash
+git clone --depth 1 --branch 1.0.0 https://github.com/SerialForBreakfast/ScreenAuditKit.git /tmp/ScreenAuditKit-1.0.0
+swift build -c release --package-path /tmp/ScreenAuditKit-1.0.0
+cp /tmp/ScreenAuditKit-1.0.0/.build/release/screenaudit /opt/homebrew/bin/screenaudit
+screenaudit --version   # must print 1.0.0
+```
+
+**Option B — mint (preferred once mint is installed):**
+```bash
+brew install mint
+mint install SerialForBreakfast/ScreenAuditKit@1.0.0
+screenaudit --version
+```
+
+To upgrade to a new version, repeat the same steps with the new tag. The adapter script
+reads whatever `screenaudit` binary is on PATH — there is no version pin inside this repo.
+
+#### Verification
+
+```bash
+screenaudit --version          # 1.0.0
+screenaudit --help             # shows validate / export-feature-walkthrough commands
+bash -n utility/validate_screen_audit.sh   # syntax check the adapter
+```
+
+#### How the adapter script works (`utility/validate_screen_audit.sh`)
+
+```
+SCREEN_AUDIT_PACKAGE env var set and is a directory?
+  └─ yes → swift run --package-path "$SCREEN_AUDIT_PACKAGE" screenaudit …  (local dev override)
+  └─ no  → screenaudit on PATH?
+             └─ yes → screenaudit …                                          (normal production path)
+             └─ no  → plain-English error box + exit 2
+```
+
+`SCREEN_AUDIT_PACKAGE` is only needed if you are actively developing ScreenAuditKit locally.
+In normal CI and developer use it should be unset.
+
+**OCR mode** (controls whether Apple Vision reads text from screenshots):
+
+| Invocation | OCR behaviour |
+|-----------|---------------|
+| `--ocr none` | Skip OCR; text rules emit skipped-info findings |
+| `--ocr vision` | Run VNRecognizeTextRequest on each PNG |
+| `RA11Y_SCREEN_AUDIT_PROFILE=ci` (no flag) | Defaults to `vision` |
+| No flag, no env var | Defaults to `none` |
+
+#### Fastlane integration
+
+```ruby
+# fastlane/Fastfile
+SCREEN_AUDIT_CHECK = "../utility/validate_screen_audit.sh"
+
+lane :screen_audit do
+  sh("bash '#{SCREEN_AUDIT_CHECK}' --ocr vision")
+end
+```
+
+The `screenshots` lane calls `validate_screen_audit.sh` after capture. The `screen_audit`
+lane can be run standalone at any time against committed screenshots in `docs/screenshots/`.
+
+#### ScreenAuditKit contracts file
+
+`RA11y-iOS/RA11y-iOSUITests/ScreenAuditContracts.json` — stays in this repo permanently.
+It is RA11y-specific data, not package code. The `--contracts` flag in the adapter script
+always points here.
+
+Run `utility/screenaudit_doctor.sh` before a full audit to catch contract / screenshot
+catalog drift without running the full validation pipeline.
+
+#### Updating ScreenAuditKit
+
+When a new version of ScreenAuditKit is released:
+1. Build and install the new binary (Option A or B above).
+2. Run `swift test --package-path /tmp/ScreenAuditKit-<version>` to confirm tests pass.
+3. Run `bash utility/validate_screen_audit.sh --ocr none` against existing screenshots
+   to confirm no contract regressions before merging any app changes.
+4. Update this section and `memlog/research/PackageMigration-ScreenAuditKit-NativeUIAuditKit.md`
+   with the new version number.
+
+---
+
+### NativeUIAuditKit — future `nativeuiaudit` CLI
+
+**Repository:** `https://github.com/SerialForBreakfast/NativeUIAuditKit`  
+**Status:** Research scaffold — Phase 0. No CoreML model exists yet.  
+**Do not install or integrate into fastlane** until Phase 6 (CoreML detector, mAP@0.5 ≥ 0.70)
+is complete. See `NativeUIAuditKit/Tasks.md` for the phase roadmap.
+
+When NativeUIAuditKit is eventually integrated, its fastlane lane will be **optional** — a
+missing CLI is a warning, not a CI failure (unlike ScreenAuditKit).
+
+The local `NativeUIAuditKit/` directory in this repo is the active development scaffold.
+It will be removed from the monorepo (like ScreenAuditKit was) once Phase 4+ is stable and
+the package is extracted to its standalone repo.
 
 ---
 
@@ -416,6 +540,10 @@ Authoritative files:
 - `fastlane/Fastfile` (`UI_TEST_IDS` allowlist)
 
 End-to-end workflow (catalog + Fastlane + ScreenAuditKit checks) is summarized in `memlog/research/ScreenshotAndScreenAudit-GoldenPath.md`.
+
+ScreenAuditKit is an **external CLI tool** (`screenaudit` binary on PATH). Installation,
+configuration, and fastlane wiring are documented in the "External CLI Tools" section above.
+Before working on screenshot validation, confirm `screenaudit --version` returns `1.0.0`.
 
 Required rules:
 - Any change to screenshot-covered UI routes, accessibility identifiers, or launch args MUST update all four files in the same change.
