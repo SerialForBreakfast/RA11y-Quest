@@ -1,27 +1,26 @@
 # Package Migration Strategy: ScreenAuditKit & NativeUIAuditKit
 
-**Status:** Planning  
-**As of:** 2026-05-03  
+**Status:** Planning checklist + operational history (migration steps below still apply when publishing or upgrading standalone packages).  
+**As of overview refresh:** 2026-05-17  
 **Audience:** RA11y maintainers performing or preparing the monorepo → standalone repo split
 
 ---
 
 ## 1. Overview
 
-Both Swift packages currently live inside the RA11y monorepo for development velocity. This
-document defines the migration path to extract each package into its own GitHub repository while
-keeping the RA11y fastlane integration working, contracts in place, and CI unbroken.
+This document records how **ScreenAuditKit** and **NativeUIAuditKit** were split out of the RA11y
+monorepo and how to keep RA11y's adapter scripts coherent.
 
-**Packages to migrate:**
+**Canonical location today:** Neither package ships as source inside RA11y.
 
-| Package | Current path | Target state |
-|---------|-------------|-------------|
-| `ScreenAuditKit` | `ScreenAuditKit/` | Standalone repo, added as SPM dependency |
-| `NativeUIAuditKit` | `NativeUIAuditKit/` | Standalone repo (after Phase 6 milestone — model ready) |
+**Packages:**
 
-**Do not rush NativeUIAuditKit.** It is a research scaffold (Phase 0). Extract it only after the
-Phase 6 CoreML model milestone produces a working detector. ScreenAuditKit is production-ready and
-can be extracted independently at any time.
+| Package | In RA11y monorepo | Consumer integration |
+|---------|-------------------|----------------------|
+| `ScreenAuditKit` | Not vendored | External **`screenaudit` CLI** from `https://github.com/SerialForBreakfast/ScreenAuditKit` (see root `AGENTS.md`). Contracts stay in RA11y as JSON data only. |
+| `NativeUIAuditKit` | Not vendored (local copy removed 2026-05-17) | `https://github.com/SerialForBreakfast/NativeUIAuditKit` — **RA11y does not adopt it yet**; optional SPM/CLI adoption only after Phase 6 in that repo. |
+
+Treat **NativeUIAuditKit** as high-risk to rush: it depends on CoreML milestones defined in **that** repository (`Tasks.md`), not RA11y's schedule.
 
 ---
 
@@ -44,12 +43,14 @@ Complete every item before touching any repository structure.
 - [ ] `utility/validate_screen_audit.sh` updated to support external-package path pattern
 - [ ] `utility/screenaudit_doctor.sh` updated with migration notes
 
-### NativeUIAuditKit
+### NativeUIAuditKit (standalone repository only — not in RA11y)
+
+Complete in **`SerialForBreakfast/NativeUIAuditKit`** before RA11y adds any dependency:
 
 - [ ] Phase 6 CoreML detector milestone complete (mAP@0.5 ≥ 0.70 on withheld-template test)
 - [ ] `NativeUIAuditKitModels` package structure defined and `.mlpackage` trained
 - [ ] `swift build` and `swift test` pass
-- [ ] `AGENTS.md` inside `NativeUIAuditKit/` reviewed and accurate
+- [ ] `AGENTS.md` at repository root reviewed and accurate
 - [ ] `README.md` has integration instructions for projects that are not RA11y
 - [ ] `LICENSE` file exists
 - [ ] No RA11y-specific code in `Sources/`
@@ -164,6 +165,11 @@ bash utility/validate_screen_audit.sh --ocr none
 ---
 
 ## 4. Migration Steps — NativeUIAuditKit
+
+**Current state:** The standalone repository **`SerialForBreakfast/NativeUIAuditKit`** already hosts the
+Swift package and research docs. RA11y removed its vendored `NativeUIAuditKit/` directory on
+2026-05-17 and does not link the package until maintainers deliberately adopt it. The procedural
+notes below remain valid if you are cloning fresh, tagging releases, or splitting `Models` into a second repo.
 
 Follow the same structure as ScreenAuditKit. Additional considerations:
 
@@ -351,12 +357,12 @@ RA11y/
 
 | Phase | Recommended timing |
 |---|---|
-| Complete ScreenAuditKit Milestone F commit | Before any extraction |
-| Create standalone ScreenAuditKit repo | When ready — no blocker |
-| RA11y consuming ScreenAuditKit as SPM dependency | After repo creation + CI smoke test |
-| Remove local ScreenAuditKit from monorepo | After RA11y SPM dependency is stable for ≥1 sprint |
-| NativeUIAuditKit Phase 6 (CoreML detector) | 3–6 months from scaffold |
-| NativeUIAuditKit extraction | After Phase 6 complete |
+| Complete ScreenAuditKit Milestone F commit | Before any extraction *(historical — extraction done)* |
+| Create standalone ScreenAuditKit repo | Done — `SerialForBreakfast/ScreenAuditKit` |
+| RA11y consuming ScreenAuditKit | **CLI on PATH** (not SPM in app); see `AGENTS.md` |
+| Remove local ScreenAuditKit from monorepo | Done |
+| NativeUIAuditKit Phase 6 (CoreML detector) | Tracked in external repo `Tasks.md` |
+| Standalone NativeUIAuditKit repo + no RA11y vendored copy | Done — RA11y monorepo directory removed 2026-05-17; adoption deferred |
 
 ---
 

@@ -7,7 +7,7 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-05-03)
+Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/` is no longer in this monorepo; development continues at https://github.com/SerialForBreakfast/NativeUIAuditKit (RA11y does not reference it yet).
 ---
 
 .

@@ -22,7 +22,6 @@ The SwiftUI rules are intended for design and implementation guidance and should
 
 - `RA11y-iOS/` — iOS app target and Xcode project (`RA11y-iOS.xcodeproj`).
 - `RA11yCore/` — Shared Swift package. All platform-agnostic logic lives here.
-- `NativeUIAuditKit/` — Local Swift package (research scaffold). Native Apple UI element detector, pre-CoreML model. See its own `AGENTS.md` and `Tasks.md`.
 - `RA11y.xcworkspace` — Workspace that ties the iOS app and RA11yCore together. Always open this.
 - `utility/` — Build and test scripts, including fastlane adapter scripts for external CLI tools.
 - `build_results/` — Script output. Gitignored.
@@ -143,16 +142,15 @@ When a new version of ScreenAuditKit is released:
 ### NativeUIAuditKit — future `nativeuiaudit` CLI
 
 **Repository:** `https://github.com/SerialForBreakfast/NativeUIAuditKit`  
-**Status:** Research scaffold — Phase 0. No CoreML model exists yet.  
-**Do not install or integrate into fastlane** until Phase 6 (CoreML detector, mAP@0.5 ≥ 0.70)
-is complete. See `NativeUIAuditKit/Tasks.md` for the phase roadmap.
+**In this monorepo:** Not vendored. RA11y has **no** SwiftPM link or workspace reference; the canonical
+sources, roadmap (`Tasks.md`), and research docs live **only** in that repository until we choose to
+adopt them.
 
-When NativeUIAuditKit is eventually integrated, its fastlane lane will be **optional** — a
-missing CLI is a warning, not a CI failure (unlike ScreenAuditKit).
+**Status:** Research scaffold (Phase 0; no shipped CoreML model). **Do not install or integrate
+into fastlane** until Phase 6 of that repo (CoreML detector, mAP@0.5 ≥ 0.70) makes it worth wiring in.
 
-The local `NativeUIAuditKit/` directory in this repo is the active development scaffold.
-It will be removed from the monorepo (like ScreenAuditKit was) once Phase 4+ is stable and
-the package is extracted to its standalone repo.
+When NativeUIAuditKit is eventually integrated, treat it like an **optional** tool — a missing CLI or
+dependency should be a **warning**, not a CI failure (unlike ScreenAuditKit).
 
 ---
 

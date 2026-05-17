@@ -1,9 +1,0 @@
-.build/
-.swiftpm/
-.DS_Store
-Package.resolved
-
-# Dataset artifacts — live outside the package repo
-NativeUIAuditKit-Dataset/
-*.mlpackage
-*.mlmodel
