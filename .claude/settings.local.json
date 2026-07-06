@@ -4,7 +4,8 @@
       "Bash(awk '/## File System Boundaries/,/## Simulator Detection/' \"/Users/josephmccraw/Dropbox/My Mac \\(MacBook-Air\\)/Documents/GitHub/RA11y-AccessibilityGamification/AGENTS.md\")",
       "Bash(swift test *)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

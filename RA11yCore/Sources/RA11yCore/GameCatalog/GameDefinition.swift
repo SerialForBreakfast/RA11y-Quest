@@ -8,7 +8,7 @@ import Foundation
 public enum GameKind: String, Hashable, Sendable, Codable, CaseIterable {
     /// Find & Focus — Simon Says drill training focus navigation and element identification.
     case findAndFocus
-    /// Crystal Resonance (player-facing name). Internal catalog id `scroll-hunt`; trains three-finger scrolling of the Moonstone alignment lane.
+    /// Crystal Resonance (player-facing name). Internal catalog id `scroll-hunt`; trains three-finger scrolling of the Glyph stream.
     case scrollHunt
     /// The Banishment — two-finger scrub / accessibility escape (`the-banishment`).
     case banishment

@@ -1544,7 +1544,7 @@
         }
       }
     },
-    "dungeon.resonance.tip.voFocusOnLane" : {
+    "dungeon.resonance.tip.voFocusOnGlyphStream" : {
       "comment" : "L1 in-game tip: VoiceOver must be focused on the scroll proxy, not chrome, for three-finger scroll to move the Moonstone.",
       "localizations" : {
         "en" : {

@@ -30,7 +30,7 @@ public struct QuestFeedbackProfile: Equatable, Sendable {
     /// Cue used when the player requests help.
     public let hintCue: QuestFeedbackCue
 
-    /// Cue used when the player moves between items in a scroll alignment lane.
+    /// Cue used when the player moves between items in the Glyph stream.
     public let laneSlotCue: QuestFeedbackCue
 
     /// Creates a reusable profile.
@@ -60,7 +60,7 @@ public struct QuestFeedbackProfile: Equatable, Sendable {
 }
 
 public extension QuestFeedbackProfile {
-    /// Resonance-oriented cue mapping for Crystal Resonance (Moonstone alignment lane) v2.
+    /// Resonance-oriented cue mapping for Crystal Resonance (Glyph stream) v2.
     static let dungeonResonance = QuestFeedbackProfile(
         name: "dungeonResonance",
         warmCue: QuestFeedbackCue(audio: .resonance, haptic: .softTick, cooldownSeconds: 0.25),

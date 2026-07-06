@@ -421,6 +421,7 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |-- Snapfile
 |   `-- report.xml
 |-- memlog
+|   |-- CompletedTasks.md
 |   |-- MagicTap-Brainstorming.md
 |   |-- MagicTap-BardsInterrupt-Tasks.md
 |   |-- DesignRecommendationReview.md
@@ -440,6 +441,15 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |   |   |-- Mockups-v2
 |   |   |   |   |-- banishment_mockup.html
 |   |   |   |   `-- dungeon_resonance_mockup.html
+|   |   |   |-- RemainingQuestMockups
+|   |   |   |   |-- PNGs
+|   |   |   |   |   |-- bards_interrupt_release_iphone_mockup.png
+|   |   |   |   |   |-- crystal_resonance_v2_iphone_mockup.png
+|   |   |   |   |   `-- threefold_seal_headings_iphone_mockup.png
+|   |   |   |   |-- BardsInterrupt.md
+|   |   |   |   |-- CrystalResonanceV2.md
+|   |   |   |   |-- README.md
+|   |   |   |   `-- ThreefoldSeal.md
 |   |   |   |-- BanishmentAssetPipeline.txt
 |   |   |   |-- DesignProcess.md
 |   |   |   |-- DesignTicket-AssetDeliveryNaming.txt
@@ -500,6 +510,7 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |   |-- ADR-0006-VoiceOver-Rotor-Actions-Pedagogy.md
 |   |   |-- ADR-0007-Screenshot-Rendering-Factory-And-Fastlane-Refactor.md
 |   |   |-- ADR-0008-Rotor-Navigation-ThreefoldSeal-SlimV1.md
+|   |   |-- ADR-0009-Scalable-Quest-Architecture-And-Testability.md
 |   |   |-- ArcanistsTower.txt
 |   |   |-- CrystalResonance-Asset-And-Scroll-QC.md
 |   |   |-- CrystalResonance-VoiceOverScrollProxy-Investigation.md

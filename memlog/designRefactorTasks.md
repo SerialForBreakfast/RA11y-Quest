@@ -2,6 +2,8 @@
 Date: 2026-04-22
 Related: Crystal Resonance (Dungeon Descent), all quests
 
+Completed checklist items are archived in `memlog/CompletedTasks.md`.
+
 ---
 
 ## Context
@@ -12,152 +14,8 @@ Two goals:
 
 **Primary edits:** `Localizable.xcstrings`. **Also update** comments and canonical terminology docs that still say “Moonstone alignment lane,” or engineering/onboarding will drift from shipped copy (see **Scope — beyond xcstrings** at the end).
 
----
-
-## Task 1 — Rename the scroll zone to "Glyph Stream"
-
-**Why:** "Lane" has no thematic fit. "Glyph stream" describes what the player experiences (glyphs flowing past as they scroll) and implies the interaction (you scroll the stream). Instructions referencing the zone by name must all update together or VoiceOver announces the wrong label.
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.a11y.scroll.container` → `"Glyph stream"`
-- [ ] `dungeon.a11y.scroll.container.hint` → `"Three-finger scroll to move the stream."`
-- [ ] `dungeon.resonance.tip.voFocusOnLane` → `"Nothing moving? Swipe to 'Glyph stream' first."`
-- [ ] `dungeon.explain.gesture.swipe3` → `"Three fingers: scroll the glyph stream"`
-- [ ] `dungeon.explain.practice_tip` → `"Three-finger scroll the glyph stream to practice."`
-- [ ] `dungeon.explain.narration` → `"Scroll the glyph stream with three fingers. Align the Moonstone with the orb to seal it."`
-- [ ] `dungeon.a11y.explain.lesson` → `"One finger moves focus. Three fingers scroll the glyph stream. Align the Moonstone with the orb."`
-- [ ] `voSpell.threeFinger.body` → `"On the glyph stream, three-finger scroll up or down moves the stream."`
-- [ ] `voSpell.kicker.scrolling` → e.g. `"Glyph stream"` (drop **Shaft scroll** if the new name is canonical)
-- [ ] `voSpell.threeFinger.*` — sweep for “lane” / “alignment lane”; match **Glyph stream**
-- [ ] `game.scrollHunt.goal`, `result.skillTransfer.scrollHunt.*`, `basicsSequence.skill.scrollHunt.intro` if they still say “Moonstone lane” / “alignment lane”
-- [ ] `dungeon.resonance.hint` → `"Scroll the glyph stream until the Moonstone aligns, then Activate the Seal."`
-
-**Verify:** VoiceOver on → swipe right through elements on L1 → hear "Glyph stream" as the zone label. Confirm the gesture tip card and hint text both say "glyph stream."
-
----
-
-## Task 2 — Trim objective strings (visual + VoiceOver)
-
-**Why:** Objective cards currently embed gesture instructions. Those live in the gesture tip and hint system. The card should be one phrase: what to do.
-
-**Files:** `Localizable.xcstrings`
-
-Visual objectives:
-- [ ] `dungeon.l1.objective.format` → `"Align the Moonstone with the orb."`
-- [ ] `dungeon.l2.objective.format` → `"Align the Moonstone — timer running."`
-- [ ] `dungeon.l3.objective.format` → `"Align the Moonstone — timer running."`
-
-VoiceOver objectives (currently repeat gesture instructions):
-- [ ] `dungeon.a11y.l1.objective.format` → `"Align the Moonstone with the orb."`
-- [ ] `dungeon.a11y.l2.objective.format` → `"Align the Moonstone before time runs out."`
-- [ ] `dungeon.a11y.l3.objective.format` → `"Align the Moonstone quickly — time is short."`
-
-**Verify:** On each level, VoiceOver reads the objective card and announces only the task — no gesture instructions embedded in the read.
-
----
-
-## Task 3 — Fix scroll status (announced after every 3-finger swipe)
-
-**Why:** Current format is "Moonstone. Crystal orb, faint resonance." The "Crystal orb," prefix repeats on every swipe announcement — it adds nothing after the first time. Replace with action-oriented band labels.
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.resonance.a11y.orb.far` → `"Far — keep scrolling"`
-- [ ] `dungeon.resonance.a11y.orb.warm` → `"Getting warmer"`
-- [ ] `dungeon.resonance.a11y.orb.near` → `"Almost aligned"`
-- [ ] `dungeon.resonance.a11y.orb.locked` → `"Aligned — seal it"`
-
-**Verify:** VoiceOver on → scroll the glyph stream → hear "Moonstone. Aligned — seal it." not "Moonstone. Crystal orb, aligned, ready to seal resonance."
-
----
-
-## Task 4 — Fix gesture tip card (in-game, L1)
-
-**Why:** The third line is too long and must match Task 1 zone naming.
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.explain.gesture.swipe3u` → `"Aligned? Seal button appears below."`
-- [ ] Zone tip line: same string as Task 1 (`dungeon.resonance.tip.voFocusOnLane`).
-
-**Verify:** Gesture tip card on L1 reads cleanly in three short lines.
-
-**Optional cleanup:** Rename localization key `voFocusOnLane` → `voFocusOnGlyphStream` in code + catalog when you touch that string (reduces future confusion).
-
----
-
-## Task 5 — Fix wrong-target feedback and not-reachable text
-
-**Why:** Both strings are verbose and one gives a directional hint that can be wrong.
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.feedback.non_target` → `"Not the Moonstone. Keep scrolling."`
-- [ ] `dungeon.target.notReachable` → `"Moonstone not aligned yet."` *(drop "too deep" / "scroll down" — Moonstone can be above or below)*
-
-**Verify:** Tap a decoy → hear "Not the Moonstone. Keep scrolling." — Seal button disabled → status shows "Moonstone not aligned yet."
-
----
-
-## Task 6 — Trim seal button hint
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.resonance.seal.hint` → `"Seals when the Moonstone is aligned."`
-
----
-
-## Task 7 — Fix Lights Off flavor text
-
-**Why:** Current text is pure instruction with no atmosphere.
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.lightsOff.flavor` → `"Darkness falls. Navigate by sound alone."`
-
-**Verify:** L3 lights-off flavor card shows the new text.
-
----
-
-## Task 8 — Timer 75% key (✅ logic verified — rename for clarity optional)
-
-**Why:** The *string key* says `75pct` but the code fires at **75% of time elapsed** (= **25% time left**). That matches copy like **"Quarter time left."** There is no threshold bug in `startTimer` today.
-
-**Verified behavior** (`iOSDungeonDescentView.swift`): `pctElapsed >= 0.75` → `announceTimerThreshold(..., 0.75)` → `dungeon.a11y.timer.75pct`.
-
-**Suggested improvements (pick one):**
-- [ ] **Documentation only:** Add a one-line comment above `announceTimerThreshold` or next to the `0.75` branch: *“Announced when ~25% of time remains.”*
-- [ ] **Or** rename the localization key to something like `dungeon.a11y.timer.quarterRemaining` and update call sites (avoids the next reader misreading “75pct” as “75% left”).
-
-**Also note:** Enchanter uses **`simon.a11y.timer.75pct`** with the *same* elapsed-fraction pattern — if you rename dungeon keys for clarity, consider matching Enchanter for consistency.
-
-**Verify:** L3 (45s): at ~33.75s elapsed, hear the quarter-remaining line once; at 50% / 25% elapsed, hear the other thresholds.
-
----
-
-## Task 9 — Tighten timeout and result strings
-
-**Product note:** These lines add back **theme** (gate, shaft, crystal). That’s fine if the goal is *flavor on results* while keeping *instructional* copy terse elsewhere. If you want maximum plainness everywhere, keep shorter defeat/pass strings instead.
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.timeout` → `"Time's up. The gate sealed."`
-- [ ] `dungeon.results.legendary` → `"Flawless. The crystal answers you."`
-- [ ] `dungeon.results.skilled` → `"Well done. The shaft yields."`
-- [ ] `dungeon.results.novice` → `"Sealed. The crystal tested you — and you endured."`
-- [ ] `dungeon.results.defeated` → `"The gate sealed. Rest, then try again."`
-
----
-
-## Task 10 — Prologue copy tightening
-
-**Files:** `Localizable.xcstrings`
-
-- [ ] `dungeon.explain.lesson.body` → `"Practice three-finger scrolling below."`
-- [ ] `dungeon.explain.narration` → covered in Task 1
-
-**Verify:** Prologue screen reads cleanly without redundant spell-card cross-references.
+All tasks in this section (1–10, the beyond-xcstrings scope sweep, and Task 8's
+timer key clarity) are complete and archived in `memlog/CompletedTasks.md`.
 
 ---
 
@@ -187,21 +45,6 @@ Any quest that requires the user to focus a specific zone to perform a gesture s
 | Path navigation | **Cipher path** / **Rune channel** |
 
 Quests where focus works on individual elements (Banishment, Enchanter's Trial) do not need a named zone.
-
----
-
-## Scope — beyond `Localizable.xcstrings` (Glyph stream rename)
-
-If **Glyph stream** becomes canonical, grep and update or annotate:
-
-| Area | Examples |
-|------|-----------|
-| Swift comments / Quick Help | `iOSDungeonDescentView.swift`, `iOSDungeonResonancePlayView.swift`, `DungeonRoom` |
-| RA11yCore | `GameDefinition.swift`, `QuestFeedbackProfile.swift`, `QuestFeedbackTypes.swift` |
-| Requirements / research | `memlog/requirements/Design/CrystalResonance-Terminology.txt`, `DungeonResonanceAssetPipeline.txt`, `memlog/research/CrystalResonance-*.md` |
-| Related product doc | `memlog/requirements/Design/VoiceOver-GestureSpell-Vocabulary.md` (spell card examples) |
-
-UITests and screenshot docs that quote the old phrase should be updated when copy ships.
 
 ---
 
@@ -247,18 +90,14 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - `RA11yCore/Sources/RA11yCore/Design/RA11yTokens.swift` if shared token additions are needed
 
 **Work:**
-- [x] Add `QuestLayoutRole` with roles for `reading`, `questCardList`, `result`, `lesson`, `playfield`, and `actions`.
-- [x] Replace or extend `QuestPaintContentMetrics` with role-aware width and horizontal padding APIs.
-- [x] Document iPhone and iPad target widths for each role (enum + `QuestPaintContentMetrics` Quick Help table).
-- [x] Keep regular-width content centered unless a playfield explicitly needs full bleed (centering unchanged; playfield role reserved).
+No remaining implementation work.
 
 **VoiceOver requirements:**
 - [ ] Document that layout role changes require rechecking VoiceOver order and Dynamic Type.
 - [ ] Ensure role metrics do not cause focusable controls to clip or move off-screen at large Dynamic Type sizes.
 
 **Verify:**
-- [x] Existing screens compile with the new metrics available.
-- [x] No screenshot route loses its root accessibility identifier (hub-only migration; other sites still use legacy reading helpers).
+Implementation verification archived in `memlog/CompletedTasks.md`.
 
 ## Task UI-2 — Fix iPad hub card layout using the new role
 
@@ -270,11 +109,7 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - `RA11y-iOS/RA11y-iOS/Hub/iOSQuestCardInfoView.swift`
 
 **Work:**
-- [x] Move the hub quest list to the `questCardList` layout role.
-- [x] Increase iPad card width to avoid short stacked title wrapping (**800pt** column vs **620pt** reading).
-- [x] Keep the initial implementation as a single centered list for stable VoiceOver order.
 - [ ] Recheck locked-card opacity, contrast, and readability (manual QA).
-- [x] Keep footer actions aligned with the hub content rhythm (footer unchanged).
 
 **VoiceOver requirements:**
 - [ ] Preserve the custom "Quests" rotor.
@@ -296,19 +131,13 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - Existing quest screens as call sites after the scaffold lands
 
 **Work:**
-- [x] Add a reusable `QuestPaintScreen` or equivalent scaffold for illustrated quest surfaces.
-- [x] Centralize full-bleed background art, readable scrim, dark color scheme, and role-based scroll column width (per-call-site vertical padding stays on inner content for now).
 - [ ] Support scroll content and fixed action areas without forcing every screen into one layout (fixed chrome variant TBD).
-- [x] Keep quest-specific art selected by the caller.
 
 **VoiceOver requirements:**
-- [x] Scaffold must not introduce extra focusable elements for background, scrim, or layout containers.
-- [x] Scaffold should preserve caller-defined root accessibility identifiers.
-- [x] Document expected screen order for content hosted inside the scaffold (see `QuestPaintScreen` Quick Help).
+Completed scaffold VoiceOver requirements are archived in `memlog/CompletedTasks.md`.
 
 **Verify:**
-- [x] Pilot call sites: `iOSGameResultView`, `iOSVORequiredView` compile; screenshot routes unchanged at identifier level.
-- [x] Decorative art remains hidden from accessibility (scrim; backdrop unchanged from prior pattern).
+Pilot verification archived in `memlog/CompletedTasks.md`.
 
 ## Task UI-4 — Create shared prologue components
 
@@ -359,27 +188,31 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - [ ] Regenerate `04_EnchanterPrologue` for all screenshot sizes.
 - [ ] Run focused VoiceOver/manual audit for prologue swipe order.
 
-## Task UI-6 — Refactor Crystal Resonance prologue to shared scaffold
+## Task UI-6 — Refactor Crystal Resonance prologue to shared scaffold — done
 
 **Why:** Crystal Resonance adds the required practice scroll gate and is the best test of whether the shared prologue model supports interactive teaching.
 
 **Files:**
 - `RA11y-iOS/RA11y-iOS/Games/iOSDungeonDescentView.swift`
-- `RA11y-iOS/RA11y-iOS/Localizable.xcstrings`
+- `RA11y-iOS/RA11y-iOS/Design/iOSQuestPrologueComponents.swift` (new — `QuestNarrationCard`, `QuestPracticeCard`, `QuestPrologueActionBar`)
+- `RA11y-iOS/RA11y-iOS/Design/iOSQuestPaintChrome.swift` (bug fix, see below)
 
 **Work:**
-- [ ] Move narration, lesson, spell plate, gesture rows, practice zone, and begin action into shared prologue structure.
-- [ ] Preserve the practice-scroll requirement before the begin action enables.
-- [ ] Align terminology with the Crystal Resonance copy tasks above, especially if "Glyph stream" becomes canonical.
+- [x] Move narration, spell plate, practice zone, and begin action into shared prologue components (`QuestNarrationCard`, `QuestPracticeCard`, `QuestPrologueActionBar`), consuming the existing `QuestPaintScreen` scaffold (role `.lesson`) instead of a hand-rolled `GeometryReader`. No separate lesson card in Dungeon's prologue, so `QuestLessonCard`/`QuestGestureRows`/`QuestPracticeCard`-for-Enchanter are deferred to UI-5 when Enchanter migrates.
+- [x] Preserve the practice-scroll requirement before the begin action enables (`practiceScrollObserved` still gates `QuestPrologueActionBar.isEnabled` exactly as before).
+- [x] Terminology already aligned — Glyph stream rename shipped separately (see Tasks 1–10 above).
 
 **VoiceOver requirements:**
-- [ ] Practice scroll surface has a clear label and hint.
-- [ ] Disabled begin action communicates what the user must do first.
-- [ ] Preserve the single reliable scroll surface model.
+- [x] Practice scroll surface keeps its exact label/hint/identifiers (`dungeon.a11y.scroll.container`, `dungeon.a11y.explain.practice.hint`, `dungeon.practiceZone`, `dungeon.prologue.practiceSection`).
+- [x] Disabled begin action still communicates via `dungeon.explain.start.hint`.
+- [x] Preserve the single reliable scroll surface model — unchanged, only the surrounding chrome moved to shared components.
 
 **Verify:**
-- [ ] Regenerate `09_DungeonPrologue` for all screenshot sizes.
-- [ ] VoiceOver can complete practice by focusing the scroll surface and three-finger scrolling.
+- [x] Full `xcodebuild` succeeds; `RA11yCore` `swift build` succeeds.
+- [x] Simulator screenshot of `-screenshotScene dungeonPrologue` visually matches pre-refactor layout (verified iPhone 17e: narration card, gesture lesson card, practice zone with numbered steps, begin button all render correctly with proper margins/wrapping).
+- [ ] Regenerate `09_DungeonPrologue` for all screenshot sizes via fastlane (not run this session — only manual simulator screenshot verified).
+
+**Found + fixed while migrating:** `QuestPaintScreen` (`iOSQuestPaintChrome.swift`) had a **pre-existing layout bug** affecting **all 8 call sites** (`iOSGameResultView`, `iOSVORequiredView`, `iOSFirstRunView`, `iOSBasicsSequenceView`, `iOSMagicTapFirstSpellView`, `iOSFirstSpellVoiceOverRequiredView`, `iOSRotorNavigationQuestView`, and now `iOSDungeonDescentView`'s prologue): the `GeometryReader` used for column-width math was a `ZStack` sibling next to unconstrained full-bleed backdrop `Image`s, so `geo.size` picked up the artwork's native pixel dimensions instead of the real screen bounds — every screen using this scaffold rendered text unwrapped and clipped on both edges. Fixed by making `GeometryReader` the outermost view and giving the backdrop/scrim an explicit `.frame(width:height:)` derived from it. Verified against both the Dungeon prologue and Dungeon result screenshots (before/after).
 
 ## Task UI-7 — Refactor Banishment prologue to shared scaffold
 
@@ -442,8 +275,6 @@ Use these as the **first mergeable slices** before prologue migrations. They cor
 - `RA11y-iOS/RA11y-iOS/Design/iOSQuestStandardActions.swift`
 
 **Work:**
-- [x] Move result layout to role-aware metrics (`QuestLayoutRole/result` + `QuestPaintScreen`; Dungeon keeps `scrollHunt` gutter).
-- [x] Ensure summary, skill transfer, gesture reminder, and action stack align to the same content width.
 - [ ] Keep `Try Again` and `Back to Tavern` consistent across all quest results.
 
 **VoiceOver requirements:**

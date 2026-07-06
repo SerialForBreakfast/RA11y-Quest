@@ -6,7 +6,7 @@ import RA11yCore
 
 // MARK: - iOSDungeonDescentView
 
-/// Container for Crystal Resonance (Moonstone alignment lane) — M7.
+/// Container for Crystal Resonance (Glyph stream) — M7.
 ///
 /// Implements the full 4-level game arc defined in `GameSpec-ScrollHunt.txt`
 /// and `GameRules-MVP.txt`:
@@ -58,16 +58,11 @@ struct iOSDungeonDescentView: View {
     // MARK: - Body
 
     /// See `iOSEnchantersTrialView` for the rationale for using `.background {}` over ZStack.
+    ///
+    /// The prologue's full-bleed backdrop is owned by `QuestPaintScreen` inside `DungeonPrologueView`;
+    /// no phase-gated background is needed here.
     var body: some View {
         levelContent
-            .background {
-                if viewModel.phase == .prologue {
-                    DungeonBackgroundView()
-                        .ignoresSafeArea()
-                } else {
-                    Color.clear
-                }
-            }
             .preferredColorScheme(.dark)
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: viewModel.completedResult) { _, result in
@@ -864,111 +859,37 @@ private struct DungeonPrologueView: View {
     let onPracticeScroll: () -> Void
     let onBeginTrial: () -> Void
 
-    @Environment(\.horizontalSizeClass) private var sizeClass
-
     var body: some View {
-        GeometryReader { geo in
-            let hPad = QuestPaintContentMetrics.horizontalPadding(
-                role: .reading,
-                containerWidth: geo.size.width,
-                horizontalSizeClass: sizeClass,
-                gameKind: .scrollHunt
-            )
-            let colW = QuestPaintContentMetrics.contentMaxWidth(
-                role: .reading,
-                containerWidth: geo.size.width,
-                horizontalSizeClass: sizeClass,
-                horizontalPadding: hPad
-            )
-            ScrollView(.vertical) {
-                VStack(spacing: RA11ySpacing.lg) {
-                    dmNarrationCard
-                    QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
-                    practiceZone
-                    beginButton
-                }
-                .padding(.vertical, RA11ySpacing.md)
-                .frame(maxWidth: colW)
-                .frame(maxWidth: .infinity, alignment: .center)
+        QuestPaintScreen(
+            ambientImageName: "dungeon_descent_bg",
+            layoutRole: .lesson,
+            gameKind: .scrollHunt
+        ) {
+            VStack(spacing: RA11ySpacing.lg) {
+                QuestNarrationCard(text: String(localized: "dungeon.explain.narration"))
+                QuestVoiceOverGestureSpellPlate.moonstoneScrollLesson()
+                QuestPracticeCard(
+                    tipText: String(localized: "dungeon.explain.practice_tip"),
+                    stepTexts: (0..<8).map { String(format: String(localized: "dungeon.explain.practice.step"), $0 + 1) },
+                    scrollAccessibilityLabel: String(localized: "dungeon.a11y.scroll.container"),
+                    scrollAccessibilityHint: String(localized: "dungeon.a11y.explain.practice.hint"),
+                    scrollAccessibilityIdentifier: "dungeon.practiceZone",
+                    containerAccessibilityIdentifier: "dungeon.prologue.practiceSection",
+                    isReady: practiceScrollObserved,
+                    readyText: String(localized: "dungeon.prologue.practice.ready"),
+                    onNonZeroScroll: onPracticeScroll
+                )
+                QuestPrologueActionBar(
+                    title: String(localized: "level.button.start"),
+                    hint: String(localized: "dungeon.explain.start.hint"),
+                    identifier: "dungeon.beginDescent",
+                    isEnabled: practiceScrollObserved,
+                    action: onBeginTrial
+                )
             }
-            .padding(.horizontal, hPad)
-            .scrollContentBackground(.hidden)
+            .padding(.vertical, RA11ySpacing.md)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .environment(\.colorScheme, .dark)
         .accessibilityElement(children: .contain)
-    }
-
-    private var dmNarrationCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Label(String(localized: "dm.label"), systemImage: "scroll.fill")
-                .font(.ra11yCaption)
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-
-            Text(String(localized: "dungeon.explain.narration"))
-                .italic()
-                .questPaintReadableText(.materialCardBody)
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
-        )
-    }
-
-    private var practiceZone: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Text(String(localized: "dungeon.explain.practice_tip"))
-                .questPaintReadableText(.materialCardMeta)
-
-            ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-                    ForEach(0..<8, id: \.self) { index in
-                        Text(String(format: String(localized: "dungeon.explain.practice.step"), index + 1))
-                            .questPaintReadableText(.bodySupporting)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 2)
-                    }
-                }
-                .padding(RA11ySpacing.sm)
-            }
-            .frame(minHeight: 96, maxHeight: 130)
-            .background(Color.black.opacity(0.35), in: .rect(cornerRadius: RA11yRadius.card))
-            .overlay(
-                RoundedRectangle(cornerRadius: RA11yRadius.card)
-                    .strokeBorder(Color.ra11yAccent.opacity(0.55), lineWidth: 1)
-            )
-            .accessibilityLabel(String(localized: "dungeon.a11y.scroll.container"))
-            .accessibilityHint(String(localized: "dungeon.a11y.explain.practice.hint"))
-            .accessibilityIdentifier("dungeon.practiceZone")
-            .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.y }) { _, offsetY in
-                if abs(offsetY) > 2 { onPracticeScroll() }
-            }
-
-            if practiceScrollObserved {
-                Text(String(localized: "dungeon.prologue.practice.ready"))
-                    .questPaintReadableText(.captionGold)
-            }
-        }
-        .padding(RA11ySpacing.md)
-        .background(.ultraThinMaterial, in: .rect(cornerRadius: RA11yRadius.card))
-        .accessibilityIdentifier("dungeon.prologue.practiceSection")
-    }
-
-    private var beginButton: some View {
-        Button(action: onBeginTrial) {
-            Text(String(localized: "level.button.start"))
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .tint(Color.ra11yAccent)
-        .disabled(!practiceScrollObserved)
-        .accessibilityHint(String(localized: "dungeon.explain.start.hint"))
-        .accessibilityIdentifier("dungeon.beginDescent")
     }
 }
 
@@ -1059,19 +980,6 @@ struct DungeonTimerHUD: View {
     private var mistakesLabel: some View {
         Text(String(format: String(localized: "dungeon.hud.mistakes.format"), mistakes))
             .questPaintReadableText(.materialCardMeta)
-    }
-}
-
-// MARK: - DungeonBackgroundView
-
-/// Full-bleed dungeon background: shared quest paint + readable scrim (prologue only).
-private struct DungeonBackgroundView: View {
-    var body: some View {
-        ZStack {
-            Color.black
-            QuestPaintAmbientBackdrop(imageName: "dungeon_descent_bg")
-            QuestPaintReadableScrim()
-        }
     }
 }
 

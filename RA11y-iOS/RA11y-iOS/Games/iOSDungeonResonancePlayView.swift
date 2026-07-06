@@ -779,7 +779,7 @@ struct iOSDungeonResonancePlayView: View {
                     .questPaintReadableText(.materialCardBody)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(String(localized: "dungeon.resonance.tip.voFocusOnLane"))
+                Text(String(localized: "dungeon.resonance.tip.voFocusOnGlyphStream"))
                     .questPaintReadableText(.materialCardBody)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)

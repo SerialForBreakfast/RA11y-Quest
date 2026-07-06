@@ -59,7 +59,7 @@ This class of bug is **layout/sync**, not PNG.
 
 ## 4. Quick device QC checklist (Crystal Resonance L1)
 
-- [ ] VoiceOver lands on **Moonstone alignment lane**; three-finger scroll moves **all** items including **last**.
+- [ ] VoiceOver lands on **Glyph stream**; three-finger scroll moves **all** items including **last**.
 - [ ] No grey plate behind Moonstone / decoys / reticle on **dark** shaft.
 - [ ] With Moonstone under centre, **glyph remains visible** through ring (and ideally through orb centre).
 - [ ] Console: no “**Modifying state during view update**” when scrolling.

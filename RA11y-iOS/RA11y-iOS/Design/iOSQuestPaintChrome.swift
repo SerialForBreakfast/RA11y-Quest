@@ -291,24 +291,26 @@ struct QuestPaintScreen<Content: View>: View {
     }
 
     var body: some View {
-        ZStack {
-            QuestPaintAmbientBackdrop(imageName: ambientImageName)
-                .ignoresSafeArea()
-            QuestPaintReadableScrim()
-                .ignoresSafeArea()
-            GeometryReader { geo in
-                let hPad = QuestPaintContentMetrics.horizontalPadding(
-                    role: layoutRole,
-                    containerWidth: geo.size.width,
-                    horizontalSizeClass: horizontalSizeClass,
-                    gameKind: gameKind
-                )
-                let colW = QuestPaintContentMetrics.contentMaxWidth(
-                    role: layoutRole,
-                    containerWidth: geo.size.width,
-                    horizontalSizeClass: horizontalSizeClass,
-                    horizontalPadding: hPad
-                )
+        GeometryReader { geo in
+            let hPad = QuestPaintContentMetrics.horizontalPadding(
+                role: layoutRole,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                gameKind: gameKind
+            )
+            let colW = QuestPaintContentMetrics.contentMaxWidth(
+                role: layoutRole,
+                containerWidth: geo.size.width,
+                horizontalSizeClass: horizontalSizeClass,
+                horizontalPadding: hPad
+            )
+            ZStack {
+                QuestPaintAmbientBackdrop(imageName: ambientImageName)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .ignoresSafeArea()
+                QuestPaintReadableScrim()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .ignoresSafeArea()
                 ScrollView {
                     content()
                         .frame(maxWidth: colW, alignment: .center)

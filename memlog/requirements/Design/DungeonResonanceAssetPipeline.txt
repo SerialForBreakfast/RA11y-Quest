@@ -2,7 +2,7 @@ RA11y — Dungeon Resonance v2 Asset Pipeline
 ============================================
 Date: 2026-04-19
 Related: ADR-0003, DesignTicket-DungeonResonancePromptSheet.txt,
-  `CrystalResonance-Terminology.txt` (canonical Moonstone / alignment lane copy).
+  `CrystalResonance-Terminology.txt` (canonical Moonstone / Glyph stream copy).
 
 Purpose
 -------
