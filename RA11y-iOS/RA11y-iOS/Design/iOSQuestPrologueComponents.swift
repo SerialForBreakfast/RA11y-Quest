@@ -1,6 +1,18 @@
 import SwiftUI
 import RA11yCore
 
+// MARK: - Prologue content order
+
+// Shared building blocks for quest L0 screens hosted in QuestPaintScreen (role .lesson).
+// Callers compose a vertical stack; there is no generic stack type because quests omit different slots:
+//   Enchanter: narration, lesson, spell plate, decorative gestures, primary action
+//   Crystal Resonance: narration, spell plate, practice gate, primary action
+//   Banishment: title, body, instructions, spell plate (Z art), primary action
+// VoiceOver: each component documents its own grouping. Decorative gesture rows are hidden;
+// spoken teaching lives on the lesson card or spell plate.
+// Dynamic Type: cards use QuestPaintReadableTextRole styles. Re-check wrapping at
+// accessibility extra-extra-large after any prologue migration.
+
 // MARK: - QuestNarrationCard
 
 /// Card background tone for ``QuestNarrationCard``, matching each quest's current DM card treatment.
@@ -47,6 +59,81 @@ struct QuestNarrationCard: View {
         case .translucentBlack(let opacity):
             AnyShapeStyle(Color.black.opacity(opacity))
         }
+    }
+}
+
+// MARK: - QuestLessonCard
+
+/// Teaching paragraph following narration: heading plus body combined into one VoiceOver element.
+///
+/// ## VoiceOver
+/// Heading and body merge via `children: .combine`. The caller supplies ``combinedAccessibilityLabel``
+/// so spoken copy can be fuller than on-screen text. The heading keeps ``AccessibilityTraits/isHeader``.
+///
+/// ## Dynamic Type
+/// Uses ``QuestPaintReadableTextRole/materialCardTitle`` and ``QuestPaintReadableTextRole/materialCardBody``.
+struct QuestLessonCard: View {
+
+    let heading: String
+    let bodyCopy: String
+    let combinedAccessibilityLabel: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
+            Text(heading)
+                .questPaintReadableText(.materialCardTitle)
+                .accessibilityAddTraits(.isHeader)
+
+            Text(bodyCopy)
+                .questPaintReadableText(.materialCardBody)
+        }
+        .padding(RA11ySpacing.base)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: RA11yRadius.card)
+                .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(combinedAccessibilityLabel)
+    }
+}
+
+// MARK: - QuestDecorativeGestureGuide
+
+/// One sight-only gesture caption (SF Symbol name + localized label) for ``QuestDecorativeGestureGuide``.
+struct QuestDecorativeGestureRow: Equatable, Sendable {
+    let systemSymbolName: String
+    let localizedLabel: String
+}
+
+/// Vertical list of illustrative gesture captions used in Enchanter L0.
+///
+/// ## VoiceOver
+/// The entire stack is ``accessibilityHidden``. Spoken equivalents must live on ``QuestLessonCard``
+/// or ``QuestVoiceOverGestureSpellPlate`` — do not add labels here.
+///
+/// ## Dynamic Type
+/// Caption text uses ``QuestPaintReadableTextRole/bodySupporting``.
+struct QuestDecorativeGestureGuide: View {
+
+    let rows: [QuestDecorativeGestureRow]
+
+    var body: some View {
+        VStack(spacing: RA11ySpacing.sm) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: RA11ySpacing.md) {
+                    Image(systemName: row.systemSymbolName)
+                        .font(.ra11yHeadline)
+                        .frame(minWidth: 32, alignment: .leading)
+                        .foregroundStyle(Color.ra11yCardTertiaryText)
+                    Text(row.localizedLabel)
+                        .questPaintReadableText(.bodySupporting)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 

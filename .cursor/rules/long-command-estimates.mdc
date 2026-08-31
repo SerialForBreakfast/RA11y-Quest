@@ -1,0 +1,19 @@
+---
+description: Warn the user before starting any command expected to take more than 5 minutes.
+alwaysApply: true
+---
+
+# Long-running command estimates
+
+If a shell command, build, test, Fastlane, screenshot, or similar step is **estimated to take more than 5 minutes**, tell the user **before starting it**.
+
+Include:
+- What you are about to run (in plain language)
+- A time estimate (range is fine, e.g. 8–15 minutes)
+
+Do not silently start long `utility/build_and_test.sh`, full iOS simulator test, or Fastlane screenshot runs.
+
+Typical RA11y durations (adjust if the machine is busy):
+- Core-only build/test: usually under 5 minutes
+- Full `utility/build_and_test.sh` (Core + iOS): often 10–40+ minutes, longer on a cold DerivedData / busy host
+- Full Fastlane screenshot matrix: often 15+ minutes

@@ -5,6 +5,8 @@ Date: 2026-07-04
 This file archives completed checklist items moved out of active task trackers so
 the remaining task files stay focused on unfinished work.
 
+**Active remaining work:** repo root [`Tasks.md`](../Tasks.md).
+
 ## From `memlog/designRefactorTasks.md`
 
 ### Task UI-1 — Add quest layout roles and metrics

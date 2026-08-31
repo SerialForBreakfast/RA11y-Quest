@@ -75,19 +75,24 @@ struct iOSEnchantersTrialView: View {
     /// ZStack's layout, shifts siblings off-centre, and causes content to overflow the screen
     /// horizontally. Using `.background {}` sizes the background to the foreground view,
     /// preventing any layout bleed from the image.
+    ///
+    /// L0 prologue art is owned by ``QuestPaintScreen`` inside ``EnchanterPrologueView``; the
+    /// parent background is skipped in ``EnchanterTrialViewModel/Phase/prologue``.
     var body: some View {
         levelContent
             .background {
-                if isLightsOffFinalLevel {
-                    /// Final beat: keep a trace of shelf art under heavy blackout (see checklist §4.4 — avoid accidental flat black).
-                    ZStack {
-                        EnchanterBackgroundView()
-                        Color.black.opacity(0.72)
-                    }
-                    .ignoresSafeArea()
-                } else {
-                    EnchanterBackgroundView()
+                if viewModel.phase != .prologue {
+                    if isLightsOffFinalLevel {
+                        /// Final beat: keep a trace of shelf art under heavy blackout (see checklist §4.4 — avoid accidental flat black).
+                        ZStack {
+                            EnchanterBackgroundView()
+                            Color.black.opacity(0.72)
+                        }
                         .ignoresSafeArea()
+                    } else {
+                        EnchanterBackgroundView()
+                            .ignoresSafeArea()
+                    }
                 }
             }
             .preferredColorScheme(.dark)
@@ -792,110 +797,55 @@ struct EnchanterRelic: Identifiable, Hashable, Equatable {
 
 /// L0 Prologue — DM narration, VoiceOver lesson card, gesture guide, and "Begin Trial" button.
 ///
-/// No game session. Player reads or listens to the lesson, then taps "Begin Trial" to start L1.
+/// Hosted in ``QuestPaintScreen`` (role ``QuestLayoutRole/lesson``). Composes
+/// ``QuestNarrationCard``, ``QuestLessonCard``, ``QuestDecorativeGestureGuide``, and
+/// ``QuestPrologueActionBar``. The parent view skips ``EnchanterBackgroundView`` in this phase
+/// so the scaffold owns full-bleed art.
 ///
-/// ## Responsive Layout (SwiftUI Best Practices)
-/// - `contentMargins` (iOS 17+) constrains scroll content to safe area without GeometryReader.
-/// - `HStack` + `Spacer` centers content on iPad when max width is 600pt.
-/// - `frame(minWidth: 0)` prevents content from expanding beyond the container.
+/// No game session. Player reads or listens to the lesson, then taps "Begin Trial" to start L1.
 private struct EnchanterPrologueView: View {
 
     let onBeginTrial: () -> Void
 
-    @Environment(\.horizontalSizeClass) private var sizeClass
-
     var body: some View {
-        GeometryReader { geo in
-            let hPad = QuestPaintContentMetrics.horizontalPadding(
-                role: .reading,
-                containerWidth: geo.size.width,
-                horizontalSizeClass: sizeClass,
-                gameKind: nil
-            )
-            let colW = QuestPaintContentMetrics.contentMaxWidth(
-                role: .reading,
-                containerWidth: geo.size.width,
-                horizontalSizeClass: sizeClass,
-                horizontalPadding: hPad
-            )
-            ScrollView(.vertical) {
-                VStack(spacing: RA11ySpacing.lg) {
-                    dmNarrationCard
-                    lessonCard
-                    QuestVoiceOverGestureSpellPlate.linearFocusLesson()
-                    gestureGuide
-                    beginButton
-                }
-                .padding(.vertical, RA11ySpacing.lg)
-                .frame(maxWidth: colW)
-                .frame(maxWidth: .infinity)
+        QuestPaintScreen(
+            ambientImageName: GameKind.findAndFocus.questLessonAmbientImageName,
+            layoutRole: .lesson
+        ) {
+            VStack(spacing: RA11ySpacing.lg) {
+                QuestNarrationCard(
+                    text: String(localized: "simon.explain.narration"),
+                    background: .translucentBlack(opacity: 0.72)
+                )
+                QuestLessonCard(
+                    heading: String(localized: "simon.explain.lesson.heading"),
+                    bodyCopy: String(localized: "simon.explain.lesson.body"),
+                    combinedAccessibilityLabel: String(localized: "simon.a11y.explain.lesson")
+                )
+                QuestVoiceOverGestureSpellPlate.linearFocusLesson()
+                QuestDecorativeGestureGuide(rows: [
+                    QuestDecorativeGestureRow(
+                        systemSymbolName: "hand.point.right.fill",
+                        localizedLabel: String(localized: "simon.explain.gesture.swipe")
+                    ),
+                    QuestDecorativeGestureRow(
+                        systemSymbolName: "hand.point.left.fill",
+                        localizedLabel: String(localized: "simon.explain.gesture.back")
+                    ),
+                    QuestDecorativeGestureRow(
+                        systemSymbolName: "hand.tap.fill",
+                        localizedLabel: String(localized: "simon.explain.gesture.tap")
+                    ),
+                ])
+                QuestPrologueActionBar(
+                    title: String(localized: "level.button.start"),
+                    hint: String(localized: "simon.explain.start.hint"),
+                    identifier: "enchanter.beginTrial",
+                    action: onBeginTrial
+                )
             }
-            .padding(.horizontal, hPad)
-            .scrollContentBackground(.hidden)
+            .padding(.vertical, RA11ySpacing.lg)
         }
-        .environment(\.colorScheme, .dark)
-        .accessibilityElement(children: .contain)
-    }
-
-    private var dmNarrationCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Label(String(localized: "dm.label"), systemImage: "scroll.fill")
-                .font(.ra11yCaption)
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-
-            Text(String(localized: "simon.explain.narration"))
-                .italic()
-                .questPaintReadableText(.materialCardBody)
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.72), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(Color.ra11yDMBorder.opacity(0.5), lineWidth: 1)
-        )
-    }
-
-    private var lessonCard: some View {
-        VStack(alignment: .leading, spacing: RA11ySpacing.sm) {
-            Text(String(localized: "simon.explain.lesson.heading"))
-                .questPaintReadableText(.materialCardTitle)
-                .accessibilityAddTraits(.isHeader)
-
-            Text(String(localized: "simon.explain.lesson.body"))
-                .questPaintReadableText(.materialCardBody)
-        }
-        .padding(RA11ySpacing.base)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.66), in: .rect(cornerRadius: RA11yRadius.card))
-        .overlay(
-            RoundedRectangle(cornerRadius: RA11yRadius.card)
-                .strokeBorder(.white.opacity(0.15), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "simon.a11y.explain.lesson"))
-    }
-
-    private var gestureGuide: some View {
-        VStack(spacing: RA11ySpacing.sm) {
-            GestureRow(symbol: "hand.point.right.fill",  label: String(localized: "simon.explain.gesture.swipe"))
-            GestureRow(symbol: "hand.point.left.fill",   label: String(localized: "simon.explain.gesture.back"))
-            GestureRow(symbol: "hand.tap.fill",          label: String(localized: "simon.explain.gesture.tap"))
-        }
-        .accessibilityHidden(true)  // Gesture guide is decorative; content in lesson card label
-    }
-
-    private var beginButton: some View {
-        Button(action: onBeginTrial) {
-            Text(String(localized: "level.button.start"))
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .tint(Color.ra11yAccent)
-        .accessibilityHint(String(localized: "simon.explain.start.hint"))
-        .accessibilityIdentifier("enchanter.beginTrial")
     }
 }
 
@@ -1412,24 +1362,6 @@ private struct TimerHUD: View {
                 .questPaintReadableText(.materialCardMeta)
         }
         .accessibilityHidden(true)  // L3 view sets accessibilityLabel on this entire HUD via .accessibilityElement(children: .ignore) at the call site
-    }
-}
-
-/// Small gesture guide row used in the L0 prologue.
-private struct GestureRow: View {
-    let symbol: String
-    let label: String
-
-    var body: some View {
-        HStack(spacing: RA11ySpacing.md) {
-            Image(systemName: symbol)
-                .font(.ra11yHeadline)
-                .frame(minWidth: 32, alignment: .leading)
-                .foregroundStyle(Color.ra11yCardTertiaryText)
-            Text(label)
-                .questPaintReadableText(.bodySupporting)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

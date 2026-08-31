@@ -1,7 +1,12 @@
 # ScreenAuditKit Workstream
 
-Date: 2026-04-24
-Status: Draft
+Date: 2026-04-24  
+**Status (2026-08-21):** Historical RA11y workstream. The package now lives at
+[`https://github.com/SerialForBreakfast/ScreenAuditKit`](https://github.com/SerialForBreakfast/ScreenAuditKit)
+(tagged **1.0.0**). RA11y consumes it as an external `screenaudit` CLI (`AGENTS.md`). Remaining
+package work (JUnit/SARIF, extra CI docs) belongs in that repository. Remaining **RA11y**
+screenshot/audit work is indexed in root **`Tasks.md`** (M8 / UI-11).
+
 Source ADR: `memlog/research/ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md`
 
 ## Purpose

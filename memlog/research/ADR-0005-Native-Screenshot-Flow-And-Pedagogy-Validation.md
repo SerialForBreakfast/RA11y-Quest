@@ -1,7 +1,10 @@
 # ADR-0005: Reusable Swift Package for Screenshot, Flow, and Pedagogy Validation
 
-Date: 2026-04-23
-Status: Proposed
+Date: 2026-04-23  
+**Status (2026-08-21):** Accepted in outcome. ScreenAuditKit shipped as a standalone repo
+([`SerialForBreakfast/ScreenAuditKit`](https://github.com/SerialForBreakfast/ScreenAuditKit), v1.0.0).
+RA11y uses the external `screenaudit` CLI (`AGENTS.md`). The body below is the original design
+rationale and should be read as historical; local-package paths are obsolete.
 
 ## Context
 

@@ -1978,7 +1978,6 @@
       }
     },
     "firstSpellVORequired.continue" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1989,7 +1988,6 @@
       }
     },
     "firstSpellVORequired.continue.accessibilityHint" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2010,7 +2008,6 @@
       }
     },
     "firstSpellVORequired.iTurnedOnVoiceOver" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2021,7 +2018,6 @@
       }
     },
     "firstSpellVORequired.iTurnedOnVoiceOver.accessibilityHint" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2133,6 +2129,28 @@
         }
       }
     },
+    "game.arcanistsTower.goal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Threefold Seal: use the VoiceOver rotor so flicks jump titles, storage regions, and links—then open what the clue names."
+          }
+        }
+      }
+    },
+    "game.arcanistsTower.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Threefold Seal"
+          }
+        }
+      }
+    },
     "game.banishment.goal" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2151,26 +2169,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Banishment"
-          }
-        }
-      }
-    },
-    "game.arcanistsTower.goal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Threefold Seal: use the VoiceOver rotor so flicks jump titles, storage regions, and links—then open what the clue names."
-          }
-        }
-      }
-    },
-    "game.arcanistsTower.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Threefold Seal"
           }
         }
       }
@@ -2474,6 +2472,106 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Try Again"
+          }
+        }
+      }
+    },
+    "result.returnToHub" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Tavern"
+          }
+        }
+      }
+    },
+    "result.skillTransfer.arcanistsTower.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In The Threefold Seal you used Headings, Containers, and Links in the rotor so VoiceOver jumps the right kind of element before you double-tap."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.arcanistsTower.realWorld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the same idea in long articles, settings screens, and mail—pick the rotor setting that matches what you are hunting for."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.banishment.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You used VoiceOver’s two-finger Z scrub to escape traps, including the Lights Off proof at the end."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.banishment.realWorld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the same scrub to dismiss alerts, sheets, or stuck focus in apps."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.findAndFocus.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe right or left to move VoiceOver focus. Double-tap to activate."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.findAndFocus.realWorld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the same pattern in any app list, menu, or toolbar."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.heading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What You Learned"
+          }
+        }
+      }
+    },
+    "result.skillTransfer.scrollHunt.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You kept focus on the Glyph stream, then used three fingers to scroll."
+          }
+        }
+      }
+    },
+    "result.skillTransfer.scrollHunt.realWorld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the same split in long lists: one finger moves focus, three fingers scroll."
           }
         }
       }
@@ -2864,106 +2962,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That mark was not the one the clue named."
-          }
-        }
-      }
-    },
-    "result.returnToHub" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back to Tavern"
-          }
-        }
-      }
-    },
-    "result.skillTransfer.banishment.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You used VoiceOver’s two-finger Z scrub to escape traps, including the Lights Off proof at the end."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.banishment.realWorld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use the same scrub to dismiss alerts, sheets, or stuck focus in apps."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.arcanistsTower.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In The Threefold Seal you used Headings, Containers, and Links in the rotor so VoiceOver jumps the right kind of element before you double-tap."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.arcanistsTower.realWorld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use the same idea in long articles, settings screens, and mail—pick the rotor setting that matches what you are hunting for."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.findAndFocus.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe right or left to move VoiceOver focus. Double-tap to activate."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.findAndFocus.realWorld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use the same pattern in any app list, menu, or toolbar."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.heading" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What You Learned"
-          }
-        }
-      }
-    },
-    "result.skillTransfer.scrollHunt.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You kept focus on the Glyph stream, then used three fingers to scroll."
-          }
-        }
-      }
-    },
-    "result.skillTransfer.scrollHunt.realWorld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use the same split in long lists: one finger moves focus, three fingers scroll."
           }
         }
       }
@@ -3761,6 +3759,7 @@
     },
     "voSpell.rotorNav.a11y" : {
       "comment" : "Accessibility label for the Threefold Seal VoiceOver gate spell plate.",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3772,6 +3771,7 @@
     },
     "voSpell.rotorNav.body" : {
       "comment" : "Body copy on the Threefold Seal VoiceOver gate spell plate.",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

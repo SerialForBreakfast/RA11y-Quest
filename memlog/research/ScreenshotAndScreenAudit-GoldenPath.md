@@ -7,7 +7,8 @@ Status: Operational guide (RA11y + ScreenAuditKit)
 
 One entry point for contributors: how to keep **Fastlane capture**, **route catalog**, **scene boot paths**, **UI tests**, and **ScreenAuditKit contracts** aligned, and how to run checks locally without guessing paths or environment variables.
 
-Authoritative schema and rule details live in [ScreenAuditKit/README.md](../../ScreenAuditKit/README.md) (contract format, reports, OCR). This document is the **workflow** layer.
+Authoritative schema and rule details live in the external package:
+[ScreenAuditKit README](https://github.com/SerialForBreakfast/ScreenAuditKit). This document is the **RA11y workflow** layer (capture, catalog, contracts, Fastlane).
 
 ---
 
@@ -107,8 +108,8 @@ You must still fill in `devices`, `text`, and any regions yourself; stubs are sc
 
 ## Related docs
 
-- [ScreenAuditKit/README.md](../../ScreenAuditKit/README.md) — CLI, contract schema, reports, roadmap  
-- [ScreenAuditKit-Workstream.md](./ScreenAuditKit-Workstream.md) — SAK milestones  
-- [ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md](./ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md) — original rationale  
+- [ScreenAuditKit README](https://github.com/SerialForBreakfast/ScreenAuditKit) — CLI, contract schema, reports, roadmap
+- [ScreenAuditKit-Workstream.md](./ScreenAuditKit-Workstream.md) — historical SAK milestones (package now extracted)
+- [ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md](./ADR-0005-Native-Screenshot-Flow-And-Pedagogy-Validation.md) — original rationale
 
 Cursor / VS Code: see `.vscode/tasks.json` tasks **Screenshot contract check**, **Screen audit doctor**, **Screen audit (committed screenshots)**.

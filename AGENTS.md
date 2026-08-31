@@ -22,6 +22,7 @@ The SwiftUI rules are intended for design and implementation guidance and should
 
 - `RA11y-iOS/` — iOS app target and Xcode project (`RA11y-iOS.xcodeproj`).
 - `RA11yCore/` — Shared Swift package. All platform-agnostic logic lives here.
+- **`Tasks.md`** — Approved remaining-work index (milestones and UI refactor checkboxes). Granular lists stay under **`memlog/`**.
 - `RA11y.xcworkspace` — Workspace that ties the iOS app and RA11yCore together. Always open this.
 - `utility/` — Build and test scripts, including fastlane adapter scripts for external CLI tools.
 - `build_results/` — Script output. Gitignored.

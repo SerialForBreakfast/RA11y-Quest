@@ -2,7 +2,7 @@
 
 Date: 2026-04-24  
 Companion: [`DesignRecommendationReview.md`](DesignRecommendationReview.md)  
-Task tracker: [`designRefactorTasks.md`](designRefactorTasks.md) — **Quest UI System Refactor** (UI-1 … UI-11)
+Task tracker: [`designRefactorTasks.md`](designRefactorTasks.md) — **Quest UI System Refactor** (UI-1 … UI-11). Remaining-work index: repo root [`Tasks.md`](../Tasks.md).
 
 This document maps each major finding and implementation phase in the design review to **concrete Swift files, types, and line-level behavior** in the repo today.
 

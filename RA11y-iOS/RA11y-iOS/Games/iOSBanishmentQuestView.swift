@@ -516,7 +516,9 @@ struct iOSBanishmentQuestView: View {
 
     @ViewBuilder
     private var background: some View {
-        if viewModel.isLightsOffPhase {
+        if viewModel.phase == .prologue {
+            EmptyView()
+        } else if viewModel.isLightsOffPhase {
             ZStack {
                 Color.black
                 if Self.shouldUseRasterBackground(named: iOSBanishmentArt.towerBackground) {
@@ -537,9 +539,11 @@ struct iOSBanishmentQuestView: View {
     }
 
     /// Practice and intermission use the ward master; timed gauntlet uses the tower master (`BanishmentAssetPipeline`).
+    /// Prologue art is owned by ``QuestPaintScreen`` in ``prologueBody``.
     private static func useWardSceneBackground(for phase: BanishmentPhase) -> Bool {
         switch phase {
-        case .prologue, .wardTrap, .wardIntermission: return true
+        case .prologue: return false
+        case .wardTrap, .wardIntermission: return true
         case .tower, .darkTower: return false
         }
     }
@@ -688,55 +692,41 @@ struct iOSBanishmentQuestView: View {
         }
     }
 
+    /// L0 teaching surface: title, body, instructions, Z spell plate, begin action.
+    ///
+    /// Hosted in ``QuestPaintScreen`` so ward art and the readable scrim live on the scaffold.
+    /// Parent ``background`` is skipped while ``BanishmentQuestViewModel/phase`` is ``BanishmentPhase/prologue``.
     private var prologueBody: some View {
-        GeometryReader { geo in
-            let hPad = QuestPaintContentMetrics.horizontalPadding(
-                role: .reading,
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                gameKind: nil
-            )
-            let colW = QuestPaintContentMetrics.contentMaxWidth(
-                role: .reading,
-                containerWidth: geo.size.width,
-                horizontalSizeClass: horizontalSizeClass,
-                horizontalPadding: hPad
-            )
-            ScrollView {
-                VStack(alignment: .center, spacing: RA11ySpacing.lg) {
-                    Text(String(localized: "banishment.prologue.title"))
-                        .multilineTextAlignment(.center)
-                        .questPaintReadableText(.heroTitle)
-                        .accessibilityIdentifier("banishment.prologue.title")
-                        .accessibilityAddTraits(.isHeader)
-                    Text(String(localized: "banishment.prologue.body"))
-                        .multilineTextAlignment(.center)
-                        .questPaintReadableText(.bodySupporting)
-                        .accessibilityIdentifier("banishment.prologue.body")
-                    Text(String(localized: "banishment.prologue.instructions"))
-                        .multilineTextAlignment(.center)
-                        .questPaintReadableText(.bodyEmphasis)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("banishment.prologue.instructions")
-                    banishmentZScrubSpellPlate
-                    Button(String(localized: "banishment.prologue.begin")) {
-                        viewModel.beginTrial()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityIdentifier("banishment.beginTrial")
-                    .accessibilityHint(String(localized: "banishment.prologue.begin.a11yHint"))
-                }
-                .padding(.vertical, RA11ySpacing.md)
-                .frame(maxWidth: colW)
-                .frame(maxWidth: .infinity)
+        QuestPaintScreen(
+            ambientImageName: GameKind.banishment.questLessonAmbientImageName,
+            layoutRole: .lesson,
+            accessibilityIdentifier: "banishment.prologue"
+        ) {
+            VStack(alignment: .center, spacing: RA11ySpacing.lg) {
+                Text(String(localized: "banishment.prologue.title"))
+                    .multilineTextAlignment(.center)
+                    .questPaintReadableText(.heroTitle)
+                    .accessibilityIdentifier("banishment.prologue.title")
+                    .accessibilityAddTraits(.isHeader)
+                Text(String(localized: "banishment.prologue.body"))
+                    .multilineTextAlignment(.center)
+                    .questPaintReadableText(.bodySupporting)
+                    .accessibilityIdentifier("banishment.prologue.body")
+                Text(String(localized: "banishment.prologue.instructions"))
+                    .multilineTextAlignment(.center)
+                    .questPaintReadableText(.bodyEmphasis)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("banishment.prologue.instructions")
+                banishmentZScrubSpellPlate
+                QuestPrologueActionBar(
+                    title: String(localized: "banishment.prologue.begin"),
+                    hint: String(localized: "banishment.prologue.begin.a11yHint"),
+                    identifier: "banishment.beginTrial",
+                    action: { viewModel.beginTrial() }
+                )
             }
-            .padding(.horizontal, hPad)
-            .scrollContentBackground(.hidden)
+            .padding(.vertical, RA11ySpacing.md)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("banishment.prologue")
     }
 
     /// Z-scrub “spell card” shared with other quests via ``QuestVoiceOverGestureSpellPlate``; raster or vector fallback.

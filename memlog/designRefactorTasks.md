@@ -2,6 +2,7 @@
 Date: 2026-04-22
 Related: Crystal Resonance (Dungeon Descent), all quests
 
+**Index:** Remaining work is summarized in repo root **`Tasks.md`**.
 Completed checklist items are archived in `memlog/CompletedTasks.md`.
 
 ---
@@ -139,7 +140,7 @@ Completed scaffold VoiceOver requirements are archived in `memlog/CompletedTasks
 **Verify:**
 Pilot verification archived in `memlog/CompletedTasks.md`.
 
-## Task UI-4 — Create shared prologue components
+## Task UI-4 — Create shared prologue components — code done
 
 **Why:** Enchanter, Crystal Resonance, and Banishment teach gestures with the same intent but different structure, spacing, and action placement.
 
@@ -149,24 +150,25 @@ Pilot verification archived in `memlog/CompletedTasks.md`.
 - New OS-prefixed design file if the component set is large, for example `iOSQuestPrologueComponents.swift`
 
 **Work:**
-- [ ] Add `QuestNarrationCard`.
-- [ ] Add `QuestLessonCard`.
-- [ ] Add `QuestGestureRows` or a compact gesture-list component.
-- [ ] Add `QuestPracticeCard` support for optional practice gates.
-- [ ] Add `QuestPrologueActionBar` using standard primary action styling.
-- [ ] Define a prologue content order: title, narration, lesson, gesture teaching card, practice if required, primary action.
+- [x] Add `QuestNarrationCard` (`iOSQuestPrologueComponents.swift`; used by Crystal L0).
+- [x] Add `QuestLessonCard` (Enchanter L0).
+- [x] Add `QuestDecorativeGestureGuide` (Enchanter L0; decorative, `accessibilityHidden`).
+- [x] Add `QuestPracticeCard` support for optional practice gates (Crystal L0).
+- [x] Add `QuestPrologueActionBar` using standard primary action styling.
+- [x] Document prologue content order in `iOSQuestPrologueComponents.swift` (no generic stack type — quests omit different slots).
 
 **VoiceOver requirements:**
-- [ ] Lesson and narration cards combine related copy into logical VoiceOver elements.
-- [ ] Gesture cards expose a clear label and hint, and hide decorative gesture art.
-- [ ] Practice gates speak disabled/enabled state and explain what unlocks the primary action.
-- [ ] Primary action hints explain the result of activation.
+- [x] Narration cards hide the decorative DM icon; body text remains a normal spoken element (`QuestNarrationCard`).
+- [x] Lesson cards combine related copy into logical VoiceOver elements (`QuestLessonCard`).
+- [x] Decorative gesture rows are hidden; spoken teaching lives on the lesson card or spell plate.
+- [x] Practice gates speak disabled/enabled state and explain what unlocks the primary action (`QuestPracticeCard` + disabled `QuestPrologueActionBar`).
+- [x] Primary action hints explain the result of activation (`QuestPrologueActionBar`).
 
 **Verify:**
-- [ ] Components have doc comments describing grouping behavior, labels/hints responsibility, and focus expectations.
-- [ ] Components scale cleanly with Dynamic Type.
+- [x] Shipped components have doc comments describing grouping, labels/hints, and identifiers.
+- [ ] Components scale cleanly with Dynamic Type (formal audit pending).
 
-## Task UI-5 — Refactor Enchanter prologue to shared scaffold
+## Task UI-5 — Refactor Enchanter prologue to shared scaffold — code done
 
 **Why:** Enchanter is the clearest current prologue pattern and should be the first migration target.
 
@@ -175,14 +177,14 @@ Pilot verification archived in `memlog/CompletedTasks.md`.
 - `RA11y-iOS/RA11y-iOS/Localizable.xcstrings` if terminology changes
 
 **Work:**
-- [ ] Replace hand-rolled prologue layout with shared scaffold/components.
-- [ ] Keep DM narration, lesson, linear navigation spell plate, gesture rows, and primary action.
+- [x] Replace hand-rolled prologue layout with `QuestPaintScreen` (role `.lesson`) and shared components.
+- [x] Keep DM narration, lesson, linear navigation spell plate, gesture rows, and primary action.
 - [ ] Standardize primary action text if product terminology decision changes from "Begin Trial" to "Begin Quest".
 
 **VoiceOver requirements:**
-- [ ] Preserve swipe-right/left then double-tap teaching.
-- [ ] Verify prologue order: title, narration, lesson, gesture card, gesture rows if exposed, primary action.
-- [ ] Ensure decorative gesture rows are either hidden or represented by equivalent spoken lesson copy.
+- [x] Decorative gesture rows are `accessibilityHidden`; lesson combined label still carries swipe/double-tap teaching.
+- [x] Prologue order: narration, lesson, spell plate, hidden gesture rows, primary action (nav title remains on the container).
+- [ ] Preserve swipe-right/left then double-tap teaching (manual VO audit).
 
 **Verify:**
 - [ ] Regenerate `04_EnchanterPrologue` for all screenshot sizes.
@@ -214,7 +216,7 @@ Pilot verification archived in `memlog/CompletedTasks.md`.
 
 **Found + fixed while migrating:** `QuestPaintScreen` (`iOSQuestPaintChrome.swift`) had a **pre-existing layout bug** affecting **all 8 call sites** (`iOSGameResultView`, `iOSVORequiredView`, `iOSFirstRunView`, `iOSBasicsSequenceView`, `iOSMagicTapFirstSpellView`, `iOSFirstSpellVoiceOverRequiredView`, `iOSRotorNavigationQuestView`, and now `iOSDungeonDescentView`'s prologue): the `GeometryReader` used for column-width math was a `ZStack` sibling next to unconstrained full-bleed backdrop `Image`s, so `geo.size` picked up the artwork's native pixel dimensions instead of the real screen bounds — every screen using this scaffold rendered text unwrapped and clipped on both edges. Fixed by making `GeometryReader` the outermost view and giving the backdrop/scrim an explicit `.frame(width:height:)` derived from it. Verified against both the Dungeon prologue and Dungeon result screenshots (before/after).
 
-## Task UI-7 — Refactor Banishment prologue to shared scaffold
+## Task UI-7 — Refactor Banishment prologue to shared scaffold — code done
 
 **Why:** Banishment currently feels visually separate from the other prologues and the large gesture plate can dominate the first viewport.
 
@@ -223,14 +225,14 @@ Pilot verification archived in `memlog/CompletedTasks.md`.
 - `RA11y-iOS/RA11y-iOS/Localizable.xcstrings`
 
 **Work:**
-- [ ] Use the shared prologue scaffold while preserving authored Z gesture art.
-- [ ] Restore a complete visible hierarchy: quest title, body/narration, instruction, gesture plate, primary action.
+- [x] Use the shared prologue scaffold (`QuestPaintScreen`, `.lesson`) while preserving authored Z gesture art.
+- [x] Restore a complete visible hierarchy: quest title, body, instruction, gesture plate, primary action (`QuestPrologueActionBar`).
 - [ ] Align the primary action label with the product terminology decision.
 
 **VoiceOver requirements:**
-- [ ] Preserve the two-finger scrub teaching.
-- [ ] Ensure gesture art is decorative and the spoken instruction fully explains the action.
-- [ ] Preserve the later trap `accessibilityAction(.escape)` behavior.
+- [x] Gesture plate remains `QuestVoiceOverGestureSpellPlate.banishmentZScrubLesson` (spoken instruction unchanged).
+- [x] Preserve the later trap `accessibilityAction(.escape)` behavior (not touched this slice).
+- [ ] Preserve the two-finger scrub teaching (manual VO audit).
 
 **Verify:**
 - [ ] Regenerate `13_BanishmentPrologue` for all screenshot sizes.
@@ -319,7 +321,7 @@ Pilot verification archived in `memlog/CompletedTasks.md`.
 - `RA11y-iOS/RA11y-iOS/App/iOSScreenshotScene.swift`
 - `RA11y-iOS/RA11y-iOSUITests/RA11y_iOSScreenshots.swift`
 - `fastlane/Fastfile`
-- `ScreenAuditKit/` if adding visual rules
+- External **`ScreenAuditKit`** ([`SerialForBreakfast/ScreenAuditKit`](https://github.com/SerialForBreakfast/ScreenAuditKit)) only when extending validation rules — not required for RA11y-only route/catalog work (`AGENTS.md` for CLI wiring)
 
 **Work:**
 - [ ] Confirm every screenshot route has a documented root accessibility identifier.

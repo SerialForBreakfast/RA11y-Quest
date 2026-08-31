@@ -1,5 +1,9 @@
 # Executive-Grade ScreenAuditKit Walkthrough Plan
 
+**Status (2026-08-21):** Historical plan. Walkthrough artifacts now live in
+[`SerialForBreakfast/ScreenAuditKit`](https://github.com/SerialForBreakfast/ScreenAuditKit), not this monorepo.
+Local `ScreenAuditKit/` paths below are obsolete.
+
 ## Summary
 Upgrade the walkthrough from “algorithm proof” to “real UI failure proof.” The committed pass/fail images should look like plausible Apple-platform UI states, with defects that Product, QA, Design, and Engineering leaders immediately recognize: missing actions, clipped copy, wrong orientation, stale screenshots, broken artwork, debug text, and incomplete flows. The goal is for each scenario to be visually obvious to a human and mechanically proven by ScreenAuditKit.
 

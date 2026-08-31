@@ -7,12 +7,13 @@ How to refresh (from repo root):
   tree -I '.git|build|DerivedData|*.xcuserstate|*.xcscheme|xcuserdata|*.imageset|*.colorset|*.appiconset|*.xcassets|*.png|*.jpg|*.xcresult|*.bak' --dirsfirst -L 6
 
 ---
-Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/` is no longer in this monorepo; development continues at https://github.com/SerialForBreakfast/NativeUIAuditKit (RA11y does not reference it yet).
+Current structure (as of 2026-08-21). `NativeUIAuditKit/` and `ScreenAuditKit/` are **not** in this monorepo — see root `AGENTS.md` and `Tasks.md`.
 ---
 
 .
 |-- .vscode
 |   `-- tasks.json
+|-- Tasks.md
 |-- RA11y-iOS
 |   |-- RA11y-iOS
 |   |   |-- App
@@ -23,6 +24,10 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |   |   |-- iOSScreenshotRootView.swift
 |   |   |   `-- iOSScreenshotScene.swift
 |   |   |-- Design
+|   |   |   |-- iOSQuestPaintChrome.swift
+|   |   |   |-- iOSQuestPrologueComponents.swift
+|   |   |   |-- iOSQuestStandardActions.swift
+|   |   |   |-- iOSQuestVoiceOverSpellPlate.swift
 |   |   |   `-- iOSTokens.swift
 |   |   |-- Feedback
 |   |   |   |-- iOSAudioFeedbackRenderer.swift
@@ -35,15 +40,16 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |   |   |-- iOSFirstSpellVoiceOverRequiredView.swift
 |   |   |   `-- iOSMagicTapFirstSpellView.swift
 |   |   |-- Games
+|   |   |   |-- iOSBanishmentArt.swift
+|   |   |   |-- iOSBanishmentQuestView.swift
 |   |   |   |-- iOSDungeonDescentView.swift
 |   |   |   |-- iOSDungeonResonanceArt.swift
 |   |   |   |-- iOSDungeonResonanceComponents.swift
 |   |   |   |-- iOSDungeonResonanceMockupView.swift
 |   |   |   |-- iOSDungeonResonancePlayView.swift
-|   |   |   |-- iOSResonanceVoiceOverScrollProxyRepresentable.swift
 |   |   |   |-- iOSEnchantersTrialView.swift
-|   |   |   |-- iOSRotorNavigationQuestView.swift
-|   |   |   `-- iOSRogueGauntletView.swift
+|   |   |   |-- iOSResonanceVoiceOverScrollProxyRepresentable.swift
+|   |   |   `-- iOSRotorNavigationQuestView.swift
 |   |   |-- Hub
 |   |   |   |-- iOSHubBackgroundView.swift
 |   |   |   |-- iOSHubDMGreetingView.swift
@@ -141,74 +147,6 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |       |-- TestHelpers.swift
 |   |       `-- VoiceOverTests.swift
 |   `-- Package.swift
-|-- ScreenAuditKit
-|   |-- Docs
-|   |   `-- FeatureWalkthrough
-|   |       |-- images
-|   |       |-- Artifacts
-|   |       |   |-- baseline-drift
-|   |       |   |-- clean-happy-path
-|   |       |   |-- device-orientation
-|   |       |   |-- flow-completeness
-|   |       |   |-- ios-alert
-|   |       |   |-- mac-toolbar
-|   |       |   |-- no-ocr
-|   |       |   |-- settings-debug
-|   |       |   |-- tvos-focus
-|   |       |   `-- visual-artifacts
-|   |       `-- ScreenAuditKitFeatureWalkthrough.md
-|   |-- Utility
-|   |   `-- export_feature_walkthrough.sh
-|   |-- Sources
-|   |   |-- ScreenAuditKit
-|   |   |   |-- Contracts
-|   |   |   |   `-- ScreenAuditContracts.swift
-|   |   |   |-- Evidence
-|   |   |   |   |-- ScreenAuditEvidence.swift
-|   |   |   |   `-- ScreenAuditVisionOCRRecognizer.swift
-|   |   |   |-- FeatureWalkthrough
-|   |   |   |   `-- ScreenAuditFeatureWalkthroughArtifactExporter.swift
-|   |   |   |-- Rules
-|   |   |   |   `-- ScreenAuditRules.swift
-|   |   |   |-- Reports
-|   |   |   |   |-- ScreenAuditOverlayRenderer.swift
-|   |   |   |   `-- ScreenAuditReports.swift
-|   |   |   |-- Validation
-|   |   |   |   |-- ScreenAuditFlowValidation.swift
-|   |   |   |   `-- ScreenAuditValidation.swift
-|   |   |   |-- Visual
-|   |   |   |   |-- ScreenAuditBaselineComparator.swift
-|   |   |   |   |-- ScreenAuditCheckerboardInspector.swift
-|   |   |   |   |-- ScreenAuditRenderedMatteInspector.swift
-|   |   |   |   `-- ScreenAuditTransparencyInspector.swift
-|   |   |   `-- ScreenAuditKit.swift
-|   |   `-- screenaudit
-|   |       `-- main.swift
-|   |-- Tests
-|   |   |-- ScreenAuditCLITests
-|   |   |   `-- ScreenAuditCLITests.swift
-|   |   `-- ScreenAuditKitTests
-|   |       |-- Fixtures
-|   |       |   |-- flow-transition-contracts.json
-|   |       |   |-- missing-required-field-contracts.json
-|   |       |   |-- unsupported-schema-contracts.json
-|   |       |   `-- valid-contracts.json
-|   |       |-- ScreenAuditBaselineTests.swift
-|   |       |-- ScreenAuditCheckerboardTests.swift
-|   |       |-- ScreenAuditContractTests.swift
-|   |       |-- ScreenAuditEvidenceTests.swift
-|   |       |-- ScreenAuditFeatureWalkthroughTests.swift
-|   |       |-- ScreenAuditFlowTests.swift
-|   |       |-- ScreenAuditKitTests.swift
-|   |       |-- ScreenAuditRenderedMatteTests.swift
-|   |       |-- ScreenAuditReportTests.swift
-|   |       |-- ScreenAuditRuleTests.swift
-|   |       |-- ScreenAuditTransparencyTests.swift
-|   |       |-- ScreenAuditValidatorFlowTests.swift
-|   |       `-- ScreenAuditVisionOCRRecognizerTests.swift
-|   |-- .gitignore
-|   |-- Package.swift
-|   `-- README.md
 |-- build_results
 |   |-- 2026-02-21_09-48-28
 |   |   `-- summary.md
@@ -433,6 +371,11 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |   |   |-- Assets
 |   |   |   |   |-- bomb
 |   |   |   |   |-- dungeon
+|   |   |   |   |   `-- crystal_resonance_v2_refresh
+|   |   |   |   |       |-- approved
+|   |   |   |   |       |-- source
+|   |   |   |   |       |-- working
+|   |   |   |   |       `-- AssetRegistry.md
 |   |   |   |   |-- enchanter
 |   |   |   |   |-- hub
 |   |   |   |   |-- magictap  (pre-import PNG staging — Phase 5)
@@ -520,6 +463,9 @@ Current structure (as of 2026-05-03). **Update 2026-05-17:** `NativeUIAuditKit/`
 |   |   |-- RotorActions-NextQuest-Curriculum-Investigation.md
 |   |   |-- RotorNavigationQuestBrainstorming.txt
 |   |   |-- RotorThreeSeals-VoiceOver-QAChecklist.txt
+|   |   |-- ReusableSkills
+|   |   |   `-- xcode-sprite-asset-pipeline
+|   |   |       `-- SKILL.md
 |   |   |-- ScreenshotAndScreenAudit-GoldenPath.md
 |   |   |-- ScreenAuditKitFeatureWalkthrough.md
 |   |   |-- ScreenAuditKit-NativeUIElementDetection-Research.md

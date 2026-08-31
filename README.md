@@ -48,8 +48,8 @@ README previews should reference stable generated output folders:
 `docs/screenshots/en-US/iPad/` for tablet previews. Avoid simulator-name folders
 such as `iPhone_17` in documentation, because those can drift as Xcode changes.
 
-Design consistency is tracked through the current quest UI workstream in
-`memlog/designRefactorTasks.md`. The active UI direction is the shared
+Remaining work is indexed in **`Tasks.md`**. Detailed Quest UI checklists live
+in `memlog/designRefactorTasks.md`. The active UI direction is the shared
 QuestPaint system: illustrated full-screen quest surfaces, reusable readable
 text treatment, standard action placement, and deterministic screenshot routes
 for iPhone small, iPhone large, and iPad.
@@ -435,9 +435,8 @@ RA11y-AccessibilityGamification/
 │   │   ├── Storage/               StorageComponent protocol + UserDefaults impl
 │   │   └── VoiceOver/             VoiceOverStateProvider protocol + stub
 │   └── Tests/RA11yCoreTests/
-├── ScreenAuditKit/                Local SPM package for screenshot validation
-│   ├── Sources/ScreenAuditKit/    Contracts, evidence, rules, reports
-│   └── Sources/screenaudit/       CLI used by local/Fastlane audit commands
+├── Tasks.md                       Remaining-work index (see also memlog/designRefactorTasks.md)
+├── RA11y-tvOS/                    tvOS scaffold (not in the shipping workspace)
 ├── utility/
 │   └── build_and_test.sh          Build and test script (see below)
 ├── build_results/                 Script output — gitignored
@@ -500,8 +499,11 @@ utility/build_and_test.sh --help
 
 ```bash
 swift test --package-path RA11yCore
-swift test --package-path ScreenAuditKit
 ```
+
+`ScreenAuditKit` is an **external** CLI (`screenaudit` on `PATH`). Install and
+upgrade it per `AGENTS.md` → External CLI Tools. Do not expect a
+`ScreenAuditKit/` directory in this repo.
 
 ### Screenshot and design audit
 
@@ -566,5 +568,7 @@ higher bar than most apps:
 | M7 | The Banishment | Review / Audit |
 | M8 | ScreenAuditKit screenshot and design audit workflow | In Progress |
 
-Current UI and design consistency tasks live in `memlog/designRefactorTasks.md`.
-Screen audit package tasks live in `memlog/research/ScreenAuditKit-Workstream.md`.
+**Remaining work:** **`Tasks.md`**. Granular UI checklists: `memlog/designRefactorTasks.md`.
+Completed archive: `memlog/CompletedTasks.md`. ScreenAuditKit CLI roadmap:
+https://github.com/SerialForBreakfast/ScreenAuditKit (historical notes in
+`memlog/research/ScreenAuditKit-Workstream.md`).

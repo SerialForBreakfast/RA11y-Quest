@@ -1,13 +1,12 @@
 # ScreenAuditKit Feature Walkthrough
 
 Date: 2026-05-03  
-Status: Superseded by package-local walkthrough
+Status: Superseded — living walkthrough is in the **standalone** ScreenAuditKit repo
 
-The living executive walkthrough now lives inside the package so it can move with ScreenAuditKit if the package becomes its own repository:
+The executive walkthrough moved with the package:
 
-- `ScreenAuditKit/Docs/FeatureWalkthrough/ScreenAuditKitFeatureWalkthrough.md`
-- `ScreenAuditKit/Docs/FeatureWalkthrough/Artifacts/`
-- `ScreenAuditKit/Docs/FeatureWalkthrough/images/`
-- `screenaudit export-feature-walkthrough` (see `ScreenAuditKit/Utility/export_feature_walkthrough.sh`)
+- Repository: [`https://github.com/SerialForBreakfast/ScreenAuditKit`](https://github.com/SerialForBreakfast/ScreenAuditKit)
+- Paths inside that repo: `Docs/FeatureWalkthrough/`, `screenaudit export-feature-walkthrough`
 
-The proving tests are in `ScreenAuditKit/Tests/ScreenAuditKitTests/ScreenAuditFeatureWalkthroughTests.swift`.
+This monorepo no longer vendors `ScreenAuditKit/`. RA11y integration is the CLI +
+`utility/validate_screen_audit.sh` (`AGENTS.md`).

@@ -3,7 +3,7 @@
 **Status:** Research / pre-spike  
 **As of:** 2026-05-03  
 **Audience:** RA11y maintainers planning ScreenAuditKit evolution  
-**Related:** [ScreenshotAndScreenAudit-GoldenPath.md](ScreenshotAndScreenAudit-GoldenPath.md), [ADR-0002-AI-Assisted-Screenshot-Validation.md](ADR-0002-AI-Assisted-Screenshot-Validation.md), `ScreenAuditKit/README.md`
+**Related:** [ScreenshotAndScreenAudit-GoldenPath.md](ScreenshotAndScreenAudit-GoldenPath.md), [ADR-0002-AI-Assisted-Screenshot-Validation.md](ADR-0002-AI-Assisted-Screenshot-Validation.md), [ScreenAuditKit README](https://github.com/SerialForBreakfast/ScreenAuditKit)
 
 ---
 
